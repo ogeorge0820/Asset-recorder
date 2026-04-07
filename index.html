@@ -92,9 +92,9 @@ body {
   background: var(--card); border: 1px solid var(--border);
   border-radius: var(--r); padding: 18px 20px;
 }
-.kpi-card.primary {
+.kpi-primary {
   background: var(--card2);
-  border-left: 4px solid var(--accent);
+  border-left: 3px solid var(--accent);
 }
 .kpi-label {
   color: var(--muted); font-size: 0.72rem;
@@ -106,7 +106,7 @@ body {
   background: var(--accent); flex-shrink: 0;
 }
 .kpi-value { font-size: 1.4rem; font-weight: 700; line-height: 1.2; }
-.kpi-card.primary .kpi-value { font-size: 2rem; }
+.kpi-primary .kpi-value { font-size: 2rem; }
 .kpi-sub { font-size: 0.75rem; color: var(--muted); margin-top: 5px; }
 .kpi-value.pos { color: var(--green); }
 .kpi-value.neg { color: var(--red); }
@@ -301,7 +301,7 @@ body {
 /* ── Responsive ── */
 @media (max-width: 1100px) {
   .kpi-grid { grid-template-columns: 1fr 1fr 1fr; }
-  .kpi-card.primary .kpi-value { font-size: 1.7rem; }
+  .kpi-primary .kpi-value { font-size: 1.7rem; }
 }
 @media (max-width: 860px) {
   .charts-row { grid-template-columns: 1fr; }
@@ -350,12 +350,12 @@ body {
 
       <!-- KPI Cards -->
       <div class="kpi-grid">
-        <div class="kpi-card primary">
+        <div class="kpi-card kpi-primary">
           <div class="kpi-label"><span class="kpi-label-dot"></span>總資產</div>
           <div class="kpi-value skel" id="kv-total">—</div>
           <div class="kpi-sub" id="ks-total"></div>
         </div>
-        <div class="kpi-card primary">
+        <div class="kpi-card kpi-primary">
           <div class="kpi-label"><span class="kpi-label-dot"></span>淨資產</div>
           <div class="kpi-value skel" id="kv-net">—</div>
           <div class="kpi-sub" id="ks-net"></div>
@@ -377,51 +377,51 @@ body {
         </div>
       </div>
 
-      <!-- Pie + Daily Trend side by side -->
+      <!-- Row 1: Pie (1fr) + Monthly Snapshot Trend (2fr) -->
       <div class="charts-row" style="margin-bottom:16px">
         <div class="chart-card">
           <h3>資產組成</h3>
-          <div style="position:relative;height:400px" id="pie-wrap">
+          <div style="position:relative;height:320px" id="pie-wrap">
             <canvas id="pie-chart"></canvas>
           </div>
         </div>
         <div class="chart-card">
-          <h3>每日資產趨勢</h3>
-          <div style="position:relative;height:400px" id="daily-trend-wrap">
-            <canvas id="daily-trend-chart"></canvas>
-            <div id="daily-trend-nodata" class="chart-nodata" style="display:none">
-              <div style="color:var(--muted);font-size:0.9rem;max-width:300px;line-height:1.7">
-                尚無每日資料，每天 23:59 自動記錄
+          <h3>總資產趨勢</h3>
+          <div class="chart-filter">
+            <button class="filter-btn active" data-f="all" onclick="setTrendFilter(this)">全部</button>
+            <button class="filter-btn" data-f="1y" onclick="setTrendFilter(this)">近1年</button>
+            <button class="filter-btn" data-f="6m" onclick="setTrendFilter(this)">近6個月</button>
+          </div>
+          <div style="position:relative;height:270px" id="trend-wrap">
+            <canvas id="trend-chart"></canvas>
+            <div id="trend-nodata" class="chart-nodata" style="display:none">
+              <div style="color:var(--muted);font-size:0.9rem;max-width:380px;line-height:1.7">
+                尚無歷史資料，請至管理頁面儲存本月快照以開始追蹤趨勢
               </div>
+              <button class="btn-goto" onclick="switchTab('management')">前往管理頁面 →</button>
             </div>
           </div>
         </div>
       </div>
 
-      <!-- Monthly Snapshot Trend Chart - full width -->
-      <div class="chart-card" style="margin-bottom:16px">
-        <h3>總資產趨勢</h3>
-        <div class="chart-filter">
-          <button class="filter-btn active" data-f="all" onclick="setTrendFilter(this)">全部</button>
-          <button class="filter-btn" data-f="1y" onclick="setTrendFilter(this)">近1年</button>
-          <button class="filter-btn" data-f="6m" onclick="setTrendFilter(this)">近6個月</button>
-        </div>
-        <div style="position:relative;height:280px" id="trend-wrap">
-          <canvas id="trend-chart"></canvas>
-          <div id="trend-nodata" class="chart-nodata" style="display:none">
-            <div style="color:var(--muted);font-size:0.9rem;max-width:380px;line-height:1.7">
-              尚無歷史資料，請至管理頁面儲存本月快照以開始追蹤趨勢
-            </div>
-            <button class="btn-goto" onclick="switchTab('management')">前往管理頁面 →</button>
-          </div>
-        </div>
-      </div>
-
-      <!-- Monthly Chart - full width -->
+      <!-- Row 2: Monthly bar - full width -->
       <div class="chart-card" style="margin-bottom:16px">
         <h3>月收益</h3>
         <div style="position:relative;height:200px" id="monthly-wrap">
           <canvas id="monthly-chart"></canvas>
+        </div>
+      </div>
+
+      <!-- Row 3: Daily trend - full width -->
+      <div class="chart-card" style="margin-bottom:16px">
+        <h3>每日資產趨勢</h3>
+        <div style="position:relative;height:220px" id="daily-trend-wrap">
+          <canvas id="daily-trend-chart"></canvas>
+          <div id="daily-trend-nodata" class="chart-nodata" style="display:none">
+            <div style="color:var(--muted);font-size:0.9rem;max-width:300px;line-height:1.7">
+              尚無每日資料，每天 23:59 自動記錄
+            </div>
+          </div>
         </div>
       </div>
     </div><!-- /tab-overview -->
