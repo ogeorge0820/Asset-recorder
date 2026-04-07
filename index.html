@@ -73,12 +73,38 @@ body {
   border-radius: 6px; padding: 3px 10px; font-size: 0.78rem; color: var(--muted);
 }
 .rate-badge b { color: var(--text); }
+.update-badge {
+  background: var(--bg); border: 1px solid var(--border);
+  border-radius: 6px; padding: 3px 10px; font-size: 0.75rem;
+  color: var(--muted); display: flex; align-items: center; gap: 5px; white-space: nowrap;
+}
+.update-dot {
+  width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0;
+  background: var(--muted);
+}
+.update-dot.ok  { background: var(--green); }
+.update-dot.err { background: var(--red); }
+.update-dot.spin {
+  background: var(--accent);
+  animation: pulse-dot 1s infinite;
+}
 .btn-signout {
   background: none; border: 1px solid var(--border);
   color: var(--muted); padding: 4px 12px; border-radius: 6px;
   cursor: pointer; font-size: 0.8rem; transition: all .2s;
 }
 .btn-signout:hover { border-color: var(--red); color: var(--red); }
+
+/* ── Button loading state ── */
+@keyframes btn-spin { to { transform: rotate(360deg); } }
+.btn-loading { position: relative; pointer-events: none; opacity: .85; }
+.btn-loading::before {
+  content: '';
+  display: inline-block; width: 12px; height: 12px;
+  border: 2px solid rgba(255,255,255,.4); border-top-color: #fff;
+  border-radius: 50%; animation: btn-spin .6s linear infinite;
+  margin-right: 6px; vertical-align: middle;
+}
 
 /* ── Content ── */
 #app-content { padding: 20px; max-width: 1440px; margin: 0 auto; }
@@ -338,7 +364,10 @@ body {
     </nav>
     <div class="header-right">
       <div class="rate-badge">USD/TWD <b id="rate-hdr">—</b></div>
-      <span id="price-err-hdr"></span>
+      <div class="update-badge" id="update-badge">
+        <span class="update-dot" id="update-dot"></span>
+        <span id="update-ts">—</span>
+      </div>
       <button class="btn-signout" onclick="signOut()">登出</button>
     </div>
   </header>
@@ -453,7 +482,7 @@ body {
         <div class="section-card">
           <h3>🇹🇼 台股 <span class="badge" id="cnt-tw">0</span></h3>
           <table class="data-table">
-            <thead><tr><th>代號</th><th>股數</th><th style="text-align:right">股價</th><th style="text-align:right">現值</th><th></th></tr></thead>
+            <thead><tr><th>代號</th><th>股數</th><th style="text-align:right">股價 (TWD)</th><th style="text-align:right">現值 (TWD)</th><th></th></tr></thead>
             <tbody id="tb-tw"></tbody>
           </table>
           <button class="btn-add" onclick="addItem('tw')">+ 新增台股</button>
@@ -467,7 +496,7 @@ body {
         <div class="section-card">
           <h3>🇺🇸 美股 <span class="badge" id="cnt-us">0</span></h3>
           <table class="data-table">
-            <thead><tr><th>代號</th><th>股數</th><th style="text-align:right">股價(USD)</th><th style="text-align:right">現值(TWD)</th><th></th></tr></thead>
+            <thead><tr><th>代號</th><th>股數</th><th style="text-align:right">股價 (USD)</th><th style="text-align:right">現值 (TWD)</th><th></th></tr></thead>
             <tbody id="tb-us"></tbody>
           </table>
           <button class="btn-add" onclick="addItem('us')">+ 新增美股</button>
@@ -495,7 +524,7 @@ body {
             </div>
           </div>
           <div style="margin-top:16px;text-align:right">
-            <button class="btn-ok" onclick="saveSettings()" style="padding:7px 18px;font-size:0.83rem">儲存設定</button>
+            <button class="btn-ok" onclick="saveSettings(this)" style="padding:7px 18px;font-size:0.83rem">儲存設定</button>
           </div>
         </div>
 
@@ -503,7 +532,7 @@ body {
         <div class="section-card" style="grid-column: 1 / -1">
           <h3>₿ 加密貨幣 <span class="badge" id="cnt-crypto">0</span></h3>
           <table class="data-table">
-            <thead><tr><th>代號</th><th>數量</th><th style="text-align:right">幣價(USD)</th><th style="text-align:right">現值(TWD)</th><th></th></tr></thead>
+            <thead><tr><th>代號</th><th>數量</th><th style="text-align:right">幣價 (USD)</th><th style="text-align:right">現值 (TWD)</th><th></th></tr></thead>
             <tbody id="tb-crypto"></tbody>
           </table>
           <button class="btn-add" onclick="addItem('crypto')">+ 新增加密貨幣</button>
@@ -517,7 +546,7 @@ body {
 
       <!-- Snapshot -->
       <div class="snapshot-bar">
-        <button class="btn-snapshot" onclick="confirmSnapshot()">📸 儲存本月快照</button>
+        <button class="btn-snapshot" id="btn-snapshot" onclick="confirmSnapshot()">📸 儲存本月快照</button>
       </div>
 
     </div><!-- /tab-management -->
@@ -867,23 +896,30 @@ async function validateCoinGecko(symbol) {
 }
 
 function setPriceStatus(state) {
-  const dot = $('price-dot'), ts = $('price-ts'), fail = $('price-fail-lbl'), hdr = $('price-err-hdr');
-  if (!dot) return;
-  dot.className = `dot ${state}`;
+  // Management page bar
+  const dot = $('price-dot'), ts = $('price-ts'), fail = $('price-fail-lbl');
+  if (dot) dot.className = `dot ${state}`;
+  // Header badge
+  const hdrDot = $('update-dot'), hdrTs = $('update-ts');
+
   if (state === 'spin') {
-    ts.textContent = '價格更新中...';
+    if (ts) ts.textContent = '價格更新中...';
     if (fail) fail.textContent = '';
-    if (hdr) hdr.textContent = '';
+    if (hdrDot) hdrDot.className = 'update-dot spin';
+    if (hdrTs)  hdrTs.textContent = '更新中…';
   } else {
-    const t = S.lastUpdate ? S.lastUpdate.toLocaleTimeString('zh-TW') : '—';
-    ts.textContent = `最後更新：${t}`;
+    const t = S.lastUpdate
+      ? S.lastUpdate.toLocaleTimeString('zh-TW', {hour:'2-digit', minute:'2-digit'})
+      : '—';
+    if (ts) ts.textContent = `最後更新：${t}`;
     if (state === 'err') {
       if (fail) fail.innerHTML = '<span style="color:var(--red)">⚠ 部分價格更新失敗</span>';
-      if (hdr) hdr.innerHTML = '<span style="color:var(--red);font-size:.75rem">⚠</span>';
+      if (hdrDot) hdrDot.className = 'update-dot err';
     } else {
       if (fail) fail.textContent = '';
-      if (hdr) hdr.textContent = '';
+      if (hdrDot) hdrDot.className = 'update-dot ok';
     }
+    if (hdrTs) hdrTs.textContent = `${t} 更新`;
   }
 }
 
@@ -1349,14 +1385,21 @@ async function persistAndRefresh(type) {
   renderKPIs(); renderCharts(); renderManagement();
 }
 
-async function saveSettings() {
-  S.data.settings.insurance_total  = parseFloat($('inp-insurance').value)  || 0;
-  S.data.settings.realestate_total = parseFloat($('inp-realestate').value) || 0;
-  S.data.settings.debt             = parseFloat($('inp-debt').value)        || 0;
-  const rows = Object.entries(S.data.settings).map(([k,v])=>[k,v]);
-  await saveSheet('settings', rows);
-  renderKPIs(); renderCharts();
-  showToast('設定已儲存', 'ok');
+async function saveSettings(btn) {
+  if (btn) btnLoading(btn);
+  try {
+    S.data.settings.insurance_total  = parseFloat($('inp-insurance').value)  || 0;
+    S.data.settings.realestate_total = parseFloat($('inp-realestate').value) || 0;
+    S.data.settings.debt             = parseFloat($('inp-debt').value)        || 0;
+    const rows = Object.entries(S.data.settings).map(([k,v])=>[k,v]);
+    await saveSheet('settings', rows);
+    renderKPIs(); renderCharts();
+    if (btn) btnDone(btn);
+    showToast('設定已儲存', 'ok');
+  } catch(e) {
+    if (btn) btnReset(btn);
+    showToast('儲存失敗：' + e.message, 'err');
+  }
 }
 
 // ══════════════════════════════════════════════════════════════
@@ -1369,16 +1412,24 @@ function confirmSnapshot() {
 }
 
 async function doSaveSnapshot() {
-  const { cashT, twT, usT, cryT, ins, re, debt, net } = calcTotals();
-  const now = new Date();
-  const ds = `${now.getFullYear()}/${String(now.getMonth()+1).padStart(2,'0')}`;
-  const row = [ds, cashT.toFixed(0), twT.toFixed(0), usT.toFixed(0), cryT.toFixed(0), ins.toFixed(0), re.toFixed(0), debt.toFixed(0), net.toFixed(0)];
-  const idx = S.data.snapshots.findIndex(s => s[0] === ds);
-  if (idx >= 0) S.data.snapshots[idx] = row;
-  else { S.data.snapshots.push(row); S.data.snapshots.sort((a,b) => a[0].localeCompare(b[0])); }
-  await saveSheet('snapshots', S.data.snapshots);
-  renderKPIs(); renderCharts();
-  showToast(`${ds} 快照已儲存`, 'ok');
+  const snapBtn = $('btn-snapshot');
+  if (snapBtn) btnLoading(snapBtn, '儲存中…');
+  try {
+    const { cashT, twT, usT, cryT, ins, re, debt, net } = calcTotals();
+    const now = new Date();
+    const ds = `${now.getFullYear()}/${String(now.getMonth()+1).padStart(2,'0')}`;
+    const row = [ds, cashT.toFixed(0), twT.toFixed(0), usT.toFixed(0), cryT.toFixed(0), ins.toFixed(0), re.toFixed(0), debt.toFixed(0), net.toFixed(0)];
+    const idx = S.data.snapshots.findIndex(s => s[0] === ds);
+    if (idx >= 0) S.data.snapshots[idx] = row;
+    else { S.data.snapshots.push(row); S.data.snapshots.sort((a,b) => a[0].localeCompare(b[0])); }
+    await saveSheet('snapshots', S.data.snapshots);
+    renderKPIs(); renderCharts();
+    if (snapBtn) btnDone(snapBtn, '✓ 已儲存');
+    showToast(`${ds} 快照已儲存`, 'ok');
+  } catch(e) {
+    if (snapBtn) btnReset(snapBtn);
+    showToast('快照儲存失敗：' + e.message, 'err');
+  }
 }
 
 async function doSaveDailySnapshot(silent = false) {
@@ -1455,12 +1506,20 @@ function openModal(title, fields, onOK) {
     });
     if (!ok) return;
     const btn = $('modal-ok');
-    btn.disabled = true; btn.textContent = '處理中…';
+    btnLoading(btn);
     try {
       const res = await onOK(vals);
-      if (res !== false) closeModal();
-    } catch(e) { showToast('錯誤：' + e.message, 'err'); }
-    finally { if (btn) { btn.disabled=false; btn.textContent='確認'; } }
+      if (res !== false) {
+        btn.classList.remove('btn-loading');
+        btn.textContent = '✓ 完成';
+        setTimeout(() => closeModal(), 600);
+      } else {
+        btnReset(btn);
+      }
+    } catch(e) {
+      btnReset(btn);
+      showToast('錯誤：' + e.message, 'err');
+    }
   };
 
   $('modal-body').onkeydown = e => { if(e.key==='Enter') $('modal-ok')?.click(); };
@@ -1475,7 +1534,12 @@ function openConfirm(title, msg, onOK) {
       <button class="btn-ok" id="modal-ok">確認</button>
     </div>`;
   $('modal').classList.add('open');
-  $('modal-ok').onclick = async () => { closeModal(); try { await onOK(); } catch(e) { showToast('錯誤：'+e.message,'err'); } };
+  $('modal-ok').onclick = async () => {
+    const btn = $('modal-ok');
+    btnLoading(btn);
+    closeModal();
+    try { await onOK(); } catch(e) { showToast('錯誤：'+e.message,'err'); }
+  };
 }
 
 function closeModal() { $('modal').classList.remove('open'); }
@@ -1532,6 +1596,27 @@ function esc(s) {
 }
 
 function $(id) { return document.getElementById(id); }
+
+// Button loading helpers
+function btnLoading(el, loadingText = '處理中…') {
+  el.disabled = true;
+  el._origText = el.textContent;
+  el.classList.add('btn-loading');
+  el.textContent = loadingText;
+}
+function btnDone(el, doneText = '✓ 完成') {
+  el.classList.remove('btn-loading');
+  el.textContent = doneText;
+  setTimeout(() => {
+    el.disabled = false;
+    el.textContent = el._origText || doneText;
+  }, 1000);
+}
+function btnReset(el) {
+  el.classList.remove('btn-loading');
+  el.disabled = false;
+  if (el._origText) el.textContent = el._origText;
+}
 
 function updateInsTWD() {
   const usd = parseFloat($('inp-insurance')?.value) || 0;
