@@ -85,18 +85,28 @@ body {
 
 /* ── KPI Grid ── */
 .kpi-grid {
-  display: grid; grid-template-columns: repeat(5, 1fr);
+  display: grid; grid-template-columns: 2fr 2fr 1fr 1fr 1fr;
   gap: 14px; margin-bottom: 20px;
 }
 .kpi-card {
   background: var(--card); border: 1px solid var(--border);
   border-radius: var(--r); padding: 18px 20px;
 }
+.kpi-card.primary {
+  background: var(--card2);
+  border-left: 4px solid var(--accent);
+}
 .kpi-label {
   color: var(--muted); font-size: 0.72rem;
   text-transform: uppercase; letter-spacing: .6px; margin-bottom: 8px;
+  display: flex; align-items: center; gap: 6px;
+}
+.kpi-label-dot {
+  width: 6px; height: 6px; border-radius: 50%;
+  background: var(--accent); flex-shrink: 0;
 }
 .kpi-value { font-size: 1.4rem; font-weight: 700; line-height: 1.2; }
+.kpi-card.primary .kpi-value { font-size: 2rem; }
 .kpi-sub { font-size: 0.75rem; color: var(--muted); margin-top: 5px; }
 .kpi-value.pos { color: var(--green); }
 .kpi-value.neg { color: var(--red); }
@@ -290,7 +300,8 @@ body {
 
 /* ── Responsive ── */
 @media (max-width: 1100px) {
-  .kpi-grid { grid-template-columns: repeat(3, 1fr); }
+  .kpi-grid { grid-template-columns: 1fr 1fr 1fr; }
+  .kpi-card.primary .kpi-value { font-size: 1.7rem; }
 }
 @media (max-width: 860px) {
   .charts-row { grid-template-columns: 1fr; }
@@ -339,13 +350,13 @@ body {
 
       <!-- KPI Cards -->
       <div class="kpi-grid">
-        <div class="kpi-card">
-          <div class="kpi-label">總資產</div>
+        <div class="kpi-card primary">
+          <div class="kpi-label"><span class="kpi-label-dot"></span>總資產</div>
           <div class="kpi-value skel" id="kv-total">—</div>
           <div class="kpi-sub" id="ks-total"></div>
         </div>
-        <div class="kpi-card">
-          <div class="kpi-label">淨資產</div>
+        <div class="kpi-card primary">
+          <div class="kpi-label"><span class="kpi-label-dot"></span>淨資產</div>
           <div class="kpi-value skel" id="kv-net">—</div>
           <div class="kpi-sub" id="ks-net"></div>
         </div>
@@ -366,15 +377,28 @@ body {
         </div>
       </div>
 
-      <!-- Pie Chart - full width -->
-      <div class="chart-card" style="margin-bottom:16px">
-        <h3>資產組成</h3>
-        <div style="position:relative;height:400px" id="pie-wrap">
-          <canvas id="pie-chart"></canvas>
+      <!-- Pie + Daily Trend side by side -->
+      <div class="charts-row" style="margin-bottom:16px">
+        <div class="chart-card">
+          <h3>資產組成</h3>
+          <div style="position:relative;height:400px" id="pie-wrap">
+            <canvas id="pie-chart"></canvas>
+          </div>
+        </div>
+        <div class="chart-card">
+          <h3>每日資產趨勢</h3>
+          <div style="position:relative;height:400px" id="daily-trend-wrap">
+            <canvas id="daily-trend-chart"></canvas>
+            <div id="daily-trend-nodata" class="chart-nodata" style="display:none">
+              <div style="color:var(--muted);font-size:0.9rem;max-width:300px;line-height:1.7">
+                尚無每日資料，每天 23:59 自動記錄
+              </div>
+            </div>
+          </div>
         </div>
       </div>
 
-      <!-- Trend Chart - full width -->
+      <!-- Monthly Snapshot Trend Chart - full width -->
       <div class="chart-card" style="margin-bottom:16px">
         <h3>總資產趨勢</h3>
         <div class="chart-filter">
@@ -455,11 +479,15 @@ body {
 
         <div class="section-card">
           <h3>📋 其他資產 &amp; 負債</h3>
-          <div class="other-inputs" style="margin-top:4px">
+          <div class="other-inputs" style="margin-top:4px;grid-template-columns:1fr 1fr 1fr">
             <div class="inp-group">
               <label>儲蓄險總值 <span style="color:var(--accent-light);font-weight:600">USD</span></label>
               <input type="number" id="inp-insurance" placeholder="0" min="0" oninput="updateInsTWD()">
               <div id="ins-twd" style="font-size:0.75rem;color:var(--muted);margin-top:3px"></div>
+            </div>
+            <div class="inp-group">
+              <label>房地產市值 (TWD)</label>
+              <input type="number" id="inp-realestate" placeholder="0" min="0">
             </div>
             <div class="inp-group">
               <label>負債總額 (TWD)</label>
@@ -531,7 +559,8 @@ const COIN_MAP = {
 };
 
 const HEADERS = {
-  snapshots: ['date','cash_total','stock_tw_total','stock_us_total','crypto_total','insurance_total','debt','net_assets'],
+  snapshots: ['date','cash_total','stock_tw_total','stock_us_total','crypto_total','insurance_total','realestate_total','debt','net_assets'],
+  daily_snapshots: ['date','cash_total','stock_tw_total','stock_us_total','crypto_total','insurance_total','realestate_total','debt','net_assets'],
   holdings_tw: ['symbol','shares'],
   holdings_us: ['symbol','shares'],
   holdings_crypto: ['symbol','quantity'],
@@ -549,12 +578,13 @@ const S = {
   initialized: false,
 
   data: {
-    cash: [],       // [bank_name, amount]
-    tw: [],         // [symbol, shares]
-    us: [],         // [symbol, shares]
-    crypto: [],     // [symbol, quantity]
-    snapshots: [],  // [date, cash, tw, us, crypto, ins, debt, net]
-    settings: { insurance_total: 0, debt: 0 },
+    cash: [],           // [bank_name, amount, currency]
+    tw: [],             // [symbol, shares]
+    us: [],             // [symbol, shares]
+    crypto: [],         // [symbol, quantity]
+    snapshots: [],      // [date, cash, tw, us, crypto, ins, re, debt, net]
+    daily_snapshots: [], // [date, cash, tw, us, crypto, ins, re, debt, net]
+    settings: { insurance_total: 0, realestate_total: 0, debt: 0 },
   },
 
   prices: {
@@ -564,7 +594,7 @@ const S = {
     errs: {},
   },
 
-  charts: { pie: null, trend: null, monthly: null },
+  charts: { pie: null, trend: null, monthly: null, dailyTrend: null },
   trendFilter: 'all',
   lastUpdate: null,
 };
@@ -677,7 +707,7 @@ async function initSheets() {
       await sheetPut('holdings_us!A1', rows);
     }
     if (needed.includes('settings')) {
-      await sheetPut('settings!A1', [HEADERS.settings, ['insurance_total','0'], ['debt','0']]);
+      await sheetPut('settings!A1', [HEADERS.settings, ['insurance_total','0'], ['realestate_total','0'], ['debt','0']]);
     }
   }
 }
@@ -686,22 +716,24 @@ async function initSheets() {
 // DATA LOAD / SAVE
 // ══════════════════════════════════════════════════════════════
 async function loadAll() {
-  const [cash, tw, us, crypto, snap, sett] = await Promise.allSettled([
+  const [cash, tw, us, crypto, snap, daily, sett] = await Promise.allSettled([
     sheetGet('cash_accounts!A:C'),
     sheetGet('holdings_tw!A:B'),
     sheetGet('holdings_us!A:B'),
     sheetGet('holdings_crypto!A:B'),
-    sheetGet('snapshots!A:H'),
+    sheetGet('snapshots!A:I'),
+    sheetGet('daily_snapshots!A:I'),
     sheetGet('settings!A:B'),
   ]);
 
-  S.data.cash     = rows(cash);
-  S.data.tw       = rows(tw);
-  S.data.us       = rows(us);
-  S.data.crypto   = rows(crypto);
-  S.data.snapshots = rows(snap);
+  S.data.cash            = rows(cash);
+  S.data.tw              = rows(tw);
+  S.data.us              = rows(us);
+  S.data.crypto          = rows(crypto);
+  S.data.snapshots       = rows(snap);
+  S.data.daily_snapshots = rows(daily);
 
-  S.data.settings = { insurance_total: 0, debt: 0 };
+  S.data.settings = { insurance_total: 0, realestate_total: 0, debt: 0 };
   rows(sett).forEach(r => { if (r[0]) S.data.settings[r[0]] = parseFloat(r[1]) || 0; });
 }
 
@@ -865,10 +897,11 @@ function calcTotals() {
   const usT   = S.data.us.reduce((s, r) => s + (parseFloat(r[1]) || 0) * (S.prices.us[r[0]] || 0) * rate, 0);
   const cryT  = S.data.crypto.reduce((s, r) => s + (parseFloat(r[1]) || 0) * (S.prices.crypto[r[0]?.toUpperCase()] || 0) * rate, 0);
   const ins   = (S.data.settings.insurance_total || 0) * rate;  // stored in USD
+  const re    = S.data.settings.realestate_total || 0;
   const debt  = S.data.settings.debt || 0;
-  const total = cashT + twT + usT + cryT + ins;
+  const total = cashT + twT + usT + cryT + ins + re;
   const net   = total - debt;
-  return { cashT, twT, usT, cryT, ins, debt, total, net };
+  return { cashT, twT, usT, cryT, ins, re, debt, total, net };
 }
 
 // ══════════════════════════════════════════════════════════════
@@ -925,8 +958,9 @@ function setKPI(vid, val, sid, sub) {
 // ══════════════════════════════════════════════════════════════
 function renderManagement() {
   renderCash(); renderTW(); renderUS(); renderCrypto();
-  $('inp-insurance').value = S.data.settings.insurance_total || 0;
-  $('inp-debt').value      = S.data.settings.debt || 0;
+  $('inp-insurance').value   = S.data.settings.insurance_total || 0;
+  $('inp-realestate').value  = S.data.settings.realestate_total || 0;
+  $('inp-debt').value        = S.data.settings.debt || 0;
   updateInsTWD();
 }
 
@@ -944,7 +978,7 @@ function renderCash() {
     return `<tr>
       <td>${esc(r[0])}</td>
       <td><span class="sym-tag" style="font-size:0.78rem;color:var(--accent-light)">${esc(ccy)}</span></td>
-      <td class="amt">${amt.toLocaleString('zh-TW', {maximumFractionDigits:2})}</td>
+      <td class="amt">${fmtCashAmt(amt, ccy)}</td>
       <td class="amt">${fmt(twd)}${hasErr ? '<span class="price-err">匯率失敗</span>' : ''}</td>
       <td><button class="btn-icon edit" onclick="editItem('cash',${i})">✏</button><button class="btn-icon del" onclick="deleteItem('cash',${i})">✕</button></td>
     </tr>`;
@@ -964,7 +998,7 @@ function renderTW() {
     const err = S.prices.errs[`tw_${r[0]}`];
     const priceCell = err
       ? '<span style="color:var(--red);font-size:0.8rem">-</span>'
-      : (p !== undefined ? p.toFixed(2) : skelSpan());
+      : (p !== undefined ? p.toLocaleString('zh-TW', {minimumFractionDigits:2, maximumFractionDigits:2}) : skelSpan());
     return `<tr>
       <td><span class="sym-tag">${esc(r[0])}</span></td>
       <td>${(parseFloat(r[1]) || 0).toLocaleString()}</td>
@@ -989,7 +1023,7 @@ function renderUS() {
     const err = S.prices.errs[`us_${r[0]}`];
     const priceCell = err
       ? '<span style="color:var(--red);font-size:0.8rem">-</span>'
-      : (p !== undefined ? `$${p.toFixed(2)}` : skelSpan());
+      : (p !== undefined ? fmtUSD(p) : skelSpan());
     return `<tr>
       <td><span class="sym-tag">${esc(r[0])}</span></td>
       <td>${(parseFloat(r[1]) || 0).toLocaleString(undefined, {maximumFractionDigits:4})}</td>
@@ -1016,7 +1050,7 @@ function renderCrypto() {
     const qty = parseFloat(r[1]) || 0;
     const priceCell = err
       ? '<span style="color:var(--red);font-size:0.8rem">-</span>'
-      : (p !== undefined ? `$${p.toLocaleString(undefined,{maximumFractionDigits:4})}` : skelSpan());
+      : (p !== undefined ? fmtUSD(p, 4) : skelSpan());
     return `<tr>
       <td><span class="sym-tag">${esc(sym)}</span></td>
       <td>${qty.toLocaleString(undefined, {maximumFractionDigits:8})}</td>
@@ -1061,18 +1095,61 @@ Chart.register({
 
 function renderCharts() {
   renderPie();
+  renderDailyTrend();
   renderTrend();
   renderMonthly();
 }
 
+function renderDailyTrend() {
+  const snaps = S.data.daily_snapshots;
+  const ctx = $('daily-trend-chart').getContext('2d');
+  if (S.charts.dailyTrend) S.charts.dailyTrend.destroy();
+
+  const nodata = $('daily-trend-nodata');
+  if (!snaps.length) {
+    ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+    if (nodata) nodata.style.display = 'flex';
+    return;
+  }
+  if (nodata) nodata.style.display = 'none';
+
+  // Show last 90 days max for readability
+  const recent = snaps.slice(-90);
+
+  S.charts.dailyTrend = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: recent.map(s => s[0]),
+      datasets: [
+        { label:'總資產', data: recent.map(s => [1,2,3,4,5,6].reduce((a,i)=>a+(parseFloat(s[i])||0), 0)),
+          borderColor:'#6366f1', backgroundColor:'rgba(99,102,241,.08)', fill:true, tension:.3, pointRadius:2, borderWidth:2 },
+        { label:'淨資產', data: recent.map(s => parseFloat(s[8])||0),
+          borderColor:'#22c55e', backgroundColor:'transparent', borderDash:[4,3], tension:.3, pointRadius:2, borderWidth:2 },
+      ],
+    },
+    options: {
+      responsive:true, maintainAspectRatio:false,
+      plugins: {
+        legend: { labels:{ color:'#94a3b8', font:{size:11}, usePointStyle:true } },
+        tooltip: { callbacks: { label(c) { return ` ${c.dataset.label}: ${fmt(c.parsed.y)}`; } } },
+      },
+      scales: {
+        x: { grid:{ color:'rgba(255,255,255,.04)' }, ticks:{ color:'#64748b', font:{size:9}, maxTicksLimit:10 } },
+        y: { grid:{ color:'rgba(255,255,255,.04)' }, ticks:{ color:'#64748b', font:{size:10}, callback:v=>fmt(v) } },
+      },
+    },
+  });
+}
+
 function renderPie() {
-  const { cashT, twT, usT, cryT, ins, total } = calcTotals();
+  const { cashT, twT, usT, cryT, ins, re, total } = calcTotals();
   const entries = [
-    { label:'現金', value:cashT, color:'#22c55e' },
-    { label:'台股', value:twT,   color:'#6366f1' },
-    { label:'美股', value:usT,   color:'#3b82f6' },
-    { label:'加密貨幣', value:cryT, color:'#f59e0b' },
-    { label:'儲蓄險', value:ins,  color:'#ec4899' },
+    { label:'流動現金', value:cashT, color:'#22c55e' },
+    { label:'台股',     value:twT,   color:'#6366f1' },
+    { label:'美股',     value:usT,   color:'#3b82f6' },
+    { label:'加密貨幣', value:cryT,  color:'#f59e0b' },
+    { label:'儲蓄險',   value:ins,   color:'#ec4899' },
+    { label:'房地產',   value:re,    color:'#14b8a6' },
   ].filter(e => e.value > 0);
 
   const ctx = $('pie-chart').getContext('2d');
@@ -1273,8 +1350,9 @@ async function persistAndRefresh(type) {
 }
 
 async function saveSettings() {
-  S.data.settings.insurance_total = parseFloat($('inp-insurance').value) || 0;
-  S.data.settings.debt = parseFloat($('inp-debt').value) || 0;
+  S.data.settings.insurance_total  = parseFloat($('inp-insurance').value)  || 0;
+  S.data.settings.realestate_total = parseFloat($('inp-realestate').value) || 0;
+  S.data.settings.debt             = parseFloat($('inp-debt').value)        || 0;
   const rows = Object.entries(S.data.settings).map(([k,v])=>[k,v]);
   await saveSheet('settings', rows);
   renderKPIs(); renderCharts();
@@ -1291,16 +1369,46 @@ function confirmSnapshot() {
 }
 
 async function doSaveSnapshot() {
-  const { cashT, twT, usT, cryT, ins, debt, net } = calcTotals();
+  const { cashT, twT, usT, cryT, ins, re, debt, net } = calcTotals();
   const now = new Date();
   const ds = `${now.getFullYear()}/${String(now.getMonth()+1).padStart(2,'0')}`;
-  const row = [ds, cashT.toFixed(0), twT.toFixed(0), usT.toFixed(0), cryT.toFixed(0), ins.toFixed(0), debt.toFixed(0), net.toFixed(0)];
+  const row = [ds, cashT.toFixed(0), twT.toFixed(0), usT.toFixed(0), cryT.toFixed(0), ins.toFixed(0), re.toFixed(0), debt.toFixed(0), net.toFixed(0)];
   const idx = S.data.snapshots.findIndex(s => s[0] === ds);
   if (idx >= 0) S.data.snapshots[idx] = row;
   else { S.data.snapshots.push(row); S.data.snapshots.sort((a,b) => a[0].localeCompare(b[0])); }
   await saveSheet('snapshots', S.data.snapshots);
   renderKPIs(); renderCharts();
   showToast(`${ds} 快照已儲存`, 'ok');
+}
+
+async function doSaveDailySnapshot(silent = false) {
+  const { cashT, twT, usT, cryT, ins, re, debt, net } = calcTotals();
+  const now = new Date();
+  const ds = `${now.getFullYear()}/${String(now.getMonth()+1).padStart(2,'0')}/${String(now.getDate()).padStart(2,'0')}`;
+  const row = [ds, cashT.toFixed(0), twT.toFixed(0), usT.toFixed(0), cryT.toFixed(0), ins.toFixed(0), re.toFixed(0), debt.toFixed(0), net.toFixed(0)];
+  const idx = S.data.daily_snapshots.findIndex(s => s[0] === ds);
+  if (idx >= 0) S.data.daily_snapshots[idx] = row;
+  else { S.data.daily_snapshots.push(row); S.data.daily_snapshots.sort((a,b) => a[0].localeCompare(b[0])); }
+  await saveSheet('daily_snapshots', S.data.daily_snapshots);
+  renderCharts();
+  if (!silent) showToast(`${ds} 每日快照已儲存`, 'ok');
+}
+
+function scheduleDailySnapshot() {
+  // Check immediately if today's snapshot is missing and it's past 23:59
+  const checkAndSnap = async () => {
+    const now = new Date();
+    const ds = `${now.getFullYear()}/${String(now.getMonth()+1).padStart(2,'0')}/${String(now.getDate()).padStart(2,'0')}`;
+    const alreadyDone = S.data.daily_snapshots.some(s => s[0] === ds);
+    const isPastTime = now.getHours() === 23 && now.getMinutes() >= 59;
+    if (!alreadyDone && isPastTime) {
+      try { await doSaveDailySnapshot(true); } catch(e) { console.warn('Daily snapshot failed:', e); }
+    }
+  };
+
+  checkAndSnap();
+  // Check every minute
+  setInterval(checkAndSnap, 60 * 1000);
 }
 
 // ══════════════════════════════════════════════════════════════
@@ -1393,6 +1501,7 @@ function showToast(msg, type='') {
   toastTmr = setTimeout(() => t.classList.remove('show'), 3000);
 }
 
+// TWD 萬元格式（所有台幣現值、合計）
 function fmt(n) {
   if (n === null || n === undefined || isNaN(n)) return '—';
   const abs = Math.abs(n), sign = n < 0 ? '-' : '';
@@ -1400,6 +1509,22 @@ function fmt(n) {
     return sign + (abs/10000).toLocaleString('zh-TW', {minimumFractionDigits:1,maximumFractionDigits:1}) + '萬';
   }
   return sign + Math.round(abs).toLocaleString('zh-TW');
+}
+
+// USD 價格格式：$325.21
+function fmtUSD(n, decimals = 2) {
+  if (n === null || n === undefined || isNaN(n)) return '—';
+  if (n >= 1000) return '$' + n.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2});
+  if (n >= 1)    return '$' + n.toFixed(decimals);
+  // Small prices (e.g. SHIB): up to 6 significant digits
+  return '$' + n.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:6});
+}
+
+// Cash amount by currency
+function fmtCashAmt(amt, ccy) {
+  if (ccy === 'JPY') return Math.round(amt).toLocaleString('ja-JP');
+  if (ccy === 'TWD') return Math.round(amt).toLocaleString('zh-TW');
+  return amt.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2});
 }
 
 function esc(s) {
@@ -1432,6 +1557,8 @@ async function initApp() {
     renderKPIs();
     renderCharts();
     showToast('載入完成', 'ok');
+
+    scheduleDailySnapshot();
 
     // Auto-refresh every 5 minutes
     setInterval(async () => {
