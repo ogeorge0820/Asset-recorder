@@ -1,7 +1,12 @@
 // ══════════════════════════════════════════════════════════════
 // CONFIG
 // ══════════════════════════════════════════════════════════════
-const BUILD_DATE = '2026/04/08 22:15';
+// 動態產生：頁面載入時取得瀏覽器本地時間（UTC+8 / 當地時區）
+const BUILD_DATE = (() => {
+  const d = new Date();
+  const pad = n => String(n).padStart(2, '0');
+  return `${d.getFullYear()}/${pad(d.getMonth()+1)}/${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+})();
 
 const SPREADSHEET_ID = '1lpRpxVzWaYUqL-jVPOAJCtjsJUIedPYYyOx4gg4PPFU';
 const CLIENT_ID = '149884248440-85f8dhc6ub9up10sv0f89e3e0itrnooj.apps.googleusercontent.com';
@@ -466,10 +471,10 @@ function renderCash() {
     const errKey = `fx_${ccy}`;
     const hasErr = !isTWD && S.prices.errs[errKey];
     return `<tr>
-      <td>${esc(r[0])}</td>
-      <td><span class="sym-tag" style="font-size:0.78rem;color:var(--accent-light)">${esc(ccy)}</span></td>
-      <td class="amt">${fmtCashAmt(amt, ccy)}</td>
-      <td class="amt">${fmt(twd)}${hasErr ? '<span class="price-err">匯率失敗</span>' : ''}</td>
+      <td data-label="帳戶">${esc(r[0])}</td>
+      <td data-label="幣別"><span class="sym-tag" style="font-size:0.78rem;color:var(--accent-light)">${esc(ccy)}</span></td>
+      <td data-label="金額" class="amt">${fmtCashAmt(amt, ccy)}</td>
+      <td data-label="台幣現值" class="amt">${fmt(twd)}${hasErr ? '<span class="price-err">匯率失敗</span>' : ''}</td>
       <td><button class="btn-icon edit" onclick="editItem('cash',${i})">✏</button><button class="btn-icon del" onclick="deleteItem('cash',${i})">✕</button></td>
     </tr>`;
   }).join('') : '<tr><td colspan="5" style="text-align:center;padding:16px;color:var(--muted)">尚無帳戶</td></tr>';
@@ -490,10 +495,10 @@ function renderTW() {
       ? '<span style="color:var(--red);font-size:0.8rem">-</span>'
       : (p !== undefined ? p.toLocaleString('zh-TW', {minimumFractionDigits:2, maximumFractionDigits:2}) : skelSpan());
     return `<tr>
-      <td><span class="sym-tag">${esc(r[0])}</span></td>
-      <td>${(parseFloat(r[1]) || 0).toLocaleString()}</td>
-      <td class="amt">${priceCell}</td>
-      <td class="amt">${v !== null ? fmt(v) : skelSpan()}${err ? '<span class="price-err">更新失敗</span>' : ''}</td>
+      <td data-label="代號"><span class="sym-tag">${esc(r[0])}</span></td>
+      <td data-label="股數">${(parseFloat(r[1]) || 0).toLocaleString()}</td>
+      <td data-label="股價 (TWD)" class="amt">${priceCell}</td>
+      <td data-label="現值 (TWD)" class="amt">${v !== null ? fmt(v) : skelSpan()}${err ? '<span class="price-err">更新失敗</span>' : ''}</td>
       <td><button class="btn-icon edit" onclick="editItem('tw',${i})">✏</button><button class="btn-icon del" onclick="deleteItem('tw',${i})">✕</button></td>
     </tr>`;
   }).join('') : '<tr><td colspan="5" style="text-align:center;padding:16px;color:var(--muted)">尚無持股</td></tr>';
@@ -515,10 +520,10 @@ function renderUS() {
       ? '<span style="color:var(--red);font-size:0.8rem">-</span>'
       : (p !== undefined ? fmtUSD(p) : skelSpan());
     return `<tr>
-      <td><span class="sym-tag">${esc(r[0])}</span></td>
-      <td>${(parseFloat(r[1]) || 0).toLocaleString(undefined, {maximumFractionDigits:4})}</td>
-      <td class="amt">${priceCell}</td>
-      <td class="amt">${v !== null ? fmt(v) : skelSpan()}${err ? '<span class="price-err">更新失敗</span>' : ''}</td>
+      <td data-label="代號"><span class="sym-tag">${esc(r[0])}</span></td>
+      <td data-label="股數">${(parseFloat(r[1]) || 0).toLocaleString(undefined, {maximumFractionDigits:4})}</td>
+      <td data-label="股價 (USD)" class="amt">${priceCell}</td>
+      <td data-label="現值 (TWD)" class="amt">${v !== null ? fmt(v) : skelSpan()}${err ? '<span class="price-err">更新失敗</span>' : ''}</td>
       <td><button class="btn-icon edit" onclick="editItem('us',${i})">✏</button><button class="btn-icon del" onclick="deleteItem('us',${i})">✕</button></td>
     </tr>`;
   }).join('') : '<tr><td colspan="5" style="text-align:center;padding:16px;color:var(--muted)">尚無持股</td></tr>';
@@ -542,10 +547,10 @@ function renderCrypto() {
       ? '<span style="color:var(--red);font-size:0.8rem">-</span>'
       : (p !== undefined ? fmtUSD(p, 4) : skelSpan());
     return `<tr>
-      <td><span class="sym-tag">${esc(sym)}</span></td>
-      <td>${qty.toLocaleString(undefined, {maximumFractionDigits:8})}</td>
-      <td class="amt">${priceCell}</td>
-      <td class="amt">${v !== null ? fmt(v) : skelSpan()}${err ? '<span class="price-err">更新失敗</span>' : ''}</td>
+      <td data-label="代號"><span class="sym-tag">${esc(sym)}</span></td>
+      <td data-label="數量">${qty.toLocaleString(undefined, {maximumFractionDigits:8})}</td>
+      <td data-label="幣價 (USD)" class="amt">${priceCell}</td>
+      <td data-label="現值 (TWD)" class="amt">${v !== null ? fmt(v) : skelSpan()}${err ? '<span class="price-err">更新失敗</span>' : ''}</td>
       <td><button class="btn-icon edit" onclick="editItem('crypto',${i})">✏</button><button class="btn-icon del" onclick="deleteItem('crypto',${i})">✕</button></td>
     </tr>`;
   }).join('') : '<tr><td colspan="5" style="text-align:center;padding:16px;color:var(--muted)">尚無持幣</td></tr>';
@@ -562,11 +567,11 @@ function renderRewards() {
   const curMonth = `${now.getFullYear()}/${String(now.getMonth()+1).padStart(2,'0')}`;
 
   $('tb-rewards').innerHTML = rw.length ? rw.map((r, i) => `<tr>
-    <td>${esc(r[0])}</td>
-    <td><span class="sym-tag">${esc(r[1])}</span></td>
-    <td class="amt">${(parseFloat(r[2])||0).toLocaleString(undefined,{maximumFractionDigits:8})}</td>
-    <td class="amt">${fmtUSD(parseFloat(r[3]))}</td>
-    <td class="amt">${fmt(parseFloat(r[4]))}</td>
+    <td data-label="月份">${esc(r[0])}</td>
+    <td data-label="幣種"><span class="sym-tag">${esc(r[1])}</span></td>
+    <td data-label="增加數量" class="amt">${(parseFloat(r[2])||0).toLocaleString(undefined,{maximumFractionDigits:8})}</td>
+    <td data-label="幣價 (USD)" class="amt">${fmtUSD(parseFloat(r[3]))}</td>
+    <td data-label="收益 (TWD)" class="amt">${fmt(parseFloat(r[4]))}</td>
     <td><button class="btn-icon edit" onclick="editReward(${i})">✏</button><button class="btn-icon del" onclick="deleteReward(${i})">✕</button></td>
   </tr>`).join('') : '<tr><td colspan="6" style="text-align:center;padding:16px;color:var(--muted)">尚無收益記錄</td></tr>';
 
@@ -857,8 +862,19 @@ function renderPie() {
     options: {
       responsive: true, maintainAspectRatio: false, cutout: '68%',
       plugins: {
-        legend: { position:'bottom', labels:{ color:cc.legend, padding:16, font:{size:12}, usePointStyle:true } },
+        legend: {
+          position: 'bottom',
+          labels: {
+            color: cc.legend,
+            // 手機版縮小圖例字體與間距，避免「房地產」換行
+            padding: window.innerWidth <= 640 ? 8 : 16,
+            font: { size: window.innerWidth <= 640 ? 10 : 12 },
+            boxWidth: window.innerWidth <= 640 ? 8 : 12,
+            usePointStyle: true,
+          },
+        },
         tooltip: {
+          // nearest：tooltip 靠近點擊扇形外緣，不遮住中心文字
           position: 'nearest',
           callbacks: { label(c) {
             const tot = c.dataset.data.reduce((a,b)=>a+b,0);

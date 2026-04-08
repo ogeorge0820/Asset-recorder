@@ -423,22 +423,72 @@ body {
   /* Management grid — full width single column */
   .mgmt-grid { grid-template-columns: 1fr; }
 
-  /* Tables — 在 card 內部橫向滑動，寬度不超出 card */
-  .table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; width: 100%; }
-  .data-table { min-width: 380px; font-size: 0.8rem; white-space: nowrap; }
-  .data-table th, .data-table td { padding: 6px 8px; }
+  /* Tables — 卡片式佈局，每列變成 2 欄 grid */
+  .table-wrap { overflow-x: visible; width: 100%; }
+  .data-table { display: block; min-width: unset; white-space: normal; }
+  .data-table thead { display: none; }
+  .data-table tbody { display: block; }
+  .data-table tr {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    column-gap: 14px;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .data-table tr:last-child { border-bottom: none; }
+  .data-table td {
+    display: flex;
+    flex-direction: column;
+    border: none;
+    padding: 3px 0;
+    font-size: 0.85rem;
+    text-align: left !important;
+  }
+  /* 顯示欄位標題（來自 data-label） */
+  .data-table td[data-label]::before {
+    content: attr(data-label);
+    font-size: 0.67rem;
+    color: var(--muted);
+    font-weight: 400;
+    margin-bottom: 2px;
+    letter-spacing: 0.02em;
+  }
+  /* 操作按鈕列：跨全寬、靠右對齊 */
+  .data-table td:last-child {
+    grid-column: 1 / -1;
+    flex-direction: row;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 4px;
+    padding: 6px 0 2px;
+    border-top: 1px solid var(--border);
+    margin-top: 2px;
+  }
+  .data-table td:last-child::before { display: none; }
+  /* 無資料列（單一 td）跨全寬置中 */
+  .data-table td:only-child { grid-column: 1 / -1; text-align: center !important; flex-direction: row; justify-content: center; }
 
-  /* Other assets — stack to single column on mobile */
+  /* Other assets — 堆疊成單欄 */
   .other-inputs, .other-inputs-3col { grid-template-columns: 1fr !important; }
+  /* 輸入框觸控高度至少 44px */
+  .inp-group input, .inp-group select { min-height: 44px; font-size: 1rem; padding: 10px 12px; }
+  .inp-group { gap: 10px; }
+
+  /* 新增按鈕觸控高度 */
+  .btn-add { min-height: 44px; font-size: 0.88rem; }
+  .btn-ok { min-height: 44px; font-size: 0.88rem; padding: 10px 20px; }
+  .section-footer { margin-top: 14px; padding-top: 12px; }
 
   /* Modal */
   .modal-box { padding: 20px 16px; width: 96%; }
+  /* Modal 輸入框也要符合觸控標準 */
+  .modal-box input, .modal-box select { min-height: 44px; font-size: 1rem; }
 
   /* Snapshot bar */
-  .btn-snapshot { padding: 11px 24px; font-size: 0.88rem; }
+  .btn-snapshot { padding: 13px 28px; font-size: 0.9rem; min-height: 48px; }
 
   /* Chart heights */
-  #pie-wrap { height: 260px !important; }
+  #pie-wrap { height: 300px !important; }
   #trend-wrap { height: 220px !important; }
   #daily-trend-wrap { height: 180px !important; }
   #monthly-wrap { height: 160px !important; }
