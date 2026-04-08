@@ -29,6 +29,7 @@ const HEADERS = {
   holdings_crypto: ['symbol','quantity'],
   cash_accounts: ['bank_name','amount','currency'],
   settings: ['key','value'],
+  crypto_rewards: ['date','symbol','quantity','price_usd','value_twd'],
 };
 
 // ══════════════════════════════════════════════════════════════
@@ -47,6 +48,7 @@ const S = {
     crypto: [],         // [symbol, quantity]
     snapshots: [],      // [date, cash, tw, us, crypto, ins, re, debt, net]
     daily_snapshots: [], // [date, cash, tw, us, crypto, ins, re, debt, net]
+    rewards: [],        // [date, symbol, quantity, price_usd, value_twd]
     settings: { insurance_total: 0, realestate_total: 0, debt: 0 },
   },
 
@@ -179,7 +181,7 @@ async function initSheets() {
 // DATA LOAD / SAVE
 // ══════════════════════════════════════════════════════════════
 async function loadAll() {
-  const [cash, tw, us, crypto, snap, daily, sett] = await Promise.allSettled([
+  const [cash, tw, us, crypto, snap, daily, sett, rw] = await Promise.allSettled([
     sheetGet('cash_accounts!A:C'),
     sheetGet('holdings_tw!A:B'),
     sheetGet('holdings_us!A:B'),
@@ -187,6 +189,7 @@ async function loadAll() {
     sheetGet('snapshots!A:I'),
     sheetGet('daily_snapshots!A:I'),
     sheetGet('settings!A:B'),
+    sheetGet('crypto_rewards!A:E'),
   ]);
 
   S.data.cash            = rows(cash);
@@ -195,6 +198,7 @@ async function loadAll() {
   S.data.crypto          = rows(crypto);
   S.data.snapshots       = rows(snap);
   S.data.daily_snapshots = rows(daily);
+  S.data.rewards         = rows(rw);
 
   S.data.settings = { insurance_total: 0, realestate_total: 0, debt: 0 };
   rows(sett).forEach(r => { if (r[0]) S.data.settings[r[0]] = parseFloat(r[1]) || 0; });
@@ -442,7 +446,7 @@ function setKPI(vid, val, sid, sub) {
 // RENDER — MANAGEMENT TABLES
 // ══════════════════════════════════════════════════════════════
 function renderManagement() {
-  renderCash(); renderTW(); renderUS(); renderCrypto();
+  renderCash(); renderTW(); renderUS(); renderCrypto(); renderRewards();
   $('inp-insurance').value   = S.data.settings.insurance_total || 0;
   $('inp-realestate').value  = S.data.settings.realestate_total || 0;
   $('inp-debt').value        = S.data.settings.debt || 0;
@@ -548,6 +552,184 @@ function renderCrypto() {
   $('tot-crypto').textContent = fmt(tot);
 }
 
+// ── 質押/活存收益記錄 ──────────────────────────────────────────
+function renderRewards() {
+  const rw = S.data.rewards;
+  if ($('cnt-rewards')) $('cnt-rewards').textContent = rw.length;
+
+  const now = new Date();
+  const curMonth = `${now.getFullYear()}/${String(now.getMonth()+1).padStart(2,'0')}`;
+
+  $('tb-rewards').innerHTML = rw.length ? rw.map((r, i) => `<tr>
+    <td>${esc(r[0])}</td>
+    <td><span class="sym-tag">${esc(r[1])}</span></td>
+    <td class="amt">${(parseFloat(r[2])||0).toLocaleString(undefined,{maximumFractionDigits:8})}</td>
+    <td class="amt">${fmtUSD(parseFloat(r[3]))}</td>
+    <td class="amt">${fmt(parseFloat(r[4]))}</td>
+    <td><button class="btn-icon edit" onclick="editReward(${i})">✏</button><button class="btn-icon del" onclick="deleteReward(${i})">✕</button></td>
+  </tr>`).join('') : '<tr><td colspan="6" style="text-align:center;padding:16px;color:var(--muted)">尚無收益記錄</td></tr>';
+
+  const monthTot = rw.filter(r => r[0] === curMonth).reduce((s, r) => s + (parseFloat(r[4])||0), 0);
+  if ($('tot-rewards-month')) $('tot-rewards-month').textContent = monthTot > 0 ? fmt(monthTot) : '—';
+}
+
+function rewardSyncPrice() {
+  const sym = $('mf-symbol')?.value?.toUpperCase();
+  if (sym && S.prices.crypto[sym] !== undefined) {
+    $('mf-price_usd').value = S.prices.crypto[sym];
+  }
+  rewardSyncValue();
+}
+
+function rewardSyncValue() {
+  const qty = parseFloat($('mf-quantity')?.value) || 0;
+  const price = parseFloat($('mf-price_usd')?.value) || 0;
+  const twd = qty * price * S.prices.usdtwd;
+  const el = $('mf-value_twd');
+  if (el) el.value = twd > 0 ? fmt(twd) : '';
+}
+
+function openRewardModal(title, defaults, onSave) {
+  const now = new Date();
+  const defaultMonth = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
+  const symOptions = [...new Set(S.data.crypto.map(r => r[0]?.toUpperCase()).filter(Boolean))];
+  const sel = defaults.symbol || symOptions[0] || '';
+  const priceDefault = defaults.price_usd !== undefined ? defaults.price_usd : (S.prices.crypto[sel] ?? '');
+  const monthVal = defaults.date ? defaults.date.replace('/', '-') : defaultMonth;
+
+  $('modal-title').textContent = title;
+  $('modal-body').innerHTML = `
+    <div class="modal-form">
+      <div class="field"><label>月份</label>
+        <input id="mf-date" type="month" value="${esc(monthVal)}">
+      </div>
+      <div class="field"><label>幣種</label>
+        <select id="mf-symbol" onchange="rewardSyncPrice()">
+          ${symOptions.map(s => `<option value="${esc(s)}" ${s===sel?'selected':''}>${esc(s)}</option>`).join('')}
+          <option value="__custom">自訂…</option>
+        </select>
+        <input id="mf-symbol-custom" type="text" placeholder="輸入幣種代號" style="display:none;margin-top:6px" oninput="this.value=this.value.toUpperCase()">
+      </div>
+      <div class="field"><label>增加數量</label>
+        <input id="mf-quantity" type="number" step="any" min="0" value="${esc(String(defaults.quantity??''))}" placeholder="0" oninput="rewardSyncValue()">
+      </div>
+      <div class="field"><label>當時幣價 (USD)</label>
+        <input id="mf-price_usd" type="number" step="any" min="0" value="${esc(String(priceDefault))}" placeholder="0" oninput="rewardSyncValue()">
+      </div>
+      <div class="field"><label>收益價值 (TWD)　<small style="color:var(--muted)">(自動計算)</small></label>
+        <input id="mf-value_twd" type="text" readonly value="${esc(defaults.value_twd??'')}" placeholder="—">
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeModal()">取消</button>
+      <button class="btn-ok" id="modal-ok">確認</button>
+    </div>`;
+  $('modal').classList.add('open');
+
+  // 自訂幣種切換
+  $('mf-symbol').addEventListener('change', function() {
+    const custom = $('mf-symbol-custom');
+    custom.style.display = this.value === '__custom' ? 'block' : 'none';
+    if (this.value !== '__custom') rewardSyncPrice();
+  });
+
+  // 初始計算
+  rewardSyncValue();
+
+  $('modal-ok').onclick = async () => {
+    const btn = $('modal-ok');
+    const rawMonth = $('mf-date')?.value;
+    const symSel = $('mf-symbol')?.value;
+    const sym = symSel === '__custom' ? ($('mf-symbol-custom')?.value?.toUpperCase()) : symSel;
+    const qty = parseFloat($('mf-quantity')?.value) || 0;
+    const price = parseFloat($('mf-price_usd')?.value) || 0;
+
+    if (!rawMonth || !sym || qty <= 0) {
+      showToast('請填寫月份、幣種與數量', 'err'); return;
+    }
+    const date = rawMonth.replace('-', '/');  // YYYY-MM → YYYY/MM
+    const valueTWD = qty * price * S.prices.usdtwd;
+
+    btnLoading(btn);
+    try {
+      await onSave(date, sym, qty, price, valueTWD);
+      btn.classList.remove('btn-loading');
+      btn.textContent = '✓ 完成';
+      setTimeout(() => closeModal(), 600);
+    } catch(e) {
+      btnReset(btn);
+      showToast('錯誤：' + e.message, 'err');
+    }
+  };
+}
+
+function addReward() {
+  openRewardModal('新增收益記錄', {}, async (date, sym, qty, price, twd) => {
+    S.data.rewards.push([date, sym, qty, price, Math.round(twd)]);
+    S.data.rewards.sort((a, b) => b[0].localeCompare(a[0]));
+    await saveSheet('crypto_rewards', S.data.rewards);
+    renderRewards(); renderRewardsSummary();
+    showToast('收益記錄已新增', 'ok');
+  });
+}
+
+function editReward(idx) {
+  const r = S.data.rewards[idx];
+  openRewardModal('編輯收益記錄', { date: r[0], symbol: r[1], quantity: r[2], price_usd: r[3], value_twd: fmt(parseFloat(r[4])) }, async (date, sym, qty, price, twd) => {
+    S.data.rewards[idx] = [date, sym, qty, price, Math.round(twd)];
+    S.data.rewards.sort((a, b) => b[0].localeCompare(a[0]));
+    await saveSheet('crypto_rewards', S.data.rewards);
+    renderRewards(); renderRewardsSummary();
+    showToast('已更新', 'ok');
+  });
+}
+
+function deleteReward(idx) {
+  openConfirm('確認刪除', '確定要刪除這筆收益記錄嗎？', async () => {
+    S.data.rewards.splice(idx, 1);
+    await saveSheet('crypto_rewards', S.data.rewards);
+    renderRewards(); renderRewardsSummary();
+    showToast('已刪除', 'ok');
+  });
+}
+
+function renderRewardsSummary() {
+  const el = $('rewards-summary');
+  if (!el) return;
+  const now = new Date();
+  const curMonth = `${now.getFullYear()}/${String(now.getMonth()+1).padStart(2,'0')}`;
+  const monthRw = S.data.rewards.filter(r => r[0] === curMonth);
+
+  if (!monthRw.length) {
+    el.innerHTML = `<div style="color:var(--muted);font-size:0.85rem;padding:12px 0">本月尚無收益記錄</div>`;
+    return;
+  }
+
+  // group by symbol
+  const grouped = {};
+  monthRw.forEach(r => {
+    const sym = r[1];
+    if (!grouped[sym]) grouped[sym] = { qty: 0, twd: 0 };
+    grouped[sym].qty += parseFloat(r[2]) || 0;
+    grouped[sym].twd += parseFloat(r[4]) || 0;
+  });
+
+  el.innerHTML = `<table class="data-table" style="margin-top:4px">
+    <thead><tr>
+      <th>幣種</th>
+      <th style="text-align:right">本月增量</th>
+      <th style="text-align:right">收益價值 (TWD)</th>
+    </tr></thead>
+    <tbody>
+      ${Object.entries(grouped).map(([sym, v]) => `<tr>
+        <td><span class="sym-tag">${esc(sym)}</span></td>
+        <td class="amt">${v.qty.toLocaleString(undefined,{maximumFractionDigits:8})}</td>
+        <td class="amt">${fmt(v.twd)}</td>
+      </tr>`).join('')}
+    </tbody>
+  </table>`;
+}
+
 function skelSpan() {
   return '<span class="skel" style="display:inline-block;width:55px;height:14px;vertical-align:middle"></span>';
 }
@@ -596,6 +778,7 @@ function renderCharts() {
   renderPie();
   renderDailyTrend();
   renderTrend();
+  renderRewardsSummary();
   renderMonthly();
 }
 

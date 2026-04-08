@@ -124,6 +124,11 @@
 
       <!-- Row 3: Monthly bar - full width -->
       <div class="chart-card" style="margin-bottom:16px">
+        <h3>質押 / 活存收益（本月）</h3>
+        <div id="rewards-summary"></div>
+      </div>
+
+      <div class="chart-card" style="margin-bottom:16px">
         <h3>月收益</h3>
         <div style="position:relative;height:200px" id="monthly-wrap">
           <canvas id="monthly-chart"></canvas>
@@ -215,6 +220,26 @@
           <div class="section-footer">
             <span class="total-lbl">加密貨幣合計</span>
             <span class="total-val" id="tot-crypto">—</span>
+          </div>
+        </div>
+
+        <!-- Row 4: 質押/活存收益記錄 全寬 -->
+        <div class="section-card" style="grid-column: 1 / -1">
+          <h3>🎁 質押 / 活存收益記錄 <span class="badge" id="cnt-rewards">0</span></h3>
+          <table class="data-table">
+            <thead><tr>
+              <th>月份</th><th>幣種</th>
+              <th style="text-align:right">增加數量</th>
+              <th style="text-align:right">當時幣價 (USD)</th>
+              <th style="text-align:right">收益價值 (TWD)</th>
+              <th></th>
+            </tr></thead>
+            <tbody id="tb-rewards"></tbody>
+          </table>
+          <button class="btn-add" onclick="addReward()">+ 新增收益記錄</button>
+          <div class="section-footer">
+            <span class="total-lbl">本月收益合計 (TWD)</span>
+            <span class="total-val" id="tot-rewards-month">—</span>
           </div>
         </div>
 
