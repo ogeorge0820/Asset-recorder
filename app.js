@@ -754,6 +754,19 @@ function chartColors() {
   };
 }
 
+// Tooltip Positioner: 永遠出現在扇形外緣，不遮住中心文字
+Chart.Tooltip.positioners.doughnutOutside = function(elements) {
+  if (!elements.length) return false;
+  const arc = elements[0].element;
+  const midAngle = (arc.startAngle + arc.endAngle) / 2;
+  // 外緣再加 24px 偏移，確保不與圓環重疊
+  const r = arc.outerRadius + 24;
+  return {
+    x: arc.x + Math.cos(midAngle) * r,
+    y: arc.y + Math.sin(midAngle) * r,
+  };
+};
+
 // Plugin: draw total value in doughnut centre
 Chart.register({
   id: 'doughnutCenter',
@@ -856,22 +869,36 @@ function renderPie() {
       datasets: [{ data: entries.map(e => e.value), backgroundColor: entries.map(e => e.color), borderColor: cc.border, borderWidth: 2 }],
     },
     options: {
-      responsive: true, maintainAspectRatio: false, cutout: '68%',
+      responsive: true, maintainAspectRatio: false, cutout: '65%',
+      layout: { padding: { top: 8, bottom: 8, left: 8, right: 8 } },
       plugins: {
-        legend: {
-          position: 'bottom',
-          labels: {
-            color: cc.legend,
-            // 手機版縮小圖例字體與間距，避免「房地產」換行
-            padding: window.innerWidth <= 640 ? 8 : 16,
-            font: { size: window.innerWidth <= 640 ? 10 : 12 },
-            boxWidth: window.innerWidth <= 640 ? 8 : 12,
-            usePointStyle: true,
-          },
-        },
+        legend: window.innerWidth <= 640
+          // 手機：底部橫排，字體縮小，itemGap 拉開
+          ? {
+              position: 'bottom',
+              labels: {
+                color: cc.legend,
+                padding: 10,
+                font: { size: 11 },
+                boxWidth: 10,
+                usePointStyle: true,
+              },
+            }
+          // 桌面：右側垂直排列，每項清晰對齊
+          : {
+              position: 'right',
+              align: 'center',
+              labels: {
+                color: cc.legend,
+                padding: 18,
+                font: { size: 13 },
+                boxWidth: 12,
+                usePointStyle: true,
+              },
+            },
         tooltip: {
-          // nearest：tooltip 靠近點擊扇形外緣，不遮住中心文字
-          position: 'nearest',
+          // 自訂 positioner：tooltip 永遠出現在扇形外緣，不蓋住中心數值
+          position: 'doughnutOutside',
           callbacks: { label(c) {
             const tot = c.dataset.data.reduce((a,b)=>a+b,0);
             return ` ${c.label}: ${fmt(c.parsed)} (${(c.parsed/tot*100).toFixed(1)}%)`;

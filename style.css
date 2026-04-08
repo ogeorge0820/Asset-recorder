@@ -496,7 +496,7 @@ body {
   .btn-snapshot { padding: 13px 28px; font-size: 0.9rem; min-height: 48px; }
 
   /* Chart heights */
-  #pie-wrap { height: 300px !important; }
+  #pie-wrap { height: 320px !important; }
   #trend-wrap { height: 220px !important; }
   #daily-trend-wrap { height: 180px !important; }
   #monthly-wrap { height: 160px !important; }
