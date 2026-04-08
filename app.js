@@ -1209,6 +1209,11 @@ function toggleTheme() {
   updateThemeBtn();
 }
 
+function updateMobileBuildBar() {
+  const el = $('mobile-build-bar');
+  if (el) el.textContent = `版本 ${BUILD_DATE}`;
+}
+
 function updateThemeBtn() {
   const btn = $('btn-theme');
   if (!btn) return;
@@ -1336,6 +1341,7 @@ document.addEventListener('DOMContentLoaded', () => {
   document.documentElement.dataset.theme = savedTheme;
   Chart.defaults.color = savedTheme === 'light' ? '#8c7055' : '#94a3b8';
   updateThemeBtn();
+  updateMobileBuildBar();
 
   $('btn-signin').addEventListener('click', signIn);
   const gisCheck = setInterval(() => {

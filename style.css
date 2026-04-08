@@ -382,15 +382,24 @@ body {
   .mgmt-grid { grid-template-columns: 1fr; }
 }
 
+/* ── Mobile build bar (hidden on desktop) ── */
+.mobile-build-bar { display: none; }
+
 /* ── Mobile (≤ 640px) ── */
 @media (max-width: 640px) {
   /* Layout */
   #app-content { padding: 10px; }
   .kpi-grid { grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 14px; }
-  .other-inputs { grid-template-columns: 1fr; }
   .charts-row { gap: 10px; }
   .chart-card { padding: 14px 14px; }
-  .section-card { padding: 14px 14px; }
+  .section-card { padding: 14px 14px; overflow: hidden; }
+
+  /* Mobile build version bar */
+  .mobile-build-bar {
+    display: block;
+    font-size: 0.72rem; color: var(--muted);
+    margin-bottom: 10px; padding: 4px 2px;
+  }
 
   /* KPI sizing */
   .kpi-card { padding: 12px 14px; }
@@ -408,10 +417,16 @@ body {
   .btn-signout { padding: 4px 8px; font-size: 0.75rem; }
   .tab-btn { padding: 5px 12px; font-size: 0.82rem; }
 
-  /* Tables — horizontal scroll */
-  .table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
-  .data-table { min-width: 480px; font-size: 0.8rem; }
-  .data-table th, .data-table td { padding: 6px 6px; }
+  /* Management grid — full width single column */
+  .mgmt-grid { grid-template-columns: 1fr; }
+
+  /* Tables — horizontal scroll within card */
+  .table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; margin: 0 -14px; padding: 0 14px; }
+  .data-table { min-width: 420px; font-size: 0.8rem; white-space: nowrap; }
+  .data-table th, .data-table td { padding: 6px 8px; }
+
+  /* Other assets — stack to single column on mobile */
+  .other-inputs, .other-inputs-3col { grid-template-columns: 1fr !important; }
 
   /* Modal */
   .modal-box { padding: 20px 16px; width: 96%; }
@@ -425,9 +440,6 @@ body {
   #daily-trend-wrap { height: 180px !important; }
   #monthly-wrap { height: 160px !important; }
 
-  /* Other inputs section */
-  .other-inputs { grid-template-columns: 1fr 1fr; }
-
   /* Toast */
   .toast { left: 12px; right: 12px; bottom: 16px; max-width: none; text-align: center; }
 }
@@ -435,6 +447,5 @@ body {
 /* ── Very small (≤ 400px, e.g. iPhone SE) ── */
 @media (max-width: 400px) {
   .kpi-grid { grid-template-columns: 1fr 1fr; gap: 8px; }
-  .other-inputs { grid-template-columns: 1fr; }
   .tab-btn { padding: 5px 10px; }
 }
