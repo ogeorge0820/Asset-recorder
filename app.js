@@ -1,7 +1,7 @@
 // ══════════════════════════════════════════════════════════════
 // CONFIG
 // ══════════════════════════════════════════════════════════════
-const BUILD_DATE = '2026/04/08 21:30';
+const BUILD_DATE = '2026/04/08 22:15';
 
 const SPREADSHEET_ID = '1lpRpxVzWaYUqL-jVPOAJCtjsJUIedPYYyOx4gg4PPFU';
 const CLIENT_ID = '149884248440-85f8dhc6ub9up10sv0f89e3e0itrnooj.apps.googleusercontent.com';
@@ -858,10 +858,13 @@ function renderPie() {
       responsive: true, maintainAspectRatio: false, cutout: '68%',
       plugins: {
         legend: { position:'bottom', labels:{ color:cc.legend, padding:16, font:{size:12}, usePointStyle:true } },
-        tooltip: { callbacks: { label(c) {
-          const tot = c.dataset.data.reduce((a,b)=>a+b,0);
-          return ` ${c.label}: ${fmt(c.parsed)} (${(c.parsed/tot*100).toFixed(1)}%)`;
-        }}},
+        tooltip: {
+          position: 'nearest',
+          callbacks: { label(c) {
+            const tot = c.dataset.data.reduce((a,b)=>a+b,0);
+            return ` ${c.label}: ${fmt(c.parsed)} (${(c.parsed/tot*100).toFixed(1)}%)`;
+          }},
+        },
         doughnutCenter: { text: fmt(total), sub: '總資產' },
       },
     },
