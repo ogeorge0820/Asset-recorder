@@ -1,12 +1,8 @@
 // ══════════════════════════════════════════════════════════════
 // CONFIG
 // ══════════════════════════════════════════════════════════════
-// 動態產生：頁面載入時取得瀏覽器本地時間（UTC+8 / 當地時區）
-const BUILD_DATE = (() => {
-  const d = new Date();
-  const pad = n => String(n).padStart(2, '0');
-  return `${d.getFullYear()}/${pad(d.getMonth()+1)}/${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
-})();
+// Build 時間：每次修改 code 後手動更新此時間（UTC+8 台北時間）
+const BUILD_DATE = '2026/04/08 23:10';
 
 const SPREADSHEET_ID = '1lpRpxVzWaYUqL-jVPOAJCtjsJUIedPYYyOx4gg4PPFU';
 const CLIENT_ID = '149884248440-85f8dhc6ub9up10sv0f89e3e0itrnooj.apps.googleusercontent.com';
