@@ -108,7 +108,7 @@ asset-recorder/
 
 ## 📋 版本歷史
 
-### v0.2 (2026-04-08)
+### v0.2 (2026/04/08 23:10)
 
 #### ✨ 新功能
 
@@ -130,22 +130,31 @@ asset-recorder/
 
 #### 🎨 UI / UX 優化
 
+- **行動端響應式設計**：
+  - 管理頁表格改為 flex-nowrap 單行佈局，名稱欄優先壓縮，操作按鈕永遠在同一行靠右
+  - 所有輸入框、按鈕 `min-height: 44px`，符合 iOS / Android 觸控標準
+  - 首頁版本資訊在手機版改顯示於 KPI 區塊上方（`.mobile-build-bar`）
+- **圓餅圖優化**：
+  - 手機版圖例縮小（10px 字體、8px padding），避免「房地產」標籤換行
+  - Tooltip 改為 `position: 'nearest'`，靠近點擊扇形顯示，不遮住中心數字
 - **圖表順序調整**：每日資產趨勢圖移至月收益圖上方，資訊層次更合理
 - **本月收益卡片動態邊框**：收益為正顯示綠色左邊框，收益為負顯示紅色左邊框，一眼辨識趨勢
-- **觸控體驗改善**：編輯 / 刪除 icon 按鈕點擊區域擴大至 44×44px，符合 iOS / Android 觸控標準
 - **快照可發現性提升**：
   - 趨勢圖無資料時，空白狀態直接嵌入「📸 立即儲存快照」按鈕，無需跳頁
   - 管理頁快照按鈕上方顯示「上次快照：YYYY/MM」提醒
-- **Header 精簡**：移除 Header 中的匯率與更新時間，改放至更新時間 badge 回 Header，USD/TWD 資訊統一由 KPI 卡片呈現
+- **Header 精簡**：移除 Header 中的匯率，USD/TWD 資訊統一由 KPI 卡片呈現
+- **加密貨幣數量顯示格式化**：管理頁數量統一顯示至小數點後兩位（原始資料不受影響）
 
 #### 🔧 程式碼架構
 
 - 將原本的單一 `index.html` 拆分為三個獨立檔案：`index.html`、`style.css`、`app.js`，提升可維護性
+- 新增 `CLAUDE.md` 專案規範文件（語言、時區、UI 框架、貨幣精度）
 
 #### 🐛 Bug Fix
 
-- **修正加密貨幣幣價全部顯示「更新失敗」**：CoinGecko API 呼叫缺少 CORS Proxy，導致瀏覽器端跨域請求被封鎖。已補上與 Yahoo Finance 相同的 `corsproxy.io` proxy 路由（含 `simple/price` 與 `search` 端點）
-- **修正 CSS 重複 media query**：移除 `@media (max-width: 1100px)` 與 `@media (max-width: 1200px)` 的重複定義
+- **修正加密貨幣幣價全部顯示「更新失敗」**：CoinGecko API 呼叫缺少 CORS Proxy，已補上 `corsproxy.io` proxy 路由（含 `simple/price` 與 `search` 端點）
+- **修正行動端整頁橫向滑動**：`body { overflow-x: hidden }` 防止表格溢出造成頁面層級滾動
+- **修正 CSS 重複 media query**：移除重複的 `@media` 定義
 
 ---
 
