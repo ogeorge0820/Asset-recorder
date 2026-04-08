@@ -392,7 +392,9 @@ body {
   .kpi-grid { grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 14px; }
   .charts-row { gap: 10px; }
   .chart-card { padding: 14px 14px; }
-  .section-card { padding: 14px 14px; overflow: hidden; }
+  /* overflow-x: clip clips visual overflow without creating a scroll container,
+     so child .table-wrap overflow-x: auto still works correctly */
+  .section-card { padding: 14px 14px; overflow-x: clip; }
 
   /* Mobile build version bar */
   .mobile-build-bar {
@@ -420,7 +422,8 @@ body {
   /* Management grid — full width single column */
   .mgmt-grid { grid-template-columns: 1fr; }
 
-  /* Tables — horizontal scroll within card */
+  /* Tables — horizontal scroll within card
+     negative margin extends table-wrap to full card width (past card padding) */
   .table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; margin: 0 -14px; padding: 0 14px; }
   .data-table { min-width: 420px; font-size: 0.8rem; white-space: nowrap; }
   .data-table th, .data-table td { padding: 6px 8px; }
