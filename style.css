@@ -239,6 +239,7 @@ body {
 }
 .other-card h3 { font-size: 0.95rem; margin-bottom: 14px; }
 .other-inputs { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.other-inputs-3col { grid-template-columns: 1fr 1fr 1fr; }
 .inp-group { display: flex; flex-direction: column; gap: 6px; }
 .inp-group label { font-size: 0.82rem; color: var(--muted); }
 .inp-group input {
@@ -380,9 +381,60 @@ body {
   .charts-row { grid-template-columns: 1fr; }
   .mgmt-grid { grid-template-columns: 1fr; }
 }
+
+/* ── Mobile (≤ 640px) ── */
 @media (max-width: 640px) {
-  .kpi-grid { grid-template-columns: 1fr 1fr; }
+  /* Layout */
+  #app-content { padding: 10px; }
+  .kpi-grid { grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 14px; }
   .other-inputs { grid-template-columns: 1fr; }
-  #app-content { padding: 12px; }
+  .charts-row { gap: 10px; }
+  .chart-card { padding: 14px 14px; }
+  .section-card { padding: 14px 14px; }
+
+  /* KPI sizing */
+  .kpi-card { padding: 12px 14px; }
+  .kpi-primary .kpi-value { font-size: 1.4rem; }
+  .kpi-value { font-size: 1.1rem; }
+  .kpi-label { font-size: 0.68rem; }
+  .kpi-sub { font-size: 0.7rem; }
+
+  /* Header — hide non-essential items, compress */
+  #app-header { padding: 0 12px; gap: 8px; height: 50px; }
   #app-header h1 { display: none; }
+  .build-badge { display: none; }
+  .update-badge { display: none; }
+  .rate-badge { display: none; }
+  .btn-signout { padding: 4px 8px; font-size: 0.75rem; }
+  .tab-btn { padding: 5px 12px; font-size: 0.82rem; }
+
+  /* Tables — horizontal scroll */
+  .table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  .data-table { min-width: 480px; font-size: 0.8rem; }
+  .data-table th, .data-table td { padding: 6px 6px; }
+
+  /* Modal */
+  .modal-box { padding: 20px 16px; width: 96%; }
+
+  /* Snapshot bar */
+  .btn-snapshot { padding: 11px 24px; font-size: 0.88rem; }
+
+  /* Chart heights */
+  #pie-wrap { height: 260px !important; }
+  #trend-wrap { height: 220px !important; }
+  #daily-trend-wrap { height: 180px !important; }
+  #monthly-wrap { height: 160px !important; }
+
+  /* Other inputs section */
+  .other-inputs { grid-template-columns: 1fr 1fr; }
+
+  /* Toast */
+  .toast { left: 12px; right: 12px; bottom: 16px; max-width: none; text-align: center; }
+}
+
+/* ── Very small (≤ 400px, e.g. iPhone SE) ── */
+@media (max-width: 400px) {
+  .kpi-grid { grid-template-columns: 1fr 1fr; gap: 8px; }
+  .other-inputs { grid-template-columns: 1fr; }
+  .tab-btn { padding: 5px 10px; }
 }
