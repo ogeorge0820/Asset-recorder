@@ -391,6 +391,8 @@ function renderKPIs() {
     const el = $('kv-monthly');
     el.textContent = (diff >= 0 ? '+' : '') + fmt(diff);
     el.className = `kpi-value ${diff >= 0 ? 'pos' : 'neg'}`;
+    const card = $('card-monthly');
+    if (card) card.className = `kpi-card ${diff >= 0 ? 'kpi-gain' : 'kpi-loss'}`;
 
     const first = snaps[0];
     const firstNet = parseFloat(first[7]) || 0;
@@ -405,6 +407,8 @@ function renderKPIs() {
   } else {
     setKPI('kv-monthly', '—', 'ks-monthly', '尚無快照');
     setKPI('kv-growth', '—', 'ks-growth', '尚無快照');
+    const card = $('card-monthly');
+    if (card) card.className = 'kpi-card';
   }
 
   const re = $('kv-rate');
@@ -415,6 +419,14 @@ function renderKPIs() {
     : 'USD/TWD';
 
   $('rate-hdr').textContent = S.prices.usdtwd.toFixed(2);
+
+  const snapLast = $('last-snap-date');
+  if (snapLast) {
+    const snaps = S.data.snapshots;
+    snapLast.textContent = snaps.length > 0
+      ? `上次快照：${snaps[snaps.length - 1][0]}`
+      : '尚未儲存任何快照';
+  }
 }
 
 function setKPI(vid, val, sid, sub) {
