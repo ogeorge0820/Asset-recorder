@@ -1,6 +1,8 @@
 // ══════════════════════════════════════════════════════════════
 // CONFIG
 // ══════════════════════════════════════════════════════════════
+const BUILD_DATE = '2026/04/08 15:31';
+
 const SPREADSHEET_ID = '1lpRpxVzWaYUqL-jVPOAJCtjsJUIedPYYyOx4gg4PPFU';
 const CLIENT_ID = '149884248440-85f8dhc6ub9up10sv0f89e3e0itrnooj.apps.googleusercontent.com';
 const SCOPE = 'https://www.googleapis.com/auth/spreadsheets';
@@ -418,7 +420,8 @@ function renderKPIs() {
     ? 'USD/TWD <span class="price-err">更新失敗</span>'
     : 'USD/TWD';
 
-  $('rate-hdr').textContent = S.prices.usdtwd.toFixed(2);
+  const buildBadge = $('build-badge');
+  if (buildBadge) buildBadge.textContent = `版本 ${BUILD_DATE}`;
 
   const snapLast = $('last-snap-date');
   if (snapLast) {

@@ -30,6 +30,11 @@
       <button class="tab-btn" onclick="switchTab('management')">管理</button>
     </nav>
     <div class="header-right">
+      <div class="build-badge" id="build-badge"></div>
+      <div class="update-badge" id="update-badge">
+        <span class="update-dot" id="update-dot"></span>
+        <span id="update-ts">—</span>
+      </div>
       <button class="btn-theme" id="btn-theme" onclick="toggleTheme()">☀</button>
       <button class="btn-signout" onclick="signOut()">登出</button>
     </div>
@@ -39,15 +44,6 @@
 
     <!-- ══ 總覽 Tab ══ -->
     <div id="tab-overview">
-
-      <!-- Info Bar -->
-      <div class="info-bar">
-        <div class="rate-badge">USD/TWD <b id="rate-hdr">—</b></div>
-        <div class="update-badge" id="update-badge">
-          <span class="update-dot" id="update-dot"></span>
-          <span id="update-ts">—</span>
-        </div>
-      </div>
 
       <!-- KPI Cards -->
       <div class="kpi-grid">
