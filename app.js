@@ -1,7 +1,7 @@
 // ══════════════════════════════════════════════════════════════
 // CONFIG
 // ══════════════════════════════════════════════════════════════
-const BUILD_DATE = '2026/04/08 15:31';
+const BUILD_DATE = '2026/04/08 16:16';
 
 const SPREADSHEET_ID = '1lpRpxVzWaYUqL-jVPOAJCtjsJUIedPYYyOx4gg4PPFU';
 const CLIENT_ID = '149884248440-85f8dhc6ub9up10sv0f89e3e0itrnooj.apps.googleusercontent.com';
@@ -304,8 +304,9 @@ async function fetchCryptoPrices() {
   if (!syms.length) return;
   const ids = syms.map(s => COIN_MAP[s] || s.toLowerCase());
   try {
+    const url = `https://api.coingecko.com/api/v3/simple/price?ids=${ids.join(',')}&vs_currencies=usd`;
     const r = await fetch(
-      `https://api.coingecko.com/api/v3/simple/price?ids=${ids.join(',')}&vs_currencies=usd`,
+      `${PROXY}${encodeURIComponent(url)}`,
       { signal: AbortSignal.timeout(9000) }
     );
     if (!r.ok) throw new Error(`HTTP ${r.status}`);
@@ -325,7 +326,7 @@ async function validateCoinGecko(symbol) {
   const id = COIN_MAP[symbol.toUpperCase()];
   if (id) return id;
   try {
-    const r = await fetch(`https://api.coingecko.com/api/v3/search?query=${encodeURIComponent(symbol)}`, { signal: AbortSignal.timeout(6000) });
+    const r = await fetch(`${PROXY}${encodeURIComponent(`https://api.coingecko.com/api/v3/search?query=${encodeURIComponent(symbol)}`)}`, { signal: AbortSignal.timeout(6000) });
     const d = await r.json();
     const coin = (d.coins || []).find(c => c.symbol.toUpperCase() === symbol.toUpperCase());
     if (coin) { COIN_MAP[symbol.toUpperCase()] = coin.id; return coin.id; }
