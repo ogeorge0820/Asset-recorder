@@ -544,7 +544,7 @@ function renderCrypto() {
       : (p !== undefined ? fmtUSD(p, 4) : skelSpan());
     return `<tr>
       <td data-label="代號"><span class="sym-tag">${esc(sym)}</span></td>
-      <td data-label="數量">${qty.toLocaleString(undefined, {maximumFractionDigits:8})}</td>
+      <td data-label="數量">${qty.toFixed(2)}</td>
       <td data-label="幣價 (USD)" class="amt">${priceCell}</td>
       <td data-label="現值 (TWD)" class="amt">${v !== null ? fmt(v) : skelSpan()}${err ? '<span class="price-err">更新失敗</span>' : ''}</td>
       <td><button class="btn-icon edit" onclick="editItem('crypto',${i})">✏</button><button class="btn-icon del" onclick="deleteItem('crypto',${i})">✕</button></td>
@@ -565,7 +565,7 @@ function renderRewards() {
   $('tb-rewards').innerHTML = rw.length ? rw.map((r, i) => `<tr>
     <td data-label="月份">${esc(r[0])}</td>
     <td data-label="幣種"><span class="sym-tag">${esc(r[1])}</span></td>
-    <td data-label="增加數量" class="amt">${(parseFloat(r[2])||0).toLocaleString(undefined,{maximumFractionDigits:8})}</td>
+    <td data-label="增加數量" class="amt">${(parseFloat(r[2])||0).toFixed(2)}</td>
     <td data-label="幣價 (USD)" class="amt">${fmtUSD(parseFloat(r[3]))}</td>
     <td data-label="收益 (TWD)" class="amt">${fmt(parseFloat(r[4]))}</td>
     <td><button class="btn-icon edit" onclick="editReward(${i})">✏</button><button class="btn-icon del" onclick="deleteReward(${i})">✕</button></td>

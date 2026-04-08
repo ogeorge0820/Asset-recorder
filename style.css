@@ -423,50 +423,58 @@ body {
   /* Management grid — full width single column */
   .mgmt-grid { grid-template-columns: 1fr; }
 
-  /* Tables — 卡片式佈局，每列變成 2 欄 grid */
+  /* Tables — 單行 flex 佈局 */
   .table-wrap { overflow-x: visible; width: 100%; }
   .data-table { display: block; min-width: unset; white-space: normal; }
   .data-table thead { display: none; }
   .data-table tbody { display: block; }
   .data-table tr {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    column-gap: 14px;
+    display: flex;
+    flex-wrap: nowrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 6px;
     padding: 10px 0;
     border-bottom: 1px solid var(--border);
   }
   .data-table tr:last-child { border-bottom: none; }
   .data-table td {
-    display: flex;
-    flex-direction: column;
     border: none;
-    padding: 3px 0;
-    font-size: 0.85rem;
-    text-align: left !important;
+    padding: 0;
+    font-size: 0.83rem;
+    /* 可縮減，文字截斷 */
+    flex: 1 1 0;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
-  /* 顯示欄位標題（來自 data-label） */
-  .data-table td[data-label]::before {
-    content: attr(data-label);
-    font-size: 0.67rem;
-    color: var(--muted);
-    font-weight: 400;
-    margin-bottom: 2px;
-    letter-spacing: 0.02em;
+  /* 第一欄（名稱/代號）：優先被壓縮，確保按鈕不換行 */
+  .data-table td:first-child {
+    flex: 0 1 60px;
+    min-width: 0;
   }
-  /* 操作按鈕列：跨全寬、靠右對齊 */
+  /* data-label 在 flex 單行模式不顯示 */
+  .data-table td[data-label]::before { display: none; }
+  /* 操作按鈕欄：絕對不縮減，永遠同行靠右 */
   .data-table td:last-child {
-    grid-column: 1 / -1;
+    flex: 0 0 auto;
+    display: flex;
     flex-direction: row;
-    justify-content: flex-end;
     align-items: center;
-    gap: 4px;
-    padding: 6px 0 2px;
-    border-top: 1px solid var(--border);
-    margin-top: 2px;
+    gap: 0;
+    justify-content: flex-end;
+    border: none;
+    padding: 0;
+    margin: 0;
   }
-  .data-table td:last-child::before { display: none; }
-  /* 無資料列（單一 td）跨全寬置中 */
-  .data-table td:only-child { grid-column: 1 / -1; text-align: center !important; flex-direction: row; justify-content: center; }
+  /* 無資料列（colspan 單一 td）置中 */
+  .data-table td:only-child {
+    flex: 1;
+    text-align: center;
+    justify-content: center;
+    overflow: visible;
+  }
 
   /* Other assets — 堆疊成單欄 */
   .other-inputs, .other-inputs-3col { grid-template-columns: 1fr !important; }
