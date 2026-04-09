@@ -2,7 +2,7 @@
 // CONFIG
 // ══════════════════════════════════════════════════════════════
 // Build 時間：每次修改 code 後手動更新此時間（UTC+8 台北時間）
-const BUILD_DATE = '2026/04/09 19:29';
+const BUILD_DATE = '2026/04/09 21:32';
 
 const SPREADSHEET_ID = '1lpRpxVzWaYUqL-jVPOAJCtjsJUIedPYYyOx4gg4PPFU';
 const CLIENT_ID = '149884248440-85f8dhc6ub9up10sv0f89e3e0itrnooj.apps.googleusercontent.com';
@@ -204,6 +204,10 @@ async function sheetPut(range, values) {
   return api('PUT', `/values/${encodeURIComponent(range)}?valueInputOption=RAW`, { values });
 }
 
+async function sheetClear(range) {
+  return api('POST', `/values/${encodeURIComponent(range)}:clear`, {});
+}
+
 async function sheetBatch(requests) {
   return api('POST', ':batchUpdate', { requests });
 }
@@ -277,6 +281,7 @@ function rows(settled) {
 
 async function saveSheet(name, dataRows) {
   const values = [HEADERS[name], ...dataRows.map(r => r.map(v => v ?? ''))];
+  await sheetClear(`${name}!A:Z`);   // 先清空，防止刪除後舊列殘留
   await sheetPut(`${name}!A1`, values);
 }
 
@@ -949,12 +954,9 @@ async function autoAddReward(sym, interestQty) {
   const now = new Date(Date.now() + 8 * 3600 * 1000);
   const month = `${now.getUTCFullYear()}/${String(now.getUTCMonth()+1).padStart(2,'0')}`;
 
-  // 防重複：同月同幣種已有系統換算記錄 → 阻擋
-  const dup = S.data.rewards.find(r => r[0] === month && r[1] === sym && r[5] === '系統換算');
-  if (dup) {
-    showToast(`${sym} 本月已有系統換算記錄，如需修改請先刪除舊記錄`, 'err');
-    return;
-  }
+  // 同月同幣種已有系統換算記錄 → 先刪除再寫入（覆蓋模式）
+  const dupIdx = S.data.rewards.findIndex(r => r[0] === month && r[1] === sym && r[5] === '系統換算');
+  if (dupIdx !== -1) S.data.rewards.splice(dupIdx, 1);
 
   const price = S.prices.crypto[sym] || 0;
   const valueTWD = Math.round(interestQty * price * S.prices.usdtwd);
