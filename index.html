@@ -165,10 +165,11 @@
 
         <div class="section-card">
           <h3>🇹🇼 台股 <span class="badge" id="cnt-tw">0</span></h3>
-          <div class="table-wrap"><table class="data-table">
+          <div class="table-wrap" id="tw-table-wrap"><table class="data-table">
             <thead><tr><th>代號</th><th>股數</th><th style="text-align:right">股價 (TWD)</th><th style="text-align:right">現值 (TWD)</th><th></th></tr></thead>
             <tbody id="tb-tw"></tbody>
           </table></div>
+          <div class="stock-cards" id="tw-cards"></div>
           <button class="btn-add" onclick="addItem('tw')">+ 新增台股</button>
           <div class="section-footer">
             <span class="total-lbl">台股合計</span>
@@ -179,10 +180,11 @@
         <!-- Row 2: 美股 | 其他資產＆負債 -->
         <div class="section-card">
           <h3>🇺🇸 美股 <span class="badge" id="cnt-us">0</span></h3>
-          <div class="table-wrap"><table class="data-table">
+          <div class="table-wrap" id="us-table-wrap"><table class="data-table">
             <thead><tr><th>代號</th><th>股數</th><th style="text-align:right">股價 (USD)</th><th style="text-align:right">現值 (TWD)</th><th></th></tr></thead>
             <tbody id="tb-us"></tbody>
           </table></div>
+          <div class="stock-cards" id="us-cards"></div>
           <button class="btn-add" onclick="addItem('us')">+ 新增美股</button>
           <div class="section-footer">
             <span class="total-lbl">美股合計</span>
@@ -278,12 +280,12 @@
     <div class="crypto-panel-value" id="cp-value"></div>
     <div class="crypto-panel-value-sub" id="cp-value-sub"></div>
     <div class="crypto-panel-actions">
-      <button class="btn-cp-primary" onclick="adjustCryptoQty()">＋ 增減數量</button>
-      <button class="btn-cp-secondary" onclick="setCryptoQty()">✎ 設定餘額</button>
+      <button class="btn-cp-primary" onclick="adjustAssetQty()">＋ 增減數量</button>
+      <button class="btn-cp-secondary" onclick="setAssetQty()">✎ 設定餘額</button>
     </div>
     <div class="crypto-panel-section-title">變動記錄</div>
     <div class="crypto-panel-history" id="cp-history"></div>
-    <button class="btn-cp-delete" onclick="deleteCryptoFromPanel()">刪除此資產</button>
+    <button class="btn-cp-delete" onclick="deleteAssetFromPanel()">刪除此資產</button>
   </div>
 </div>
 

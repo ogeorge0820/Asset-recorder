@@ -2,7 +2,7 @@
 // CONFIG
 // ══════════════════════════════════════════════════════════════
 // Build 時間：每次修改 code 後手動更新此時間（UTC+8 台北時間）
-const BUILD_DATE = '2026/04/09 12:24';
+const BUILD_DATE = '2026/04/09 12:36';
 
 const SPREADSHEET_ID = '1lpRpxVzWaYUqL-jVPOAJCtjsJUIedPYYyOx4gg4PPFU';
 const CLIENT_ID = '149884248440-85f8dhc6ub9up10sv0f89e3e0itrnooj.apps.googleusercontent.com';
@@ -45,6 +45,8 @@ const HEADERS = {
   settings: ['key','value'],
   crypto_rewards: ['date','symbol','quantity','price_usd','value_twd'],
   crypto_history: ['date','symbol','qty_before','qty_after','delta','price_usd','value_twd'],
+  tw_history: ['date','symbol','qty_before','qty_after','delta','price_twd','value_twd'],
+  us_history: ['date','symbol','qty_before','qty_after','delta','price_usd','value_twd'],
 };
 
 // ══════════════════════════════════════════════════════════════
@@ -65,6 +67,8 @@ const S = {
     daily_snapshots: [], // [date, cash, tw, us, crypto, ins, re, debt, net]
     rewards: [],        // [date, symbol, quantity, price_usd, value_twd]
     crypto_history: [], // [date, symbol, qty_before, qty_after, delta, price_usd, value_twd]
+    tw_history: [],     // [date, symbol, qty_before, qty_after, delta, price_twd, value_twd]
+    us_history: [],     // [date, symbol, qty_before, qty_after, delta, price_usd, value_twd]
     settings: { insurance_total: 0, realestate_total: 0, debt: 0 },
   },
 
@@ -197,7 +201,7 @@ async function initSheets() {
 // DATA LOAD / SAVE
 // ══════════════════════════════════════════════════════════════
 async function loadAll() {
-  const [cash, tw, us, crypto, snap, daily, sett, rw, hist] = await Promise.allSettled([
+  const [cash, tw, us, crypto, snap, daily, sett, rw, hist, twHist, usHist] = await Promise.allSettled([
     sheetGet('cash_accounts!A:C'),
     sheetGet('holdings_tw!A:B'),
     sheetGet('holdings_us!A:B'),
@@ -207,6 +211,8 @@ async function loadAll() {
     sheetGet('settings!A:B'),
     sheetGet('crypto_rewards!A:E'),
     sheetGet('crypto_history!A:G'),
+    sheetGet('tw_history!A:G'),
+    sheetGet('us_history!A:G'),
   ]);
 
   S.data.cash            = rows(cash);
@@ -217,6 +223,8 @@ async function loadAll() {
   S.data.daily_snapshots = rows(daily);
   S.data.rewards         = rows(rw);
   S.data.crypto_history  = rows(hist);
+  S.data.tw_history      = rows(twHist);
+  S.data.us_history      = rows(usHist);
 
   S.data.settings = { insurance_total: 0, realestate_total: 0, debt: 0 };
   rows(sett).forEach(r => { if (r[0]) S.data.settings[r[0]] = parseFloat(r[1]) || 0; });
@@ -496,22 +504,53 @@ function renderTW() {
     const val = r => (parseFloat(r[1])||0) * (S.prices.tw[r[0]]||0);
     return val(b.r) - val(a.r);
   });
-  $('tb-tw').innerHTML = sorted.length ? sorted.map(({r, i}) => {
-    const p = S.prices.tw[r[0]], v = p ? (parseFloat(r[1]) || 0) * p : null;
-    const err = S.prices.errs[`tw_${r[0]}`];
-    const priceCell = err
-      ? '<span style="color:var(--red);font-size:0.8rem">-</span>'
-      : (p !== undefined ? p.toLocaleString('zh-TW', {minimumFractionDigits:2, maximumFractionDigits:2}) : skelSpan());
-    return `<tr>
-      <td data-label="代號"><span class="sym-tag">${esc(r[0])}</span></td>
-      <td data-label="股數">${(parseFloat(r[1]) || 0).toLocaleString()}</td>
-      <td data-label="股價 (TWD)" class="amt">${priceCell}</td>
-      <td data-label="現值 (TWD)" class="amt">${v !== null ? fmt(v) : skelSpan()}${err ? '<span class="price-err">更新失敗</span>' : ''}</td>
-      <td><button class="btn-icon edit" onclick="editItem('tw',${i})">✏</button><button class="btn-icon del" onclick="deleteItem('tw',${i})">✕</button></td>
-    </tr>`;
-  }).join('') : '<tr><td colspan="5" style="text-align:center;padding:16px;color:var(--muted)">尚無持股</td></tr>';
-  const tot = rows.reduce((s, r) => s + (parseFloat(r[1]) || 0) * (S.prices.tw[r[0]] || 0), 0);
-  $('tot-tw').textContent = fmt(tot);
+
+  const totalTWTWD = rows.reduce((s, r) => s + (parseFloat(r[1]) || 0) * (S.prices.tw[r[0]] || 0), 0);
+
+  if (!sorted.length) {
+    $('tb-tw').innerHTML = '<tr><td colspan="5" style="text-align:center;padding:16px;color:var(--muted)">尚無持股</td></tr>';
+    $('tw-cards').innerHTML = '<div style="text-align:center;padding:20px;color:var(--muted);font-size:0.88rem">尚無持股</div>';
+  } else {
+    $('tb-tw').innerHTML = sorted.map(({r, i}) => {
+      const p = S.prices.tw[r[0]], v = p ? (parseFloat(r[1]) || 0) * p : null;
+      const err = S.prices.errs[`tw_${r[0]}`];
+      const priceCell = err
+        ? '<span style="color:var(--red);font-size:0.8rem">-</span>'
+        : (p !== undefined ? p.toLocaleString('zh-TW', {minimumFractionDigits:2, maximumFractionDigits:2}) : skelSpan());
+      return `<tr>
+        <td data-label="代號"><span class="sym-tag">${esc(r[0])}</span></td>
+        <td data-label="股數">${(parseFloat(r[1]) || 0).toLocaleString()}</td>
+        <td data-label="股價 (TWD)" class="amt">${priceCell}</td>
+        <td data-label="現值 (TWD)" class="amt">${v !== null ? fmt(v) : skelSpan()}${err ? '<span class="price-err">更新失敗</span>' : ''}</td>
+        <td><button class="btn-icon edit" onclick="editItem('tw',${i})">✏</button><button class="btn-icon del" onclick="deleteItem('tw',${i})">✕</button></td>
+      </tr>`;
+    }).join('');
+
+    $('tw-cards').innerHTML = sorted.map(({r, i}) => {
+      const sym = r[0]?.toUpperCase(), p = S.prices.tw[sym];
+      const qty = parseFloat(r[1]) || 0;
+      const v = p ? qty * p : null;
+      const err = S.prices.errs[`tw_${sym}`];
+      const pct = (totalTWTWD > 0 && v !== null) ? Math.round(v / totalTWTWD * 100) : null;
+      const pctStr = pct !== null ? pct + '%' : '—';
+      const twdStr = err ? '更新失敗' : (v !== null ? fmt(v) : skelSpan());
+      const detailStr = err
+        ? `持有 ${qty.toLocaleString()} 股`
+        : `持有 ${qty.toLocaleString()} 股 · ${p !== undefined ? p.toLocaleString('zh-TW', {minimumFractionDigits:2,maximumFractionDigits:2}) + ' TWD' : '—'}`;
+      return `<div class="asset-card${err ? ' err' : ''}" onclick="openAssetDetail('tw',${i})" role="button" tabindex="0">
+        <div class="asset-card-left">
+          <div class="asset-card-pct">${pctStr}</div>
+          <div class="asset-card-sym">${esc(sym)}</div>
+        </div>
+        <div class="asset-card-mid">
+          <div class="asset-card-twd">${twdStr}</div>
+          <div class="asset-card-detail">${detailStr}</div>
+        </div>
+      </div>`;
+    }).join('');
+  }
+
+  $('tot-tw').textContent = fmt(totalTWTWD);
 }
 
 function renderUS() {
@@ -521,22 +560,53 @@ function renderUS() {
     const val = r => (parseFloat(r[1])||0) * (S.prices.us[r[0]]||0) * rate;
     return val(b.r) - val(a.r);
   });
-  $('tb-us').innerHTML = sorted.length ? sorted.map(({r, i}) => {
-    const p = S.prices.us[r[0]], v = p ? (parseFloat(r[1]) || 0) * p * rate : null;
-    const err = S.prices.errs[`us_${r[0]}`];
-    const priceCell = err
-      ? '<span style="color:var(--red);font-size:0.8rem">-</span>'
-      : (p !== undefined ? fmtUSD(p) : skelSpan());
-    return `<tr>
-      <td data-label="代號"><span class="sym-tag">${esc(r[0])}</span></td>
-      <td data-label="股數">${(parseFloat(r[1]) || 0).toLocaleString(undefined, {maximumFractionDigits:4})}</td>
-      <td data-label="股價 (USD)" class="amt">${priceCell}</td>
-      <td data-label="現值 (TWD)" class="amt">${v !== null ? fmt(v) : skelSpan()}${err ? '<span class="price-err">更新失敗</span>' : ''}</td>
-      <td><button class="btn-icon edit" onclick="editItem('us',${i})">✏</button><button class="btn-icon del" onclick="deleteItem('us',${i})">✕</button></td>
-    </tr>`;
-  }).join('') : '<tr><td colspan="5" style="text-align:center;padding:16px;color:var(--muted)">尚無持股</td></tr>';
-  const tot = rows.reduce((s, r) => s + (parseFloat(r[1]) || 0) * (S.prices.us[r[0]] || 0) * rate, 0);
-  $('tot-us').textContent = fmt(tot);
+
+  const totalUSTWD = rows.reduce((s, r) => s + (parseFloat(r[1]) || 0) * (S.prices.us[r[0]] || 0) * rate, 0);
+
+  if (!sorted.length) {
+    $('tb-us').innerHTML = '<tr><td colspan="5" style="text-align:center;padding:16px;color:var(--muted)">尚無持股</td></tr>';
+    $('us-cards').innerHTML = '<div style="text-align:center;padding:20px;color:var(--muted);font-size:0.88rem">尚無持股</div>';
+  } else {
+    $('tb-us').innerHTML = sorted.map(({r, i}) => {
+      const p = S.prices.us[r[0]], v = p ? (parseFloat(r[1]) || 0) * p * rate : null;
+      const err = S.prices.errs[`us_${r[0]}`];
+      const priceCell = err
+        ? '<span style="color:var(--red);font-size:0.8rem">-</span>'
+        : (p !== undefined ? fmtUSD(p) : skelSpan());
+      return `<tr>
+        <td data-label="代號"><span class="sym-tag">${esc(r[0])}</span></td>
+        <td data-label="股數">${(parseFloat(r[1]) || 0).toLocaleString(undefined, {maximumFractionDigits:4})}</td>
+        <td data-label="股價 (USD)" class="amt">${priceCell}</td>
+        <td data-label="現值 (TWD)" class="amt">${v !== null ? fmt(v) : skelSpan()}${err ? '<span class="price-err">更新失敗</span>' : ''}</td>
+        <td><button class="btn-icon edit" onclick="editItem('us',${i})">✏</button><button class="btn-icon del" onclick="deleteItem('us',${i})">✕</button></td>
+      </tr>`;
+    }).join('');
+
+    $('us-cards').innerHTML = sorted.map(({r, i}) => {
+      const sym = r[0]?.toUpperCase(), p = S.prices.us[sym];
+      const qty = parseFloat(r[1]) || 0;
+      const v = p ? qty * p * rate : null;
+      const err = S.prices.errs[`us_${sym}`];
+      const pct = (totalUSTWD > 0 && v !== null) ? Math.round(v / totalUSTWD * 100) : null;
+      const pctStr = pct !== null ? pct + '%' : '—';
+      const twdStr = err ? '更新失敗' : (v !== null ? fmt(v) : skelSpan());
+      const detailStr = err
+        ? `持有 ${qty.toLocaleString(undefined,{maximumFractionDigits:4})} 股`
+        : `持有 ${qty.toLocaleString(undefined,{maximumFractionDigits:4})} 股 · ${p !== undefined ? fmtUSD(p) + ' USD' : '—'}`;
+      return `<div class="asset-card${err ? ' err' : ''}" onclick="openAssetDetail('us',${i})" role="button" tabindex="0">
+        <div class="asset-card-left">
+          <div class="asset-card-pct">${pctStr}</div>
+          <div class="asset-card-sym">${esc(sym)}</div>
+        </div>
+        <div class="asset-card-mid">
+          <div class="asset-card-twd">${twdStr}</div>
+          <div class="asset-card-detail">${detailStr}</div>
+        </div>
+      </div>`;
+    }).join('');
+  }
+
+  $('tot-us').textContent = fmt(totalUSTWD);
 }
 
 function renderCrypto() {
@@ -588,14 +658,14 @@ function renderCrypto() {
       const detailStr = err
         ? `持有 ${qty.toFixed(2)}`
         : `持有 ${qty.toFixed(2)} · ${p !== undefined ? fmtUSD(p, 4) : '—'}`;
-      return `<div class="crypto-card${err ? ' err' : ''}" onclick="openCryptoDetail(${i})" role="button" tabindex="0">
-        <div class="crypto-card-left">
-          <div class="crypto-card-pct">${pctStr}</div>
-          <div class="crypto-card-sym">${esc(sym)}</div>
+      return `<div class="asset-card${err ? ' err' : ''}" onclick="openAssetDetail('crypto',${i})" role="button" tabindex="0">
+        <div class="asset-card-left">
+          <div class="asset-card-pct">${pctStr}</div>
+          <div class="asset-card-sym">${esc(sym)}</div>
         </div>
-        <div class="crypto-card-mid">
-          <div class="crypto-card-twd">${twdStr}</div>
-          <div class="crypto-card-detail">${detailStr}</div>
+        <div class="asset-card-mid">
+          <div class="asset-card-twd">${twdStr}</div>
+          <div class="asset-card-detail">${detailStr}</div>
         </div>
       </div>`;
     }).join('');
@@ -1107,17 +1177,23 @@ function editItem(type, idx) {
       S.data.cash[idx] = [vals.bank_name, parseFloat(vals.amount)||0, vals.currency||'TWD'];
       await persistAndRefresh(type);
     } else if (type === 'tw') {
-      S.data.tw[idx] = [r[0], parseFloat(vals.shares)||0];
+      const qtyBefore = parseFloat(r[1]) || 0;
+      const qtyAfter = parseFloat(vals.shares) || 0;
+      S.data.tw[idx] = [r[0], qtyAfter];
       await persistAndRefresh(type);
+      await appendHistory('tw', r[0].toUpperCase(), qtyBefore, qtyAfter);
     } else if (type === 'us') {
-      S.data.us[idx] = [r[0], parseFloat(vals.shares)||0];
+      const qtyBefore = parseFloat(r[1]) || 0;
+      const qtyAfter = parseFloat(vals.shares) || 0;
+      S.data.us[idx] = [r[0], qtyAfter];
       await persistAndRefresh(type);
+      await appendHistory('us', r[0].toUpperCase(), qtyBefore, qtyAfter);
     } else if (type === 'crypto') {
       const qtyBefore = parseFloat(r[1]) || 0;
       const qtyAfter = parseFloat(vals.quantity) || 0;
       S.data.crypto[idx] = [r[0], qtyAfter];
       await persistAndRefresh(type);
-      await appendCryptoHistory(r[0].toUpperCase(), qtyBefore, qtyAfter);
+      await appendHistory('crypto', r[0].toUpperCase(), qtyBefore, qtyAfter);
     }
     showToast('已更新', 'ok');
     return true;
@@ -1301,9 +1377,10 @@ function closeModal() { $('modal').classList.remove('open'); }
 function modalBgClick(e) { if(e.target === $('modal')) closeModal(); }
 
 // ══════════════════════════════════════════════════════════════
-// CRYPTO DETAIL PANEL
+// ASSET DETAIL PANEL (共用：crypto / tw / us)
 // ══════════════════════════════════════════════════════════════
-let _cryptoPanelIdx = null;
+let _panelIdx = null;
+let _panelAssetType = null; // 'crypto' | 'tw' | 'us'
 
 function getNowTW8() {
   const d = new Date(Date.now() + 8 * 3600 * 1000);
@@ -1311,30 +1388,70 @@ function getNowTW8() {
   return `${d.getUTCFullYear()}/${pad(d.getUTCMonth()+1)}/${pad(d.getUTCDate())} ${pad(d.getUTCHours())}:${pad(d.getUTCMinutes())}`;
 }
 
-async function appendCryptoHistory(sym, qtyBefore, qtyAfter) {
+// 通用歷史寫入（支援 crypto / tw / us）
+async function appendHistory(type, sym, qtyBefore, qtyAfter) {
   const delta = qtyAfter - qtyBefore;
-  const p = S.prices.crypto[sym];
-  const valueTwd = p !== undefined ? delta * p * S.prices.usdtwd : '';
-  const row = [getNowTW8(), sym, qtyBefore, qtyAfter, delta, p !== undefined ? p : '', valueTwd];
-  S.data.crypto_history.push(row);
-  await saveSheet('crypto_history', S.data.crypto_history);
+  let price = '', valueTwd = '';
+  if (type === 'crypto') {
+    const p = S.prices.crypto[sym];
+    price = p !== undefined ? p : '';
+    valueTwd = p !== undefined ? delta * p * S.prices.usdtwd : '';
+  } else if (type === 'tw') {
+    const p = S.prices.tw[sym];
+    price = p !== undefined ? p : '';
+    valueTwd = p !== undefined ? delta * p : '';
+  } else if (type === 'us') {
+    const p = S.prices.us[sym];
+    price = p !== undefined ? p : '';
+    valueTwd = p !== undefined ? delta * p * S.prices.usdtwd : '';
+  }
+  const histKey = `${type}_history`;
+  const row = [getNowTW8(), sym, qtyBefore, qtyAfter, delta, price, valueTwd];
+  S.data[histKey].push(row);
+  await saveSheet(histKey, S.data[histKey]);
 }
 
+// 向下相容舊呼叫（editItem crypto 路徑）
+async function appendCryptoHistory(sym, qtyBefore, qtyAfter) {
+  return appendHistory('crypto', sym, qtyBefore, qtyAfter);
+}
+
+// 更新 panel 顯示
 function _refreshPanelDisplay(sym) {
-  const idx = _cryptoPanelIdx;
-  if (idx === null || !S.data.crypto[idx]) return;
-  const r = S.data.crypto[idx];
-  const p = S.prices.crypto[sym];
+  const type = _panelAssetType, idx = _panelIdx;
+  if (idx === null) return;
+  const dataMap = { crypto: S.data.crypto, tw: S.data.tw, us: S.data.us };
+  const r = dataMap[type]?.[idx];
+  if (!r) return;
+
   const qty = parseFloat(r[1]) || 0;
-  const valueTwd = p !== undefined ? qty * p * S.prices.usdtwd : null;
+  let valueTwd = null, subText = '';
+
+  if (type === 'crypto') {
+    const p = S.prices.crypto[sym];
+    valueTwd = p !== undefined ? qty * p * S.prices.usdtwd : null;
+    subText = `持有 ${qty.toFixed(4)} ${sym}　·　${p !== undefined ? fmtUSD(p, 4) : '—'}`;
+  } else if (type === 'tw') {
+    const p = S.prices.tw[sym];
+    valueTwd = p !== undefined ? qty * p : null;
+    subText = `持有 ${qty.toLocaleString()} 股　·　${p !== undefined ? p.toLocaleString('zh-TW',{minimumFractionDigits:2,maximumFractionDigits:2}) + ' TWD' : '—'}`;
+  } else if (type === 'us') {
+    const p = S.prices.us[sym];
+    valueTwd = p !== undefined ? qty * p * S.prices.usdtwd : null;
+    subText = `持有 ${qty.toLocaleString(undefined,{maximumFractionDigits:4})} 股　·　${p !== undefined ? fmtUSD(p) + ' USD' : '—'}`;
+  }
+
   $('cp-value').textContent = valueTwd !== null ? fmt(valueTwd) + ' TWD' : '—';
-  $('cp-value-sub').textContent = `持有 ${qty.toFixed(4)} ${sym}　·　${p !== undefined ? fmtUSD(p, 4) : '—'}`;
-  renderCryptoHistory(sym);
+  $('cp-value-sub').textContent = subText;
+  renderHistoryInPanel(type, sym);
 }
 
-function openCryptoDetail(idx) {
-  _cryptoPanelIdx = idx;
-  const r = S.data.crypto[idx];
+// 通用：開啟 panel
+function openAssetDetail(type, idx) {
+  _panelAssetType = type;
+  _panelIdx = idx;
+  const dataMap = { crypto: S.data.crypto, tw: S.data.tw, us: S.data.us };
+  const r = dataMap[type][idx];
   const sym = r[0]?.toUpperCase();
   $('cp-sym').textContent = sym;
   _refreshPanelDisplay(sym);
@@ -1342,53 +1459,80 @@ function openCryptoDetail(idx) {
   document.body.style.overflow = 'hidden';
 }
 
-function closeCryptoDetail() {
+// 向下相容
+function openCryptoDetail(idx) { openAssetDetail('crypto', idx); }
+
+function closeAssetDetail() {
   $('crypto-panel').classList.remove('open');
   document.body.style.overflow = '';
-  _cryptoPanelIdx = null;
+  _panelIdx = null;
+  _panelAssetType = null;
 }
+
+// 向下相容
+function closeCryptoDetail() { closeAssetDetail(); }
 
 function cryptoPanelBgClick(e) {
-  if (e.target === $('crypto-panel')) closeCryptoDetail();
+  if (e.target === $('crypto-panel')) closeAssetDetail();
 }
 
-function renderCryptoHistory(sym) {
-  const hist = S.data.crypto_history.filter(r => r[1] === sym);
+// 通用歷史記錄渲染
+function renderHistoryInPanel(type, sym) {
+  const histKey = `${type}_history`;
+  const hist = (S.data[histKey] || []).filter(r => r[1] === sym);
   hist.sort((a, b) => b[0] > a[0] ? 1 : -1);
+
   if (!hist.length) {
     $('cp-history').innerHTML = '<div class="cp-history-empty">尚無變動記錄</div>';
     return;
   }
+
   $('cp-history').innerHTML = hist.map(r => {
     const delta = parseFloat(r[4]);
     const isPos = delta >= 0;
-    const deltaStr = (isPos ? '+' : '') + delta.toFixed(4);
+    const isCrypto = type === 'crypto';
+    const deltaStr = (isPos ? '+' : '') + (isCrypto ? delta.toFixed(4) : delta.toLocaleString(undefined,{maximumFractionDigits:4}));
     const qtyAfter = parseFloat(r[3]);
-    const priceStr = r[5] !== '' ? fmtUSD(parseFloat(r[5]), 4) : '—';
+    const qtyStr = isCrypto ? qtyAfter.toFixed(4) : qtyAfter.toLocaleString();
+    let priceStr = '—';
+    if (r[5] !== '') {
+      const p = parseFloat(r[5]);
+      priceStr = type === 'tw'
+        ? p.toLocaleString('zh-TW',{minimumFractionDigits:2,maximumFractionDigits:2}) + ' TWD'
+        : fmtUSD(p, isCrypto ? 4 : 2);
+    }
     return `<div class="cp-history-item">
       <span class="cp-history-date">${esc(r[0])}</span>
       <span class="cp-history-delta ${isPos ? 'pos' : 'neg'}">${deltaStr}</span>
-      <span class="cp-history-qty">→ ${qtyAfter.toFixed(4)}</span>
+      <span class="cp-history-qty">→ ${qtyStr}</span>
       <span class="cp-history-price">${priceStr}</span>
     </div>`;
   }).join('');
 }
 
-async function adjustCryptoQty() {
-  if (_cryptoPanelIdx === null) return;
-  const r = S.data.crypto[_cryptoPanelIdx];
+// 向下相容
+function renderCryptoHistory(sym) { renderHistoryInPanel('crypto', sym); }
+
+// 通用：增減數量
+async function adjustAssetQty() {
+  if (_panelIdx === null) return;
+  const type = _panelAssetType;
+  const dataMap = { crypto: S.data.crypto, tw: S.data.tw, us: S.data.us };
+  const r = dataMap[type][_panelIdx];
   const sym = r[0]?.toUpperCase();
   const qtyBefore = parseFloat(r[1]) || 0;
-  openModal('增減數量 · ' + sym, [
-    { id: 'delta', label: '變動數量（正為增加，負為減少）', type: 'number', step: 'any', ph: '例如 0.5 或 -0.1' }
+  const unit = type === 'crypto' ? '' : '股';
+  openModal(`增減數量 · ${sym}`, [
+    { id: 'delta', label: `變動${unit ? unit : '數量'}（正為增加，負為減少）`, type: 'number', step: 'any', ph: unit ? '例如 100 或 -50' : '例如 0.5 或 -0.1' }
   ], async vals => {
     const delta = parseFloat(vals.delta);
     if (isNaN(delta) || delta === 0) { showToast('請輸入有效的變動數量', 'err'); return false; }
     const qtyAfter = qtyBefore + delta;
     if (qtyAfter < 0) { showToast('數量不能小於 0', 'err'); return false; }
-    S.data.crypto[_cryptoPanelIdx] = [sym, qtyAfter];
-    await saveSheet('holdings_crypto', S.data.crypto);
-    await appendCryptoHistory(sym, qtyBefore, qtyAfter);
+    dataMap[type][_panelIdx] = [sym, qtyAfter];
+    const sheetMap = { crypto:'holdings_crypto', tw:'holdings_tw', us:'holdings_us' };
+    await saveSheet(sheetMap[type], dataMap[type]);
+    await appendHistory(type, sym, qtyBefore, qtyAfter);
     renderKPIs(); renderCharts(); renderManagement();
     _refreshPanelDisplay(sym);
     showToast('已更新', 'ok');
@@ -1396,19 +1540,26 @@ async function adjustCryptoQty() {
   });
 }
 
-async function setCryptoQty() {
-  if (_cryptoPanelIdx === null) return;
-  const r = S.data.crypto[_cryptoPanelIdx];
+// 向下相容
+async function adjustCryptoQty() { return adjustAssetQty(); }
+
+// 通用：設定餘額
+async function setAssetQty() {
+  if (_panelIdx === null) return;
+  const type = _panelAssetType;
+  const dataMap = { crypto: S.data.crypto, tw: S.data.tw, us: S.data.us };
+  const r = dataMap[type][_panelIdx];
   const sym = r[0]?.toUpperCase();
   const qtyBefore = parseFloat(r[1]) || 0;
-  openModal('設定餘額 · ' + sym, [
-    { id: 'quantity', label: '新數量', type: 'number', val: r[1], min: 0, step: 'any' }
+  openModal(`設定餘額 · ${sym}`, [
+    { id: 'quantity', label: type === 'crypto' ? '新數量' : '新股數', type: 'number', val: r[1], min: 0, step: 'any' }
   ], async vals => {
     const qtyAfter = parseFloat(vals.quantity);
     if (isNaN(qtyAfter) || qtyAfter < 0) { showToast('請輸入有效數量', 'err'); return false; }
-    S.data.crypto[_cryptoPanelIdx] = [sym, qtyAfter];
-    await saveSheet('holdings_crypto', S.data.crypto);
-    await appendCryptoHistory(sym, qtyBefore, qtyAfter);
+    dataMap[type][_panelIdx] = [sym, qtyAfter];
+    const sheetMap = { crypto:'holdings_crypto', tw:'holdings_tw', us:'holdings_us' };
+    await saveSheet(sheetMap[type], dataMap[type]);
+    await appendHistory(type, sym, qtyBefore, qtyAfter);
     renderKPIs(); renderCharts(); renderManagement();
     _refreshPanelDisplay(sym);
     showToast('已更新', 'ok');
@@ -1416,17 +1567,27 @@ async function setCryptoQty() {
   });
 }
 
-function deleteCryptoFromPanel() {
-  if (_cryptoPanelIdx === null) return;
-  const sym = S.data.crypto[_cryptoPanelIdx]?.[0]?.toUpperCase();
+// 向下相容
+async function setCryptoQty() { return setAssetQty(); }
+
+// 通用：從 panel 刪除
+function deleteAssetFromPanel() {
+  if (_panelIdx === null) return;
+  const type = _panelAssetType;
+  const dataMap = { crypto: S.data.crypto, tw: S.data.tw, us: S.data.us };
+  const sym = dataMap[type][_panelIdx]?.[0]?.toUpperCase();
+  const sheetMap = { crypto:'holdings_crypto', tw:'holdings_tw', us:'holdings_us' };
   openConfirm('刪除 ' + sym, `確定要從持倉中移除 ${sym} 嗎？`, async () => {
-    S.data.crypto.splice(_cryptoPanelIdx, 1);
-    await saveSheet('holdings_crypto', S.data.crypto);
+    dataMap[type].splice(_panelIdx, 1);
+    await saveSheet(sheetMap[type], dataMap[type]);
     renderKPIs(); renderCharts(); renderManagement();
-    closeCryptoDetail();
+    closeAssetDetail();
     showToast('已刪除 ' + sym, 'ok');
   });
 }
+
+// 向下相容
+function deleteCryptoFromPanel() { deleteAssetFromPanel(); }
 
 // ══════════════════════════════════════════════════════════════
 // THEME

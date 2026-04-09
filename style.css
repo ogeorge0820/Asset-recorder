@@ -385,46 +385,45 @@ body {
 /* ── Mobile build bar (hidden on desktop) ── */
 .mobile-build-bar { display: none; }
 
-/* ── Crypto cards (hidden on desktop, shown on mobile) ── */
+/* ── Asset cards (hidden on desktop, shown on mobile) ── */
+/* Used by: crypto-cards, tw-cards, us-cards */
 .crypto-cards { display: none; }
-.crypto-card {
+.stock-cards  { display: none; }
+.asset-card {
   display: flex; align-items: center; gap: 14px;
   padding: 10px 14px;
   background: var(--card2); border: 1px solid var(--border);
   border-radius: 10px;
   cursor: pointer; transition: background .15s;
 }
-.crypto-card:hover { background: var(--border); }
-.crypto-card-left {
+.asset-card:hover { background: var(--border); }
+.asset-card-left {
   display: flex; flex-direction: column; align-items: center;
   gap: 5px; flex-shrink: 0; width: 50px;
 }
-.crypto-card-pct {
+.asset-card-pct {
   width: 46px; height: 46px; border-radius: 50%;
   background: var(--accent); color: #fff;
   font-size: 0.72rem; font-weight: 700;
   display: flex; align-items: center; justify-content: center;
   letter-spacing: -0.3px;
 }
-.crypto-card.err .crypto-card-pct { background: rgba(239,68,68,.2); color: var(--red); }
-.crypto-card-sym {
+.asset-card.err .asset-card-pct { background: rgba(239,68,68,.2); color: var(--red); }
+.asset-card-sym {
   font-size: 0.7rem; font-weight: 700;
   font-family: monospace; color: var(--muted);
   letter-spacing: .3px;
 }
-.crypto-card-mid { flex: 1; min-width: 0; }
-.crypto-card-twd {
+.asset-card-mid { flex: 1; min-width: 0; }
+.asset-card-twd {
   font-size: 1.25rem; font-weight: 700;
   color: var(--text); letter-spacing: -0.5px; line-height: 1.2;
 }
-.crypto-card.err .crypto-card-twd { font-size: 0.85rem; color: var(--red); }
-.crypto-card-detail {
+.asset-card.err .asset-card-twd { font-size: 0.85rem; color: var(--red); }
+.asset-card-detail {
   font-size: 0.75rem; color: var(--muted);
   margin-top: 4px; overflow: hidden;
   text-overflow: ellipsis; white-space: nowrap;
-}
-.crypto-card-actions {
-  display: flex; flex-direction: column; gap: 6px; flex-shrink: 0;
 }
 
 /* ── Mobile (≤ 640px) ── */
@@ -465,9 +464,12 @@ body {
   /* Management grid — full width single column */
   .mgmt-grid { grid-template-columns: 1fr; }
 
-  /* Crypto: hide table, show cards */
+  /* Stocks & Crypto: hide tables, show cards */
   #crypto-table-wrap { display: none; }
+  #tw-table-wrap { display: none; }
+  #us-table-wrap { display: none; }
   .crypto-cards { display: flex; flex-direction: column; gap: 10px; margin-top: 4px; }
+  .stock-cards  { display: flex; flex-direction: column; gap: 10px; margin-top: 4px; }
 
   /* Tables — 單行 flex 佈局 */
   .table-wrap { overflow-x: visible; width: 100%; }
