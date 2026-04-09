@@ -706,3 +706,52 @@ body {
 }
 [data-theme="light"] .reward-type-tag.auto { background: rgba(99,102,241,.12); color: #4f46e5; }
 [data-theme="light"] .reward-type-tag.manual { background: rgba(0,0,0,.06); color: #8c7055; }
+
+/* ── 收益記錄折疊 Accordion ── */
+#rewards-accordion { display: flex; flex-direction: column; gap: 6px; margin-bottom: 4px; }
+.rwd-empty { color: var(--muted); font-size: 0.9rem; text-align: center; padding: 20px 0; }
+.rwd-group {
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  overflow: hidden;
+}
+.rwd-group.current {
+  border-color: var(--accent);
+}
+.rwd-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 11px 14px;
+  cursor: pointer;
+  background: rgba(255,255,255,.03);
+  transition: background .15s;
+}
+.rwd-header:hover { background: rgba(99,102,241,.08); }
+.rwd-header-left { display: flex; align-items: center; gap: 8px; }
+.rwd-month-label { font-weight: 600; font-size: 0.9rem; color: var(--text); }
+.rwd-header-sub { font-size: 0.75rem; color: var(--muted); }
+.rwd-header-right { display: flex; align-items: center; gap: 10px; }
+.rwd-total-twd { font-weight: 700; font-size: 0.95rem; color: var(--accent-light); }
+.rwd-toggle { font-size: 0.72rem; color: var(--muted); transition: transform .2s; user-select: none; }
+.rwd-body { padding: 0 14px 10px; }
+.rwd-item {
+  display: flex; align-items: center; gap: 8px;
+  padding: 7px 0;
+  border-bottom: 1px solid rgba(45,49,85,.35);
+}
+.rwd-item:last-child { border-bottom: none; }
+.rwd-sym {
+  font-weight: 700; font-size: 0.82rem;
+  background: rgba(99,102,241,.14); color: #818cf8;
+  padding: 2px 7px; border-radius: 20px;
+  white-space: nowrap; min-width: 52px; text-align: center;
+}
+.rwd-detail { flex: 1; font-size: 0.88rem; color: var(--text); }
+.rwd-twd { color: var(--muted); font-size: 0.8rem; margin-left: 4px; }
+.rwd-actions { display: flex; gap: 4px; flex-shrink: 0; }
+/* Light mode */
+[data-theme="light"] .rwd-header { background: rgba(0,0,0,.02); }
+[data-theme="light"] .rwd-header:hover { background: rgba(99,102,241,.06); }
+[data-theme="light"] .rwd-sym { background: rgba(99,102,241,.1); color: #4f46e5; }
+[data-theme="light"] .rwd-group { border-color: #e2d9c8; }
+[data-theme="light"] .rwd-group.current { border-color: #8b6f47; }
+[data-theme="light"] .rwd-item { border-bottom-color: rgba(139,111,71,.2); }

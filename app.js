@@ -2,7 +2,7 @@
 // CONFIG
 // ══════════════════════════════════════════════════════════════
 // Build 時間：每次修改 code 後手動更新此時間（UTC+8 台北時間）
-const BUILD_DATE = '2026/04/09 21:50';
+const BUILD_DATE = '2026/04/09 22:05';
 
 const SPREADSHEET_ID = '1lpRpxVzWaYUqL-jVPOAJCtjsJUIedPYYyOx4gg4PPFU';
 const CLIENT_ID = '149884248440-85f8dhc6ub9up10sv0f89e3e0itrnooj.apps.googleusercontent.com';
@@ -754,7 +754,7 @@ function renderCrypto() {
         : (p !== undefined ? fmtUSD(p, 4) : skelSpan());
       return `<tr>
         <td data-label="代號"><span class="sym-tag">${esc(sym)}</span></td>
-        <td data-label="數量">${qty.toFixed(2)}</td>
+        <td data-label="數量">${qty.toFixed(3)}</td>
         <td data-label="幣價 (USD)" class="amt">${priceCell}</td>
         <td data-label="現值 (TWD)" class="amt">${v !== null ? fmt(v) : skelSpan()}${err ? '<span class="price-err">更新失敗</span>' : ''}</td>
         <td><button class="btn-icon edit" onclick="editItem('crypto',${i})">✏</button><button class="btn-icon del" onclick="deleteItem('crypto',${i})">✕</button></td>
@@ -771,8 +771,8 @@ function renderCrypto() {
       const pctStr = pct !== null ? pct + '%' : '—';
       const twdStr = err ? '更新失敗' : (v !== null ? fmt(v) : skelSpan());
       const detailStr = err
-        ? `持有 ${qty.toFixed(2)}`
-        : `持有 ${qty.toFixed(2)} · ${p !== undefined ? fmtFloor3(p) : '—'}`;
+        ? `持有 ${qty.toFixed(3)}`
+        : `持有 ${qty.toFixed(3)} · ${p !== undefined ? fmtFloor3(p) : '—'}`;
       return `<div class="asset-card${err ? ' err' : ''}" onclick="openAssetDetail('crypto',${i})" role="button" tabindex="0">
         <div class="asset-card-pct">${pctStr}</div>
         <div class="asset-card-sym">${esc(sym)}</div>
@@ -789,6 +789,14 @@ function renderCrypto() {
 }
 
 // ── 質押/活存收益記錄 ──────────────────────────────────────────
+// 計算單筆收益即時 TWD（有報價用即時，否則 fallback 存量）
+function rewardTWD(r) {
+  const qty = parseFloat(r[2]) || 0;
+  const sym = (r[1] || '').toUpperCase();
+  const price = S.prices.crypto[sym];
+  return price !== undefined ? qty * price * S.prices.usdtwd : (parseFloat(r[4]) || 0);
+}
+
 function renderRewards() {
   const rw = S.data.rewards;
   if ($('cnt-rewards')) $('cnt-rewards').textContent = rw.length;
@@ -796,33 +804,80 @@ function renderRewards() {
   const now = new Date();
   const curMonth = `${now.getFullYear()}/${String(now.getMonth()+1).padStart(2,'0')}`;
 
-  $('tb-rewards').innerHTML = rw.length ? rw.map((r, i) => {
-    const rtype = r[5] || '手動';
-    const isAuto = rtype === '系統換算';
-    const qty = parseFloat(r[2]) || 0;
-    const sym = (r[1] || '').toUpperCase();
-    const dynPrice = S.prices.crypto[sym];
-    const dynTWD = dynPrice !== undefined ? qty * dynPrice * S.prices.usdtwd : null;
-    const twdDisplay = dynTWD !== null ? fmt(dynTWD) : fmt(parseFloat(r[4]));
-    return `<tr>
-      <td data-label="月份">${esc(r[0])}</td>
-      <td data-label="幣種"><span class="sym-tag">${esc(r[1])}</span></td>
-      <td data-label="增加數量" class="amt">${qty.toFixed(4)}</td>
-      <td data-label="幣價 (USD)" class="amt">${dynPrice !== undefined ? fmtUSD(dynPrice) : fmtUSD(parseFloat(r[3]))}</td>
-      <td data-label="收益 (TWD)" class="amt">${twdDisplay}</td>
-      <td data-label="類型"><span class="reward-type-tag ${isAuto ? 'auto' : 'manual'}">${isAuto ? '系統換算' : '手動'}</span></td>
-      <td><button class="btn-icon del" onclick="deleteReward(${i})" title="刪除">✕</button>${isAuto ? '' : `<button class="btn-icon edit" onclick="editReward(${i})">✏</button>`}</td>
-    </tr>`;
-  }).join('') : '<tr><td colspan="7" style="text-align:center;padding:16px;color:var(--muted)">尚無收益記錄</td></tr>';
+  // Group by month, preserving original array indices for delete/edit
+  const groups = {};
+  rw.forEach((r, i) => {
+    const m = r[0] || '—';
+    if (!groups[m]) groups[m] = [];
+    groups[m].push({ r, i });
+  });
+  const sortedMonths = Object.keys(groups).sort((a, b) => b.localeCompare(a));
 
-  // 本月收益合計：動態即時幣價計算
-  const monthTot = rw.filter(r => r[0] === curMonth).reduce((s, r) => {
-    const qty = parseFloat(r[2]) || 0;
-    const sym = (r[1] || '').toUpperCase();
-    const price = S.prices.crypto[sym];
-    return s + (price !== undefined ? qty * price * S.prices.usdtwd : (parseFloat(r[4]) || 0));
-  }, 0);
+  const accordion = $('rewards-accordion');
+  if (!sortedMonths.length) {
+    accordion.innerHTML = '<div class="rwd-empty">尚無收益記錄</div>';
+    if ($('tot-rewards-month')) $('tot-rewards-month').textContent = '—';
+    return;
+  }
+
+  accordion.innerHTML = sortedMonths.map(month => {
+    const items = groups[month];
+    // Sort by TWD desc for expanded view
+    const sorted = [...items].sort((a, b) => rewardTWD(b.r) - rewardTWD(a.r));
+    const totalTWD = items.reduce((s, { r }) => s + rewardTWD(r), 0);
+
+    const [yr, mo] = month.split('/');
+    const monthLabel = yr && mo ? `${yr}年 ${parseInt(mo, 10)}月` : month;
+    const gid = month.replace('/', '-');
+    const isCur = month === curMonth;
+
+    return `<div class="rwd-group${isCur ? ' current' : ''}">
+      <div class="rwd-header" onclick="toggleRewardGroup('${gid}')">
+        <div class="rwd-header-left">
+          <span class="rwd-month-label">${esc(monthLabel)} 收益總計</span>
+          <span class="rwd-header-sub">${items.length} 筆</span>
+        </div>
+        <div class="rwd-header-right">
+          <span class="rwd-total-twd">${fmt(totalTWD)}</span>
+          <span class="rwd-toggle" id="rwd-toggle-${gid}">▼</span>
+        </div>
+      </div>
+      <div class="rwd-body" id="rwd-body-${gid}" style="${isCur ? 'display:block' : 'display:none'}">
+        ${sorted.map(({ r, i }) => {
+          const qty = parseFloat(r[2]) || 0;
+          const sym = (r[1] || '').toUpperCase();
+          const twd = rewardTWD(r);
+          const isAuto = (r[5] || '') === '系統換算';
+          return `<div class="rwd-item">
+            <span class="rwd-sym">${esc(sym)}</span>
+            <span class="rwd-detail">+${qty.toFixed(3)} <span class="rwd-twd">≈ ${fmt(twd)}</span></span>
+            <div class="rwd-actions">
+              ${isAuto ? '' : `<button class="btn-icon edit" onclick="editReward(${i})" title="編輯">✏</button>`}
+              <button class="btn-icon del" onclick="deleteReward(${i})" title="刪除">✕</button>
+            </div>
+          </div>`;
+        }).join('')}
+      </div>
+    </div>`;
+  }).join('');
+
+  // Update current-month toggle arrow (default open)
+  const curGid = curMonth.replace('/', '-');
+  const curToggle = $(`rwd-toggle-${curGid}`);
+  if (curToggle) curToggle.textContent = '▲';
+
+  // 本月收益合計 for footer
+  const monthTot = (groups[curMonth] || []).reduce((s, { r }) => s + rewardTWD(r), 0);
   if ($('tot-rewards-month')) $('tot-rewards-month').textContent = monthTot > 0 ? fmt(monthTot) : '—';
+}
+
+function toggleRewardGroup(gid) {
+  const body = $(`rwd-body-${gid}`);
+  const toggle = $(`rwd-toggle-${gid}`);
+  if (!body) return;
+  const open = body.style.display !== 'none';
+  body.style.display = open ? 'none' : 'block';
+  if (toggle) toggle.textContent = open ? '▼' : '▲';
 }
 
 function rewardSyncPrice() {
@@ -1574,7 +1629,7 @@ function _refreshPanelDisplay(sym) {
   if (type === 'crypto') {
     const p = S.prices.crypto[sym];
     valueTwd = p !== undefined ? qty * p * S.prices.usdtwd : null;
-    subText = `持有 ${qty.toFixed(4)} ${sym}　·　${p !== undefined ? fmtUSD(p, 4) : '—'}`;
+    subText = `持有 ${qty.toFixed(3)} ${sym}　·　${p !== undefined ? fmtUSD(p, 4) : '—'}`;
   } else if (type === 'tw') {
     const p = S.prices.tw[sym];
     valueTwd = p !== undefined ? qty * p : null;
