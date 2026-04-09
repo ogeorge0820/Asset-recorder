@@ -2,7 +2,7 @@
 
 一個用來追蹤和管理個人資產的網頁應用，支援多種資產類型（現金、台股、美股、加密貨幣、儲蓄險等），並與 Google Sheets 整合進行資料儲存，同時串接即時市場報價 API。
 
-🔗 **線上預覽**：[https://ogeorge0820.github.io/asset-recorder](https://ogeorge0820.github.io/asset-recorder)
+🔗 **線上預覽**：[https://ogeorge0820.github.io/Asset-recorder](https://ogeorge0820.github.io/Asset-recorder)
 
 ---
 
@@ -59,7 +59,7 @@
 
 ## 🚀 使用方法
 
-1. 訪問 [https://ogeorge0820.github.io/asset-recorder](https://ogeorge0820.github.io/asset-recorder)
+1. 訪問 [https://ogeorge0820.github.io/Asset-recorder](https://ogeorge0820.github.io/Asset-recorder)
 2. 點擊「使用 Google 帳號登入」按鈕
 3. 授權應用程式存取 Google Sheets
 4. 在「管理」頁面新增或修改各類資產
