@@ -2,7 +2,7 @@
 // CONFIG
 // ══════════════════════════════════════════════════════════════
 // Build 時間：每次修改 code 後手動更新此時間（UTC+8 台北時間）
-const BUILD_DATE = '2026/04/09 13:43';
+const BUILD_DATE = '2026/04/09 13:51';
 
 const SPREADSHEET_ID = '1lpRpxVzWaYUqL-jVPOAJCtjsJUIedPYYyOx4gg4PPFU';
 const CLIENT_ID = '149884248440-85f8dhc6ub9up10sv0f89e3e0itrnooj.apps.googleusercontent.com';
@@ -12,6 +12,9 @@ const PROXY_BACKUP = 'https://api.allorigins.win/raw?url=';
 
 // George，未來每個月初請在這裡更新上月底的快照金額
 const LAST_MONTH_AVAILABLE_SNAPSHOT = 17819156;
+
+// George，未來每年底請在這裡更新當年 12/31 的可用資產快照金額
+const LAST_YEAR_END_AVAILABLE_SNAPSHOT = 22272019; // 2025/12/31 快照
 
 async function proxyFetch(url, opts = {}) {
   try {
@@ -424,20 +427,12 @@ function renderKPIs() {
   if (cardMonthly) cardMonthly.className = `kpi-card ${monthlyDiff >= 0 ? 'kpi-gain' : 'kpi-loss'}`;
   const sMonthly = $('ks-monthly'); if (sMonthly) sMonthly.textContent = '可用資產 − 3/31 基準';
 
-  if (snaps.length > 0) {
-    const first = snaps[0];
-    const firstNet = parseFloat(first[7]) || 0;
-    if (firstNet > 0) {
-      const g = ((net - firstNet) / firstNet * 100);
-      const ge = $('kv-growth');
-      ge.textContent = (g >= 0 ? '+' : '') + g.toFixed(1) + '%';
-      ge.className = `kpi-value ${g >= 0 ? 'pos' : 'neg'}`;
-    } else {
-      setKPI('kv-growth', '—', 'ks-growth', '尚無有效快照');
-    }
-  } else {
-    setKPI('kv-growth', '—', 'ks-growth', '尚無快照');
-  }
+  // 本年收益：可用資產 − 2025/12/31 快照基準
+  const yearlyDiff = liquid - LAST_YEAR_END_AVAILABLE_SNAPSHOT;
+  const elGrowth = $('kv-growth');
+  elGrowth.textContent = (yearlyDiff >= 0 ? '+' : '') + fmt(yearlyDiff);
+  elGrowth.className = `kpi-value ${yearlyDiff >= 0 ? 'pos' : 'neg'}`;
+  const sGrowth = $('ks-growth'); if (sGrowth) sGrowth.textContent = '可用資產 − 2025/12/31 基準';
 
   const re = $('kv-rate');
   re.textContent = S.prices.usdtwd.toFixed(2);
