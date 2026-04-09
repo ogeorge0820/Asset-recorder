@@ -2,7 +2,7 @@
 // CONFIG
 // ══════════════════════════════════════════════════════════════
 // Build 時間：每次修改 code 後手動更新此時間（UTC+8 台北時間）
-const BUILD_DATE = '2026/04/09 14:15';
+const BUILD_DATE = '2026/04/09 15:30';
 
 const SPREADSHEET_ID = '1lpRpxVzWaYUqL-jVPOAJCtjsJUIedPYYyOx4gg4PPFU';
 const CLIENT_ID = '149884248440-85f8dhc6ub9up10sv0f89e3e0itrnooj.apps.googleusercontent.com';
@@ -263,7 +263,28 @@ async function saveSheet(name, dataRows) {
 // ══════════════════════════════════════════════════════════════
 // PRICE FETCHING
 // ══════════════════════════════════════════════════════════════
-async function fetchAllPrices() {
+const PRICE_CACHE_KEY = 'asset_price_cache';
+const PRICE_CACHE_TTL = 4.5 * 60 * 1000; // 4.5 分鐘，跨 tab/reload 共享
+
+async function fetchAllPrices(force = false) {
+  // ── 嘗試讀取 localStorage 快取（防止頻繁重整 / 多分頁打爆 API rate limit）
+  if (!force) {
+    try {
+      const cached = JSON.parse(localStorage.getItem(PRICE_CACHE_KEY));
+      if (cached && Date.now() - cached.ts < PRICE_CACHE_TTL) {
+        S.prices.tw      = cached.tw      || {};
+        S.prices.us      = cached.us      || {};
+        S.prices.crypto  = cached.crypto  || {};
+        S.prices.usdtwd  = cached.usdtwd  || 32.0;
+        S.prices.fx      = cached.fx      || S.prices.fx;
+        S.prices.errs    = {};
+        S.lastUpdate     = new Date(cached.ts);
+        setPriceStatus('ok');
+        return;
+      }
+    } catch (_) {}
+  }
+
   setPriceStatus('spin');
   const results = await Promise.allSettled([
     fetchUSDTWD(),
@@ -275,6 +296,20 @@ async function fetchAllPrices() {
   S.lastUpdate = new Date();
   const hasErr = results.some(r => r.status === 'rejected') || Object.keys(S.prices.errs).length > 0;
   setPriceStatus(hasErr ? 'err' : 'ok');
+
+  // ── 若無錯誤才寫入快取，避免把失敗的空值快取下來
+  if (!hasErr) {
+    try {
+      localStorage.setItem(PRICE_CACHE_KEY, JSON.stringify({
+        ts:     Date.now(),
+        tw:     S.prices.tw,
+        us:     S.prices.us,
+        crypto: S.prices.crypto,
+        usdtwd: S.prices.usdtwd,
+        fx:     S.prices.fx,
+      }));
+    } catch (_) {}
+  }
 }
 
 async function yahooFetch(ticker) {
@@ -1733,9 +1768,9 @@ async function initApp() {
 
     scheduleDailySnapshot();
 
-    // Auto-refresh every 5 minutes
+    // Auto-refresh every 5 minutes（force=true 繞過快取，確保定時刷新）
     setInterval(async () => {
-      await fetchAllPrices();
+      await fetchAllPrices(true);
       renderKPIs(); renderCharts();
       if ($('tab-management').style.display !== 'none') renderManagement();
     }, 5 * 60 * 1000);
