@@ -91,7 +91,7 @@
           </div>
         </div>
         <div class="chart-card">
-          <h3>總資產趨勢</h3>
+          <h3>淨資產趨勢</h3>
           <div class="chart-filter">
             <button class="filter-btn active" data-f="all" onclick="setTrendFilter(this)">全部</button>
             <button class="filter-btn" data-f="1y" onclick="setTrendFilter(this)">近1年</button>
@@ -101,11 +101,7 @@
             <canvas id="trend-chart"></canvas>
             <div id="trend-nodata" class="chart-nodata" style="display:none">
               <div style="color:var(--muted);font-size:0.9rem;max-width:380px;line-height:1.7">
-                尚無歷史資料，儲存本月快照以開始追蹤趨勢
-              </div>
-              <div style="display:flex;gap:10px;flex-wrap:wrap;justify-content:center">
-                <button class="btn-snapshot" style="padding:9px 22px;font-size:0.88rem" onclick="confirmSnapshot()">📸 立即儲存快照</button>
-                <button class="btn-goto" onclick="switchTab('management')">前往管理頁面 →</button>
+                尚無歷史資料
               </div>
             </div>
           </div>
@@ -235,12 +231,6 @@
         </div>
 
       </div><!-- /mgmt-grid -->
-
-      <!-- Snapshot -->
-      <div class="snapshot-bar">
-        <span class="snap-last" id="last-snap-date"></span>
-        <button class="btn-snapshot" id="btn-snapshot" onclick="confirmSnapshot()">📸 儲存本月快照</button>
-      </div>
 
     </div><!-- /tab-management -->
 

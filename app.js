@@ -2,7 +2,7 @@
 // CONFIG
 // ══════════════════════════════════════════════════════════════
 // Build 時間：每次修改 code 後手動更新此時間（UTC+8 台北時間）
-const BUILD_DATE = '2026/04/09 13:51';
+const BUILD_DATE = '2026/04/09 14:15';
 
 const SPREADSHEET_ID = '1lpRpxVzWaYUqL-jVPOAJCtjsJUIedPYYyOx4gg4PPFU';
 const CLIENT_ID = '149884248440-85f8dhc6ub9up10sv0f89e3e0itrnooj.apps.googleusercontent.com';
@@ -15,6 +15,15 @@ const LAST_MONTH_AVAILABLE_SNAPSHOT = 17819156;
 
 // George，未來每年底請在這裡更新當年 12/31 的可用資產快照金額
 const LAST_YEAR_END_AVAILABLE_SNAPSHOT = 22272019; // 2025/12/31 快照
+
+// 歷史淨資產快照基準（僅含 net_assets，其他欄位補 0）
+// 若 Google Sheet 中已有同月資料，以 Sheet 資料優先
+const SNAPSHOT_SEEDS = [
+  ['2025/12','0','0','0','0','0','0','0','25508561'],
+  ['2026/01','0','0','0','0','0','0','0','24206629'],
+  ['2026/02','0','0','0','0','0','0','0','21005199'],
+  ['2026/03','0','0','0','0','0','0','0','21117892'],
+];
 
 async function proxyFetch(url, opts = {}) {
   try {
@@ -226,6 +235,11 @@ async function loadAll() {
   S.data.us              = rows(us);
   S.data.crypto          = rows(crypto);
   S.data.snapshots       = rows(snap);
+  // 合併歷史種子：Sheet 有的月份不覆蓋，Sheet 沒有的才補入
+  for (const seed of SNAPSHOT_SEEDS) {
+    if (!S.data.snapshots.some(s => s[0] === seed[0])) S.data.snapshots.push(seed);
+  }
+  S.data.snapshots.sort((a, b) => a[0].localeCompare(b[0]));
   S.data.daily_snapshots = rows(daily);
   S.data.rewards         = rows(rw);
   S.data.crypto_history  = rows(hist);
@@ -444,13 +458,6 @@ function renderKPIs() {
   const buildBadge = $('build-badge');
   if (buildBadge) buildBadge.textContent = `版本 ${BUILD_DATE}`;
 
-  const snapLast = $('last-snap-date');
-  if (snapLast) {
-    const snaps = S.data.snapshots;
-    snapLast.textContent = snaps.length > 0
-      ? `上次快照：${snaps[snaps.length - 1][0]}`
-      : '尚未儲存任何快照';
-  }
 }
 
 function setKPI(vid, val, sid, sub) {
@@ -1069,20 +1076,18 @@ function renderTrend() {
     data: {
       labels: snaps.map(s => s[0]),
       datasets: [
-        { label:'總資產', data: snaps.map(s => [1,2,3,4,5].reduce((a,i)=>a+(parseFloat(s[i])||0), 0)),
-          borderColor:'#6366f1', backgroundColor:'rgba(99,102,241,.1)', fill:true, tension:.3, pointRadius:3 },
-        { label:'淨資產', data: snaps.map(s => parseFloat(s[7])||0),
-          borderColor:'#22c55e', backgroundColor:'transparent', borderDash:[5,3], tension:.3, pointRadius:3 },
+        { label:'淨資產', data: snaps.map(s => parseFloat(s[8])||0),
+          borderColor:'#6366f1', backgroundColor:'rgba(99,102,241,.12)', fill:true, tension:.3, pointRadius:4, pointHoverRadius:6 },
       ],
     },
     options: {
       responsive:true, maintainAspectRatio:false,
       plugins: {
-        legend: { labels:{ color:cc.legend, font:{size:11}, usePointStyle:true } },
-        tooltip: { callbacks: { label(c) { return ` ${c.dataset.label}: ${fmt(c.parsed.y)}`; } } },
+        legend: { display: false },
+        tooltip: { callbacks: { label(c) { return ` 淨資產: ${fmt(c.parsed.y)}`; } } },
       },
       scales: {
-        x: { grid:{ color:cc.grid }, ticks:{ color:cc.tick, font:{size:10} } },
+        x: { grid:{ color:cc.grid }, ticks:{ color:cc.tick, font:{size:10}, maxTicksLimit:6, maxRotation:0 } },
         y: { grid:{ color:cc.grid }, ticks:{ color:cc.tick, font:{size:10}, callback:v=>fmt(v) } },
       },
     },
@@ -1105,7 +1110,7 @@ function renderMonthly() {
   const labels=[], vals=[];
   for (let i=1;i<snaps.length;i++) {
     labels.push(snaps[i][0]);
-    vals.push((parseFloat(snaps[i][7])||0) - (parseFloat(snaps[i-1][7])||0));
+    vals.push((parseFloat(snaps[i][8])||0) - (parseFloat(snaps[i-1][8])||0));
   }
 
   S.charts.monthly = new Chart(ctx, {
@@ -1246,33 +1251,6 @@ async function saveSettings(btn) {
 // ══════════════════════════════════════════════════════════════
 // SNAPSHOT
 // ══════════════════════════════════════════════════════════════
-function confirmSnapshot() {
-  const now = new Date();
-  const ms = `${now.getFullYear()}/${String(now.getMonth()+1).padStart(2,'0')}`;
-  openConfirm('儲存快照', `儲存 ${ms} 快照？\n（同月份資料將被覆蓋）`, doSaveSnapshot);
-}
-
-async function doSaveSnapshot() {
-  const snapBtn = $('btn-snapshot');
-  if (snapBtn) btnLoading(snapBtn, '儲存中…');
-  try {
-    const { cashT, twT, usT, cryT, ins, re, debt, net } = calcTotals();
-    const now = new Date();
-    const ds = `${now.getFullYear()}/${String(now.getMonth()+1).padStart(2,'0')}`;
-    const row = [ds, cashT.toFixed(0), twT.toFixed(0), usT.toFixed(0), cryT.toFixed(0), ins.toFixed(0), re.toFixed(0), debt.toFixed(0), net.toFixed(0)];
-    const idx = S.data.snapshots.findIndex(s => s[0] === ds);
-    if (idx >= 0) S.data.snapshots[idx] = row;
-    else { S.data.snapshots.push(row); S.data.snapshots.sort((a,b) => a[0].localeCompare(b[0])); }
-    await saveSheet('snapshots', S.data.snapshots);
-    renderKPIs(); renderCharts();
-    if (snapBtn) btnDone(snapBtn, '✓ 已儲存');
-    showToast(`${ds} 快照已儲存`, 'ok');
-  } catch(e) {
-    if (snapBtn) btnReset(snapBtn);
-    showToast('快照儲存失敗：' + e.message, 'err');
-  }
-}
-
 async function doSaveDailySnapshot(silent = false) {
   const { cashT, twT, usT, cryT, ins, re, debt, net } = calcTotals();
   const now = new Date();
