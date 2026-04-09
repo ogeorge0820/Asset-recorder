@@ -399,7 +399,7 @@ body {
 .asset-card:hover { background: var(--border); }
 .asset-card-left {
   display: flex; flex-direction: row; align-items: center;
-  gap: 8px; flex-shrink: 0; max-width: 140px;
+  gap: 10px; flex-shrink: 0;
 }
 .asset-card-pct {
   width: 46px; height: 46px; border-radius: 50%;
@@ -410,22 +410,24 @@ body {
 }
 .asset-card.err .asset-card-pct { background: rgba(239,68,68,.2); color: var(--red); }
 .asset-card-sym {
+  /* 固定寬度 64px：所有卡片的 % 圓圈垂直對齊 */
+  width: 64px; flex-shrink: 0;
   font-size: 1rem; font-weight: 800;
   font-family: monospace; color: var(--text);
   letter-spacing: .5px;
   overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
-  max-width: 76px;
 }
 .asset-card-mid { flex: 1; min-width: 0; text-align: right; }
 .asset-card-twd {
-  font-size: 1.25rem; font-weight: 700;
-  color: var(--text); letter-spacing: -0.5px; line-height: 1.2;
+  font-size: 1.2rem; font-weight: 700;
+  color: var(--text); letter-spacing: -0.5px; line-height: 1.3;
 }
 .asset-card.err .asset-card-twd { font-size: 0.85rem; color: var(--red); }
 .asset-card-detail {
-  font-size: 0.75rem; color: var(--muted);
-  margin-top: 4px; overflow: hidden;
+  font-size: 0.73rem; color: var(--muted);
+  margin-top: 5px; overflow: hidden;
   text-overflow: ellipsis; white-space: nowrap;
+  line-height: 1.4;
 }
 
 /* ── Mobile (≤ 640px) ── */
