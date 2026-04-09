@@ -2,7 +2,7 @@
 // CONFIG
 // ══════════════════════════════════════════════════════════════
 // Build 時間：每次修改 code 後手動更新此時間（UTC+8 台北時間）
-const BUILD_DATE = '2026/04/09 12:36';
+const BUILD_DATE = '2026/04/09 14:22';
 
 const SPREADSHEET_ID = '1lpRpxVzWaYUqL-jVPOAJCtjsJUIedPYYyOx4gg4PPFU';
 const CLIENT_ID = '149884248440-85f8dhc6ub9up10sv0f89e3e0itrnooj.apps.googleusercontent.com';
@@ -539,8 +539,8 @@ function renderTW() {
         : `持有 ${qty.toLocaleString()} 股 · ${p !== undefined ? p.toLocaleString('zh-TW', {minimumFractionDigits:2,maximumFractionDigits:2}) + ' TWD' : '—'}`;
       return `<div class="asset-card${err ? ' err' : ''}" onclick="openAssetDetail('tw',${i})" role="button" tabindex="0">
         <div class="asset-card-left">
-          <div class="asset-card-pct">${pctStr}</div>
           <div class="asset-card-sym">${esc(sym)}</div>
+          <div class="asset-card-pct">${pctStr}</div>
         </div>
         <div class="asset-card-mid">
           <div class="asset-card-twd">${twdStr}</div>
@@ -595,8 +595,8 @@ function renderUS() {
         : `持有 ${qty.toLocaleString(undefined,{maximumFractionDigits:4})} 股 · ${p !== undefined ? fmtUSD(p) + ' USD' : '—'}`;
       return `<div class="asset-card${err ? ' err' : ''}" onclick="openAssetDetail('us',${i})" role="button" tabindex="0">
         <div class="asset-card-left">
-          <div class="asset-card-pct">${pctStr}</div>
           <div class="asset-card-sym">${esc(sym)}</div>
+          <div class="asset-card-pct">${pctStr}</div>
         </div>
         <div class="asset-card-mid">
           <div class="asset-card-twd">${twdStr}</div>
@@ -657,11 +657,11 @@ function renderCrypto() {
       const twdStr = err ? '更新失敗' : (v !== null ? fmt(v) : skelSpan());
       const detailStr = err
         ? `持有 ${qty.toFixed(2)}`
-        : `持有 ${qty.toFixed(2)} · ${p !== undefined ? fmtUSD(p, 4) : '—'}`;
+        : `持有 ${qty.toFixed(2)} · ${p !== undefined ? fmtFloor3(p) : '—'}`;
       return `<div class="asset-card${err ? ' err' : ''}" onclick="openAssetDetail('crypto',${i})" role="button" tabindex="0">
         <div class="asset-card-left">
-          <div class="asset-card-pct">${pctStr}</div>
           <div class="asset-card-sym">${esc(sym)}</div>
+          <div class="asset-card-pct">${pctStr}</div>
         </div>
         <div class="asset-card-mid">
           <div class="asset-card-twd">${twdStr}</div>
@@ -1643,6 +1643,14 @@ function fmt(n) {
     return sign + (abs/10000).toLocaleString('zh-TW', {minimumFractionDigits:1,maximumFractionDigits:1}) + '萬';
   }
   return sign + Math.round(abs).toLocaleString('zh-TW');
+}
+
+// 加密貨幣幣價（卡片顯示）：無條件捨去到小數第三位
+function fmtFloor3(n) {
+  if (n === null || n === undefined || isNaN(n)) return '—';
+  const f = Math.floor(n * 1000) / 1000;
+  if (f >= 1000) return '$' + f.toLocaleString('en-US', {minimumFractionDigits:3, maximumFractionDigits:3});
+  return '$' + f.toFixed(3);
 }
 
 // USD 價格格式：$325.21
