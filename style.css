@@ -389,10 +389,12 @@ body {
 .crypto-cards { display: none; }
 .crypto-card {
   display: flex; align-items: center; gap: 14px;
-  padding: 14px 16px;
+  padding: 10px 14px;
   background: var(--card2); border: 1px solid var(--border);
   border-radius: 10px;
+  cursor: pointer; transition: background .15s;
 }
+.crypto-card:hover { background: var(--border); }
 .crypto-card-left {
   display: flex; flex-direction: column; align-items: center;
   gap: 5px; flex-shrink: 0; width: 50px;
@@ -554,3 +556,126 @@ body {
   .kpi-grid { grid-template-columns: 1fr 1fr; gap: 8px; }
   .tab-btn { padding: 5px 10px; }
 }
+
+/* ══ Crypto Detail Panel ══ */
+.crypto-panel-overlay {
+  visibility: hidden; pointer-events: none;
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,0);
+  transition: background .32s, visibility 0s .32s;
+  z-index: 800;
+}
+.crypto-panel-overlay.open {
+  visibility: visible; pointer-events: auto;
+  background: rgba(0,0,0,.6);
+  transition: background .32s;
+}
+.crypto-panel-sheet {
+  position: absolute; bottom: 0; left: 0; right: 0;
+  background: var(--card);
+  border-top: 1px solid var(--border);
+  border-radius: 20px 20px 0 0;
+  padding: 20px 20px 40px;
+  max-height: 88vh;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  transform: translateY(100%);
+  transition: transform .32s cubic-bezier(.32,1,.45,1);
+}
+.crypto-panel-overlay.open .crypto-panel-sheet {
+  transform: translateY(0);
+}
+
+/* Panel header */
+.crypto-panel-header {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 16px;
+}
+.crypto-panel-sym {
+  font-size: 1.2rem; font-weight: 700;
+  color: var(--accent-light); letter-spacing: 1px;
+}
+.crypto-panel-close {
+  background: none; border: none;
+  color: var(--muted); font-size: 1.2rem;
+  cursor: pointer; padding: 4px 8px;
+  border-radius: 6px; line-height: 1;
+}
+.crypto-panel-close:hover { background: var(--card2); color: var(--text); }
+
+/* 大字現值 */
+.crypto-panel-value {
+  font-size: 2.2rem; font-weight: 800;
+  color: var(--text); letter-spacing: -1px;
+  margin-bottom: 4px; line-height: 1.1;
+}
+.crypto-panel-value-sub {
+  font-size: 0.82rem; color: var(--muted);
+  margin-bottom: 24px;
+}
+
+/* 主操作按鈕 */
+.crypto-panel-actions {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 10px;
+  margin-bottom: 28px;
+}
+.btn-cp-primary {
+  background: var(--accent); color: #fff; border: none;
+  padding: 13px 10px; border-radius: 10px;
+  font-size: 0.9rem; font-weight: 600; cursor: pointer;
+  transition: background .2s;
+}
+.btn-cp-primary:hover { background: var(--accent-light); }
+.btn-cp-secondary {
+  background: var(--card2); color: var(--text);
+  border: 1px solid var(--border);
+  padding: 13px 10px; border-radius: 10px;
+  font-size: 0.9rem; font-weight: 600; cursor: pointer;
+  transition: background .2s;
+}
+.btn-cp-secondary:hover { background: var(--border); }
+
+/* 變動記錄 */
+.crypto-panel-section-title {
+  font-size: 0.72rem; font-weight: 600;
+  color: var(--muted); letter-spacing: .5px;
+  text-transform: uppercase; margin-bottom: 10px;
+}
+.crypto-panel-history {
+  display: flex; flex-direction: column; gap: 8px;
+  margin-bottom: 28px;
+  max-height: 240px; overflow-y: auto;
+}
+.cp-history-item {
+  display: grid;
+  grid-template-columns: 100px auto 1fr auto;
+  align-items: center; gap: 10px;
+  padding: 10px 12px;
+  background: var(--card2); border-radius: 8px;
+  font-size: 0.8rem;
+}
+.cp-history-date { color: var(--muted); }
+.cp-history-delta { font-weight: 700; }
+.cp-history-delta.pos { color: var(--green); }
+.cp-history-delta.neg { color: var(--red); }
+.cp-history-qty { color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.cp-history-price { color: var(--muted); text-align: right; white-space: nowrap; }
+.cp-history-empty {
+  text-align: center; color: var(--muted);
+  padding: 20px 0; font-size: 0.85rem;
+  background: var(--card2); border-radius: 8px;
+}
+
+/* 刪除按鈕 */
+.btn-cp-delete {
+  width: 100%; background: none;
+  border: 1px solid var(--red); color: var(--red);
+  padding: 12px; border-radius: 10px;
+  font-size: 0.9rem; font-weight: 600; cursor: pointer;
+  transition: all .2s;
+}
+.btn-cp-delete:hover { background: rgba(239,68,68,.08); }
+
+/* Light mode 補充 */
+[data-theme="light"] .crypto-panel-close:hover { background: var(--card2); }
+[data-theme="light"] .btn-cp-delete:hover { background: rgba(155,107,58,.08); }

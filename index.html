@@ -268,6 +268,25 @@
   </div>
 </div>
 
+<!-- ── Crypto Detail Panel ── -->
+<div class="crypto-panel-overlay" id="crypto-panel" onclick="cryptoPanelBgClick(event)">
+  <div class="crypto-panel-sheet" id="crypto-panel-sheet">
+    <div class="crypto-panel-header">
+      <span class="crypto-panel-sym" id="cp-sym"></span>
+      <button class="crypto-panel-close" onclick="closeCryptoDetail()">✕</button>
+    </div>
+    <div class="crypto-panel-value" id="cp-value"></div>
+    <div class="crypto-panel-value-sub" id="cp-value-sub"></div>
+    <div class="crypto-panel-actions">
+      <button class="btn-cp-primary" onclick="adjustCryptoQty()">＋ 增減數量</button>
+      <button class="btn-cp-secondary" onclick="setCryptoQty()">✎ 設定餘額</button>
+    </div>
+    <div class="crypto-panel-section-title">變動記錄</div>
+    <div class="crypto-panel-history" id="cp-history"></div>
+    <button class="btn-cp-delete" onclick="deleteCryptoFromPanel()">刪除此資產</button>
+  </div>
+</div>
+
 <!-- ── Toast ── -->
 <div class="toast" id="toast"></div>
 

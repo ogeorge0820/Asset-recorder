@@ -2,7 +2,7 @@
 // CONFIG
 // ══════════════════════════════════════════════════════════════
 // Build 時間：每次修改 code 後手動更新此時間（UTC+8 台北時間）
-const BUILD_DATE = '2026/04/09 11:58';
+const BUILD_DATE = '2026/04/09 12:24';
 
 const SPREADSHEET_ID = '1lpRpxVzWaYUqL-jVPOAJCtjsJUIedPYYyOx4gg4PPFU';
 const CLIENT_ID = '149884248440-85f8dhc6ub9up10sv0f89e3e0itrnooj.apps.googleusercontent.com';
@@ -44,6 +44,7 @@ const HEADERS = {
   cash_accounts: ['bank_name','amount','currency'],
   settings: ['key','value'],
   crypto_rewards: ['date','symbol','quantity','price_usd','value_twd'],
+  crypto_history: ['date','symbol','qty_before','qty_after','delta','price_usd','value_twd'],
 };
 
 // ══════════════════════════════════════════════════════════════
@@ -63,6 +64,7 @@ const S = {
     snapshots: [],      // [date, cash, tw, us, crypto, ins, re, debt, net]
     daily_snapshots: [], // [date, cash, tw, us, crypto, ins, re, debt, net]
     rewards: [],        // [date, symbol, quantity, price_usd, value_twd]
+    crypto_history: [], // [date, symbol, qty_before, qty_after, delta, price_usd, value_twd]
     settings: { insurance_total: 0, realestate_total: 0, debt: 0 },
   },
 
@@ -195,7 +197,7 @@ async function initSheets() {
 // DATA LOAD / SAVE
 // ══════════════════════════════════════════════════════════════
 async function loadAll() {
-  const [cash, tw, us, crypto, snap, daily, sett, rw] = await Promise.allSettled([
+  const [cash, tw, us, crypto, snap, daily, sett, rw, hist] = await Promise.allSettled([
     sheetGet('cash_accounts!A:C'),
     sheetGet('holdings_tw!A:B'),
     sheetGet('holdings_us!A:B'),
@@ -204,6 +206,7 @@ async function loadAll() {
     sheetGet('daily_snapshots!A:I'),
     sheetGet('settings!A:B'),
     sheetGet('crypto_rewards!A:E'),
+    sheetGet('crypto_history!A:G'),
   ]);
 
   S.data.cash            = rows(cash);
@@ -213,6 +216,7 @@ async function loadAll() {
   S.data.snapshots       = rows(snap);
   S.data.daily_snapshots = rows(daily);
   S.data.rewards         = rows(rw);
+  S.data.crypto_history  = rows(hist);
 
   S.data.settings = { insurance_total: 0, realestate_total: 0, debt: 0 };
   rows(sett).forEach(r => { if (r[0]) S.data.settings[r[0]] = parseFloat(r[1]) || 0; });
@@ -584,7 +588,7 @@ function renderCrypto() {
       const detailStr = err
         ? `持有 ${qty.toFixed(2)}`
         : `持有 ${qty.toFixed(2)} · ${p !== undefined ? fmtUSD(p, 4) : '—'}`;
-      return `<div class="crypto-card${err ? ' err' : ''}">
+      return `<div class="crypto-card${err ? ' err' : ''}" onclick="openCryptoDetail(${i})" role="button" tabindex="0">
         <div class="crypto-card-left">
           <div class="crypto-card-pct">${pctStr}</div>
           <div class="crypto-card-sym">${esc(sym)}</div>
@@ -592,10 +596,6 @@ function renderCrypto() {
         <div class="crypto-card-mid">
           <div class="crypto-card-twd">${twdStr}</div>
           <div class="crypto-card-detail">${detailStr}</div>
-        </div>
-        <div class="crypto-card-actions">
-          <button class="btn-icon edit" onclick="editItem('crypto',${i})">✏</button>
-          <button class="btn-icon del" onclick="deleteItem('crypto',${i})">✕</button>
         </div>
       </div>`;
     }).join('');
@@ -1103,11 +1103,22 @@ function editItem(type, idx) {
   };
   const c = configs[type];
   openModal(c.title, c.fields, async vals => {
-    if (type === 'cash')   S.data.cash[idx]   = [vals.bank_name, parseFloat(vals.amount)||0, vals.currency||'TWD'];
-    if (type === 'tw')     S.data.tw[idx]     = [r[0], parseFloat(vals.shares)||0];
-    if (type === 'us')     S.data.us[idx]     = [r[0], parseFloat(vals.shares)||0];
-    if (type === 'crypto') S.data.crypto[idx] = [r[0], parseFloat(vals.quantity)||0];
-    await persistAndRefresh(type);
+    if (type === 'cash') {
+      S.data.cash[idx] = [vals.bank_name, parseFloat(vals.amount)||0, vals.currency||'TWD'];
+      await persistAndRefresh(type);
+    } else if (type === 'tw') {
+      S.data.tw[idx] = [r[0], parseFloat(vals.shares)||0];
+      await persistAndRefresh(type);
+    } else if (type === 'us') {
+      S.data.us[idx] = [r[0], parseFloat(vals.shares)||0];
+      await persistAndRefresh(type);
+    } else if (type === 'crypto') {
+      const qtyBefore = parseFloat(r[1]) || 0;
+      const qtyAfter = parseFloat(vals.quantity) || 0;
+      S.data.crypto[idx] = [r[0], qtyAfter];
+      await persistAndRefresh(type);
+      await appendCryptoHistory(r[0].toUpperCase(), qtyBefore, qtyAfter);
+    }
     showToast('已更新', 'ok');
     return true;
   });
@@ -1288,6 +1299,134 @@ function openConfirm(title, msg, onOK) {
 
 function closeModal() { $('modal').classList.remove('open'); }
 function modalBgClick(e) { if(e.target === $('modal')) closeModal(); }
+
+// ══════════════════════════════════════════════════════════════
+// CRYPTO DETAIL PANEL
+// ══════════════════════════════════════════════════════════════
+let _cryptoPanelIdx = null;
+
+function getNowTW8() {
+  const d = new Date(Date.now() + 8 * 3600 * 1000);
+  const pad = n => String(n).padStart(2, '0');
+  return `${d.getUTCFullYear()}/${pad(d.getUTCMonth()+1)}/${pad(d.getUTCDate())} ${pad(d.getUTCHours())}:${pad(d.getUTCMinutes())}`;
+}
+
+async function appendCryptoHistory(sym, qtyBefore, qtyAfter) {
+  const delta = qtyAfter - qtyBefore;
+  const p = S.prices.crypto[sym];
+  const valueTwd = p !== undefined ? delta * p * S.prices.usdtwd : '';
+  const row = [getNowTW8(), sym, qtyBefore, qtyAfter, delta, p !== undefined ? p : '', valueTwd];
+  S.data.crypto_history.push(row);
+  await saveSheet('crypto_history', S.data.crypto_history);
+}
+
+function _refreshPanelDisplay(sym) {
+  const idx = _cryptoPanelIdx;
+  if (idx === null || !S.data.crypto[idx]) return;
+  const r = S.data.crypto[idx];
+  const p = S.prices.crypto[sym];
+  const qty = parseFloat(r[1]) || 0;
+  const valueTwd = p !== undefined ? qty * p * S.prices.usdtwd : null;
+  $('cp-value').textContent = valueTwd !== null ? fmt(valueTwd) + ' TWD' : '—';
+  $('cp-value-sub').textContent = `持有 ${qty.toFixed(4)} ${sym}　·　${p !== undefined ? fmtUSD(p, 4) : '—'}`;
+  renderCryptoHistory(sym);
+}
+
+function openCryptoDetail(idx) {
+  _cryptoPanelIdx = idx;
+  const r = S.data.crypto[idx];
+  const sym = r[0]?.toUpperCase();
+  $('cp-sym').textContent = sym;
+  _refreshPanelDisplay(sym);
+  $('crypto-panel').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeCryptoDetail() {
+  $('crypto-panel').classList.remove('open');
+  document.body.style.overflow = '';
+  _cryptoPanelIdx = null;
+}
+
+function cryptoPanelBgClick(e) {
+  if (e.target === $('crypto-panel')) closeCryptoDetail();
+}
+
+function renderCryptoHistory(sym) {
+  const hist = S.data.crypto_history.filter(r => r[1] === sym);
+  hist.sort((a, b) => b[0] > a[0] ? 1 : -1);
+  if (!hist.length) {
+    $('cp-history').innerHTML = '<div class="cp-history-empty">尚無變動記錄</div>';
+    return;
+  }
+  $('cp-history').innerHTML = hist.map(r => {
+    const delta = parseFloat(r[4]);
+    const isPos = delta >= 0;
+    const deltaStr = (isPos ? '+' : '') + delta.toFixed(4);
+    const qtyAfter = parseFloat(r[3]);
+    const priceStr = r[5] !== '' ? fmtUSD(parseFloat(r[5]), 4) : '—';
+    return `<div class="cp-history-item">
+      <span class="cp-history-date">${esc(r[0])}</span>
+      <span class="cp-history-delta ${isPos ? 'pos' : 'neg'}">${deltaStr}</span>
+      <span class="cp-history-qty">→ ${qtyAfter.toFixed(4)}</span>
+      <span class="cp-history-price">${priceStr}</span>
+    </div>`;
+  }).join('');
+}
+
+async function adjustCryptoQty() {
+  if (_cryptoPanelIdx === null) return;
+  const r = S.data.crypto[_cryptoPanelIdx];
+  const sym = r[0]?.toUpperCase();
+  const qtyBefore = parseFloat(r[1]) || 0;
+  openModal('增減數量 · ' + sym, [
+    { id: 'delta', label: '變動數量（正為增加，負為減少）', type: 'number', step: 'any', ph: '例如 0.5 或 -0.1' }
+  ], async vals => {
+    const delta = parseFloat(vals.delta);
+    if (isNaN(delta) || delta === 0) { showToast('請輸入有效的變動數量', 'err'); return false; }
+    const qtyAfter = qtyBefore + delta;
+    if (qtyAfter < 0) { showToast('數量不能小於 0', 'err'); return false; }
+    S.data.crypto[_cryptoPanelIdx] = [sym, qtyAfter];
+    await saveSheet('holdings_crypto', S.data.crypto);
+    await appendCryptoHistory(sym, qtyBefore, qtyAfter);
+    renderKPIs(); renderCharts(); renderManagement();
+    _refreshPanelDisplay(sym);
+    showToast('已更新', 'ok');
+    return true;
+  });
+}
+
+async function setCryptoQty() {
+  if (_cryptoPanelIdx === null) return;
+  const r = S.data.crypto[_cryptoPanelIdx];
+  const sym = r[0]?.toUpperCase();
+  const qtyBefore = parseFloat(r[1]) || 0;
+  openModal('設定餘額 · ' + sym, [
+    { id: 'quantity', label: '新數量', type: 'number', val: r[1], min: 0, step: 'any' }
+  ], async vals => {
+    const qtyAfter = parseFloat(vals.quantity);
+    if (isNaN(qtyAfter) || qtyAfter < 0) { showToast('請輸入有效數量', 'err'); return false; }
+    S.data.crypto[_cryptoPanelIdx] = [sym, qtyAfter];
+    await saveSheet('holdings_crypto', S.data.crypto);
+    await appendCryptoHistory(sym, qtyBefore, qtyAfter);
+    renderKPIs(); renderCharts(); renderManagement();
+    _refreshPanelDisplay(sym);
+    showToast('已更新', 'ok');
+    return true;
+  });
+}
+
+function deleteCryptoFromPanel() {
+  if (_cryptoPanelIdx === null) return;
+  const sym = S.data.crypto[_cryptoPanelIdx]?.[0]?.toUpperCase();
+  openConfirm('刪除 ' + sym, `確定要從持倉中移除 ${sym} 嗎？`, async () => {
+    S.data.crypto.splice(_cryptoPanelIdx, 1);
+    await saveSheet('holdings_crypto', S.data.crypto);
+    renderKPIs(); renderCharts(); renderManagement();
+    closeCryptoDetail();
+    showToast('已刪除 ' + sym, 'ok');
+  });
+}
 
 // ══════════════════════════════════════════════════════════════
 // THEME
