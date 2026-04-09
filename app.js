@@ -2,13 +2,16 @@
 // CONFIG
 // ══════════════════════════════════════════════════════════════
 // Build 時間：每次修改 code 後手動更新此時間（UTC+8 台北時間）
-const BUILD_DATE = '2026/04/09 13:02';
+const BUILD_DATE = '2026/04/09 13:12';
 
 const SPREADSHEET_ID = '1lpRpxVzWaYUqL-jVPOAJCtjsJUIedPYYyOx4gg4PPFU';
 const CLIENT_ID = '149884248440-85f8dhc6ub9up10sv0f89e3e0itrnooj.apps.googleusercontent.com';
 const SCOPE = 'https://www.googleapis.com/auth/spreadsheets';
 const PROXY = 'https://corsproxy.io/?';
 const PROXY_BACKUP = 'https://api.allorigins.win/raw?url=';
+
+// George，未來每個月初請在這裡更新上月底的快照金額
+const LAST_MONTH_AVAILABLE_SNAPSHOT = 17819156;
 
 async function proxyFetch(url, opts = {}) {
   try {
@@ -412,16 +415,16 @@ function renderKPIs() {
   setKPI('kv-net', fmt(net), 'ks-net', '');
   setKPI('kv-liquid', fmt(liquid), 'ks-liquid', '總資產 − 房地產');
 
-  if (snaps.length > 0) {
-    const last = snaps[snaps.length - 1];
-    const lastNet = parseFloat(last[7]) || 0;
-    const diff = net - lastNet;
-    const el = $('kv-monthly');
-    el.textContent = (diff >= 0 ? '+' : '') + fmt(diff);
-    el.className = `kpi-value ${diff >= 0 ? 'pos' : 'neg'}`;
-    const card = $('card-monthly');
-    if (card) card.className = `kpi-card ${diff >= 0 ? 'kpi-gain' : 'kpi-loss'}`;
+  // 本月收益：可用資產 − 上月底快照基準
+  const monthlyDiff = liquid - LAST_MONTH_AVAILABLE_SNAPSHOT;
+  const elMonthly = $('kv-monthly');
+  elMonthly.textContent = (monthlyDiff >= 0 ? '+' : '') + fmt(monthlyDiff);
+  elMonthly.className = `kpi-value ${monthlyDiff >= 0 ? 'pos' : 'neg'}`;
+  const cardMonthly = $('card-monthly');
+  if (cardMonthly) cardMonthly.className = `kpi-card ${monthlyDiff >= 0 ? 'kpi-gain' : 'kpi-loss'}`;
+  const sMonthly = $('ks-monthly'); if (sMonthly) sMonthly.textContent = '可用資產 − 3/31 基準';
 
+  if (snaps.length > 0) {
     const first = snaps[0];
     const firstNet = parseFloat(first[7]) || 0;
     if (firstNet > 0) {
@@ -433,10 +436,7 @@ function renderKPIs() {
       setKPI('kv-growth', '—', 'ks-growth', '尚無有效快照');
     }
   } else {
-    setKPI('kv-monthly', '—', 'ks-monthly', '尚無快照');
     setKPI('kv-growth', '—', 'ks-growth', '尚無快照');
-    const card = $('card-monthly');
-    if (card) card.className = 'kpi-card';
   }
 
   const re = $('kv-rate');
