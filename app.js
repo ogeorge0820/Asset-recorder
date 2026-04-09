@@ -2,12 +2,25 @@
 // CONFIG
 // ══════════════════════════════════════════════════════════════
 // Build 時間：每次修改 code 後手動更新此時間（UTC+8 台北時間）
-const BUILD_DATE = '2026/04/08 23:52';
+const BUILD_DATE = '2026/04/09 12:00';
 
 const SPREADSHEET_ID = '1lpRpxVzWaYUqL-jVPOAJCtjsJUIedPYYyOx4gg4PPFU';
 const CLIENT_ID = '149884248440-85f8dhc6ub9up10sv0f89e3e0itrnooj.apps.googleusercontent.com';
 const SCOPE = 'https://www.googleapis.com/auth/spreadsheets';
 const PROXY = 'https://corsproxy.io/?';
+const PROXY_BACKUP = 'https://api.allorigins.win/raw?url=';
+
+async function proxyFetch(url, opts = {}) {
+  try {
+    const r = await fetch(`${PROXY}${encodeURIComponent(url)}`, { ...opts, signal: AbortSignal.timeout(9000) });
+    if (!r.ok) throw new Error(`HTTP ${r.status}`);
+    return r;
+  } catch {
+    const r2 = await fetch(`${PROXY_BACKUP}${encodeURIComponent(url)}`, { ...opts, signal: AbortSignal.timeout(9000) });
+    if (!r2.ok) throw new Error(`HTTP ${r2.status}`);
+    return r2;
+  }
+}
 
 const COIN_MAP = {
   BTC:'bitcoin', ETH:'ethereum', BNB:'binancecoin', SOL:'solana',
@@ -234,8 +247,7 @@ async function fetchAllPrices() {
 
 async function yahooFetch(ticker) {
   const url = `https://query1.finance.yahoo.com/v8/finance/chart/${ticker}`;
-  const r = await fetch(`${PROXY}${encodeURIComponent(url)}`, { signal: AbortSignal.timeout(9000) });
-  if (!r.ok) throw new Error(`HTTP ${r.status}`);
+  const r = await proxyFetch(url);
   const d = await r.json();
   const price = d?.chart?.result?.[0]?.meta?.regularMarketPrice;
   if (!price) throw new Error('no price');
@@ -306,11 +318,7 @@ async function fetchCryptoPrices() {
   const ids = syms.map(s => COIN_MAP[s] || s.toLowerCase());
   try {
     const url = `https://api.coingecko.com/api/v3/simple/price?ids=${ids.join(',')}&vs_currencies=usd`;
-    const r = await fetch(
-      `${PROXY}${encodeURIComponent(url)}`,
-      { signal: AbortSignal.timeout(9000) }
-    );
-    if (!r.ok) throw new Error(`HTTP ${r.status}`);
+    const r = await proxyFetch(url);
     const d = await r.json();
     syms.forEach((sym, i) => {
       const id = ids[i];
@@ -327,7 +335,7 @@ async function validateCoinGecko(symbol) {
   const id = COIN_MAP[symbol.toUpperCase()];
   if (id) return id;
   try {
-    const r = await fetch(`${PROXY}${encodeURIComponent(`https://api.coingecko.com/api/v3/search?query=${encodeURIComponent(symbol)}`)}`, { signal: AbortSignal.timeout(6000) });
+    const r = await proxyFetch(`https://api.coingecko.com/api/v3/search?query=${encodeURIComponent(symbol)}`);
     const d = await r.json();
     const coin = (d.coins || []).find(c => c.symbol.toUpperCase() === symbol.toUpperCase());
     if (coin) { COIN_MAP[symbol.toUpperCase()] = coin.id; return coin.id; }
