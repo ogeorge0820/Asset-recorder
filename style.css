@@ -188,7 +188,11 @@ body {
 }
 .section-card h3 {
   font-size: 0.95rem; margin-bottom: 14px;
-  display: flex; align-items: center; gap: 8px;
+  display: flex; align-items: center; justify-content: space-between; gap: 8px;
+}
+.section-total {
+  font-size: 0.95rem; font-weight: 700;
+  color: var(--accent-light); white-space: nowrap; flex-shrink: 0;
 }
 .badge {
   background: var(--accent); color: #fff;
