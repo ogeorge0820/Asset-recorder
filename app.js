@@ -2,7 +2,7 @@
 // CONFIG
 // ══════════════════════════════════════════════════════════════
 // Build 時間：每次修改 code 後手動更新此時間（UTC+8 台北時間）
-const BUILD_DATE = '2026/04/09 23:30';
+const BUILD_DATE = '2026/04/09 23:55';
 
 const SPREADSHEET_ID = '1lpRpxVzWaYUqL-jVPOAJCtjsJUIedPYYyOx4gg4PPFU';
 const CLIENT_ID = '149884248440-85f8dhc6ub9up10sv0f89e3e0itrnooj.apps.googleusercontent.com';
@@ -139,7 +139,7 @@ const HEADERS = {
   holdings_crypto: ['symbol','quantity'],
   cash_accounts: ['bank_name','amount','currency'],
   settings: ['key','value'],
-  crypto_rewards: ['date','symbol','quantity','price_usd','value_twd','type'],
+  crypto_rewards: ['date','symbol','quantity','price_usd','value_twd','type','note'],
   crypto_history: ['date','symbol','qty_before','qty_after','delta','price_usd','value_twd'],
   tw_history: ['date','symbol','qty_before','qty_after','delta','price_twd','value_twd'],
   us_history: ['date','symbol','qty_before','qty_after','delta','price_usd','value_twd'],
@@ -872,9 +872,15 @@ function renderRewards() {
           const qty = parseFloat(r[2]) || 0;
           const sym = (r[1] || '').toUpperCase();
           const twd = rewardTWD(r);
-          const isAuto = (r[5] || '') === '系統換算';
+          const type = r[5] || '手動';
+          const note = r[6] || '';
+          const isAuto = type === '系統換算';
+          const typeBadge = isAuto ? '' : `<span class="rwd-type-badge rwd-type-${type === '外部存入' ? 'ext' : 'manual'}">${esc(type)}</span>`;
           return `<div class="rwd-item">
-            <span class="rwd-sym">${esc(sym)}</span>
+            <div class="rwd-item-left">
+              <span class="rwd-sym">${esc(sym)}${typeBadge}</span>
+              ${note ? `<span class="rwd-note">${esc(note)}</span>` : ''}
+            </div>
             <span class="rwd-detail">+${qty.toFixed(3)} <span class="rwd-twd">≈ ${fmt(twd)}</span></span>
             <div class="rwd-actions">
               ${isAuto ? '' : `<button class="btn-icon edit" onclick="editReward(${i})" title="編輯">✏</button>`}
@@ -928,6 +934,8 @@ function openRewardModal(title, defaults, onSave) {
   const sel = defaults.symbol || symOptions[0] || '';
   const priceDefault = defaults.price_usd !== undefined ? defaults.price_usd : (S.prices.crypto[sel] ?? '');
   const monthVal = defaults.date ? defaults.date.replace('/', '-') : defaultMonth;
+  const typeVal = defaults.type || '手動';
+  const noteVal = defaults.note || '';
 
   $('modal-title').textContent = title;
   $('modal-body').innerHTML = `
@@ -942,6 +950,12 @@ function openRewardModal(title, defaults, onSave) {
         </select>
         <input id="mf-symbol-custom" type="text" placeholder="輸入幣種代號" style="display:none;margin-top:6px" oninput="this.value=this.value.toUpperCase()">
       </div>
+      <div class="field"><label>類型</label>
+        <select id="mf-type">
+          <option value="手動" ${typeVal==='手動'?'selected':''}>手動輸入</option>
+          <option value="外部存入" ${typeVal==='外部存入'?'selected':''}>外部存入</option>
+        </select>
+      </div>
       <div class="field"><label>增加數量</label>
         <input id="mf-quantity" type="number" step="any" min="0" value="${esc(String(defaults.quantity??''))}" placeholder="0" oninput="rewardSyncValue()">
       </div>
@@ -950,6 +964,9 @@ function openRewardModal(title, defaults, onSave) {
       </div>
       <div class="field"><label>收益價值 (TWD)　<small style="color:var(--muted)">(自動計算)</small></label>
         <input id="mf-value_twd" type="text" readonly value="${esc(defaults.value_twd??'')}" placeholder="—">
+      </div>
+      <div class="field"><label>備註 <small style="color:var(--muted)">(選填)</small></label>
+        <input id="mf-note" type="text" maxlength="60" value="${esc(noteVal)}" placeholder="例：VISA 儲值、Binance Earn…">
       </div>
     </div>
     <div class="modal-actions">
@@ -975,6 +992,8 @@ function openRewardModal(title, defaults, onSave) {
     const sym = symSel === '__custom' ? ($('mf-symbol-custom')?.value?.toUpperCase()) : symSel;
     const qty = parseFloat($('mf-quantity')?.value) || 0;
     const price = parseFloat($('mf-price_usd')?.value) || 0;
+    const type = $('mf-type')?.value || '手動';
+    const note = ($('mf-note')?.value || '').trim();
 
     if (!rawMonth || !sym || qty <= 0) {
       showToast('請填寫月份、幣種與數量', 'err'); return;
@@ -984,7 +1003,7 @@ function openRewardModal(title, defaults, onSave) {
 
     btnLoading(btn);
     try {
-      await onSave(date, sym, qty, price, valueTWD);
+      await onSave(date, sym, qty, price, valueTWD, type, note);
       btn.classList.remove('btn-loading');
       btn.textContent = '✓ 完成';
       setTimeout(() => closeModal(), 600);
@@ -996,8 +1015,8 @@ function openRewardModal(title, defaults, onSave) {
 }
 
 function addReward() {
-  openRewardModal('新增收益記錄', {}, async (date, sym, qty, price, twd) => {
-    S.data.rewards.push([date, sym, qty, price, Math.round(twd), '手動']);
+  openRewardModal('新增收益記錄', {}, async (date, sym, qty, price, twd, type, note) => {
+    S.data.rewards.push([date, sym, qty, price, Math.round(twd), type || '手動', note || '']);
     S.data.rewards.sort((a, b) => b[0].localeCompare(a[0]));
     await saveSheet('crypto_rewards', S.data.rewards);
     renderRewards(); renderRewardsSummary();
@@ -1007,8 +1026,8 @@ function addReward() {
 
 function editReward(idx) {
   const r = S.data.rewards[idx];
-  openRewardModal('編輯收益記錄', { date: r[0], symbol: r[1], quantity: r[2], price_usd: r[3], value_twd: fmt(parseFloat(r[4])) }, async (date, sym, qty, price, twd) => {
-    S.data.rewards[idx] = [date, sym, qty, price, Math.round(twd), r[5] || '手動'];  // 保留原始類型
+  openRewardModal('編輯收益記錄', { date: r[0], symbol: r[1], quantity: r[2], price_usd: r[3], value_twd: fmt(parseFloat(r[4])), type: r[5], note: r[6] || '' }, async (date, sym, qty, price, twd, type, note) => {
+    S.data.rewards[idx] = [date, sym, qty, price, Math.round(twd), type || r[5] || '手動', note ?? r[6] ?? ''];
     S.data.rewards.sort((a, b) => b[0].localeCompare(a[0]));
     await saveSheet('crypto_rewards', S.data.rewards);
     renderRewards(); renderRewardsSummary();
