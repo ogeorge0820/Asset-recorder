@@ -2,7 +2,7 @@
 // CONFIG
 // ══════════════════════════════════════════════════════════════
 // Build 時間：每次修改 code 後手動更新此時間（UTC+8 台北時間）
-const BUILD_DATE = '2026/04/09 21:32';
+const BUILD_DATE = '2026/04/09 21:50';
 
 const SPREADSHEET_ID = '1lpRpxVzWaYUqL-jVPOAJCtjsJUIedPYYyOx4gg4PPFU';
 const CLIENT_ID = '149884248440-85f8dhc6ub9up10sv0f89e3e0itrnooj.apps.googleusercontent.com';
@@ -34,6 +34,42 @@ async function seedBaselineHistory() {
   S.data.crypto_history.push(...seedRows);
   S.data.crypto_history.sort((a, b) => a[0].localeCompare(b[0]));
   await saveSheet('crypto_history', S.data.crypto_history);
+}
+
+// USDT 3 月手動支出金額（計算質押利息時扣除）
+const USDT_MARCH_MANUAL_ADJ = -4000;
+
+// 批量寫入 2026/03 各幣種質押收益（首次執行，Guard：已有 2026/03 系統換算記錄則跳過）
+// 需在 fetchAllPrices() 之後呼叫，確保 S.prices.crypto 已就緒
+async function batchSeedMarchRewards() {
+  const TARGET_MONTH = '2026/03';
+  if (S.data.rewards.some(r => r[0] === TARGET_MONTH && r[5] === '系統換算')) return 0;
+
+  const feb28Map = new Map(BASELINE_FEB28.map(([sym, qty]) => [sym.toUpperCase(), qty]));
+  const newRecords = [];
+
+  for (const holding of S.data.crypto) {
+    const sym = (holding[0] || '').toUpperCase();
+    const march31Qty = parseFloat(holding[1]) || 0;
+    const feb28Qty = feb28Map.get(sym);
+    if (feb28Qty === undefined) continue;  // 不在 2/28 基準中，略過
+
+    const delta = march31Qty - feb28Qty;
+    const manualAdj = sym === 'USDT' ? USDT_MARCH_MANUAL_ADJ : 0;
+    const interestQty = delta - manualAdj;
+    if (interestQty <= 0) continue;
+
+    const price = S.prices.crypto[sym] || 0;
+    const valueTWD = Math.round(interestQty * price * S.prices.usdtwd);
+    newRecords.push([TARGET_MONTH, sym, interestQty, price, valueTWD, '系統換算']);
+  }
+
+  if (newRecords.length === 0) return 0;
+
+  S.data.rewards.push(...newRecords);
+  S.data.rewards.sort((a, b) => b[0].localeCompare(a[0]) || a[1].localeCompare(b[1]));
+  await saveSheet('crypto_rewards', S.data.rewards);
+  return newRecords.length;
 }
 
 // 歷史淨資產快照基準（僅含 net_assets，其他欄位補 0）
@@ -1842,6 +1878,9 @@ async function initApp() {
 
     showToast('抓取即時價格…');
     await fetchAllPrices();
+
+    const marchCount = await batchSeedMarchRewards();
+    if (marchCount > 0) showToast(`已新增 ${marchCount} 筆 3 月份質押收益`, 'ok');
 
     renderKPIs();
     renderCharts();
