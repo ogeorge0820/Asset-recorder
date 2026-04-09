@@ -398,10 +398,7 @@ body {
   cursor: pointer; transition: background .15s;
 }
 .asset-card:hover { background: var(--border); }
-.asset-card-left {
-  display: flex; flex-direction: row; align-items: center;
-  gap: 10px; flex-shrink: 0;
-}
+/* 圓圈：左側固定錨點 */
 .asset-card-pct {
   width: 46px; height: 46px; border-radius: 50%;
   background: var(--accent); color: #fff;
@@ -410,15 +407,15 @@ body {
   letter-spacing: -0.3px; flex-shrink: 0;
 }
 .asset-card.err .asset-card-pct { background: rgba(239,68,68,.2); color: var(--red); }
+/* 名稱：中間彈性區，完整顯示後才截斷 */
 .asset-card-sym {
-  /* 固定寬度 64px：所有卡片的 % 圓圈垂直對齊 */
-  width: 64px; flex-shrink: 0;
-  font-size: 1rem; font-weight: 800;
-  font-family: monospace; color: var(--text);
-  letter-spacing: .5px;
+  flex: 1; min-width: 0;
+  font-size: 1rem; font-weight: 700;
+  color: var(--text);
   overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
 }
-.asset-card-mid { flex: 1; min-width: 0; text-align: right; }
+/* 金額區塊：右側固定，不壓縮 */
+.asset-card-mid { flex-shrink: 0; text-align: right; }
 .asset-card-twd {
   font-size: 1.2rem; font-weight: 700;
   color: var(--text); letter-spacing: -0.5px; line-height: 1.3;
