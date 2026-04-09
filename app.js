@@ -2,7 +2,7 @@
 // CONFIG
 // ══════════════════════════════════════════════════════════════
 // Build 時間：每次修改 code 後手動更新此時間（UTC+8 台北時間）
-const BUILD_DATE = '2026/04/09 08:02';
+const BUILD_DATE = '2026/04/09 09:20';
 
 const SPREADSHEET_ID = '1lpRpxVzWaYUqL-jVPOAJCtjsJUIedPYYyOx4gg4PPFU';
 const CLIENT_ID = '149884248440-85f8dhc6ub9up10sv0f89e3e0itrnooj.apps.googleusercontent.com';
@@ -542,22 +542,65 @@ function renderCrypto() {
     const val = r => (parseFloat(r[1])||0) * (S.prices.crypto[r[0]?.toUpperCase()]||0) * rate;
     return val(b.r) - val(a.r);
   });
-  $('tb-crypto').innerHTML = sorted.length ? sorted.map(({r, i}) => {
+
+  // 計算總值（用於百分比）
+  const totalCryptoTWD = rows.reduce((s, r) => {
     const sym = r[0]?.toUpperCase(), p = S.prices.crypto[sym];
-    const v = p ? (parseFloat(r[1]) || 0) * p * rate : null;
-    const err = S.prices.errs[`c_${sym}`];
-    const qty = parseFloat(r[1]) || 0;
-    const priceCell = err
-      ? '<span style="color:var(--red);font-size:0.8rem">-</span>'
-      : (p !== undefined ? fmtUSD(p, 4) : skelSpan());
-    return `<tr>
-      <td data-label="代號"><span class="sym-tag">${esc(sym)}</span></td>
-      <td data-label="數量">${qty.toFixed(2)}</td>
-      <td data-label="幣價 (USD)" class="amt">${priceCell}</td>
-      <td data-label="現值 (TWD)" class="amt">${v !== null ? fmt(v) : skelSpan()}${err ? '<span class="price-err">更新失敗</span>' : ''}</td>
-      <td><button class="btn-icon edit" onclick="editItem('crypto',${i})">✏</button><button class="btn-icon del" onclick="deleteItem('crypto',${i})">✕</button></td>
-    </tr>`;
-  }).join('') : '<tr><td colspan="5" style="text-align:center;padding:16px;color:var(--muted)">尚無持幣</td></tr>';
+    return s + (p ? (parseFloat(r[1]) || 0) * p * rate : 0);
+  }, 0);
+
+  if (!sorted.length) {
+    const empty = '<tr><td colspan="5" style="text-align:center;padding:16px;color:var(--muted)">尚無持幣</td></tr>';
+    $('tb-crypto').innerHTML = empty;
+    $('crypto-cards').innerHTML = '<div style="text-align:center;padding:20px;color:var(--muted);font-size:0.88rem">尚無持幣</div>';
+  } else {
+    // ── 桌機 table rows ──
+    $('tb-crypto').innerHTML = sorted.map(({r, i}) => {
+      const sym = r[0]?.toUpperCase(), p = S.prices.crypto[sym];
+      const v = p ? (parseFloat(r[1]) || 0) * p * rate : null;
+      const err = S.prices.errs[`c_${sym}`];
+      const qty = parseFloat(r[1]) || 0;
+      const priceCell = err
+        ? '<span style="color:var(--red);font-size:0.8rem">-</span>'
+        : (p !== undefined ? fmtUSD(p, 4) : skelSpan());
+      return `<tr>
+        <td data-label="代號"><span class="sym-tag">${esc(sym)}</span></td>
+        <td data-label="數量">${qty.toFixed(2)}</td>
+        <td data-label="幣價 (USD)" class="amt">${priceCell}</td>
+        <td data-label="現值 (TWD)" class="amt">${v !== null ? fmt(v) : skelSpan()}${err ? '<span class="price-err">更新失敗</span>' : ''}</td>
+        <td><button class="btn-icon edit" onclick="editItem('crypto',${i})">✏</button><button class="btn-icon del" onclick="deleteItem('crypto',${i})">✕</button></td>
+      </tr>`;
+    }).join('');
+
+    // ── 手機卡片 ──
+    $('crypto-cards').innerHTML = sorted.map(({r, i}) => {
+      const sym = r[0]?.toUpperCase(), p = S.prices.crypto[sym];
+      const v = p ? (parseFloat(r[1]) || 0) * p * rate : null;
+      const err = S.prices.errs[`c_${sym}`];
+      const qty = parseFloat(r[1]) || 0;
+      const pct = (totalCryptoTWD > 0 && v !== null) ? Math.round(v / totalCryptoTWD * 100) : null;
+      const pctStr = pct !== null ? pct + '%' : '—';
+      const twdStr = err ? '更新失敗' : (v !== null ? fmt(v) : skelSpan());
+      const detailStr = err
+        ? `持有 ${qty.toFixed(2)}`
+        : `持有 ${qty.toFixed(2)} · ${p !== undefined ? fmtUSD(p, 4) : '—'}`;
+      return `<div class="crypto-card${err ? ' err' : ''}">
+        <div class="crypto-card-left">
+          <div class="crypto-card-pct">${pctStr}</div>
+          <div class="crypto-card-sym">${esc(sym)}</div>
+        </div>
+        <div class="crypto-card-mid">
+          <div class="crypto-card-twd">${twdStr}</div>
+          <div class="crypto-card-detail">${detailStr}</div>
+        </div>
+        <div class="crypto-card-actions">
+          <button class="btn-icon edit" onclick="editItem('crypto',${i})">✏</button>
+          <button class="btn-icon del" onclick="deleteItem('crypto',${i})">✕</button>
+        </div>
+      </div>`;
+    }).join('');
+  }
+
   const tot = rows.reduce((s, r) => s + (parseFloat(r[1]) || 0) * (S.prices.crypto[r[0]?.toUpperCase()] || 0) * rate, 0);
   $('tot-crypto').textContent = fmt(tot);
 }

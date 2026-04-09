@@ -215,10 +215,11 @@
         <!-- Row 3: 加密貨幣 全寬 -->
         <div class="section-card" style="grid-column: 1 / -1">
           <h3>₿ 加密貨幣 <span class="badge" id="cnt-crypto">0</span></h3>
-          <div class="table-wrap"><table class="data-table">
+          <div class="table-wrap" id="crypto-table-wrap"><table class="data-table">
             <thead><tr><th>代號</th><th>數量</th><th style="text-align:right">幣價 (USD)</th><th style="text-align:right">現值 (TWD)</th><th></th></tr></thead>
             <tbody id="tb-crypto"></tbody>
           </table></div>
+          <div class="crypto-cards" id="crypto-cards"></div>
           <button class="btn-add" onclick="addItem('crypto')">+ 新增加密貨幣</button>
           <div class="section-footer">
             <span class="total-lbl">加密貨幣合計</span>
