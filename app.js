@@ -2,7 +2,7 @@
 // CONFIG
 // ══════════════════════════════════════════════════════════════
 // Build 時間：每次修改 code 後手動更新此時間（UTC+8 台北時間）
-const BUILD_DATE = '2026/04/09 13:12';
+const BUILD_DATE = '2026/04/09 13:31';
 
 const SPREADSHEET_ID = '1lpRpxVzWaYUqL-jVPOAJCtjsJUIedPYYyOx4gg4PPFU';
 const CLIENT_ID = '149884248440-85f8dhc6ub9up10sv0f89e3e0itrnooj.apps.googleusercontent.com';
@@ -495,6 +495,29 @@ function renderCash() {
     </tr>`;
   }).join('') : '<tr><td colspan="5" style="text-align:center;padding:16px;color:var(--muted)">尚無帳戶</td></tr>';
   $('tot-cash').textContent = fmt(rows.reduce((s, r) => s + cashToTWD(r), 0));
+
+  // ── 手機卡片 ──
+  const totalCashTWD = rows.reduce((s, r) => s + cashToTWD(r), 0);
+  $('cash-cards').innerHTML = sorted.length ? sorted.map(({r, i}) => {
+    const ccy = (r[2] || 'TWD').toUpperCase();
+    const amt = parseFloat(r[1]) || 0;
+    const twd = cashToTWD(r);
+    const hasErr = ccy !== 'TWD' && S.prices.errs[`fx_${ccy}`];
+    const pct = (totalCashTWD > 0) ? Math.round(twd / totalCashTWD * 100) : null;
+    const pctStr = pct !== null ? pct + '%' : '—';
+    const twdStr = hasErr ? '匯率失敗' : fmt(twd);
+    const detailStr = `${esc(ccy)} ${fmtCashAmt(amt, ccy)}`;
+    return `<div class="asset-card${hasErr ? ' err' : ''}" onclick="openCashDetail(${i})" role="button" tabindex="0">
+      <div class="asset-card-left">
+        <div class="asset-card-sym">${esc(r[0])}</div>
+        <div class="asset-card-pct">${pctStr}</div>
+      </div>
+      <div class="asset-card-mid">
+        <div class="asset-card-twd">${twdStr}</div>
+        <div class="asset-card-detail">${detailStr}</div>
+      </div>
+    </div>`;
+  }).join('') : '<div style="text-align:center;padding:20px;color:var(--muted);font-size:0.88rem">尚無帳戶</div>';
 }
 
 function renderTW() {
@@ -1375,6 +1398,28 @@ function openConfirm(title, msg, onOK) {
 
 function closeModal() { $('modal').classList.remove('open'); }
 function modalBgClick(e) { if(e.target === $('modal')) closeModal(); }
+
+// 流動現金卡片點擊詳情
+function openCashDetail(idx) {
+  const r = S.data.cash[idx];
+  if (!r) return;
+  const name = r[0] || '帳戶';
+  const ccy = (r[2] || 'TWD').toUpperCase();
+  const amt = parseFloat(r[1]) || 0;
+  const twd = cashToTWD(r);
+  const hasErr = ccy !== 'TWD' && S.prices.errs[`fx_${ccy}`];
+  $('modal-title').textContent = name;
+  $('modal-body').innerHTML = `
+    <div style="text-align:center;padding:8px 0 20px">
+      <div style="font-size:1.6rem;font-weight:800;color:var(--text);line-height:1.2">${hasErr ? '匯率失敗' : fmt(twd)}</div>
+      <div style="font-size:0.85rem;color:var(--muted);margin-top:6px">${esc(ccy)} ${fmtCashAmt(amt, ccy)}</div>
+    </div>
+    <div class="modal-actions" style="flex-direction:column;gap:10px">
+      <button class="btn-ok" style="width:100%" onclick="closeModal();setTimeout(()=>editItem('cash',${idx}),80)">✏ 修改金額</button>
+      <button class="btn-cp-delete" onclick="closeModal();setTimeout(()=>deleteItem('cash',${idx}),80)">✕ 刪除帳戶</button>
+    </div>`;
+  $('modal').classList.add('open');
+}
 
 // ══════════════════════════════════════════════════════════════
 // ASSET DETAIL PANEL (共用：crypto / tw / us)

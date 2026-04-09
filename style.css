@@ -386,7 +386,8 @@ body {
 .mobile-build-bar { display: none; }
 
 /* ── Asset cards (hidden on desktop, shown on mobile) ── */
-/* Used by: crypto-cards, tw-cards, us-cards */
+/* Used by: cash-cards, crypto-cards, tw-cards, us-cards */
+.cash-cards   { display: none; }
 .crypto-cards { display: none; }
 .stock-cards  { display: none; }
 .asset-card {
@@ -468,10 +469,12 @@ body {
   /* Management grid — full width single column */
   .mgmt-grid { grid-template-columns: 1fr; }
 
-  /* Stocks & Crypto: hide tables, show cards */
+  /* Cash, Stocks & Crypto: hide tables, show cards */
+  #cash-table-wrap  { display: none; }
   #crypto-table-wrap { display: none; }
   #tw-table-wrap { display: none; }
   #us-table-wrap { display: none; }
+  .cash-cards   { display: flex; flex-direction: column; gap: 10px; margin-top: 4px; }
   .crypto-cards { display: flex; flex-direction: column; gap: 10px; margin-top: 4px; }
   .stock-cards  { display: flex; flex-direction: column; gap: 10px; margin-top: 4px; }
 

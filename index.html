@@ -152,10 +152,11 @@
         <!-- Row 1: 流動現金 | 台股 -->
         <div class="section-card">
           <h3>🏦 流動現金 <span class="badge" id="cnt-cash">0</span></h3>
-          <div class="table-wrap"><table class="data-table">
+          <div class="table-wrap" id="cash-table-wrap"><table class="data-table">
             <thead><tr><th>帳戶</th><th>幣別</th><th style="text-align:right">金額</th><th style="text-align:right">台幣現值</th><th></th></tr></thead>
             <tbody id="tb-cash"></tbody>
           </table></div>
+          <div class="cash-cards" id="cash-cards"></div>
           <button class="btn-add" onclick="addItem('cash')">+ 新增流動現金</button>
           <div class="section-footer">
             <span class="total-lbl">現金合計 (TWD)</span>
