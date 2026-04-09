@@ -2,7 +2,7 @@
 // CONFIG
 // ══════════════════════════════════════════════════════════════
 // Build 時間：每次修改 code 後手動更新此時間（UTC+8 台北時間）
-const BUILD_DATE = '2026/04/09 19:15';
+const BUILD_DATE = '2026/04/09 19:29';
 
 const SPREADSHEET_ID = '1lpRpxVzWaYUqL-jVPOAJCtjsJUIedPYYyOx4gg4PPFU';
 const CLIENT_ID = '149884248440-85f8dhc6ub9up10sv0f89e3e0itrnooj.apps.googleusercontent.com';
@@ -15,6 +15,26 @@ const LAST_MONTH_AVAILABLE_SNAPSHOT = 17819156;
 
 // George，未來每年底請在這裡更新當年 12/31 的可用資產快照金額
 const LAST_YEAR_END_AVAILABLE_SNAPSHOT = 22272019; // 2025/12/31 快照
+
+// 2026/02/28 加密貨幣數量基準（首次啟動時自動寫入 crypto_history，僅執行一次）
+const BASELINE_FEB28 = [
+  ['BTC', 3.019], ['ETH', 46.986], ['USDT', 29036.299], ['BNB', 24.359],
+  ['CRO', 178573.150], ['SOL', 85.809], ['ADA', 23618.738], ['SUI', 4560.470],
+  ['BGB', 2031.098], ['AVAX', 281.443], ['TAO', 2.630], ['LINK', 77.779],
+  ['APT', 571.834], ['NEAR', 412.734], ['IMX', 3156.570], ['FET', 1005.576],
+];
+
+// 若 crypto_history 中尚無 2026/02 基準資料，自動寫入一次
+async function seedBaselineHistory() {
+  const hasBaseline = S.data.crypto_history.some(r => r[0]?.startsWith('2026/02'));
+  if (hasBaseline) return;
+  const seedRows = BASELINE_FEB28.map(([sym, qty]) =>
+    ['2026/02/28 基準', sym, '0', String(qty), String(qty), '', '']
+  );
+  S.data.crypto_history.push(...seedRows);
+  S.data.crypto_history.sort((a, b) => a[0].localeCompare(b[0]));
+  await saveSheet('crypto_history', S.data.crypto_history);
+}
 
 // 歷史淨資產快照基準（僅含 net_assets，其他欄位補 0）
 // 若 Google Sheet 中已有同月資料，以 Sheet 資料優先
@@ -224,7 +244,7 @@ async function loadAll() {
     sheetGet('snapshots!A:I'),
     sheetGet('daily_snapshots!A:I'),
     sheetGet('settings!A:B'),
-    sheetGet('crypto_rewards!A:E'),
+    sheetGet('crypto_rewards!A:F'),
     sheetGet('crypto_history!A:G'),
     sheetGet('tw_history!A:G'),
     sheetGet('us_history!A:G'),
@@ -738,18 +758,29 @@ function renderRewards() {
   $('tb-rewards').innerHTML = rw.length ? rw.map((r, i) => {
     const rtype = r[5] || '手動';
     const isAuto = rtype === '系統換算';
+    const qty = parseFloat(r[2]) || 0;
+    const sym = (r[1] || '').toUpperCase();
+    const dynPrice = S.prices.crypto[sym];
+    const dynTWD = dynPrice !== undefined ? qty * dynPrice * S.prices.usdtwd : null;
+    const twdDisplay = dynTWD !== null ? fmt(dynTWD) : fmt(parseFloat(r[4]));
     return `<tr>
       <td data-label="月份">${esc(r[0])}</td>
       <td data-label="幣種"><span class="sym-tag">${esc(r[1])}</span></td>
-      <td data-label="增加數量" class="amt">${(parseFloat(r[2])||0).toFixed(4)}</td>
-      <td data-label="幣價 (USD)" class="amt">${fmtUSD(parseFloat(r[3]))}</td>
-      <td data-label="收益 (TWD)" class="amt">${fmt(parseFloat(r[4]))}</td>
+      <td data-label="增加數量" class="amt">${qty.toFixed(4)}</td>
+      <td data-label="幣價 (USD)" class="amt">${dynPrice !== undefined ? fmtUSD(dynPrice) : fmtUSD(parseFloat(r[3]))}</td>
+      <td data-label="收益 (TWD)" class="amt">${twdDisplay}</td>
       <td data-label="類型"><span class="reward-type-tag ${isAuto ? 'auto' : 'manual'}">${isAuto ? '系統換算' : '手動'}</span></td>
       <td><button class="btn-icon del" onclick="deleteReward(${i})" title="刪除">✕</button>${isAuto ? '' : `<button class="btn-icon edit" onclick="editReward(${i})">✏</button>`}</td>
     </tr>`;
   }).join('') : '<tr><td colspan="7" style="text-align:center;padding:16px;color:var(--muted)">尚無收益記錄</td></tr>';
 
-  const monthTot = rw.filter(r => r[0] === curMonth).reduce((s, r) => s + (parseFloat(r[4])||0), 0);
+  // 本月收益合計：動態即時幣價計算
+  const monthTot = rw.filter(r => r[0] === curMonth).reduce((s, r) => {
+    const qty = parseFloat(r[2]) || 0;
+    const sym = (r[1] || '').toUpperCase();
+    const price = S.prices.crypto[sym];
+    return s + (price !== undefined ? qty * price * S.prices.usdtwd : (parseFloat(r[4]) || 0));
+  }, 0);
   if ($('tot-rewards-month')) $('tot-rewards-month').textContent = monthTot > 0 ? fmt(monthTot) : '—';
 }
 
@@ -885,13 +916,12 @@ function renderRewardsSummary() {
     return;
   }
 
-  // group by symbol
+  // group by symbol（只累計顆數，TWD 以即時幣價動態計算）
   const grouped = {};
   monthRw.forEach(r => {
-    const sym = r[1];
-    if (!grouped[sym]) grouped[sym] = { qty: 0, twd: 0 };
+    const sym = (r[1] || '').toUpperCase();
+    if (!grouped[sym]) grouped[sym] = { qty: 0 };
     grouped[sym].qty += parseFloat(r[2]) || 0;
-    grouped[sym].twd += parseFloat(r[4]) || 0;
   });
 
   el.innerHTML = `<table class="data-table" style="margin-top:4px">
@@ -901,11 +931,15 @@ function renderRewardsSummary() {
       <th style="text-align:right">收益價值 (TWD)</th>
     </tr></thead>
     <tbody>
-      ${Object.entries(grouped).map(([sym, v]) => `<tr>
-        <td><span class="sym-tag">${esc(sym)}</span></td>
-        <td class="amt">${v.qty.toLocaleString(undefined,{maximumFractionDigits:8})}</td>
-        <td class="amt">${fmt(v.twd)}</td>
-      </tr>`).join('')}
+      ${Object.entries(grouped).map(([sym, v]) => {
+        const price = S.prices.crypto[sym] || 0;
+        const twd = v.qty * price * S.prices.usdtwd;
+        return `<tr>
+          <td><span class="sym-tag">${esc(sym)}</span></td>
+          <td class="amt">${v.qty.toLocaleString(undefined,{maximumFractionDigits:8})}</td>
+          <td class="amt">${fmt(twd)}</td>
+        </tr>`;
+      }).join('')}
     </tbody>
   </table>`;
 }
@@ -1802,6 +1836,7 @@ async function initApp() {
 
     showToast('載入資料…');
     await loadAll();
+    await seedBaselineHistory();
 
     showToast('抓取即時價格…');
     await fetchAllPrices();
