@@ -2,7 +2,7 @@
 // CONFIG
 // ══════════════════════════════════════════════════════════════
 // Build 時間：每次修改 code 後手動更新此時間（UTC+8 台北時間）
-const BUILD_DATE = '2026/04/09 22:05';
+const BUILD_DATE = '2026/04/09 23:30';
 
 const SPREADSHEET_ID = '1lpRpxVzWaYUqL-jVPOAJCtjsJUIedPYYyOx4gg4PPFU';
 const CLIENT_ID = '149884248440-85f8dhc6ub9up10sv0f89e3e0itrnooj.apps.googleusercontent.com';
@@ -44,19 +44,42 @@ const USDT_MARCH_MANUAL_ADJ = -4000;
 async function batchSeedMarchRewards() {
   const TARGET_MONTH = '2026/03';
   if (S.data.rewards.some(r => r[0] === TARGET_MONTH && r[5] === '系統換算')) return 0;
+  return _calcAndWriteMarchRewards(TARGET_MONTH);
+}
 
+// 強制覆蓋 2026/03 質押收益：刪除舊記錄，依最新持倉重算後寫回
+// 從瀏覽器 console 呼叫：await forceReseedMarchRewards()
+async function forceReseedMarchRewards() {
+  const TARGET_MONTH = '2026/03';
+  // 先重新抓取最新持倉與報價
+  await loadAll();
+  await fetchAllPrices();
+  // 刪除所有 2026/03 記錄（不管 type）
+  const before = S.data.rewards.length;
+  S.data.rewards = S.data.rewards.filter(r => r[0] !== TARGET_MONTH);
+  const deleted = before - S.data.rewards.length;
+  console.log(`[forceReseed] 已移除 ${deleted} 筆舊 2026/03 記錄`);
+  const written = await _calcAndWriteMarchRewards(TARGET_MONTH);
+  renderKPIs(); renderCharts(); renderManagement();
+  showToast(`對帳完成：刪除 ${deleted} 筆，新增 ${written} 筆 2026/03 記錄`);
+  return { deleted, written };
+}
+
+async function _calcAndWriteMarchRewards(TARGET_MONTH) {
   const feb28Map = new Map(BASELINE_FEB28.map(([sym, qty]) => [sym.toUpperCase(), qty]));
   const newRecords = [];
+  const log = [];
 
   for (const holding of S.data.crypto) {
     const sym = (holding[0] || '').toUpperCase();
     const march31Qty = parseFloat(holding[1]) || 0;
     const feb28Qty = feb28Map.get(sym);
-    if (feb28Qty === undefined) continue;  // 不在 2/28 基準中，略過
+    if (feb28Qty === undefined) continue;
 
     const delta = march31Qty - feb28Qty;
     const manualAdj = sym === 'USDT' ? USDT_MARCH_MANUAL_ADJ : 0;
     const interestQty = delta - manualAdj;
+    log.push(`${sym}: 3/31=${march31Qty}, 2/28=${feb28Qty}, delta=${delta.toFixed(6)}, adj=${manualAdj}, interest=${interestQty.toFixed(6)}`);
     if (interestQty <= 0) continue;
 
     const price = S.prices.crypto[sym] || 0;
@@ -64,11 +87,13 @@ async function batchSeedMarchRewards() {
     newRecords.push([TARGET_MONTH, sym, interestQty, price, valueTWD, '系統換算']);
   }
 
+  console.table(log);
   if (newRecords.length === 0) return 0;
 
   S.data.rewards.push(...newRecords);
   S.data.rewards.sort((a, b) => b[0].localeCompare(a[0]) || a[1].localeCompare(b[1]));
   await saveSheet('crypto_rewards', S.data.rewards);
+  console.log(`[calcMarchRewards] 寫入 ${newRecords.length} 筆:`, newRecords);
   return newRecords.length;
 }
 
