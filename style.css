@@ -689,3 +689,20 @@ body {
 /* Light mode 補充 */
 [data-theme="light"] .crypto-panel-close:hover { background: var(--card2); }
 [data-theme="light"] .btn-cp-delete:hover { background: rgba(155,107,58,.08); }
+
+
+/* ── 收益記錄類型 Tag ── */
+.reward-type-tag {
+  display: inline-block;
+  font-size: 0.72rem; font-weight: 600;
+  padding: 2px 7px; border-radius: 20px;
+  white-space: nowrap;
+}
+.reward-type-tag.auto {
+  background: rgba(99,102,241,.18); color: #818cf8;
+}
+.reward-type-tag.manual {
+  background: rgba(148,163,184,.12); color: var(--muted);
+}
+[data-theme="light"] .reward-type-tag.auto { background: rgba(99,102,241,.12); color: #4f46e5; }
+[data-theme="light"] .reward-type-tag.manual { background: rgba(0,0,0,.06); color: #8c7055; }

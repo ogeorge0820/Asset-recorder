@@ -58,7 +58,7 @@ const HEADERS = {
   holdings_crypto: ['symbol','quantity'],
   cash_accounts: ['bank_name','amount','currency'],
   settings: ['key','value'],
-  crypto_rewards: ['date','symbol','quantity','price_usd','value_twd'],
+  crypto_rewards: ['date','symbol','quantity','price_usd','value_twd','type'],
   crypto_history: ['date','symbol','qty_before','qty_after','delta','price_usd','value_twd'],
   tw_history: ['date','symbol','qty_before','qty_after','delta','price_twd','value_twd'],
   us_history: ['date','symbol','qty_before','qty_after','delta','price_usd','value_twd'],
@@ -735,14 +735,19 @@ function renderRewards() {
   const now = new Date();
   const curMonth = `${now.getFullYear()}/${String(now.getMonth()+1).padStart(2,'0')}`;
 
-  $('tb-rewards').innerHTML = rw.length ? rw.map((r, i) => `<tr>
-    <td data-label="月份">${esc(r[0])}</td>
-    <td data-label="幣種"><span class="sym-tag">${esc(r[1])}</span></td>
-    <td data-label="增加數量" class="amt">${(parseFloat(r[2])||0).toFixed(2)}</td>
-    <td data-label="幣價 (USD)" class="amt">${fmtUSD(parseFloat(r[3]))}</td>
-    <td data-label="收益 (TWD)" class="amt">${fmt(parseFloat(r[4]))}</td>
-    <td><button class="btn-icon edit" onclick="editReward(${i})">✏</button><button class="btn-icon del" onclick="deleteReward(${i})">✕</button></td>
-  </tr>`).join('') : '<tr><td colspan="6" style="text-align:center;padding:16px;color:var(--muted)">尚無收益記錄</td></tr>';
+  $('tb-rewards').innerHTML = rw.length ? rw.map((r, i) => {
+    const rtype = r[5] || '手動';
+    const isAuto = rtype === '系統換算';
+    return `<tr>
+      <td data-label="月份">${esc(r[0])}</td>
+      <td data-label="幣種"><span class="sym-tag">${esc(r[1])}</span></td>
+      <td data-label="增加數量" class="amt">${(parseFloat(r[2])||0).toFixed(4)}</td>
+      <td data-label="幣價 (USD)" class="amt">${fmtUSD(parseFloat(r[3]))}</td>
+      <td data-label="收益 (TWD)" class="amt">${fmt(parseFloat(r[4]))}</td>
+      <td data-label="類型"><span class="reward-type-tag ${isAuto ? 'auto' : 'manual'}">${isAuto ? '系統換算' : '手動'}</span></td>
+      <td><button class="btn-icon del" onclick="deleteReward(${i})" title="刪除">✕</button>${isAuto ? '' : `<button class="btn-icon edit" onclick="editReward(${i})">✏</button>`}</td>
+    </tr>`;
+  }).join('') : '<tr><td colspan="7" style="text-align:center;padding:16px;color:var(--muted)">尚無收益記錄</td></tr>';
 
   const monthTot = rw.filter(r => r[0] === curMonth).reduce((s, r) => s + (parseFloat(r[4])||0), 0);
   if ($('tot-rewards-month')) $('tot-rewards-month').textContent = monthTot > 0 ? fmt(monthTot) : '—';
@@ -840,7 +845,7 @@ function openRewardModal(title, defaults, onSave) {
 
 function addReward() {
   openRewardModal('新增收益記錄', {}, async (date, sym, qty, price, twd) => {
-    S.data.rewards.push([date, sym, qty, price, Math.round(twd)]);
+    S.data.rewards.push([date, sym, qty, price, Math.round(twd), '手動']);
     S.data.rewards.sort((a, b) => b[0].localeCompare(a[0]));
     await saveSheet('crypto_rewards', S.data.rewards);
     renderRewards(); renderRewardsSummary();
@@ -851,7 +856,7 @@ function addReward() {
 function editReward(idx) {
   const r = S.data.rewards[idx];
   openRewardModal('編輯收益記錄', { date: r[0], symbol: r[1], quantity: r[2], price_usd: r[3], value_twd: fmt(parseFloat(r[4])) }, async (date, sym, qty, price, twd) => {
-    S.data.rewards[idx] = [date, sym, qty, price, Math.round(twd)];
+    S.data.rewards[idx] = [date, sym, qty, price, Math.round(twd), r[5] || '手動'];  // 保留原始類型
     S.data.rewards.sort((a, b) => b[0].localeCompare(a[0]));
     await saveSheet('crypto_rewards', S.data.rewards);
     renderRewards(); renderRewardsSummary();
@@ -903,6 +908,28 @@ function renderRewardsSummary() {
       </tr>`).join('')}
     </tbody>
   </table>`;
+}
+
+// 自動新增系統換算利息收益記錄（含防重複）
+async function autoAddReward(sym, interestQty) {
+  const now = new Date(Date.now() + 8 * 3600 * 1000);
+  const month = `${now.getUTCFullYear()}/${String(now.getUTCMonth()+1).padStart(2,'0')}`;
+
+  // 防重複：同月同幣種已有系統換算記錄 → 阻擋
+  const dup = S.data.rewards.find(r => r[0] === month && r[1] === sym && r[5] === '系統換算');
+  if (dup) {
+    showToast(`${sym} 本月已有系統換算記錄，如需修改請先刪除舊記錄`, 'err');
+    return;
+  }
+
+  const price = S.prices.crypto[sym] || 0;
+  const valueTWD = Math.round(interestQty * price * S.prices.usdtwd);
+  S.data.rewards.push([month, sym, interestQty, price, valueTWD, '系統換算']);
+  S.data.rewards.sort((a, b) => b[0].localeCompare(a[0]));
+  await saveSheet('crypto_rewards', S.data.rewards);
+  renderRewards();
+  renderRewardsSummary();
+  showToast(`已自動新增 ${sym} 利息收益記錄 (${fmt(valueTWD)} TWD)`, 'ok');
 }
 
 function skelSpan() {
@@ -1567,9 +1594,11 @@ async function adjustAssetQty() {
   const sym = r[0]?.toUpperCase();
   const qtyBefore = parseFloat(r[1]) || 0;
   const unit = type === 'crypto' ? '' : '股';
-  openModal(`增減數量 · ${sym}`, [
-    { id: 'delta', label: `變動${unit ? unit : '數量'}（正為增加，負為減少）`, type: 'number', step: 'any', ph: unit ? '例如 100 或 -50' : '例如 0.5 或 -0.1' }
-  ], async vals => {
+  const fields = [
+    { id: 'delta', label: `變動${unit ? unit : '數量'}（正為增加，負為減少）`, type: 'number', step: 'any', ph: unit ? '例如 100 或 -50' : '例如 0.5 或 -0.1' },
+    ...(type === 'crypto' ? [{ id: 'manual_adj', label: '其中手動增減（如提領生活費，選填）', type: 'number', step: 'any', val: 0, ph: '例如 -100 表示提領了 100' }] : []),
+  ];
+  openModal(`增減數量 · ${sym}`, fields, async vals => {
     const delta = parseFloat(vals.delta);
     if (isNaN(delta) || delta === 0) { showToast('請輸入有效的變動數量', 'err'); return false; }
     const qtyAfter = qtyBefore + delta;
@@ -1581,6 +1610,12 @@ async function adjustAssetQty() {
     renderKPIs(); renderCharts(); renderManagement();
     _refreshPanelDisplay(sym);
     showToast('已更新', 'ok');
+    // 自動換算利息收益（僅 crypto）
+    if (type === 'crypto') {
+      const manualAdj = parseFloat(vals.manual_adj) || 0;
+      const interestQty = delta - manualAdj;
+      if (interestQty > 0) await autoAddReward(sym, interestQty);
+    }
     return true;
   });
 }
@@ -1596,9 +1631,11 @@ async function setAssetQty() {
   const r = dataMap[type][_panelIdx];
   const sym = r[0]?.toUpperCase();
   const qtyBefore = parseFloat(r[1]) || 0;
-  openModal(`設定餘額 · ${sym}`, [
-    { id: 'quantity', label: type === 'crypto' ? '新數量' : '新股數', type: 'number', val: r[1], min: 0, step: 'any' }
-  ], async vals => {
+  const fields = [
+    { id: 'quantity', label: type === 'crypto' ? '新數量' : '新股數', type: 'number', val: r[1], min: 0, step: 'any' },
+    ...(type === 'crypto' ? [{ id: 'manual_adj', label: '本月手動增減（如提領生活費，選填）', type: 'number', step: 'any', val: 0, ph: '例如 -100 表示提領了 100，0 表示全為利息' }] : []),
+  ];
+  openModal(`設定餘額 · ${sym}`, fields, async vals => {
     const qtyAfter = parseFloat(vals.quantity);
     if (isNaN(qtyAfter) || qtyAfter < 0) { showToast('請輸入有效數量', 'err'); return false; }
     dataMap[type][_panelIdx] = [sym, qtyAfter];
@@ -1608,6 +1645,13 @@ async function setAssetQty() {
     renderKPIs(); renderCharts(); renderManagement();
     _refreshPanelDisplay(sym);
     showToast('已更新', 'ok');
+    // 自動換算利息收益（僅 crypto）
+    if (type === 'crypto') {
+      const delta = qtyAfter - qtyBefore;
+      const manualAdj = parseFloat(vals.manual_adj) || 0;
+      const interestQty = delta - manualAdj;
+      if (interestQty > 0) await autoAddReward(sym, interestQty);
+    }
     return true;
   });
 }
