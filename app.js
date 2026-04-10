@@ -2,7 +2,7 @@
 // CONFIG
 // ══════════════════════════════════════════════════════════════
 // Build 時間：每次修改 code 後手動更新此時間（UTC+8 台北時間）
-const BUILD_DATE = '2026/04/10 21:10';
+const BUILD_DATE = '2026/04/10 21:08';
 
 const SPREADSHEET_ID = '1lpRpxVzWaYUqL-jVPOAJCtjsJUIedPYYyOx4gg4PPFU';
 const CLIENT_ID = '149884248440-85f8dhc6ub9up10sv0f89e3e0itrnooj.apps.googleusercontent.com';
@@ -1317,13 +1317,19 @@ Chart.defaults.color = '#94a3b8';
 function chartColors() {
   const light = document.documentElement.dataset.theme === 'light';
   return {
-    grid:        light ? 'rgba(0,0,0,.06)'    : 'rgba(255,255,255,.04)',
-    tick:        light ? '#8c7055'             : '#64748b',
-    legend:      light ? '#8c7055'             : '#94a3b8',
-    center_text: light ? '#2c1e12'             : '#e2e8f0',
-    center_sub:  light ? '#8c7055'             : '#94a3b8',
-    nodata:      light ? '#8c7055'             : '#475569',
+    grid:        light ? 'rgba(0,0,0,.0)'     : 'rgba(255,255,255,.04)',
+    gridFaint:   light ? 'rgba(0,0,0,.05)'    : 'rgba(255,255,255,.04)',
+    tick:        light ? '#86868b'             : '#64748b',
+    legend:      light ? '#86868b'             : '#94a3b8',
+    center_text: light ? '#1d1d1f'             : '#e2e8f0',
+    center_sub:  light ? '#86868b'             : '#94a3b8',
+    nodata:      light ? '#86868b'             : '#475569',
     border:      light ? '#ffffff'             : '#1a1d2e',
+    // 趨勢圖線條顏色
+    line1:       light ? '#007AFF'             : '#6366f1',
+    line2:       light ? '#34C759'             : '#22c55e',
+    barPos:      light ? 'rgba(52,199,89,.7)'  : 'rgba(34,197,94,.65)',
+    barNeg:      light ? 'rgba(255,59,48,.65)' : 'rgba(239,68,68,.65)',
   };
 }
 
@@ -1348,12 +1354,13 @@ Chart.register({
     const cx = (left + right) / 2, cy = (top + bottom) / 2;
     ctx.save();
     ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    // 主數字：縮小字體、深灰色更 Apple
     ctx.fillStyle = cc.center_text;
-    ctx.font = 'bold 24px -apple-system, BlinkMacSystemFont, sans-serif';
-    ctx.fillText(opts.text, cx, cy - 12);
+    ctx.font = '700 18px -apple-system, BlinkMacSystemFont, sans-serif';
+    ctx.fillText(opts.text, cx, cy - 10);
     ctx.fillStyle = cc.center_sub;
-    ctx.font = '13px -apple-system, BlinkMacSystemFont, sans-serif';
-    ctx.fillText(opts.sub || '', cx, cy + 14);
+    ctx.font = '500 11px -apple-system, BlinkMacSystemFont, sans-serif';
+    ctx.fillText(opts.sub || '', cx, cy + 12);
     ctx.restore();
   }
 });
@@ -1389,20 +1396,30 @@ function renderDailyTrend() {
       labels: recent.map(s => s[0]),
       datasets: [
         { label:'總資產', data: recent.map(s => [1,2,3,4,5,6].reduce((a,i)=>a+(parseFloat(s[i])||0), 0)),
-          borderColor:'#6366f1', backgroundColor:'rgba(99,102,241,.08)', fill:true, tension:.3, pointRadius:2, borderWidth:2 },
+          borderColor: cc.line1,
+          backgroundColor(context) {
+            const {ctx: c, chartArea} = context.chart;
+            if (!chartArea) return 'rgba(0,122,255,0)';
+            const g = c.createLinearGradient(0, chartArea.top, 0, chartArea.bottom);
+            g.addColorStop(0, cc.line1 === '#007AFF' ? 'rgba(0,122,255,0.18)' : 'rgba(99,102,241,0.18)');
+            g.addColorStop(1, 'rgba(0,0,0,0)');
+            return g;
+          },
+          fill:true, tension:.42, pointRadius:0, pointHoverRadius:5, borderWidth:2 },
         { label:'淨資產', data: recent.map(s => parseFloat(s[8])||0),
-          borderColor:'#22c55e', backgroundColor:'transparent', borderDash:[4,3], tension:.3, pointRadius:2, borderWidth:2 },
+          borderColor: cc.line2, backgroundColor:'transparent',
+          borderDash:[5,3], tension:.42, pointRadius:0, pointHoverRadius:5, borderWidth:1.5 },
       ],
     },
     options: {
       responsive:true, maintainAspectRatio:false,
       plugins: {
-        legend: { labels:{ color:cc.legend, font:{size:11}, usePointStyle:true } },
+        legend: { labels:{ color:cc.legend, font:{size:11}, usePointStyle:true, pointStyleWidth:10 } },
         tooltip: { callbacks: { label(c) { return ` ${c.dataset.label}: ${fmt(c.parsed.y)}`; } } },
       },
       scales: {
-        x: { grid:{ color:cc.grid }, ticks:{ color:cc.tick, font:{size:9}, maxTicksLimit:10 } },
-        y: { grid:{ color:cc.grid }, ticks:{ color:cc.tick, font:{size:10}, callback:v=>fmt(v) } },
+        x: { grid:{ display:false }, ticks:{ color:cc.tick, font:{size:9}, maxTicksLimit:10 }, border:{display:false} },
+        y: { display:false },
       },
     },
   });
@@ -1442,7 +1459,7 @@ function renderPie() {
       layout: { padding: { top: 8, bottom: 8, left: 8, right: 8 } },
       plugins: {
         legend: window.innerWidth <= 640
-          // 手機：底部橫排，字體縮小，itemGap 拉開
+          // 手機：底部橫排，字體縮小
           ? {
               position: 'bottom',
               labels: {
@@ -1451,18 +1468,38 @@ function renderPie() {
                 font: { size: 11 },
                 boxWidth: 10,
                 usePointStyle: true,
+                generateLabels(chart) {
+                  const ds = chart.data.datasets[0];
+                  const tot = ds.data.reduce((a,b)=>a+b,0);
+                  return chart.data.labels.map((label, i) => ({
+                    text: `${label} ${(ds.data[i]/tot*100).toFixed(1)}%`,
+                    fillStyle: ds.backgroundColor[i],
+                    strokeStyle: ds.backgroundColor[i],
+                    hidden: false, index: i,
+                  }));
+                },
               },
             }
-          // 桌面：右側垂直排列，每項清晰對齊
+          // 桌面：右側垂直排列，含百分比
           : {
               position: 'right',
               align: 'center',
               labels: {
                 color: cc.legend,
-                padding: 18,
-                font: { size: 13 },
-                boxWidth: 12,
+                padding: 16,
+                font: { size: 12 },
+                boxWidth: 10,
                 usePointStyle: true,
+                generateLabels(chart) {
+                  const ds = chart.data.datasets[0];
+                  const tot = ds.data.reduce((a,b)=>a+b,0);
+                  return chart.data.labels.map((label, i) => ({
+                    text: `${label}  ${(ds.data[i]/tot*100).toFixed(1)}%`,
+                    fillStyle: ds.backgroundColor[i],
+                    strokeStyle: ds.backgroundColor[i],
+                    hidden: false, index: i,
+                  }));
+                },
               },
             },
         tooltip: {
@@ -1470,8 +1507,7 @@ function renderPie() {
           position: 'cursorOffset',
           yAlign: 'bottom',
           callbacks: { label(c) {
-            const tot = c.dataset.data.reduce((a,b)=>a+b,0);
-            return ` ${c.label}: ${fmt(c.parsed)} (${(c.parsed/tot*100).toFixed(1)}%)`;
+            return ` ${c.label}: ${fmt(c.parsed)}`;
           }},
         },
         doughnutCenter: { text: fmt(total), sub: '總資產' },
@@ -1509,7 +1545,16 @@ function renderTrend() {
       labels: snaps.map(s => s[0]),
       datasets: [
         { label:'淨資產', data: snaps.map(s => parseFloat(s[8])||0),
-          borderColor:'#6366f1', backgroundColor:'rgba(99,102,241,.12)', fill:true, tension:.3, pointRadius:4, pointHoverRadius:6 },
+          borderColor: cc.line1,
+          backgroundColor(context) {
+            const {ctx: c, chartArea} = context.chart;
+            if (!chartArea) return 'rgba(0,0,0,0)';
+            const g = c.createLinearGradient(0, chartArea.top, 0, chartArea.bottom);
+            g.addColorStop(0, cc.line1 === '#007AFF' ? 'rgba(0,122,255,0.2)' : 'rgba(99,102,241,0.2)');
+            g.addColorStop(1, 'rgba(0,0,0,0)');
+            return g;
+          },
+          fill:true, tension:.42, pointRadius:4, pointHoverRadius:7, borderWidth:2.5 },
       ],
     },
     options: {
@@ -1519,8 +1564,8 @@ function renderTrend() {
         tooltip: { callbacks: { label(c) { return ` 淨資產: ${fmt(c.parsed.y)}`; } } },
       },
       scales: {
-        x: { grid:{ color:cc.grid }, ticks:{ color:cc.tick, font:{size:10}, maxTicksLimit:6, maxRotation:0 } },
-        y: { grid:{ color:cc.grid }, ticks:{ color:cc.tick, font:{size:10}, callback:v=>fmt(v) } },
+        x: { grid:{ display:false }, ticks:{ color:cc.tick, font:{size:10}, maxTicksLimit:6, maxRotation:0 }, border:{display:false} },
+        y: { display:false },
       },
     },
   });
@@ -1551,9 +1596,9 @@ function renderMonthly() {
       labels,
       datasets: [{
         label:'月收益', data:vals,
-        backgroundColor: vals.map(v=>v>=0?'rgba(34,197,94,.65)':'rgba(239,68,68,.65)'),
-        borderColor: vals.map(v=>v>=0?'#22c55e':'#ef4444'),
-        borderWidth:1, borderRadius:4,
+        backgroundColor: vals.map(v=>v>=0 ? cc.barPos : cc.barNeg),
+        borderColor: vals.map(v=>v>=0 ? (cc.line2) : '#FF3B30'),
+        borderWidth:0, borderRadius:6,
       }],
     },
     options: {
@@ -1563,8 +1608,8 @@ function renderMonthly() {
         tooltip:{ callbacks:{ label(c){ return ` ${c.parsed.y>=0?'+':''}${fmt(c.parsed.y)}`; } } },
       },
       scales: {
-        x:{ grid:{color:cc.grid}, ticks:{color:cc.tick,font:{size:10}} },
-        y:{ grid:{color:cc.grid}, ticks:{color:cc.tick,font:{size:10},callback:v=>fmt(v)} },
+        x:{ grid:{display:false}, ticks:{color:cc.tick,font:{size:10}}, border:{display:false} },
+        y:{ display:false },
       },
     },
   });

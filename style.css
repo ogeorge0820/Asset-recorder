@@ -388,34 +388,39 @@ h3.section-header {
 @keyframes skel-anim { 0%{background-position:200% 0} 100%{background-position:-200% 0} }
 .skel * { visibility: hidden; }
 
-/* ── Light Mode (木質調) ── */
+/* ── Light Mode (Apple) ── */
 [data-theme="light"] {
-  --bg: #f5f0e8;
+  --bg: #F5F5F7;
   --card: #ffffff;
-  --card2: #fdf7ef;
-  --accent: #9b6b3a;
-  --accent-light: #c4894d;
-  --text: #2c1e12;
-  --muted: #8c7055;
-  --border: #e0cdb8;
-  --green: #2a7a3b;
-  --red: #c0392b;
+  --card2: #f9f9fb;
+  --accent: #007AFF;
+  --accent-light: #409CFF;
+  --text: #1d1d1f;
+  --muted: #86868b;
+  --border: #d2d2d7;
+  --green: #34C759;
+  --red: #FF3B30;
+  --r: 16px;
 }
 [data-theme="light"] body { background: var(--bg); }
-[data-theme="light"] .data-table td { border-bottom-color: rgba(155,107,58,.15); }
+[data-theme="light"] .data-table td { border-bottom-color: rgba(0,0,0,.06); }
 [data-theme="light"] .btn-add {
-  background: rgba(155,107,58,.07); border-color: var(--accent);
+  background: rgba(0,122,255,.05); border-color: var(--accent);
 }
-[data-theme="light"] .btn-add:hover { background: rgba(155,107,58,.14); }
-[data-theme="light"] .btn-icon.edit:hover { background: rgba(155,107,58,.1); }
-[data-theme="light"] .modal-overlay { background: rgba(44,30,18,.55); }
+[data-theme="light"] .btn-add:hover { background: rgba(0,122,255,.1); }
+[data-theme="light"] .btn-icon.edit:hover { background: rgba(0,122,255,.08); }
+[data-theme="light"] .modal-overlay { background: rgba(0,0,0,.4); }
 [data-theme="light"] .skel {
-  background: linear-gradient(90deg, #ede6d8 25%, #f8f2e8 50%, #ede6d8 75%);
+  background: linear-gradient(90deg, #ebebed 25%, #f5f5f7 50%, #ebebed 75%);
   background-size: 200% 100%;
 }
 [data-theme="light"] .btn-loading::before {
-  border-color: rgba(44,30,18,.3); border-top-color: var(--text);
+  border-color: rgba(0,0,0,.2); border-top-color: var(--text);
 }
+[data-theme="light"] .section-total { color: var(--accent); }
+[data-theme="light"] .total-val { color: var(--accent); }
+[data-theme="light"] .kpi-label-dot { background: var(--accent); }
+[data-theme="light"] .badge { background: var(--accent); }
 
 /* ── Sidebar (base — hidden on mobile) ── */
 #sidebar { display: none; }
@@ -465,8 +470,9 @@ h3.section-header {
 /* ── Desktop layout (≥ 769px) ── */
 @media (min-width: 769px) {
   body { background: #0b0e15; }
-  [data-theme="light"] body { background: #e6dfd4; }
+  [data-theme="light"] body { background: #F5F5F7; }
 
+  /* ── Sidebar ── */
   #sidebar {
     display: flex; flex-direction: column;
     position: fixed; left: 0; top: 0; bottom: 0;
@@ -475,58 +481,137 @@ h3.section-header {
     border-right: 1px solid var(--border);
     z-index: 200; overflow: hidden;
   }
+  [data-theme="light"] #sidebar {
+    background: rgba(255,255,255,0.82);
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+    border-right: 1px solid rgba(0,0,0,0.08);
+  }
+
+  /* Sidebar header */
+  [data-theme="light"] .sidebar-header { border-bottom-color: rgba(0,0,0,0.06); }
+  [data-theme="light"] .sidebar-logo { color: var(--accent); }
+
+  /* Sidebar nav — 選中態：文字加粗 + 左側圓點，無背景 */
+  .sidebar-nav-item {
+    position: relative;
+    padding-left: 16px;
+  }
+  .sidebar-nav-item.active {
+    background: none;
+    color: var(--text);
+    font-weight: 700;
+  }
+  .sidebar-nav-item.active::before {
+    content: '';
+    position: absolute;
+    left: 0; top: 50%;
+    transform: translateY(-50%);
+    width: 3px; height: 18px;
+    background: var(--accent);
+    border-radius: 0 2px 2px 0;
+  }
+  [data-theme="light"] .sidebar-nav-item { color: #86868b; }
+  [data-theme="light"] .sidebar-nav-item:hover { background: rgba(0,0,0,0.04); color: var(--text); }
+  [data-theme="light"] .sidebar-nav-item.active { color: var(--accent); }
+  [data-theme="light"] .sidebar-nav-item.active::before { background: var(--accent); }
+
+  /* Sidebar footer — 整合資訊區塊 */
+  [data-theme="light"] .sidebar-footer { border-top-color: rgba(0,0,0,0.06); }
+  .sidebar-info-block {
+    background: rgba(255,255,255,0.06);
+    border-radius: 10px;
+    padding: 8px 10px;
+    display: flex; flex-direction: column; gap: 4px;
+    margin-top: 4px;
+  }
+  [data-theme="light"] .sidebar-info-block {
+    background: rgba(0,0,0,0.04);
+  }
+  .sidebar-info-row { display: flex; justify-content: space-between; align-items: center; gap: 6px; }
+  .sidebar-rate {
+    font-size: 0.75rem; color: var(--muted);
+    display: flex; align-items: center; gap: 3px;
+  }
+  .sidebar-rate b { color: var(--text); font-weight: 600; }
+  .sidebar-update {
+    font-size: 0.72rem; color: var(--muted);
+    display: flex; align-items: center; gap: 4px;
+    flex: 1; justify-content: flex-end;
+  }
+  .sidebar-build-badge {
+    font-size: 0.66rem; color: var(--muted); opacity: .6;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .sidebar-actions { display: flex; gap: 6px; }
+  [data-theme="light"] .btn-signout { border-color: rgba(0,0,0,0.12); }
+  [data-theme="light"] .btn-theme { border-color: rgba(0,0,0,0.12); }
+
   #app-header { display: none; }
   #app { margin-left: 180px; }
   #app-content { padding: 28px 32px; max-width: none; }
 
-  /* Card depth */
+  /* ── Card Apple style ── */
   .kpi-card, .chart-card, .section-card {
-    box-shadow: 0 2px 10px rgba(0,0,0,.22);
+    border-radius: 16px;
+    box-shadow: 0 2px 12px rgba(0,0,0,.25);
   }
   [data-theme="light"] .kpi-card,
   [data-theme="light"] .chart-card,
   [data-theme="light"] .section-card {
-    box-shadow: 0 2px 10px rgba(44,30,18,.08);
+    border: none;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+  }
+  [data-theme="light"] .kpi-primary {
+    background: #fff;
+    border-left: 3px solid var(--accent);
+    box-shadow: 0 4px 24px rgba(0,122,255,0.08);
   }
 
-  /* KPI 防折行：6 張等寬，數字永遠同一行 */
+  /* ── KPI Hierarchy ── */
   .kpi-grid {
-    grid-template-columns: repeat(6, minmax(0, 1fr));
+    grid-template-columns: 2fr 2fr 2fr 1fr 1fr 1fr;
     gap: 14px;
   }
   .kpi-value { white-space: nowrap; }
-  .kpi-primary .kpi-value { font-size: 1.6rem; white-space: nowrap; }
+  .kpi-primary .kpi-value { font-size: 1.9rem; font-weight: 800; white-space: nowrap; letter-spacing: -0.5px; }
+  [data-theme="light"] .kpi-primary .kpi-value { color: #1d1d1f; }
+  [data-theme="light"] .kpi-card:not(.kpi-primary) .kpi-value { font-size: 1.1rem; color: #1d1d1f; }
+  [data-theme="light"] .kpi-value.pos { color: #34C759; }
+  [data-theme="light"] .kpi-value.neg { color: #FF3B30; }
+  [data-theme="light"] .kpi-card.kpi-gain { border-left: 3px solid #34C759; }
+  [data-theme="light"] .kpi-card.kpi-loss { border-left: 3px solid #FF3B30; }
+  [data-theme="light"] .kpi-label { color: #86868b; letter-spacing: 0.4px; }
+  [data-theme="light"] .kpi-sub { color: #86868b; }
 
-  /* Overview: 主欄 75% / 側欄 25%；確保每日趨勢圖橫向拉寬 */
+  /* ── Overview two-column ── */
   .overview-grid {
     display: grid;
     grid-template-columns: 3fr 1fr;
     gap: 16px; align-items: start;
   }
 
-  /* Management sections 全寬 */
+  /* ── Chart card refinement ── */
+  [data-theme="light"] .chart-card h3 { color: #86868b; font-size: 0.82rem; letter-spacing: 0.3px; }
+  [data-theme="light"] .filter-btn { border-color: rgba(0,0,0,0.12); color: #86868b; }
+  [data-theme="light"] .filter-btn.active { background: var(--accent); border-color: var(--accent); color: #fff; }
+
+  /* ── Management sections ── */
   .mgmt-grid { grid-template-columns: 1fr 1fr; }
   #section-us, #section-crypto, #section-other, .section-card[style*="grid-column"] {
     grid-column: 1 / -1;
-  }
-
-  [data-theme="light"] .sidebar-nav-item.active {
-    background: rgba(155,107,58,.12); color: var(--accent);
-  }
-  [data-theme="light"] .sidebar-nav-item:hover {
-    background: rgba(155,107,58,.07); color: var(--text);
   }
 }
 
 /* ── Responsive ── */
 @media (max-width: 1200px) {
   .kpi-grid { grid-template-columns: 1fr 1fr 1fr; }
-  .kpi-primary .kpi-value { font-size: 1.7rem; }
+  .kpi-primary .kpi-value { font-size: 1.6rem; }
 }
 @media (min-width: 769px) and (max-width: 1050px) {
-  /* Narrow desktop: side column collapses, overview stacks */
   .overview-grid { grid-template-columns: 1fr !important; }
   .kpi-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .kpi-primary .kpi-value { font-size: 1.5rem; }
 }
 @media (max-width: 860px) {
   .charts-row { grid-template-columns: 1fr; }

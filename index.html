@@ -25,18 +25,20 @@
   </nav>
   <div class="sidebar-spacer"></div>
   <div class="sidebar-footer">
-    <div class="sidebar-info-row">
-      <div class="rate-badge sidebar-rate"><span>USD</span><b id="sidebar-rate-val">—</b></div>
-      <div class="update-badge sidebar-update">
-        <span class="update-dot" id="sidebar-update-dot"></span>
-        <span id="sidebar-update-ts">—</span>
-      </div>
-    </div>
     <div class="sidebar-actions">
       <button class="btn-theme" id="sidebar-btn-theme" onclick="toggleTheme()">☀</button>
       <button class="btn-signout" onclick="signOut()">登出</button>
     </div>
-    <div class="build-badge sidebar-build-badge" id="sidebar-build-badge"></div>
+    <div class="sidebar-info-block">
+      <div class="sidebar-info-row">
+        <div class="sidebar-rate"><span>USD</span><b id="sidebar-rate-val">—</b></div>
+        <div class="sidebar-update">
+          <span class="update-dot" id="sidebar-update-dot"></span>
+          <span id="sidebar-update-ts">—</span>
+        </div>
+      </div>
+      <div class="sidebar-build-badge" id="sidebar-build-badge"></div>
+    </div>
   </div>
 </aside>
 
