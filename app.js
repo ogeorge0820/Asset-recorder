@@ -2,7 +2,7 @@
 // CONFIG
 // ══════════════════════════════════════════════════════════════
 // Build 時間：每次修改 code 後手動更新此時間（UTC+8 台北時間）
-const BUILD_DATE = '2026/04/10 14:24';
+const BUILD_DATE = '2026/04/10 14:44';
 
 const SPREADSHEET_ID = '1lpRpxVzWaYUqL-jVPOAJCtjsJUIedPYYyOx4gg4PPFU';
 const CLIENT_ID = '149884248440-85f8dhc6ub9up10sv0f89e3e0itrnooj.apps.googleusercontent.com';
@@ -598,6 +598,53 @@ function renderManagement() {
   $('inp-realestate').value  = S.data.settings.realestate_total || 0;
   $('inp-debt').value        = S.data.settings.debt || 0;
   updateInsTWD();
+  initAccordion();
+}
+
+// ── Accordion: 折疊/展開資產分類 ──
+function initAccordion() {
+  const saved = JSON.parse(localStorage.getItem('section_acc') || '{}');
+  ['cash', 'tw', 'us', 'crypto'].forEach(id => {
+    const card = document.getElementById('section-' + id);
+    if (!card) return;
+    const body = card.querySelector('.section-body');
+    if (saved[id] === true) {
+      // 已儲存為展開：移除 collapsed，設為無限制高
+      card.classList.remove('collapsed');
+      body.style.maxHeight = '';
+    } else {
+      // 預設收合
+      card.classList.add('collapsed');
+      body.style.maxHeight = '0';
+    }
+  });
+}
+
+function toggleSection(id) {
+  const card = document.getElementById('section-' + id);
+  if (!card) return;
+  const body = card.querySelector('.section-body');
+  const isCollapsed = card.classList.contains('collapsed');
+  if (isCollapsed) {
+    // 展開
+    card.classList.remove('collapsed');
+    body.style.maxHeight = body.scrollHeight + 'px';
+    body.addEventListener('transitionend', function handler() {
+      body.style.maxHeight = ''; // 移除限制，允許內容動態增長
+      body.removeEventListener('transitionend', handler);
+    });
+  } else {
+    // 收合：先固定高度，再 RAF 觸發動畫
+    body.style.maxHeight = body.scrollHeight + 'px';
+    requestAnimationFrame(() => requestAnimationFrame(() => {
+      card.classList.add('collapsed');
+      body.style.maxHeight = '0';
+    }));
+  }
+  // 儲存狀態
+  const saved = JSON.parse(localStorage.getItem('section_acc') || '{}');
+  saved[id] = isCollapsed; // 原本 collapsed→現在展開 = true
+  localStorage.setItem('section_acc', JSON.stringify(saved));
 }
 
 function renderCash() {

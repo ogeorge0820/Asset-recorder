@@ -152,35 +152,41 @@
       <div class="mgmt-grid">
 
         <!-- Row 1: 流動現金 | 台股 -->
-        <div class="section-card">
-          <h3><span>🏦 流動現金 <span class="badge" id="cnt-cash">0</span></span><span class="section-total" id="tot-cash">—</span></h3>
+        <div class="section-card collapsed" id="section-cash">
+          <h3 class="section-header" onclick="toggleSection('cash')"><span>🏦 流動現金 <span class="badge" id="cnt-cash">0</span></span><span class="section-header-right"><span class="section-total" id="tot-cash">—</span><span class="section-chevron">▾</span></span></h3>
+          <div class="section-body">
           <div class="table-wrap" id="cash-table-wrap"><table class="data-table">
             <thead><tr><th>帳戶</th><th>幣別</th><th style="text-align:right">金額</th><th style="text-align:right">台幣現值</th><th></th></tr></thead>
             <tbody id="tb-cash"></tbody>
           </table></div>
           <div class="cash-cards" id="cash-cards"></div>
           <button class="btn-add" onclick="addItem('cash')">+ 新增流動現金</button>
+          </div>
         </div>
 
-        <div class="section-card">
-          <h3><span>🇹🇼 台股 <span class="badge" id="cnt-tw">0</span></span><span class="section-header-right"><span class="section-total" id="tot-tw">—</span><span class="section-gain" id="gain-tw"></span></span></h3>
+        <div class="section-card collapsed" id="section-tw">
+          <h3 class="section-header" onclick="toggleSection('tw')"><span>🇹🇼 台股 <span class="badge" id="cnt-tw">0</span></span><span class="section-header-right"><span class="section-total" id="tot-tw">—</span><span class="section-gain" id="gain-tw"></span><span class="section-chevron">▾</span></span></h3>
+          <div class="section-body">
           <div class="table-wrap" id="tw-table-wrap"><table class="data-table">
             <thead><tr><th>代號</th><th>股數</th><th style="text-align:right">股價 (TWD)</th><th style="text-align:right">現值 (TWD)</th><th></th></tr></thead>
             <tbody id="tb-tw"></tbody>
           </table></div>
           <div class="stock-cards" id="tw-cards"></div>
           <button class="btn-add" onclick="addItem('tw')">+ 新增台股</button>
+          </div>
         </div>
 
         <!-- Row 2: 美股 | 其他資產＆負債 -->
-        <div class="section-card">
-          <h3><span>🇺🇸 美股 <span class="badge" id="cnt-us">0</span></span><span class="section-header-right"><span class="section-total" id="tot-us">—</span><span class="section-gain" id="gain-us"></span></span></h3>
+        <div class="section-card collapsed" id="section-us">
+          <h3 class="section-header" onclick="toggleSection('us')"><span>🇺🇸 美股 <span class="badge" id="cnt-us">0</span></span><span class="section-header-right"><span class="section-total" id="tot-us">—</span><span class="section-gain" id="gain-us"></span><span class="section-chevron">▾</span></span></h3>
+          <div class="section-body">
           <div class="table-wrap" id="us-table-wrap"><table class="data-table">
             <thead><tr><th>代號</th><th>股數</th><th style="text-align:right">股價 (USD)</th><th style="text-align:right">現值 (TWD)</th><th></th></tr></thead>
             <tbody id="tb-us"></tbody>
           </table></div>
           <div class="stock-cards" id="us-cards"></div>
           <button class="btn-add" onclick="addItem('us')">+ 新增美股</button>
+          </div>
         </div>
 
         <div class="section-card">
@@ -206,14 +212,16 @@
         </div>
 
         <!-- Row 3: 加密貨幣 全寬 -->
-        <div class="section-card" style="grid-column: 1 / -1">
-          <h3><span>₿ 加密貨幣 <span class="badge" id="cnt-crypto">0</span></span><span class="section-header-right"><span class="section-total" id="tot-crypto">—</span><span class="section-gain" id="gain-crypto"></span></span></h3>
+        <div class="section-card collapsed" id="section-crypto" style="grid-column: 1 / -1">
+          <h3 class="section-header" onclick="toggleSection('crypto')"><span>₿ 加密貨幣 <span class="badge" id="cnt-crypto">0</span></span><span class="section-header-right"><span class="section-total" id="tot-crypto">—</span><span class="section-gain" id="gain-crypto"></span><span class="section-chevron">▾</span></span></h3>
+          <div class="section-body">
           <div class="table-wrap" id="crypto-table-wrap"><table class="data-table">
             <thead><tr><th>代號</th><th>數量</th><th style="text-align:right">幣價 (USD)</th><th style="text-align:right">現值 (TWD)</th><th></th></tr></thead>
             <tbody id="tb-crypto"></tbody>
           </table></div>
           <div class="crypto-cards" id="crypto-cards"></div>
           <button class="btn-add" onclick="addItem('crypto')">+ 新增加密貨幣</button>
+          </div>
         </div>
 
         <!-- Row 4: 質押/活存收益記錄 全寬 -->

@@ -197,6 +197,22 @@ body {
   font-size: 0.95rem; margin-bottom: 14px;
   display: flex; align-items: center; justify-content: space-between; gap: 8px;
 }
+/* ── Accordion ── */
+h3.section-header {
+  cursor: pointer; user-select: none;
+  transition: margin-bottom 0.3s ease;
+}
+.section-card.collapsed h3.section-header { margin-bottom: 0; }
+.section-chevron {
+  font-size: 0.85rem; color: var(--muted); flex-shrink: 0;
+  display: inline-block; transition: transform 0.3s ease;
+}
+.section-card.collapsed .section-chevron { transform: rotate(-90deg); }
+.section-body {
+  overflow: hidden;
+  transition: max-height 0.35s cubic-bezier(0.4,0,0.2,1);
+}
+.section-card.collapsed .section-body { max-height: 0; }
 .section-header-right {
   display: flex; align-items: center; gap: 6px; flex-shrink: 0; flex-wrap: wrap; justify-content: flex-end;
 }
