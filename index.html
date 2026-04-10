@@ -206,24 +206,7 @@
         <div class="section-card collapsed" id="section-other" style="grid-column: 1 / -1">
           <h3 class="section-header" onclick="toggleSection('other')"><span>📋 其他資產 &amp; 負債</span><span class="section-header-right"><span class="section-total" id="tot-other">—</span><span class="section-chevron">▾</span></span></h3>
           <div class="section-body">
-          <div class="other-inputs other-inputs-3col" style="margin-top:4px">
-            <div class="inp-group">
-              <label>儲蓄險總值 <span style="color:var(--accent-light);font-weight:600">USD</span></label>
-              <input type="number" id="inp-insurance" placeholder="0" min="0" oninput="updateInsTWD(); updateOtherTotal()">
-              <div id="ins-twd" style="font-size:0.75rem;color:var(--muted);margin-top:3px"></div>
-            </div>
-            <div class="inp-group">
-              <label>房地產市值 (TWD)</label>
-              <input type="number" id="inp-realestate" placeholder="0" min="0" oninput="updateOtherTotal()">
-            </div>
-            <div class="inp-group">
-              <label>負債總額 (TWD)</label>
-              <input type="number" id="inp-debt" placeholder="0" min="0" oninput="updateOtherTotal()">
-            </div>
-          </div>
-          <div style="margin-top:16px;text-align:right">
-            <button class="btn-ok" onclick="saveSettings(this)" style="padding:7px 18px;font-size:0.83rem">儲存設定</button>
-          </div>
+          <div id="other-items" style="display:flex;flex-direction:column;gap:10px;margin-top:4px"></div>
           </div>
         </div>
 

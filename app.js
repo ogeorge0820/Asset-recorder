@@ -2,7 +2,7 @@
 // CONFIG
 // ══════════════════════════════════════════════════════════════
 // Build 時間：每次修改 code 後手動更新此時間（UTC+8 台北時間）
-const BUILD_DATE = '2026/04/10 15:11';
+const BUILD_DATE = '2026/04/10 15:20';
 
 const SPREADSHEET_ID = '1lpRpxVzWaYUqL-jVPOAJCtjsJUIedPYYyOx4gg4PPFU';
 const CLIENT_ID = '149884248440-85f8dhc6ub9up10sv0f89e3e0itrnooj.apps.googleusercontent.com';
@@ -143,6 +143,7 @@ const HEADERS = {
   crypto_history: ['date','symbol','qty_before','qty_after','delta','price_usd','value_twd'],
   tw_history: ['date','symbol','qty_before','qty_after','delta','price_twd','value_twd'],
   us_history: ['date','symbol','qty_before','qty_after','delta','price_usd','value_twd'],
+  other_history: ['date','key','value_before','value_after','delta','note'],
 };
 
 // ══════════════════════════════════════════════════════════════
@@ -165,6 +166,7 @@ const S = {
     crypto_history: [], // [date, symbol, qty_before, qty_after, delta, price_usd, value_twd]
     tw_history: [],     // [date, symbol, qty_before, qty_after, delta, price_twd, value_twd]
     us_history: [],     // [date, symbol, qty_before, qty_after, delta, price_usd, value_twd]
+    other_history: [],  // [date, key, value_before, value_after, delta, note]
     settings: { insurance_total: 0, realestate_total: 0, debt: 0 },
   },
 
@@ -301,7 +303,7 @@ async function initSheets() {
 // DATA LOAD / SAVE
 // ══════════════════════════════════════════════════════════════
 async function loadAll() {
-  const [cash, tw, us, crypto, snap, daily, sett, rw, hist, twHist, usHist] = await Promise.allSettled([
+  const [cash, tw, us, crypto, snap, daily, sett, rw, hist, twHist, usHist, otherHist] = await Promise.allSettled([
     sheetGet('cash_accounts!A:C'),
     sheetGet('holdings_tw!A:B'),
     sheetGet('holdings_us!A:B'),
@@ -313,6 +315,7 @@ async function loadAll() {
     sheetGet('crypto_history!A:G'),
     sheetGet('tw_history!A:G'),
     sheetGet('us_history!A:G'),
+    sheetGet('other_history!A:F'),
   ]);
 
   S.data.cash            = rows(cash);
@@ -330,6 +333,7 @@ async function loadAll() {
   S.data.crypto_history  = rows(hist);
   S.data.tw_history      = rows(twHist);
   S.data.us_history      = rows(usHist);
+  S.data.other_history   = rows(otherHist);
 
   S.data.settings = { insurance_total: 0, realestate_total: 0, debt: 0 };
   rows(sett).forEach(r => { if (r[0]) S.data.settings[r[0]] = parseFloat(r[1]) || 0; });
@@ -593,12 +597,7 @@ function setKPI(vid, val, sid, sub) {
 // RENDER — MANAGEMENT TABLES
 // ══════════════════════════════════════════════════════════════
 function renderManagement() {
-  renderCash(); renderTW(); renderUS(); renderCrypto(); renderRewards();
-  $('inp-insurance').value   = S.data.settings.insurance_total || 0;
-  $('inp-realestate').value  = S.data.settings.realestate_total || 0;
-  $('inp-debt').value        = S.data.settings.debt || 0;
-  updateInsTWD();
-  updateOtherTotal();
+  renderCash(); renderTW(); renderUS(); renderCrypto(); renderOther(); renderRewards();
   initAccordion();
 }
 
@@ -606,11 +605,97 @@ function renderManagement() {
 function updateOtherTotal() {
   const el = $('tot-other');
   if (!el) return;
-  const insUSD = parseFloat($('inp-insurance')?.value) || 0;
-  const re   = parseFloat($('inp-realestate')?.value) || 0;
-  const debt = parseFloat($('inp-debt')?.value) || 0;
+  const insUSD = S.data.settings.insurance_total  || 0;
+  const re     = S.data.settings.realestate_total || 0;
+  const debt   = S.data.settings.debt             || 0;
   const net = insUSD * S.prices.usdtwd + re - debt;
   el.textContent = net !== 0 ? '淨值 ' + fmt(net) : '—';
+}
+
+// 渲染「其他資產 & 負債」三個固定項目卡片
+function renderOther() {
+  const ins  = S.data.settings.insurance_total  || 0;
+  const re   = S.data.settings.realestate_total || 0;
+  const debt = S.data.settings.debt             || 0;
+  const rate = S.prices.usdtwd;
+
+  const items = [
+    {
+      key: 'insurance_total',
+      icon: '🛡️',
+      label: '儲蓄險',
+      valueTWD: ins * rate,
+      sub: ins > 0 ? `USD ${ins.toLocaleString('zh-TW', {minimumFractionDigits:2, maximumFractionDigits:2})}` : '尚未設定',
+      isDebt: false,
+    },
+    {
+      key: 'realestate_total',
+      icon: '🏠',
+      label: '房地產',
+      valueTWD: re,
+      sub: '不動產市值',
+      isDebt: false,
+    },
+    {
+      key: 'debt',
+      icon: '📉',
+      label: '負債',
+      valueTWD: debt,
+      sub: '貸款等負債總額',
+      isDebt: true,
+    },
+  ];
+
+  const el = $('other-items');
+  if (!el) return;
+  el.innerHTML = items.map(c => `
+    <div class="other-item-card" onclick="openOtherItemDetail('${c.key}')" role="button" tabindex="0">
+      <div class="other-item-icon">${c.icon}</div>
+      <div class="other-item-info">
+        <div class="other-item-label">${c.label}</div>
+        <div class="other-item-sub">${c.sub}</div>
+      </div>
+      <div class="other-item-value${c.isDebt ? ' neg' : ''}">${c.valueTWD > 0 ? fmt(c.valueTWD) : '—'}</div>
+    </div>
+  `).join('');
+
+  updateOtherTotal();
+}
+
+// 開啟「其他資產」修改 Modal
+function openOtherItemDetail(key) {
+  const META = {
+    insurance_total:  { label: '儲蓄險',  currency: 'USD', icon: '🛡️' },
+    realestate_total: { label: '房地產',  currency: 'TWD', icon: '🏠' },
+    debt:             { label: '負債',    currency: 'TWD', icon: '📉' },
+  };
+  const m = META[key];
+  if (!m) return;
+  const current = S.data.settings[key] || 0;
+  const fields = [
+    { id: 'new_value', label: `新餘額 (${m.currency})`, type: 'number', val: current, min: 0, step: 'any' },
+    { id: 'note', label: '備註（選填）', type: 'text', ph: '例如：市值更新、保費繳納' },
+  ];
+  openModal(`${m.icon} 更新 · ${m.label}`, fields, async vals => {
+    const newValue = parseFloat(vals.new_value);
+    if (isNaN(newValue) || newValue < 0) { showToast('請輸入有效數值', 'err'); return false; }
+    const valueBefore = S.data.settings[key] || 0;
+    S.data.settings[key] = newValue;
+    const settRows = Object.entries(S.data.settings).map(([k, v]) => [k, v]);
+    await saveSheet('settings', settRows);
+    await appendOtherHistory(key, valueBefore, newValue, vals.note || '');
+    renderKPIs(); renderCharts(); renderManagement();
+    showToast('已更新', 'ok');
+    return true;
+  });
+}
+
+// 寫入「其他資產」歷史記錄
+async function appendOtherHistory(key, valueBefore, valueAfter, note) {
+  const delta = valueAfter - valueBefore;
+  const row = [getNowTW8(), key, valueBefore, valueAfter, delta, note];
+  S.data.other_history.push(row);
+  await saveSheet('other_history', S.data.other_history);
 }
 
 // ── Accordion: 折疊/展開資產分類 ──
@@ -1567,24 +1652,6 @@ async function persistAndRefresh(type) {
   renderKPIs(); renderCharts(); renderManagement();
 }
 
-async function saveSettings(btn) {
-  if (btn) btnLoading(btn);
-  try {
-    S.data.settings.insurance_total  = parseFloat($('inp-insurance').value)  || 0;
-    S.data.settings.realestate_total = parseFloat($('inp-realestate').value) || 0;
-    S.data.settings.debt             = parseFloat($('inp-debt').value)        || 0;
-    const rows = Object.entries(S.data.settings).map(([k,v])=>[k,v]);
-    await saveSheet('settings', rows);
-    renderKPIs(); renderCharts();
-    updateOtherTotal();
-    if (btn) btnDone(btn);
-    showToast('設定已儲存', 'ok');
-  } catch(e) {
-    if (btn) btnReset(btn);
-    showToast('儲存失敗：' + e.message, 'err');
-  }
-}
-
 // ══════════════════════════════════════════════════════════════
 // SNAPSHOT
 // ══════════════════════════════════════════════════════════════
@@ -2058,13 +2125,6 @@ function btnReset(el) {
   el.classList.remove('btn-loading');
   el.disabled = false;
   if (el._origText) el.textContent = el._origText;
-}
-
-function updateInsTWD() {
-  const usd = parseFloat($('inp-insurance')?.value) || 0;
-  const el = $('ins-twd');
-  if (!el) return;
-  el.textContent = usd > 0 ? `≈ TWD ${fmt(usd * S.prices.usdtwd)}` : '';
 }
 
 // ══════════════════════════════════════════════════════════════

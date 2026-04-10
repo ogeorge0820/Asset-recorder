@@ -273,16 +273,25 @@ h3.section-header {
   border-radius: var(--r); padding: 18px 20px; margin-bottom: 16px;
 }
 .other-card h3 { font-size: 0.95rem; margin-bottom: 14px; }
-.other-inputs { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
-.other-inputs-3col { grid-template-columns: 1fr 1fr 1fr; }
-.inp-group { display: flex; flex-direction: column; gap: 6px; }
-.inp-group label { font-size: 0.82rem; color: var(--muted); }
-.inp-group input {
-  background: var(--bg); border: 1px solid var(--border);
-  color: var(--text); padding: 8px 12px; border-radius: 6px;
-  font-size: 0.9rem;
+
+/* ── Other Item Cards ── */
+.other-item-card {
+  display: flex; align-items: center; gap: 14px;
+  padding: 12px 14px;
+  background: var(--card2); border: 1px solid var(--border);
+  border-radius: 10px;
+  cursor: pointer; transition: background .15s;
 }
-.inp-group input:focus { outline: none; border-color: var(--accent); }
+.other-item-card:hover { background: var(--border); }
+.other-item-icon { font-size: 1.4rem; flex-shrink: 0; width: 36px; text-align: center; line-height: 1; }
+.other-item-info { flex: 1; min-width: 0; }
+.other-item-label { font-size: 0.95rem; font-weight: 700; color: var(--text); }
+.other-item-sub { font-size: 0.75rem; color: var(--muted); margin-top: 2px; }
+.other-item-value {
+  font-size: 1.1rem; font-weight: 700; color: var(--text);
+  flex-shrink: 0; text-align: right;
+}
+.other-item-value.neg { color: var(--red); }
 
 /* ── Snapshot Section ── */
 .snapshot-bar {
@@ -562,12 +571,6 @@ h3.section-header {
     justify-content: center;
     overflow: visible;
   }
-
-  /* Other assets — 堆疊成單欄 */
-  .other-inputs, .other-inputs-3col { grid-template-columns: 1fr !important; }
-  /* 輸入框觸控高度至少 44px */
-  .inp-group input, .inp-group select { min-height: 44px; font-size: 1rem; padding: 10px 12px; }
-  .inp-group { gap: 10px; }
 
   /* 新增按鈕觸控高度 */
   .btn-add { min-height: 44px; font-size: 0.88rem; }
