@@ -2,7 +2,7 @@
 // CONFIG
 // ══════════════════════════════════════════════════════════════
 // Build 時間：每次修改 code 後手動更新此時間（UTC+8 台北時間）
-const BUILD_DATE = '2026/04/10 14:05';
+const BUILD_DATE = '2026/04/10 14:30';
 
 const SPREADSHEET_ID = '1lpRpxVzWaYUqL-jVPOAJCtjsJUIedPYYyOx4gg4PPFU';
 const CLIENT_ID = '149884248440-85f8dhc6ub9up10sv0f89e3e0itrnooj.apps.googleusercontent.com';
@@ -878,11 +878,10 @@ function renderRewards() {
           const note = r[6] || '';
           const isAuto = type === '系統換算';
           const typeBadge = isAuto ? '' : `<span class="rwd-type-badge rwd-type-${type === '外部存入' ? 'ext' : 'manual'}">${esc(type)}</span>`;
-          // 幣價：非 USDT 才顯示，優先用記錄時的 price_usd，fallback 即時價
-          const showPrice = sym !== 'USDT';
-          const recordPrice = parseFloat(r[3]) || 0;
-          const priceStr = showPrice && recordPrice > 0
-            ? ` <span class="rwd-price">($${recordPrice >= 1000 ? Math.round(recordPrice).toLocaleString() : recordPrice.toFixed(2)})</span>`
+          // 幣價：非 USDT 才顯示，永遠使用即時價（S.prices.crypto）
+          const livePrice = S.prices.crypto[sym];
+          const priceStr = sym !== 'USDT' && livePrice > 0
+            ? ` <span class="rwd-price">($${livePrice >= 1000 ? Math.round(livePrice).toLocaleString() : livePrice.toFixed(2)})</span>`
             : '';
           return `<div class="rwd-item">
             <div class="rwd-item-left">
@@ -920,16 +919,13 @@ function toggleRewardGroup(gid) {
 }
 
 function rewardSyncPrice() {
-  const sym = $('mf-symbol')?.value?.toUpperCase();
-  if (sym && S.prices.crypto[sym] !== undefined) {
-    $('mf-price_usd').value = S.prices.crypto[sym];
-  }
   rewardSyncValue();
 }
 
 function rewardSyncValue() {
+  const sym = ($('mf-symbol')?.value || '').toUpperCase();
   const qty = parseFloat($('mf-quantity')?.value) || 0;
-  const price = parseFloat($('mf-price_usd')?.value) || 0;
+  const price = S.prices.crypto[sym] || 0;
   const twd = qty * price * S.prices.usdtwd;
   const el = $('mf-value_twd');
   if (el) el.value = twd > 0 ? fmt(twd) : '';
@@ -940,7 +936,6 @@ function openRewardModal(title, defaults, onSave) {
   const defaultMonth = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
   const symOptions = [...new Set(S.data.crypto.map(r => r[0]?.toUpperCase()).filter(Boolean))];
   const sel = defaults.symbol || symOptions[0] || '';
-  const priceDefault = defaults.price_usd !== undefined ? defaults.price_usd : (S.prices.crypto[sel] ?? '');
   const monthVal = defaults.date ? defaults.date.replace('/', '-') : defaultMonth;
   const typeVal = defaults.type || '手動';
   const noteVal = defaults.note || '';
@@ -967,10 +962,7 @@ function openRewardModal(title, defaults, onSave) {
       <div class="field"><label>增加數量</label>
         <input id="mf-quantity" type="number" step="any" min="0" value="${esc(String(defaults.quantity??''))}" placeholder="0" oninput="rewardSyncValue()">
       </div>
-      <div class="field"><label>當時幣價 (USD)</label>
-        <input id="mf-price_usd" type="number" step="any" min="0" value="${esc(String(priceDefault))}" placeholder="0" oninput="rewardSyncValue()">
-      </div>
-      <div class="field"><label>收益價值 (TWD)　<small style="color:var(--muted)">(自動計算)</small></label>
+      <div class="field"><label>收益價值 (TWD)　<small style="color:var(--muted)">(即時幣價換算)</small></label>
         <input id="mf-value_twd" type="text" readonly value="${esc(defaults.value_twd??'')}" placeholder="—">
       </div>
       <div class="field"><label>備註 <small style="color:var(--muted)">(選填)</small></label>
@@ -999,7 +991,6 @@ function openRewardModal(title, defaults, onSave) {
     const symSel = $('mf-symbol')?.value;
     const sym = symSel === '__custom' ? ($('mf-symbol-custom')?.value?.toUpperCase()) : symSel;
     const qty = parseFloat($('mf-quantity')?.value) || 0;
-    const price = parseFloat($('mf-price_usd')?.value) || 0;
     const type = $('mf-type')?.value || '手動';
     const note = ($('mf-note')?.value || '').trim();
 
@@ -1007,11 +998,13 @@ function openRewardModal(title, defaults, onSave) {
       showToast('請填寫月份、幣種與數量', 'err'); return;
     }
     const date = rawMonth.replace('-', '/');  // YYYY-MM → YYYY/MM
-    const valueTWD = qty * price * S.prices.usdtwd;
+    // price_usd 不再儲存（顯示時改用即時價），寫 0 保留 schema 相容
+    const liveP = S.prices.crypto[sym] || 0;
+    const valueTWD = qty * liveP * S.prices.usdtwd;
 
     btnLoading(btn);
     try {
-      await onSave(date, sym, qty, price, valueTWD, type, note);
+      await onSave(date, sym, qty, 0, valueTWD, type, note);
       btn.classList.remove('btn-loading');
       btn.textContent = '✓ 完成';
       setTimeout(() => closeModal(), 600);
