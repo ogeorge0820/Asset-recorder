@@ -598,13 +598,25 @@ function renderManagement() {
   $('inp-realestate').value  = S.data.settings.realestate_total || 0;
   $('inp-debt').value        = S.data.settings.debt || 0;
   updateInsTWD();
+  updateOtherTotal();
   initAccordion();
+}
+
+// 計算並更新「其他資產 & 負債」標題列淨值摘要
+function updateOtherTotal() {
+  const el = $('tot-other');
+  if (!el) return;
+  const insUSD = parseFloat($('inp-insurance')?.value) || 0;
+  const re   = parseFloat($('inp-realestate')?.value) || 0;
+  const debt = parseFloat($('inp-debt')?.value) || 0;
+  const net = insUSD * S.prices.usdtwd + re - debt;
+  el.textContent = net !== 0 ? '淨值 ' + fmt(net) : '—';
 }
 
 // ── Accordion: 折疊/展開資產分類 ──
 function initAccordion() {
   const saved = JSON.parse(localStorage.getItem('section_acc') || '{}');
-  ['cash', 'tw', 'us', 'crypto'].forEach(id => {
+  ['cash', 'tw', 'us', 'crypto', 'other'].forEach(id => {
     const card = document.getElementById('section-' + id);
     if (!card) return;
     const body = card.querySelector('.section-body');
@@ -1564,6 +1576,7 @@ async function saveSettings(btn) {
     const rows = Object.entries(S.data.settings).map(([k,v])=>[k,v]);
     await saveSheet('settings', rows);
     renderKPIs(); renderCharts();
+    updateOtherTotal();
     if (btn) btnDone(btn);
     showToast('設定已儲存', 'ok');
   } catch(e) {
