@@ -158,6 +158,13 @@ body {
   border-radius: var(--r); padding: 18px 20px;
 }
 .chart-card h3 { font-size: 0.88rem; color: var(--muted); font-weight: 500; margin-bottom: 14px; }
+.chart-title-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
+.chart-title-row h3 { margin-bottom: 0; }
+.daily-gain-badge { display: flex; align-items: center; gap: 6px; }
+.daily-gain-label { font-size: 0.72rem; color: var(--muted); }
+.daily-gain-val { font-size: 0.88rem; font-weight: 700; }
+.daily-gain-val.pos { color: var(--green); }
+.daily-gain-val.neg { color: var(--red); }
 .chart-filter { display: flex; gap: 6px; margin-bottom: 12px; }
 .filter-btn {
   background: none; border: 1px solid var(--border); color: var(--muted);
@@ -754,7 +761,8 @@ body {
 .rwd-type-ext { background: rgba(16,185,129,.18); color: #34d399; }
 .rwd-type-manual { background: rgba(251,191,36,.18); color: #fbbf24; }
 .rwd-note { font-size: 0.72rem; color: var(--muted); padding-left: 2px; }
-.rwd-detail { flex: 1; font-size: 0.88rem; color: var(--text); }
+.rwd-detail { flex: 1; font-size: 0.88rem; color: var(--text); min-width: 0; }
+.rwd-price { color: var(--muted); font-size: 0.78rem; }
 .rwd-twd { color: var(--muted); font-size: 0.8rem; margin-left: 4px; }
 .rwd-actions { display: flex; gap: 4px; flex-shrink: 0; }
 /* Light mode */

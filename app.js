@@ -2,7 +2,7 @@
 // CONFIG
 // ══════════════════════════════════════════════════════════════
 // Build 時間：每次修改 code 後手動更新此時間（UTC+8 台北時間）
-const BUILD_DATE = '2026/04/09 23:55';
+const BUILD_DATE = '2026/04/10 01:10';
 
 const SPREADSHEET_ID = '1lpRpxVzWaYUqL-jVPOAJCtjsJUIedPYYyOx4gg4PPFU';
 const CLIENT_ID = '149884248440-85f8dhc6ub9up10sv0f89e3e0itrnooj.apps.googleusercontent.com';
@@ -567,6 +567,8 @@ function renderKPIs() {
   const elGrowth = $('kv-growth');
   elGrowth.textContent = (yearlyDiff >= 0 ? '+' : '') + fmt(yearlyDiff);
   elGrowth.className = `kpi-value ${yearlyDiff >= 0 ? 'pos' : 'neg'}`;
+  const cardGrowth = $('card-growth');
+  if (cardGrowth) cardGrowth.className = `kpi-card ${yearlyDiff >= 0 ? 'kpi-gain' : 'kpi-loss'}`;
   const sGrowth = $('ks-growth'); if (sGrowth) sGrowth.textContent = '可用資產 − 2025/12/31 基準';
 
   const re = $('kv-rate');
@@ -876,12 +878,18 @@ function renderRewards() {
           const note = r[6] || '';
           const isAuto = type === '系統換算';
           const typeBadge = isAuto ? '' : `<span class="rwd-type-badge rwd-type-${type === '外部存入' ? 'ext' : 'manual'}">${esc(type)}</span>`;
+          // 幣價：非 USDT 才顯示，優先用記錄時的 price_usd，fallback 即時價
+          const showPrice = sym !== 'USDT';
+          const recordPrice = parseFloat(r[3]) || 0;
+          const priceStr = showPrice && recordPrice > 0
+            ? ` <span class="rwd-price">($${recordPrice >= 1000 ? Math.round(recordPrice).toLocaleString() : recordPrice.toFixed(2)})</span>`
+            : '';
           return `<div class="rwd-item">
             <div class="rwd-item-left">
               <span class="rwd-sym">${esc(sym)}${typeBadge}</span>
               ${note ? `<span class="rwd-note">${esc(note)}</span>` : ''}
             </div>
-            <span class="rwd-detail">+${qty.toFixed(3)} <span class="rwd-twd">≈ ${fmt(twd)}</span></span>
+            <span class="rwd-detail">+${qty.toFixed(3)}${priceStr} <span class="rwd-twd">≈ ${fmt(twd)}</span></span>
             <div class="rwd-actions">
               ${isAuto ? '' : `<button class="btn-icon edit" onclick="editReward(${i})" title="編輯">✏</button>`}
               <button class="btn-icon del" onclick="deleteReward(${i})" title="刪除">✕</button>
@@ -1180,6 +1188,25 @@ function renderDailyTrend() {
     return;
   }
   if (nodata) nodata.style.display = 'none';
+
+  // 今日收益：當前淨資產 − 昨日最新快照淨資產
+  const badge = $('daily-gain-badge');
+  const valEl = $('daily-gain-val');
+  if (badge && valEl) {
+    const { net: curNet } = calcTotals();
+    const todayStr = (() => { const n = new Date(); return `${n.getFullYear()}/${String(n.getMonth()+1).padStart(2,'0')}/${String(n.getDate()).padStart(2,'0')}`; })();
+    // 找「今天以前」最新一筆快照
+    const prevSnap = [...snaps].reverse().find(s => s[0] < todayStr);
+    if (prevSnap) {
+      const prevNet = parseFloat(prevSnap[8]) || 0;
+      const diff = curNet - prevNet;
+      valEl.textContent = (diff >= 0 ? '+' : '') + fmt(diff);
+      valEl.className = `daily-gain-val ${diff >= 0 ? 'pos' : 'neg'}`;
+      badge.style.display = 'flex';
+    } else {
+      badge.style.display = 'none';
+    }
+  }
 
   // Show last 90 days max for readability
   const recent = snaps.slice(-90);

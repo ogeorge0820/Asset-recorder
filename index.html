@@ -70,7 +70,7 @@
           <div class="kpi-value skel" id="kv-monthly">—</div>
           <div class="kpi-sub" id="ks-monthly">與上月快照比較</div>
         </div>
-        <div class="kpi-card">
+        <div class="kpi-card" id="card-growth">
           <div class="kpi-label">本年收益</div>
           <div class="kpi-value skel" id="kv-growth">—</div>
           <div class="kpi-sub" id="ks-growth">可用資產 − 2025/12/31 基準</div>
@@ -110,7 +110,13 @@
 
       <!-- Row 2: Daily trend - full width -->
       <div class="chart-card" style="margin-bottom:16px">
-        <h3>每日資產趨勢</h3>
+        <div class="chart-title-row">
+          <h3>每日資產趨勢</h3>
+          <div class="daily-gain-badge" id="daily-gain-badge" style="display:none">
+            <span class="daily-gain-label">今日收益</span>
+            <span class="daily-gain-val" id="daily-gain-val">—</span>
+          </div>
+        </div>
         <div style="position:relative;height:220px" id="daily-trend-wrap">
           <canvas id="daily-trend-chart"></canvas>
           <div id="daily-trend-nodata" class="chart-nodata" style="display:none">
