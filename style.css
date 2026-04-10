@@ -197,10 +197,18 @@ body {
   font-size: 0.95rem; margin-bottom: 14px;
   display: flex; align-items: center; justify-content: space-between; gap: 8px;
 }
+.section-header-right {
+  display: flex; align-items: center; gap: 6px; flex-shrink: 0; flex-wrap: wrap; justify-content: flex-end;
+}
 .section-total {
   font-size: 0.95rem; font-weight: 700;
-  color: var(--accent-light); white-space: nowrap; flex-shrink: 0;
+  color: var(--accent-light); white-space: nowrap;
 }
+.section-gain {
+  font-size: 0.78rem; font-weight: 600; white-space: nowrap;
+}
+.section-gain.pos { color: var(--green); }
+.section-gain.neg { color: var(--red); }
 .badge {
   background: var(--accent); color: #fff;
   border-radius: 10px; padding: 1px 7px; font-size: 0.72rem;

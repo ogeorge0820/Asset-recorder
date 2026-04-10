@@ -2,7 +2,7 @@
 // CONFIG
 // ══════════════════════════════════════════════════════════════
 // Build 時間：每次修改 code 後手動更新此時間（UTC+8 台北時間）
-const BUILD_DATE = '2026/04/10 14:30';
+const BUILD_DATE = '2026/04/10 14:24';
 
 const SPREADSHEET_ID = '1lpRpxVzWaYUqL-jVPOAJCtjsJUIedPYYyOx4gg4PPFU';
 const CLIENT_ID = '149884248440-85f8dhc6ub9up10sv0f89e3e0itrnooj.apps.googleusercontent.com';
@@ -643,6 +643,27 @@ function renderCash() {
   }).join('') : '<div style="text-align:center;padding:20px;color:var(--muted);font-size:0.88rem">尚無帳戶</div>';
 }
 
+// 取昨日 daily_snapshots 某欄位數值（colIdx: 2=tw,3=us,4=crypto）
+// 回傳 null 表示無昨日快照
+function getDailySnapYesterday(colIdx) {
+  const todayStr = (() => { const n = new Date(); return `${n.getFullYear()}/${String(n.getMonth()+1).padStart(2,'0')}/${String(n.getDate()).padStart(2,'0')}`; })();
+  const prev = [...S.data.daily_snapshots].reverse().find(s => s[0] < todayStr);
+  if (!prev) return null;
+  const v = parseFloat(prev[colIdx]);
+  return isNaN(v) ? null : v;
+}
+
+// 更新分類今日收益 badge
+function updateSectionGain(elId, curTotal, colIdx) {
+  const el = $(elId);
+  if (!el) return;
+  const yesterday = getDailySnapYesterday(colIdx);
+  if (yesterday === null) { el.textContent = ''; return; }
+  const diff = curTotal - yesterday;
+  el.textContent = (diff >= 0 ? '(+' : '(') + fmt(diff) + ')';
+  el.className = `section-gain ${diff >= 0 ? 'pos' : 'neg'}`;
+}
+
 function renderTW() {
   const rows = S.data.tw;
   $('cnt-tw').textContent = rows.length;
@@ -695,6 +716,7 @@ function renderTW() {
   }
 
   $('tot-tw').textContent = fmt(totalTWTWD);
+  updateSectionGain('gain-tw', totalTWTWD, 2);
 }
 
 function renderUS() {
@@ -749,6 +771,7 @@ function renderUS() {
   }
 
   $('tot-us').textContent = fmt(totalUSTWD);
+  updateSectionGain('gain-us', totalUSTWD, 3);
 }
 
 function renderCrypto() {
@@ -813,6 +836,7 @@ function renderCrypto() {
 
   const tot = rows.reduce((s, r) => s + (parseFloat(r[1]) || 0) * (S.prices.crypto[r[0]?.toUpperCase()] || 0) * rate, 0);
   $('tot-crypto').textContent = fmt(tot);
+  updateSectionGain('gain-crypto', tot, 4);
 }
 
 // ── 質押/活存收益記錄 ──────────────────────────────────────────
