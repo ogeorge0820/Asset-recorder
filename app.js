@@ -2,7 +2,7 @@
 // CONFIG
 // ══════════════════════════════════════════════════════════════
 // Build 時間：每次修改 code 後手動更新此時間（UTC+8 台北時間）
-const BUILD_DATE = '2026/04/11 01:00';
+const BUILD_DATE = '2026/04/11 01:30';
 
 const SPREADSHEET_ID = '1lpRpxVzWaYUqL-jVPOAJCtjsJUIedPYYyOx4gg4PPFU';
 const CLIENT_ID = '149884248440-85f8dhc6ub9up10sv0f89e3e0itrnooj.apps.googleusercontent.com';
@@ -600,10 +600,14 @@ function renderKPIs() {
       if (prevSnap) {
         const prevNet = parseFloat(prevSnap[8]) || 0;
         const diff = curNet - prevNet;
-        console.log('[dailyGain] prevSnap:', prevSnap[0], '| prevNet:', prevNet, '| curNet:', curNet, '| diff:', diff, '| usdtwd:', S.prices.usdtwd, '| BTC:', S.prices.crypto['BTC']);
-        dgEl.textContent = (diff >= 0 ? '+' : '') + fmt(diff);
-        dgEl.className = `kpi-value ${diff >= 0 ? 'pos' : 'neg'}`;
-        if (dgCard) dgCard.className = `kpi-card ${diff >= 0 ? 'kpi-gain' : 'kpi-loss'}`;
+        if (Math.abs(diff) < 100) {
+          dgEl.textContent = '持平'; dgEl.className = 'kpi-value';
+          if (dgCard) dgCard.className = 'kpi-card';
+        } else {
+          dgEl.textContent = (diff >= 0 ? '+' : '') + fmt(diff);
+          dgEl.className = `kpi-value ${diff >= 0 ? 'pos' : 'neg'}`;
+          if (dgCard) dgCard.className = `kpi-card ${diff >= 0 ? 'kpi-gain' : 'kpi-loss'}`;
+        }
         if (dgSub) dgSub.textContent = '淨資產日變化';
       } else {
         dgEl.textContent = '—'; dgEl.className = 'kpi-value';
