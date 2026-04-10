@@ -2,7 +2,7 @@
 // CONFIG
 // ══════════════════════════════════════════════════════════════
 // Build 時間：每次修改 code 後手動更新此時間（UTC+8 台北時間）
-const BUILD_DATE = '2026/04/11 00:00';
+const BUILD_DATE = '2026/04/11 00:30';
 
 const SPREADSHEET_ID = '1lpRpxVzWaYUqL-jVPOAJCtjsJUIedPYYyOx4gg4PPFU';
 const CLIENT_ID = '149884248440-85f8dhc6ub9up10sv0f89e3e0itrnooj.apps.googleusercontent.com';
@@ -2219,7 +2219,7 @@ async function initApp() {
     await seedBaselineHistory();
 
     showToast('抓取即時價格…');
-    await fetchAllPrices();
+    await fetchAllPrices(true); // 啟動時強制抓新報價，確保跨裝置數據一致
 
     const marchCount = await batchSeedMarchRewards();
     if (marchCount > 0) showToast(`已新增 ${marchCount} 筆 3 月份質押收益`, 'ok');
