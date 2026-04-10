@@ -2,7 +2,7 @@
 // CONFIG
 // ══════════════════════════════════════════════════════════════
 // Build 時間：每次修改 code 後手動更新此時間（UTC+8 台北時間）
-const BUILD_DATE = '2026/04/11 00:30';
+const BUILD_DATE = '2026/04/11 01:00';
 
 const SPREADSHEET_ID = '1lpRpxVzWaYUqL-jVPOAJCtjsJUIedPYYyOx4gg4PPFU';
 const CLIENT_ID = '149884248440-85f8dhc6ub9up10sv0f89e3e0itrnooj.apps.googleusercontent.com';
@@ -600,6 +600,7 @@ function renderKPIs() {
       if (prevSnap) {
         const prevNet = parseFloat(prevSnap[8]) || 0;
         const diff = curNet - prevNet;
+        console.log('[dailyGain] prevSnap:', prevSnap[0], '| prevNet:', prevNet, '| curNet:', curNet, '| diff:', diff, '| usdtwd:', S.prices.usdtwd, '| BTC:', S.prices.crypto['BTC']);
         dgEl.textContent = (diff >= 0 ? '+' : '') + fmt(diff);
         dgEl.className = `kpi-value ${diff >= 0 ? 'pos' : 'neg'}`;
         if (dgCard) dgCard.className = `kpi-card ${diff >= 0 ? 'kpi-gain' : 'kpi-loss'}`;
@@ -2219,7 +2220,8 @@ async function initApp() {
     await seedBaselineHistory();
 
     showToast('抓取即時價格…');
-    await fetchAllPrices(true); // 啟動時強制抓新報價，確保跨裝置數據一致
+    localStorage.removeItem(PRICE_CACHE_KEY); // 啟動時強制清快取
+    await fetchAllPrices(true); // 並強制抓新報價，確保跨裝置數據一致
 
     const marchCount = await batchSeedMarchRewards();
     if (marchCount > 0) showToast(`已新增 ${marchCount} 筆 3 月份質押收益`, 'ok');
