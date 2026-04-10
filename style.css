@@ -433,11 +433,11 @@ h3.section-header {
   padding: 10px 8px; flex: 1; overflow-y: auto;
 }
 .sidebar-nav-item {
-  display: flex; align-items: center; gap: 10px;
-  width: 100%; padding: 10px 12px; margin-bottom: 2px;
+  display: flex; align-items: center; gap: 8px;
+  width: 100%; padding: 8px 10px; margin-bottom: 2px;
   border-radius: 8px; background: none; border: none;
   color: var(--muted); cursor: pointer;
-  font-size: 0.9rem; transition: background .15s, color .15s;
+  font-size: 0.85rem; transition: background .15s, color .15s;
   text-align: left;
 }
 .sidebar-nav-item:hover { background: var(--card2); color: var(--text); }
@@ -470,14 +470,14 @@ h3.section-header {
   #sidebar {
     display: flex; flex-direction: column;
     position: fixed; left: 0; top: 0; bottom: 0;
-    width: 240px;
+    width: 180px;
     background: var(--card);
     border-right: 1px solid var(--border);
     z-index: 200; overflow: hidden;
   }
   #app-header { display: none; }
-  #app { margin-left: 240px; }
-  #app-content { padding: 32px; max-width: none; }
+  #app { margin-left: 180px; }
+  #app-content { padding: 28px 32px; max-width: none; }
 
   /* Card depth */
   .kpi-card, .chart-card, .section-card {
@@ -497,11 +497,10 @@ h3.section-header {
   .kpi-value { white-space: nowrap; }
   .kpi-primary .kpi-value { font-size: 1.6rem; white-space: nowrap; }
 
-  /* Overview: main full width (daily trend + rewards + monthly) 上方
-     side column (pie + net trend) 右側固定 340px */
+  /* Overview: 主欄 75% / 側欄 25%；確保每日趨勢圖橫向拉寬 */
   .overview-grid {
     display: grid;
-    grid-template-columns: 1fr 340px;
+    grid-template-columns: 3fr 1fr;
     gap: 16px; align-items: start;
   }
 
@@ -524,7 +523,7 @@ h3.section-header {
   .kpi-grid { grid-template-columns: 1fr 1fr 1fr; }
   .kpi-primary .kpi-value { font-size: 1.7rem; }
 }
-@media (min-width: 769px) and (max-width: 1100px) {
+@media (min-width: 769px) and (max-width: 1050px) {
   /* Narrow desktop: side column collapses, overview stacks */
   .overview-grid { grid-template-columns: 1fr !important; }
   .kpi-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }

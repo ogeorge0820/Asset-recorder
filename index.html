@@ -120,7 +120,7 @@
           <!-- Daily trend -->
           <div class="chart-card">
             <div class="chart-title-row"><h3>每日資產趨勢</h3></div>
-            <div style="position:relative;height:220px" id="daily-trend-wrap">
+            <div style="position:relative;height:240px" id="daily-trend-wrap">
               <canvas id="daily-trend-chart"></canvas>
               <div id="daily-trend-nodata" class="chart-nodata" style="display:none">
                 <div style="color:var(--muted);font-size:0.9rem;max-width:300px;line-height:1.7">
@@ -129,10 +129,22 @@
               </div>
             </div>
           </div>
-          <!-- Rewards summary -->
+          <!-- Net worth trend (swapped from side) -->
           <div class="chart-card">
-            <h3>質押 / 活存收益（本月）</h3>
-            <div id="rewards-summary"></div>
+            <h3>淨資產趨勢</h3>
+            <div class="chart-filter">
+              <button class="filter-btn active" data-f="all" onclick="setTrendFilter(this)">全部</button>
+              <button class="filter-btn" data-f="1y" onclick="setTrendFilter(this)">近1年</button>
+              <button class="filter-btn" data-f="6m" onclick="setTrendFilter(this)">近6個月</button>
+            </div>
+            <div style="position:relative;height:200px" id="trend-wrap">
+              <canvas id="trend-chart"></canvas>
+              <div id="trend-nodata" class="chart-nodata" style="display:none">
+                <div style="color:var(--muted);font-size:0.9rem;max-width:380px;line-height:1.7">
+                  尚無歷史資料
+                </div>
+              </div>
+            </div>
           </div>
           <!-- Monthly bar -->
           <div class="chart-card">
@@ -147,26 +159,14 @@
           <!-- Pie -->
           <div class="chart-card">
             <h3>資產組成</h3>
-            <div style="position:relative;height:340px" id="pie-wrap">
+            <div style="position:relative;height:320px" id="pie-wrap">
               <canvas id="pie-chart"></canvas>
             </div>
           </div>
-          <!-- Net worth trend -->
+          <!-- Rewards summary (swapped from main) -->
           <div class="chart-card">
-            <h3>淨資產趨勢</h3>
-            <div class="chart-filter">
-              <button class="filter-btn active" data-f="all" onclick="setTrendFilter(this)">全部</button>
-              <button class="filter-btn" data-f="1y" onclick="setTrendFilter(this)">近1年</button>
-              <button class="filter-btn" data-f="6m" onclick="setTrendFilter(this)">近6個月</button>
-            </div>
-            <div style="position:relative;height:270px" id="trend-wrap">
-              <canvas id="trend-chart"></canvas>
-              <div id="trend-nodata" class="chart-nodata" style="display:none">
-                <div style="color:var(--muted);font-size:0.9rem;max-width:380px;line-height:1.7">
-                  尚無歷史資料
-                </div>
-              </div>
-            </div>
+            <h3>質押 / 活存收益（本月）</h3>
+            <div id="rewards-summary"></div>
           </div>
         </div><!-- /overview-side -->
 
