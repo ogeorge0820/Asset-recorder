@@ -108,6 +108,33 @@ asset-recorder/
 
 ## 📋 版本歷史
 
+### v0.4 (2026/04/10 21:08)
+
+#### 🎨 Apple Design System 升級
+
+- **視覺語法（Glassmorphism & Softness）**：
+  - 所有卡片 `border-radius: 16px`，移除邊框，改用極細陰影 `0 4px 20px rgba(0,0,0,0.05)`
+  - Light mode 背景改為 `#F5F5F7`（macOS System Background），卡片背景純白
+  - 顏色系統全面切換至 Apple 規範：藍 `#007AFF`、綠 `#34C759`、紅 `#FF3B30`
+
+- **KPI 層級重構（Header Hierarchy）**：
+  - 總資產、淨資產、可用資產三張主要卡片：字重 800、字體 1.9rem，比例 `2:2:2:1:1:1`
+  - 收益卡片（本月、本年、本日）縮小寬度，搭配 Apple 規範的紅綠色值
+
+- **圖表專業化（Refined Data）**：
+  - 每日趨勢圖、淨資產趨勢圖：隱藏 Y 軸與網格線，平滑曲線 `tension 0.42`，半透明漸層填充
+  - 月收益長條圖：隱藏 Y 軸，使用 Apple 綠/紅配色，圓角柱體
+  - 圓餅圖：百分比直接顯示在右側圖例標籤中（如「加密貨幣  42.5%」），Tooltip 精簡
+
+- **側邊欄優雅化**：
+  - Light mode sidebar：`backdrop-filter: blur(24px)` 半透明毛玻璃效果
+  - 選中狀態：移除背景色，改用左側 3px 圓點 + 文字加粗
+  - 底部資訊（匯率、更新時間、版本號）整合為單一半透明 `sidebar-info-block`
+
+- **Tooltip 優化**：圓餅圖 Tooltip 改為跟隨滑鼠游標顯示，永遠不遮住中心數字
+
+---
+
 ### v0.3 (2026/04/09 14:24)
 
 #### ✨ 新功能
