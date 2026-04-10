@@ -2,7 +2,7 @@
 // CONFIG
 // ══════════════════════════════════════════════════════════════
 // Build 時間：每次修改 code 後手動更新此時間（UTC+8 台北時間）
-const BUILD_DATE = '2026/04/10 20:51';
+const BUILD_DATE = '2026/04/10 21:10';
 
 const SPREADSHEET_ID = '1lpRpxVzWaYUqL-jVPOAJCtjsJUIedPYYyOx4gg4PPFU';
 const CLIENT_ID = '149884248440-85f8dhc6ub9up10sv0f89e3e0itrnooj.apps.googleusercontent.com';
@@ -1327,16 +1327,12 @@ function chartColors() {
   };
 }
 
-// Tooltip Positioner: 永遠出現在扇形外緣，不遮住中心文字
-Chart.Tooltip.positioners.doughnutOutside = function(elements) {
-  if (!elements.length) return false;
-  const arc = elements[0].element;
-  const midAngle = (arc.startAngle + arc.endAngle) / 2;
-  // 外緣再加 24px 偏移，確保不與圓環重疊
-  const r = arc.outerRadius + 24;
+// Tooltip Positioner: 跟隨滑鼠游標，往上偏移避免遮住圓心文字
+Chart.Tooltip.positioners.cursorOffset = function(elements, eventPosition) {
+  if (!elements.length || !eventPosition) return false;
   return {
-    x: arc.x + Math.cos(midAngle) * r,
-    y: arc.y + Math.sin(midAngle) * r,
+    x: eventPosition.x,
+    y: eventPosition.y - 12,
   };
 };
 
@@ -1470,8 +1466,9 @@ function renderPie() {
               },
             },
         tooltip: {
-          // 自訂 positioner：tooltip 永遠出現在扇形外緣，不蓋住中心數值
-          position: 'doughnutOutside',
+          // 跟隨游標顯示，yAlign:bottom 讓 tooltip 在游標上方展開
+          position: 'cursorOffset',
+          yAlign: 'bottom',
           callbacks: { label(c) {
             const tot = c.dataset.data.reduce((a,b)=>a+b,0);
             return ` ${c.label}: ${fmt(c.parsed)} (${(c.parsed/tot*100).toFixed(1)}%)`;
