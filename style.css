@@ -579,6 +579,8 @@ h3.section-header {
   [data-theme="light"] .kpi-card:not(.kpi-primary) .kpi-value { font-size: 1.1rem; color: #1d1d1f; }
   [data-theme="light"] .kpi-value.pos { color: #34C759; }
   [data-theme="light"] .kpi-value.neg { color: #FF3B30; }
+  [data-theme="light"] .kpi-card:not(.kpi-primary) .kpi-value.pos { color: #34C759; }
+  [data-theme="light"] .kpi-card:not(.kpi-primary) .kpi-value.neg { color: #FF3B30; }
   [data-theme="light"] .kpi-card.kpi-gain { border-left: 3px solid #34C759; }
   [data-theme="light"] .kpi-card.kpi-loss { border-left: 3px solid #FF3B30; }
   [data-theme="light"] .kpi-label { color: #86868b; letter-spacing: 0.4px; }

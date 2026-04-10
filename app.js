@@ -2,7 +2,7 @@
 // CONFIG
 // ══════════════════════════════════════════════════════════════
 // Build 時間：每次修改 code 後手動更新此時間（UTC+8 台北時間）
-const BUILD_DATE = '2026/04/10 21:08';
+const BUILD_DATE = '2026/04/11 00:00';
 
 const SPREADSHEET_ID = '1lpRpxVzWaYUqL-jVPOAJCtjsJUIedPYYyOx4gg4PPFU';
 const CLIENT_ID = '149884248440-85f8dhc6ub9up10sv0f89e3e0itrnooj.apps.googleusercontent.com';
@@ -354,7 +354,7 @@ async function saveSheet(name, dataRows) {
 // PRICE FETCHING
 // ══════════════════════════════════════════════════════════════
 const PRICE_CACHE_KEY = 'asset_price_cache';
-const PRICE_CACHE_TTL = 10 * 60 * 1000; // 10 分鐘，跨 tab/reload 共享
+const PRICE_CACHE_TTL = 5 * 60 * 1000; // 5 分鐘，跨 tab/reload 共享
 
 async function fetchAllPrices(force = false) {
   // ── 嘗試讀取 localStorage 快取（防止頻繁重整 / 多分頁打爆 API rate limit）
@@ -1405,10 +1405,10 @@ function renderDailyTrend() {
             g.addColorStop(1, 'rgba(0,0,0,0)');
             return g;
           },
-          fill:true, tension:.42, pointRadius:0, pointHoverRadius:5, borderWidth:2 },
+          fill:true, tension:.42, pointRadius:3, pointHoverRadius:6, borderWidth:2 },
         { label:'淨資產', data: recent.map(s => parseFloat(s[8])||0),
           borderColor: cc.line2, backgroundColor:'transparent',
-          borderDash:[5,3], tension:.42, pointRadius:0, pointHoverRadius:5, borderWidth:1.5 },
+          borderDash:[5,3], tension:.42, pointRadius:3, pointHoverRadius:6, borderWidth:1.5 },
       ],
     },
     options: {
@@ -1538,6 +1538,13 @@ function renderTrend() {
     snaps = snaps.filter(s => new Date(s[0]) >= cut);
   }
 
+  // 加入當月即時數據點（若最後一筆快照不是本月）
+  const todayM = `${now.getFullYear()}/${String(now.getMonth()+1).padStart(2,'0')}`;
+  if (!snaps.length || snaps[snaps.length-1][0] < todayM) {
+    const { net: liveNet } = calcTotals();
+    snaps = [...snaps, [todayM + ' ▸', 0,0,0,0,0,0,0, liveNet]];
+  }
+
   const cc = chartColors();
   S.charts.trend = new Chart(ctx, {
     type: 'line',
@@ -1588,6 +1595,16 @@ function renderMonthly() {
   for (let i=1;i<snaps.length;i++) {
     labels.push(snaps[i][0]);
     vals.push((parseFloat(snaps[i][8])||0) - (parseFloat(snaps[i-1][8])||0));
+  }
+
+  // 加入當月即時數據（若最後一筆快照不是本月）
+  const nowM = new Date();
+  const todayM2 = `${nowM.getFullYear()}/${String(nowM.getMonth()+1).padStart(2,'0')}`;
+  if (snaps.length && snaps[snaps.length-1][0] < todayM2) {
+    const lastNet = parseFloat(snaps[snaps.length-1][8]) || 0;
+    const { net: curNet } = calcTotals();
+    labels.push(todayM2 + ' ▸');
+    vals.push(curNet - lastNet);
   }
 
   S.charts.monthly = new Chart(ctx, {
