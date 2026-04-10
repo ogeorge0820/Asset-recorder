@@ -31,6 +31,7 @@
     </nav>
     <div class="header-right">
       <div class="build-badge" id="build-badge"></div>
+      <div class="rate-badge" id="header-rate">USD <b id="header-rate-val">—</b></div>
       <div class="update-badge" id="update-badge">
         <span class="update-dot" id="update-dot"></span>
         <span id="update-ts">—</span>
@@ -75,10 +76,10 @@
           <div class="kpi-value skel" id="kv-growth">—</div>
           <div class="kpi-sub" id="ks-growth">可用資產 − 2025/12/31 基準</div>
         </div>
-        <div class="kpi-card">
-          <div class="kpi-label">美金匯率</div>
-          <div class="kpi-value skel" id="kv-rate">—</div>
-          <div class="kpi-sub" id="ks-rate">USD/TWD</div>
+        <div class="kpi-card" id="card-daily-gain">
+          <div class="kpi-label">本日收益</div>
+          <div class="kpi-value skel" id="kv-daily-gain">—</div>
+          <div class="kpi-sub" id="ks-daily-gain">淨資產日變化</div>
         </div>
       </div>
 
@@ -112,10 +113,6 @@
       <div class="chart-card" style="margin-bottom:16px">
         <div class="chart-title-row">
           <h3>每日資產趨勢</h3>
-          <div class="daily-gain-badge" id="daily-gain-badge" style="display:none">
-            <span class="daily-gain-label">今日收益</span>
-            <span class="daily-gain-val" id="daily-gain-val">—</span>
-          </div>
         </div>
         <div style="position:relative;height:220px" id="daily-trend-wrap">
           <canvas id="daily-trend-chart"></canvas>

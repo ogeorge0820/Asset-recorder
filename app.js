@@ -2,7 +2,7 @@
 // CONFIG
 // ══════════════════════════════════════════════════════════════
 // Build 時間：每次修改 code 後手動更新此時間（UTC+8 台北時間）
-const BUILD_DATE = '2026/04/10 15:20';
+const BUILD_DATE = '2026/04/10 16:10';
 
 const SPREADSHEET_ID = '1lpRpxVzWaYUqL-jVPOAJCtjsJUIedPYYyOx4gg4PPFU';
 const CLIENT_ID = '149884248440-85f8dhc6ub9up10sv0f89e3e0itrnooj.apps.googleusercontent.com';
@@ -575,12 +575,40 @@ function renderKPIs() {
   if (cardGrowth) cardGrowth.className = `kpi-card ${yearlyDiff >= 0 ? 'kpi-gain' : 'kpi-loss'}`;
   const sGrowth = $('ks-growth'); if (sGrowth) sGrowth.textContent = '可用資產 − 2025/12/31 基準';
 
-  const re = $('kv-rate');
-  re.textContent = S.prices.usdtwd.toFixed(2);
-  re.className = 'kpi-value';
-  $('ks-rate').innerHTML = S.prices.errs.usdtwd
-    ? 'USD/TWD <span class="price-err">更新失敗</span>'
-    : 'USD/TWD';
+  // Header 匯率
+  const headerRateEl = $('header-rate-val');
+  if (headerRateEl) {
+    headerRateEl.textContent = S.prices.usdtwd.toFixed(2);
+    const headerRate = $('header-rate');
+    if (headerRate) headerRate.title = S.prices.errs?.usdtwd ? '匯率更新失敗' : 'USD/TWD';
+  }
+
+  // 本日收益 KPI（淨資產日變化）
+  const dailySnaps = S.data.daily_snapshots || [];
+  const dgEl = $('kv-daily-gain');
+  const dgSub = $('ks-daily-gain');
+  const dgCard = $('card-daily-gain');
+  if (dgEl) {
+    if (dailySnaps.length) {
+      const { net: curNet } = calcTotals();
+      const todayStr = (() => { const n = new Date(); return `${n.getFullYear()}/${String(n.getMonth()+1).padStart(2,'0')}/${String(n.getDate()).padStart(2,'0')}`; })();
+      const prevSnap = [...dailySnaps].reverse().find(s => s[0] < todayStr);
+      if (prevSnap) {
+        const prevNet = parseFloat(prevSnap[8]) || 0;
+        const diff = curNet - prevNet;
+        dgEl.textContent = (diff >= 0 ? '+' : '') + fmt(diff);
+        dgEl.className = `kpi-value ${diff >= 0 ? 'pos' : 'neg'}`;
+        if (dgCard) dgCard.className = `kpi-card ${diff >= 0 ? 'kpi-gain' : 'kpi-loss'}`;
+        if (dgSub) dgSub.textContent = '淨資產日變化';
+      } else {
+        dgEl.textContent = '—'; dgEl.className = 'kpi-value';
+        if (dgSub) dgSub.textContent = '尚無前日快照';
+      }
+    } else {
+      dgEl.textContent = '—'; dgEl.className = 'kpi-value';
+      if (dgSub) dgSub.textContent = '尚無每日快照';
+    }
+  }
 
   const buildBadge = $('build-badge');
   if (buildBadge) buildBadge.textContent = `版本 ${BUILD_DATE}`;
@@ -1349,25 +1377,6 @@ function renderDailyTrend() {
     return;
   }
   if (nodata) nodata.style.display = 'none';
-
-  // 今日收益：當前淨資產 − 昨日最新快照淨資產
-  const badge = $('daily-gain-badge');
-  const valEl = $('daily-gain-val');
-  if (badge && valEl) {
-    const { net: curNet } = calcTotals();
-    const todayStr = (() => { const n = new Date(); return `${n.getFullYear()}/${String(n.getMonth()+1).padStart(2,'0')}/${String(n.getDate()).padStart(2,'0')}`; })();
-    // 找「今天以前」最新一筆快照
-    const prevSnap = [...snaps].reverse().find(s => s[0] < todayStr);
-    if (prevSnap) {
-      const prevNet = parseFloat(prevSnap[8]) || 0;
-      const diff = curNet - prevNet;
-      valEl.textContent = (diff >= 0 ? '+' : '') + fmt(diff);
-      valEl.className = `daily-gain-val ${diff >= 0 ? 'pos' : 'neg'}`;
-      badge.style.display = 'flex';
-    } else {
-      badge.style.display = 'none';
-    }
-  }
 
   // Show last 90 days max for readability
   const recent = snaps.slice(-90);
