@@ -2,7 +2,7 @@
 // CONFIG
 // ══════════════════════════════════════════════════════════════
 // Build 時間：每次修改 code 後手動更新此時間（UTC+8 台北時間）
-const BUILD_DATE = '2026/04/10 14:44';
+const BUILD_DATE = '2026/04/10 15:40';
 
 const SPREADSHEET_ID = '1lpRpxVzWaYUqL-jVPOAJCtjsJUIedPYYyOx4gg4PPFU';
 const CLIENT_ID = '149884248440-85f8dhc6ub9up10sv0f89e3e0itrnooj.apps.googleusercontent.com';
@@ -350,7 +350,7 @@ async function saveSheet(name, dataRows) {
 // PRICE FETCHING
 // ══════════════════════════════════════════════════════════════
 const PRICE_CACHE_KEY = 'asset_price_cache';
-const PRICE_CACHE_TTL = 4.5 * 60 * 1000; // 4.5 分鐘，跨 tab/reload 共享
+const PRICE_CACHE_TTL = 10 * 60 * 1000; // 10 分鐘，跨 tab/reload 共享
 
 async function fetchAllPrices(force = false) {
   // ── 嘗試讀取 localStorage 快取（防止頻繁重整 / 多分頁打爆 API rate limit）
@@ -2091,12 +2091,12 @@ async function initApp() {
 
     scheduleDailySnapshot();
 
-    // Auto-refresh every 5 minutes（force=true 繞過快取，確保定時刷新）
+    // Auto-refresh every 10 minutes（force=true 繞過快取，確保定時刷新）
     setInterval(async () => {
       await fetchAllPrices(true);
       renderKPIs(); renderCharts();
       if ($('tab-management').style.display !== 'none') renderManagement();
-    }, 5 * 60 * 1000);
+    }, 10 * 60 * 1000);
 
   } catch(e) {
     if (e.message !== 'auth') showToast('載入失敗：' + e.message, 'err');
