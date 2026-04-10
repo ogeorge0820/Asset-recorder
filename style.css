@@ -504,6 +504,7 @@ h3.section-header {
   .build-badge { display: none; }
   .update-badge { display: none; }
   .rate-badge { display: none; }
+  #header-rate { display: flex; }
   .btn-signout { padding: 4px 8px; font-size: 0.75rem; }
   .tab-btn { padding: 5px 12px; font-size: 0.82rem; }
 
