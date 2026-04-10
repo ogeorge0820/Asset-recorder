@@ -2,7 +2,7 @@
 // CONFIG
 // ══════════════════════════════════════════════════════════════
 // Build 時間：每次修改 code 後手動更新此時間（UTC+8 台北時間）
-const BUILD_DATE = '2026/04/10 19:12';
+const BUILD_DATE = '2026/04/10 19:55';
 
 const SPREADSHEET_ID = '1lpRpxVzWaYUqL-jVPOAJCtjsJUIedPYYyOx4gg4PPFU';
 const CLIENT_ID = '149884248440-85f8dhc6ub9up10sv0f89e3e0itrnooj.apps.googleusercontent.com';
@@ -507,11 +507,14 @@ function setPriceStatus(state) {
   // Header badge
   const hdrDot = $('update-dot'), hdrTs = $('update-ts');
 
+  const sbDot = $('sidebar-update-dot'), sbTs = $('sidebar-update-ts');
   if (state === 'spin') {
     if (ts) ts.textContent = '價格更新中...';
     if (fail) fail.textContent = '';
     if (hdrDot) hdrDot.className = 'update-dot spin';
     if (hdrTs)  hdrTs.textContent = '更新中…';
+    if (sbDot)  sbDot.className  = 'update-dot spin';
+    if (sbTs)   sbTs.textContent = '更新中…';
   } else {
     const t = S.lastUpdate
       ? S.lastUpdate.toLocaleTimeString('zh-TW', {hour:'2-digit', minute:'2-digit'})
@@ -520,11 +523,14 @@ function setPriceStatus(state) {
     if (state === 'err') {
       if (fail) fail.innerHTML = '<span style="color:var(--red)">⚠ 部分價格更新失敗</span>';
       if (hdrDot) hdrDot.className = 'update-dot err';
+      if (sbDot)  sbDot.className  = 'update-dot err';
     } else {
       if (fail) fail.textContent = '';
       if (hdrDot) hdrDot.className = 'update-dot ok';
+      if (sbDot)  sbDot.className  = 'update-dot ok';
     }
     if (hdrTs) hdrTs.textContent = `${t} 更新`;
+    if (sbTs)  sbTs.textContent  = `${t} 更新`;
   }
 }
 
@@ -575,13 +581,11 @@ function renderKPIs() {
   if (cardGrowth) cardGrowth.className = `kpi-card ${yearlyDiff >= 0 ? 'kpi-gain' : 'kpi-loss'}`;
   const sGrowth = $('ks-growth'); if (sGrowth) sGrowth.textContent = '可用資產 − 2025/12/31 基準';
 
-  // Header 匯率
-  const headerRateEl = $('header-rate-val');
-  if (headerRateEl) {
-    headerRateEl.textContent = S.prices.usdtwd.toFixed(2);
-    const headerRate = $('header-rate');
-    if (headerRate) headerRate.title = S.prices.errs?.usdtwd ? '匯率更新失敗' : 'USD/TWD';
-  }
+  // 匯率 — header + sidebar
+  const rateStr = S.prices.usdtwd.toFixed(2);
+  ['header-rate-val', 'sidebar-rate-val'].forEach(id => {
+    const el = $(id); if (el) el.textContent = rateStr;
+  });
 
   // 本日收益 KPI（淨資產日變化）
   const dailySnaps = S.data.daily_snapshots || [];
@@ -610,8 +614,9 @@ function renderKPIs() {
     }
   }
 
-  const buildBadge = $('build-badge');
-  if (buildBadge) buildBadge.textContent = `版本 ${BUILD_DATE}`;
+  ['build-badge', 'sidebar-build-badge'].forEach(id => {
+    const el = $(id); if (el) el.textContent = `版本 ${BUILD_DATE}`;
+  });
 
 }
 
@@ -2048,11 +2053,13 @@ function updateMobileBuildBar() {
 }
 
 function updateThemeBtn() {
-  const btn = $('btn-theme');
-  if (!btn) return;
   const isLight = document.documentElement.dataset.theme === 'light';
-  btn.textContent = isLight ? '🌙' : '☀';
-  btn.title = isLight ? '切換為深色模式' : '切換為淺色模式';
+  const icon = isLight ? '🌙' : '☀';
+  const title = isLight ? '切換為深色模式' : '切換為淺色模式';
+  ['btn-theme', 'sidebar-btn-theme'].forEach(id => {
+    const btn = $(id); if (!btn) return;
+    btn.textContent = icon; btn.title = title;
+  });
 }
 
 // ══════════════════════════════════════════════════════════════
@@ -2064,6 +2071,10 @@ function switchTab(tab) {
   document.querySelectorAll('.tab-btn').forEach((b,i) => {
     b.classList.toggle('active', (i===0&&tab==='overview')||(i===1&&tab==='management'));
   });
+  // Sidebar nav
+  const sO = $('snav-overview'), sM = $('snav-management');
+  if (sO) sO.classList.toggle('active', tab === 'overview');
+  if (sM) sM.classList.toggle('active', tab === 'management');
   if (tab === 'management') renderManagement();
 }
 

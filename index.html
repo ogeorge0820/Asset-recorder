@@ -10,6 +10,36 @@
 </head>
 <body>
 
+<!-- ── Sidebar (desktop only) ── -->
+<aside id="sidebar">
+  <div class="sidebar-header">
+    <div class="sidebar-logo"><span>💰</span><span class="sidebar-logo-text">資產追蹤</span></div>
+  </div>
+  <nav class="sidebar-nav">
+    <button class="sidebar-nav-item active" id="snav-overview" onclick="switchTab('overview')">
+      <span class="snav-icon">📊</span><span>總覽</span>
+    </button>
+    <button class="sidebar-nav-item" id="snav-management" onclick="switchTab('management')">
+      <span class="snav-icon">💼</span><span>管理</span>
+    </button>
+  </nav>
+  <div class="sidebar-spacer"></div>
+  <div class="sidebar-footer">
+    <div class="sidebar-info-row">
+      <div class="rate-badge sidebar-rate"><span>USD</span><b id="sidebar-rate-val">—</b></div>
+      <div class="update-badge sidebar-update">
+        <span class="update-dot" id="sidebar-update-dot"></span>
+        <span id="sidebar-update-ts">—</span>
+      </div>
+    </div>
+    <div class="sidebar-actions">
+      <button class="btn-theme" id="sidebar-btn-theme" onclick="toggleTheme()">☀</button>
+      <button class="btn-signout" onclick="signOut()">登出</button>
+    </div>
+    <div class="build-badge sidebar-build-badge" id="sidebar-build-badge"></div>
+  </div>
+</aside>
+
 <!-- ── Login Screen ── -->
 <div id="login-screen">
   <div class="login-card">
@@ -83,59 +113,64 @@
         </div>
       </div>
 
-      <!-- Row 1: Pie (1fr) + Monthly Snapshot Trend (2fr) -->
-      <div class="charts-row" style="margin-bottom:16px">
-        <div class="chart-card">
-          <h3>資產組成</h3>
-          <div style="position:relative;height:340px" id="pie-wrap">
-            <canvas id="pie-chart"></canvas>
-          </div>
-        </div>
-        <div class="chart-card">
-          <h3>淨資產趨勢</h3>
-          <div class="chart-filter">
-            <button class="filter-btn active" data-f="all" onclick="setTrendFilter(this)">全部</button>
-            <button class="filter-btn" data-f="1y" onclick="setTrendFilter(this)">近1年</button>
-            <button class="filter-btn" data-f="6m" onclick="setTrendFilter(this)">近6個月</button>
-          </div>
-          <div style="position:relative;height:270px" id="trend-wrap">
-            <canvas id="trend-chart"></canvas>
-            <div id="trend-nodata" class="chart-nodata" style="display:none">
-              <div style="color:var(--muted);font-size:0.9rem;max-width:380px;line-height:1.7">
-                尚無歷史資料
+      <!-- Two-column layout: main (trends) | side (pie + net worth) -->
+      <div class="overview-grid">
+
+        <div class="overview-main">
+          <!-- Daily trend -->
+          <div class="chart-card">
+            <div class="chart-title-row"><h3>每日資產趨勢</h3></div>
+            <div style="position:relative;height:220px" id="daily-trend-wrap">
+              <canvas id="daily-trend-chart"></canvas>
+              <div id="daily-trend-nodata" class="chart-nodata" style="display:none">
+                <div style="color:var(--muted);font-size:0.9rem;max-width:300px;line-height:1.7">
+                  尚無每日資料，每天 23:59 自動記錄
+                </div>
               </div>
             </div>
           </div>
-        </div>
-      </div>
-
-      <!-- Row 2: Daily trend - full width -->
-      <div class="chart-card" style="margin-bottom:16px">
-        <div class="chart-title-row">
-          <h3>每日資產趨勢</h3>
-        </div>
-        <div style="position:relative;height:220px" id="daily-trend-wrap">
-          <canvas id="daily-trend-chart"></canvas>
-          <div id="daily-trend-nodata" class="chart-nodata" style="display:none">
-            <div style="color:var(--muted);font-size:0.9rem;max-width:300px;line-height:1.7">
-              尚無每日資料，每天 23:59 自動記錄
+          <!-- Rewards summary -->
+          <div class="chart-card">
+            <h3>質押 / 活存收益（本月）</h3>
+            <div id="rewards-summary"></div>
+          </div>
+          <!-- Monthly bar -->
+          <div class="chart-card">
+            <h3>月收益</h3>
+            <div style="position:relative;height:200px" id="monthly-wrap">
+              <canvas id="monthly-chart"></canvas>
             </div>
           </div>
-        </div>
-      </div>
+        </div><!-- /overview-main -->
 
-      <!-- Row 3: Monthly bar - full width -->
-      <div class="chart-card" style="margin-bottom:16px">
-        <h3>質押 / 活存收益（本月）</h3>
-        <div id="rewards-summary"></div>
-      </div>
+        <div class="overview-side">
+          <!-- Pie -->
+          <div class="chart-card">
+            <h3>資產組成</h3>
+            <div style="position:relative;height:340px" id="pie-wrap">
+              <canvas id="pie-chart"></canvas>
+            </div>
+          </div>
+          <!-- Net worth trend -->
+          <div class="chart-card">
+            <h3>淨資產趨勢</h3>
+            <div class="chart-filter">
+              <button class="filter-btn active" data-f="all" onclick="setTrendFilter(this)">全部</button>
+              <button class="filter-btn" data-f="1y" onclick="setTrendFilter(this)">近1年</button>
+              <button class="filter-btn" data-f="6m" onclick="setTrendFilter(this)">近6個月</button>
+            </div>
+            <div style="position:relative;height:270px" id="trend-wrap">
+              <canvas id="trend-chart"></canvas>
+              <div id="trend-nodata" class="chart-nodata" style="display:none">
+                <div style="color:var(--muted);font-size:0.9rem;max-width:380px;line-height:1.7">
+                  尚無歷史資料
+                </div>
+              </div>
+            </div>
+          </div>
+        </div><!-- /overview-side -->
 
-      <div class="chart-card" style="margin-bottom:16px">
-        <h3>月收益</h3>
-        <div style="position:relative;height:200px" id="monthly-wrap">
-          <canvas id="monthly-chart"></canvas>
-        </div>
-      </div>
+      </div><!-- /overview-grid -->
     </div><!-- /tab-overview -->
 
     <!-- ══ 管理 Tab ══ -->
