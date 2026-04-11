@@ -2,7 +2,7 @@
 // CONFIG
 // ══════════════════════════════════════════════════════════════
 // Build 時間：每次修改 code 後手動更新此時間（UTC+8 台北時間）
-const BUILD_DATE = '2026/04/11 08:30';
+const BUILD_DATE = '2026/04/12 00:00';
 
 const SPREADSHEET_ID = '1lpRpxVzWaYUqL-jVPOAJCtjsJUIedPYYyOx4gg4PPFU';
 const CLIENT_ID = '149884248440-85f8dhc6ub9up10sv0f89e3e0itrnooj.apps.googleusercontent.com';
@@ -572,6 +572,11 @@ function setPriceStatus(state) {
     }
     if (hdrTs) hdrTs.textContent = `${t} 更新`;
     if (sbTs)  sbTs.textContent  = `${t} 更新`;
+    const menuTs = $('menu-update-ts'); if (menuTs) menuTs.textContent = `${t}`;
+    // Mobile footer dot
+    const fDot = $('mobile-footer-dot');
+    if (fDot) fDot.className = `mobile-footer-dot ${state === 'err' ? 'err' : 'ok'}`;
+    const fTs = $('mobile-footer-ts'); if (fTs) fTs.textContent = `${t} 更新`;
   }
 }
 
@@ -622,9 +627,9 @@ function renderKPIs() {
   if (cardGrowth) cardGrowth.className = `kpi-card ${yearlyDiff >= 0 ? 'kpi-gain' : 'kpi-loss'}`;
   const sGrowth = $('ks-growth'); if (sGrowth) sGrowth.textContent = '可用資產 − 2025/12/31 基準';
 
-  // 匯率 — header + sidebar
+  // 匯率 — header + sidebar + mobile menu
   const rateStr = S.prices.usdtwd.toFixed(2);
-  ['header-rate-val', 'sidebar-rate-val'].forEach(id => {
+  ['header-rate-val', 'sidebar-rate-val', 'menu-rate-val'].forEach(id => {
     const el = $(id); if (el) el.textContent = rateStr;
   });
 
@@ -2153,8 +2158,12 @@ function toggleTheme() {
 }
 
 function updateMobileBuildBar() {
+  // 舊的頂部 bar（已隱藏，保留相容）
   const el = $('mobile-build-bar');
   if (el) el.textContent = `版本 ${BUILD_DATE}`;
+  // 新的底部 footer
+  const fb = $('mobile-footer-build');
+  if (fb) fb.textContent = `版本 ${BUILD_DATE}`;
 }
 
 function updateThemeBtn() {
@@ -2165,6 +2174,8 @@ function updateThemeBtn() {
     const btn = $(id); if (!btn) return;
     btn.textContent = icon; btn.title = title;
   });
+  const menuIcon = $('menu-theme-icon');
+  if (menuIcon) menuIcon.textContent = icon;
 }
 
 // ══════════════════════════════════════════════════════════════
@@ -2181,6 +2192,23 @@ function switchTab(tab) {
   if (sO) sO.classList.toggle('active', tab === 'overview');
   if (sM) sM.classList.toggle('active', tab === 'management');
   if (tab === 'management') renderManagement();
+}
+
+// ── Mobile Menu Sheet ──
+function openMobileMenu() {
+  const overlay = $('mobile-menu');
+  if (!overlay) return;
+  overlay.classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+function closeMobileMenu() {
+  const overlay = $('mobile-menu');
+  if (!overlay) return;
+  overlay.classList.remove('open');
+  document.body.style.overflow = '';
+}
+function mobileMenuBgClick(e) {
+  if (e.target === $('mobile-menu')) closeMobileMenu();
 }
 
 let toastTmr;

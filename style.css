@@ -98,6 +98,11 @@ body {
 }
 .btn-theme:hover { border-color: var(--accent); color: var(--accent); }
 
+/* ── Mobile-only elements (hidden on desktop) ── */
+.mobile-menu-btn { display: none; }
+.mobile-footer { display: none; }
+.mobile-menu-overlay { display: none; }
+
 /* ── Button loading state ── */
 @keyframes btn-spin { to { transform: rotate(360deg); } }
 .btn-loading { position: relative; pointer-events: none; opacity: .85; }
@@ -692,15 +697,60 @@ h3.section-header {
   .kpi-label { font-size: 0.68rem; }
   .kpi-sub { font-size: 0.7rem; }
 
-  /* Header — hide non-essential items, compress */
-  #app-header { padding: 0 12px; gap: 8px; height: 50px; }
-  #app-header h1 { display: none; }
-  .build-badge { display: none; }
-  .update-badge { display: none; }
-  .rate-badge { display: none; }
-  #header-rate { display: flex; }
-  .btn-signout { padding: 4px 8px; font-size: 0.75rem; }
-  .tab-btn { padding: 5px 12px; font-size: 0.82rem; }
+  /* ── Header: 毛玻璃 + 置中 Segmented Control ── */
+  #app-header {
+    height: 52px; padding: 0 12px; gap: 0;
+    background: rgba(15,17,23,0.82);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-bottom: 1px solid rgba(255,255,255,0.07);
+    justify-content: center;
+  }
+  /* 左側對稱佔位，讓 tab-nav 視覺居中 */
+  #app-header::before { content: ''; width: 44px; flex-shrink: 0; }
+  /* 隱藏不需要的 Header 元素 */
+  #app-header h1,
+  .build-badge,
+  .update-badge,
+  #header-rate,
+  .btn-theme,
+  .btn-signout { display: none; }
+  /* header-right 只剩 mobile-menu-btn */
+  .header-right { margin-left: 0; gap: 0; }
+
+  /* ── iOS Segmented Control ── */
+  .tab-nav {
+    flex: 1; display: flex; justify-content: center;
+    background: rgba(255,255,255,0.10);
+    border-radius: 10px; padding: 3px;
+    max-width: 220px;
+  }
+  .tab-btn {
+    flex: 1; padding: 6px 0; border-radius: 8px;
+    font-size: 0.875rem; font-weight: 500;
+    color: rgba(255,255,255,0.55);
+    transition: background .2s, color .2s;
+  }
+  .tab-btn.active {
+    background: rgba(255,255,255,0.18);
+    color: #fff;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+  }
+
+  /* ── Mobile Menu Button (漢堡) ── */
+  .mobile-menu-btn {
+    display: flex; flex-direction: column; justify-content: center;
+    align-items: center; gap: 4px;
+    width: 44px; height: 44px;
+    background: none; border: none; cursor: pointer;
+    flex-shrink: 0; border-radius: 8px;
+    transition: background .15s;
+  }
+  .mobile-menu-btn:active { background: rgba(255,255,255,0.1); }
+  .mobile-menu-icon {
+    display: block; width: 18px; height: 2px;
+    background: rgba(255,255,255,0.75); border-radius: 1px;
+  }
 
   /* Management grid — full width single column */
   .mgmt-grid { grid-template-columns: 1fr; }
@@ -787,7 +837,29 @@ h3.section-header {
   #monthly-wrap { height: 160px !important; }
 
   /* Toast */
-  .toast { left: 12px; right: 12px; bottom: 16px; max-width: none; text-align: center; }
+  .toast { left: 12px; right: 12px; bottom: 56px; max-width: none; text-align: center; }
+
+  /* ── Mobile Footer ── */
+  .mobile-footer {
+    display: flex; align-items: center; justify-content: center; gap: 6px;
+    padding: 10px 16px 16px;
+    font-size: 0.72rem; color: var(--muted);
+    border-top: 1px solid var(--border);
+    margin-top: 8px;
+  }
+  .mobile-footer-sep { opacity: .4; }
+  .mobile-footer-dot {
+    width: 6px; height: 6px; border-radius: 50%;
+    background: var(--muted); flex-shrink: 0;
+  }
+  .mobile-footer-dot.ok  { background: var(--green); }
+  .mobile-footer-dot.err { background: var(--red); }
+
+  /* Mobile Menu Sheet 啟用 */
+  .mobile-menu-overlay { display: block; }
+
+  /* ── Mobile build bar 改至 footer，隱藏原頂部 bar ── */
+  .mobile-build-bar { display: none !important; }
 }
 
 /* ── Very small (≤ 400px, e.g. iPhone SE) ── */
@@ -996,3 +1068,69 @@ h3.section-header {
 [data-theme="light"] .rwd-group { border-color: #e2d9c8; }
 [data-theme="light"] .rwd-group.current { border-color: #8b6f47; }
 [data-theme="light"] .rwd-item { border-bottom-color: rgba(139,111,71,.2); }
+
+/* ══ Mobile Menu Sheet ══ */
+.mobile-menu-overlay {
+  visibility: hidden; pointer-events: none;
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,0);
+  transition: background .28s, visibility 0s .28s;
+  z-index: 900;
+}
+.mobile-menu-overlay.open {
+  visibility: visible; pointer-events: auto;
+  background: rgba(0,0,0,.55);
+  transition: background .28s;
+}
+.mobile-menu-sheet {
+  position: absolute; bottom: 0; left: 0; right: 0;
+  background: var(--card);
+  border-top: 1px solid var(--border);
+  border-radius: 20px 20px 0 0;
+  padding: 12px 0 40px;
+  transform: translateY(100%);
+  transition: transform .3s cubic-bezier(.32,1,.45,1);
+}
+.mobile-menu-overlay.open .mobile-menu-sheet {
+  transform: translateY(0);
+}
+.mobile-menu-handle {
+  width: 36px; height: 4px; border-radius: 2px;
+  background: var(--border); margin: 0 auto 20px;
+}
+.mobile-menu-info-row {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 10px 20px;
+}
+.mobile-menu-info-label { font-size: 0.85rem; color: var(--muted); }
+.mobile-menu-info-val { font-size: 0.85rem; color: var(--text); }
+.mobile-menu-divider {
+  height: 1px; background: var(--border);
+  margin: 8px 0;
+}
+.mobile-menu-item {
+  display: flex; align-items: center; gap: 14px;
+  width: 100%; padding: 14px 20px;
+  background: none; border: none;
+  font-size: 1rem; color: var(--text);
+  cursor: pointer; text-align: left;
+  transition: background .15s;
+}
+.mobile-menu-item:active { background: var(--card2); }
+.mobile-menu-item-icon { font-size: 1.1rem; width: 24px; text-align: center; }
+.mobile-menu-item-danger { color: var(--red); }
+
+/* Light mode */
+[data-theme="light"] .mobile-menu-sheet { background: #fff; }
+[data-theme="light"] .mobile-menu-item:active { background: #f0ebe3; }
+[data-theme="light"] #app-header {
+  background: rgba(248,244,238,0.85);
+  border-bottom-color: rgba(0,0,0,0.08);
+}
+[data-theme="light"] .tab-nav { background: rgba(0,0,0,0.08); }
+[data-theme="light"] .tab-btn { color: rgba(0,0,0,0.45); }
+[data-theme="light"] .tab-btn.active {
+  background: rgba(255,255,255,0.85);
+  color: #1c1c1e;
+}
+[data-theme="light"] .mobile-menu-icon { background: rgba(0,0,0,0.6); }

@@ -70,6 +70,11 @@
       </div>
       <button class="btn-theme" id="btn-theme" onclick="toggleTheme()">☀</button>
       <button class="btn-signout" onclick="signOut()">登出</button>
+      <button class="mobile-menu-btn" id="mobile-menu-btn" onclick="openMobileMenu()" aria-label="選單">
+        <span class="mobile-menu-icon"></span>
+        <span class="mobile-menu-icon"></span>
+        <span class="mobile-menu-icon"></span>
+      </button>
     </div>
   </header>
 
@@ -260,6 +265,14 @@
     </div><!-- /tab-management -->
 
   </div><!-- /app-content -->
+
+  <!-- Mobile-only footer: version + update time -->
+  <div class="mobile-footer" id="mobile-footer">
+    <span class="mobile-footer-dot" id="mobile-footer-dot"></span>
+    <span id="mobile-footer-ts">—</span>
+    <span class="mobile-footer-sep">·</span>
+    <span id="mobile-footer-build"></span>
+  </div>
 </div><!-- /app -->
 
 <!-- ── Modal ── -->
@@ -286,6 +299,29 @@
     <div class="crypto-panel-section-title">變動記錄</div>
     <div class="crypto-panel-history" id="cp-history"></div>
     <button class="btn-cp-delete" onclick="deleteAssetFromPanel()">刪除此資產</button>
+  </div>
+</div>
+
+<!-- ── Mobile Menu Sheet ── -->
+<div class="mobile-menu-overlay" id="mobile-menu" onclick="mobileMenuBgClick(event)">
+  <div class="mobile-menu-sheet" id="mobile-menu-sheet">
+    <div class="mobile-menu-handle"></div>
+    <div class="mobile-menu-info-row">
+      <span class="mobile-menu-info-label">USD 匯率</span>
+      <span class="mobile-menu-info-val"><b id="menu-rate-val">—</b></span>
+    </div>
+    <div class="mobile-menu-info-row">
+      <span class="mobile-menu-info-label">最後更新</span>
+      <span class="mobile-menu-info-val" id="menu-update-ts">—</span>
+    </div>
+    <div class="mobile-menu-divider"></div>
+    <button class="mobile-menu-item" onclick="toggleTheme();closeMobileMenu()">
+      <span class="mobile-menu-item-icon" id="menu-theme-icon">☀</span>
+      <span>切換深色 / 淺色模式</span>
+    </button>
+    <button class="mobile-menu-item mobile-menu-item-danger" onclick="signOut()">
+      <span class="mobile-menu-item-icon">登出</span>
+    </button>
   </div>
 </div>
 
