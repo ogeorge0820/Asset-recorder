@@ -2,7 +2,7 @@
 // CONFIG
 // ══════════════════════════════════════════════════════════════
 // Build 時間：每次修改 code 後手動更新此時間（UTC+8 台北時間）
-const BUILD_DATE = '2026/04/11 08:00';
+const BUILD_DATE = '2026/04/11 08:20';
 
 const SPREADSHEET_ID = '1lpRpxVzWaYUqL-jVPOAJCtjsJUIedPYYyOx4gg4PPFU';
 const CLIENT_ID = '149884248440-85f8dhc6ub9up10sv0f89e3e0itrnooj.apps.googleusercontent.com';
@@ -488,14 +488,12 @@ async function fetchCryptoPrices() {
   });
   if (!toFetch.length) return;
 
-  // ── 第一優先：Binance 公開 API（原生支援 CORS，不需 proxy，rate limit 高）
+  // ── 第一優先：Binance API（透過 proxy 解決桌機 CORS，rate limit 高）
   const binanceSyms = JSON.stringify(toFetch.map(s => `${s}USDT`));
   try {
-    const r = await fetch(
-      `https://api.binance.com/api/v3/ticker/price?symbols=${encodeURIComponent(binanceSyms)}`,
-      { signal: AbortSignal.timeout(9000) }
+    const r = await proxyFetch(
+      `https://api.binance.com/api/v3/ticker/price?symbols=${encodeURIComponent(binanceSyms)}`
     );
-    if (!r.ok) throw new Error(`HTTP ${r.status}`);
     const data = await r.json();
     const priceMap = {};
     data.forEach(item => { priceMap[item.symbol.replace(/USDT$/, '')] = parseFloat(item.price); });
@@ -534,10 +532,10 @@ async function validateCoinGecko(symbol) {
   const sym = symbol.toUpperCase();
   // 穩定幣直接通過
   if (STABLECOINS.has(sym)) return sym;
-  // 先試 Binance
+  // 先試 Binance（透過 proxy）
   try {
-    const r = await fetch(`https://api.binance.com/api/v3/ticker/price?symbol=${sym}USDT`, { signal: AbortSignal.timeout(5000) });
-    if (r.ok) { const d = await r.json(); if (d.price) return sym; }
+    const r = await proxyFetch(`https://api.binance.com/api/v3/ticker/price?symbol=${sym}USDT`);
+    const d = await r.json(); if (d.price) return sym;
   } catch {}
   // Fallback：CoinGecko
   const id = COIN_MAP[sym];
