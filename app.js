@@ -2,7 +2,7 @@
 // CONFIG
 // ══════════════════════════════════════════════════════════════
 // Build 時間：每次修改 code 後手動更新此時間（UTC+8 台北時間）
-const BUILD_DATE = '2026/04/11 01:30';
+const BUILD_DATE = '2026/04/11 02:15';
 
 const SPREADSHEET_ID = '1lpRpxVzWaYUqL-jVPOAJCtjsJUIedPYYyOx4gg4PPFU';
 const CLIENT_ID = '149884248440-85f8dhc6ub9up10sv0f89e3e0itrnooj.apps.googleusercontent.com';
@@ -130,6 +130,9 @@ const COIN_MAP = {
   CRO:'crypto-com-chain', BGB:'bitget-token', IMX:'immutable-x', FET:'fetch-ai',
   TAO:'bittensor', USDT:'tether', USDC:'usd-coin', DAI:'dai',
 };
+
+// 穩定幣：固定 $1.00，不需呼叫 API
+const STABLECOINS = new Set(['USDT','USDC','DAI','BUSD','TUSD','FRAX','FDUSD']);
 
 const HEADERS = {
   snapshots: ['date','cash_total','stock_tw_total','stock_us_total','crypto_total','insurance_total','realestate_total','debt','net_assets'],
@@ -472,6 +475,45 @@ async function fetchUSPrices() {
 async function fetchCryptoPrices() {
   const syms = S.data.crypto.map(r => r[0]?.toUpperCase()).filter(Boolean);
   if (!syms.length) return;
+
+  // 穩定幣直接設 $1.00
+  const toFetch = [];
+  syms.forEach(sym => {
+    if (STABLECOINS.has(sym)) {
+      S.prices.crypto[sym] = 1.0;
+      delete S.prices.errs[`c_${sym}`];
+    } else {
+      toFetch.push(sym);
+    }
+  });
+  if (!toFetch.length) return;
+
+  // ── 第一優先：Binance 公開 API（原生支援 CORS，不需 proxy，rate limit 高）
+  const binanceSyms = JSON.stringify(toFetch.map(s => `${s}USDT`));
+  try {
+    const r = await fetch(
+      `https://api.binance.com/api/v3/ticker/price?symbols=${encodeURIComponent(binanceSyms)}`,
+      { signal: AbortSignal.timeout(9000) }
+    );
+    if (!r.ok) throw new Error(`HTTP ${r.status}`);
+    const data = await r.json();
+    const priceMap = {};
+    data.forEach(item => { priceMap[item.symbol.replace(/USDT$/, '')] = parseFloat(item.price); });
+    const notFound = [];
+    toFetch.forEach(sym => {
+      if (priceMap[sym]) { S.prices.crypto[sym] = priceMap[sym]; delete S.prices.errs[`c_${sym}`]; }
+      else notFound.push(sym);
+    });
+    // Binance 上沒有的幣種 fallback 到 CoinGecko
+    if (notFound.length) await fetchCryptoFromCoinGecko(notFound);
+  } catch (e) {
+    console.warn('Binance API failed, falling back to CoinGecko:', e.message);
+    await fetchCryptoFromCoinGecko(toFetch);
+  }
+}
+
+// CoinGecko fallback（透過 proxy）
+async function fetchCryptoFromCoinGecko(syms) {
   const ids = syms.map(s => COIN_MAP[s] || s.toLowerCase());
   try {
     const url = `https://api.coingecko.com/api/v3/simple/price?ids=${ids.join(',')}&vs_currencies=usd`;
@@ -483,19 +525,28 @@ async function fetchCryptoPrices() {
       else S.prices.errs[`c_${sym}`] = true;
     });
   } catch (e) {
-    syms.forEach(s => { S.prices.errs[`c_${s}`] = true; });
-    console.warn('Crypto:', e.message);
+    syms.forEach(sym => { S.prices.errs[`c_${sym}`] = true; });
+    console.warn('CoinGecko fallback also failed:', e.message);
   }
 }
 
 async function validateCoinGecko(symbol) {
-  const id = COIN_MAP[symbol.toUpperCase()];
+  const sym = symbol.toUpperCase();
+  // 穩定幣直接通過
+  if (STABLECOINS.has(sym)) return sym;
+  // 先試 Binance
+  try {
+    const r = await fetch(`https://api.binance.com/api/v3/ticker/price?symbol=${sym}USDT`, { signal: AbortSignal.timeout(5000) });
+    if (r.ok) { const d = await r.json(); if (d.price) return sym; }
+  } catch {}
+  // Fallback：CoinGecko
+  const id = COIN_MAP[sym];
   if (id) return id;
   try {
     const r = await proxyFetch(`https://api.coingecko.com/api/v3/search?query=${encodeURIComponent(symbol)}`);
     const d = await r.json();
-    const coin = (d.coins || []).find(c => c.symbol.toUpperCase() === symbol.toUpperCase());
-    if (coin) { COIN_MAP[symbol.toUpperCase()] = coin.id; return coin.id; }
+    const coin = (d.coins || []).find(c => c.symbol.toUpperCase() === sym);
+    if (coin) { COIN_MAP[sym] = coin.id; return coin.id; }
     return null;
   } catch { return null; }
 }
