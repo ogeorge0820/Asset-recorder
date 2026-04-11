@@ -2,7 +2,7 @@
 // CONFIG
 // ══════════════════════════════════════════════════════════════
 // Build 時間：每次修改 code 後手動更新此時間（UTC+8 台北時間）
-const BUILD_DATE = '2026/04/11 08:20';
+const BUILD_DATE = '2026/04/11 08:30';
 
 const SPREADSHEET_ID = '1lpRpxVzWaYUqL-jVPOAJCtjsJUIedPYYyOx4gg4PPFU';
 const CLIENT_ID = '149884248440-85f8dhc6ub9up10sv0f89e3e0itrnooj.apps.googleusercontent.com';
@@ -488,26 +488,18 @@ async function fetchCryptoPrices() {
   });
   if (!toFetch.length) return;
 
-  // ── 第一優先：Binance API（透過 proxy 解決桌機 CORS，rate limit 高）
-  const binanceSyms = JSON.stringify(toFetch.map(s => `${s}USDT`));
-  try {
-    const r = await proxyFetch(
-      `https://api.binance.com/api/v3/ticker/price?symbols=${encodeURIComponent(binanceSyms)}`
-    );
-    const data = await r.json();
-    const priceMap = {};
-    data.forEach(item => { priceMap[item.symbol.replace(/USDT$/, '')] = parseFloat(item.price); });
-    const notFound = [];
-    toFetch.forEach(sym => {
-      if (priceMap[sym]) { S.prices.crypto[sym] = priceMap[sym]; delete S.prices.errs[`c_${sym}`]; }
+  // ── 第一優先：Binance API，每個幣獨立請求（URL 最簡單，無編碼問題），全部並行
+  const notFound = [];
+  await Promise.allSettled(toFetch.map(async sym => {
+    try {
+      const r = await proxyFetch(`https://api.binance.com/api/v3/ticker/price?symbol=${sym}USDT`);
+      const d = await r.json();
+      if (d.price) { S.prices.crypto[sym] = parseFloat(d.price); delete S.prices.errs[`c_${sym}`]; }
       else notFound.push(sym);
-    });
-    // Binance 上沒有的幣種 fallback 到 CoinGecko
-    if (notFound.length) await fetchCryptoFromCoinGecko(notFound);
-  } catch (e) {
-    console.warn('Binance API failed, falling back to CoinGecko:', e.message);
-    await fetchCryptoFromCoinGecko(toFetch);
-  }
+    } catch { notFound.push(sym); }
+  }));
+  // Binance 上沒有的幣種 fallback 到 CoinGecko
+  if (notFound.length) await fetchCryptoFromCoinGecko(notFound);
 }
 
 // CoinGecko fallback（透過 proxy）
