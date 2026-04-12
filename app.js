@@ -2,7 +2,7 @@
 // CONFIG
 // ══════════════════════════════════════════════════════════════
 // Build 時間：每次修改 code 後手動更新此時間（UTC+8 台北時間）
-const BUILD_DATE = '2026/04/12 22:25';
+const BUILD_DATE = '2026/04/12 22:40';
 
 const SPREADSHEET_ID = '1lpRpxVzWaYUqL-jVPOAJCtjsJUIedPYYyOx4gg4PPFU';
 const CLIENT_ID = '149884248440-85f8dhc6ub9up10sv0f89e3e0itrnooj.apps.googleusercontent.com';
@@ -502,34 +502,46 @@ async function fetchCryptoPrices() {
       else notFound.push(sym);
     } catch { notFound.push(sym); }
   }));
-  // Binance 上沒有的幣種 fallback 到 CoinGecko
-  if (notFound.length) await fetchCryptoFromCoinGecko(notFound);
+  // Binance 上沒有的幣種 fallback 到 CryptoCompare，再失敗才 CoinGecko
+  if (notFound.length) await fetchCryptoFromCC(notFound);
 }
 
-// CoinGecko fallback（先直接 fetch，失敗再走 proxy）
+// CryptoCompare fallback（直接 fetch，CORS 支援，用 symbol 名稱，不需要 ID mapping）
+async function fetchCryptoFromCC(syms) {
+  const stillMissing = [];
+  try {
+    const url = `https://min-api.cryptocompare.com/data/pricemulti?fsyms=${syms.join(',')}&tsyms=USD`;
+    const r = await fetch(url, { signal: AbortSignal.timeout(9000) });
+    const d = await r.json();
+    syms.forEach(sym => {
+      if (d[sym]?.USD) { S.prices.crypto[sym] = d[sym].USD; delete S.prices.errs[`c_${sym}`]; }
+      else { stillMissing.push(sym); console.warn(`CryptoCompare: no price for ${sym}`); }
+    });
+  } catch (e) {
+    console.warn('CryptoCompare failed:', e.message);
+    syms.forEach(s => stillMissing.push(s));
+  }
+  if (stillMissing.length) await fetchCryptoFromCoinGecko(stillMissing);
+}
+
+// CoinGecko 最後備用
 async function fetchCryptoFromCoinGecko(syms) {
   const ids = syms.map(s => COIN_MAP[s] || s.toLowerCase());
   const url = `https://api.coingecko.com/api/v3/simple/price?ids=${ids.join(',')}&vs_currencies=usd`;
-
   let d = null;
-  // 1. 先直接 fetch（CoinGecko 支援 CORS，不需要 proxy）
   try {
     const r = await fetch(url, { signal: AbortSignal.timeout(9000) });
     if (r.ok) d = await r.json();
   } catch {}
-  // 2. 直接 fetch 失敗才走 proxy
   if (!d) {
-    try {
-      const r = await proxyFetch(url);
-      d = await r.json();
-    } catch (e) {
+    try { const r = await proxyFetch(url); d = await r.json(); }
+    catch (e) {
       syms.forEach(sym => { S.prices.errs[`c_${sym}`] = true; });
-      console.warn('CoinGecko fallback failed:', e.message);
+      console.warn('CoinGecko also failed:', e.message);
       return;
     }
   }
   if (d?.status?.error_code) {
-    console.warn('CoinGecko API error:', d.status.error_message);
     syms.forEach(sym => { S.prices.errs[`c_${sym}`] = true; });
     return;
   }
