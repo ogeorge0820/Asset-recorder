@@ -192,7 +192,7 @@
 
         <!-- Row 1: 流動現金 | 台股 -->
         <div class="section-card collapsed" id="section-cash">
-          <h3 class="section-header" onclick="toggleSection('cash')"><span>🏦 流動現金 <span class="badge" id="cnt-cash">0</span></span><span class="section-header-right"><span class="section-total" id="tot-cash">—</span><span class="section-chevron">▾</span></span></h3>
+          <h3 class="section-header" onclick="toggleSection('cash')"><span>🏦 流動現金 <span class="badge" id="cnt-cash">0</span></span><span class="section-header-right"><span class="section-total" id="tot-cash">—</span><span class="section-avail" id="avail-cash" style="display:none"></span><span class="section-chevron">▾</span></span></h3>
           <div class="section-body">
           <div class="table-wrap" id="cash-table-wrap"><table class="data-table">
             <thead><tr><th>帳戶</th><th>幣別</th><th style="text-align:right">金額</th><th style="text-align:right">台幣現值</th><th></th></tr></thead>
@@ -257,6 +257,15 @@
           <div class="section-footer">
             <span class="total-lbl">本月收益合計 (TWD)</span>
             <span class="total-val" id="tot-rewards-month">—</span>
+          </div>
+        </div>
+
+        <!-- Row 6: 生活支出預算 全寬 -->
+        <div class="section-card collapsed" id="section-budget" style="grid-column: 1 / -1">
+          <h3 class="section-header" onclick="toggleSection('budget')"><span>💳 生活支出預算 <span class="badge" id="cnt-budget">0</span></span><span class="section-header-right"><span class="budget-total-label">月支出：</span><span class="section-total" id="tot-budget">—</span><span class="section-chevron">▾</span></span></h3>
+          <div class="section-body">
+            <div class="budget-cats" id="budget-cats"></div>
+            <button class="btn-add" onclick="addBudgetItem()">+ 新增支出項目</button>
           </div>
         </div>
 

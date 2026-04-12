@@ -2,7 +2,7 @@
 // CONFIG
 // ══════════════════════════════════════════════════════════════
 // Build 時間：每次修改 code 後手動更新此時間（UTC+8 台北時間）
-const BUILD_DATE = '2026/04/12 09:00';
+const BUILD_DATE = '2026/04/12 10:18';
 
 const SPREADSHEET_ID = '1lpRpxVzWaYUqL-jVPOAJCtjsJUIedPYYyOx4gg4PPFU';
 const CLIENT_ID = '149884248440-85f8dhc6ub9up10sv0f89e3e0itrnooj.apps.googleusercontent.com';
@@ -147,6 +147,7 @@ const HEADERS = {
   tw_history: ['date','symbol','qty_before','qty_after','delta','price_twd','value_twd'],
   us_history: ['date','symbol','qty_before','qty_after','delta','price_usd','value_twd'],
   other_history: ['date','key','value_before','value_after','delta','note'],
+  expense_budget: ['category','item_name','amount','payment_source'],
 };
 
 // ══════════════════════════════════════════════════════════════
@@ -170,6 +171,7 @@ const S = {
     tw_history: [],     // [date, symbol, qty_before, qty_after, delta, price_twd, value_twd]
     us_history: [],     // [date, symbol, qty_before, qty_after, delta, price_usd, value_twd]
     other_history: [],  // [date, key, value_before, value_after, delta, note]
+    expense_budget: [], // [category, item_name, amount, payment_source]
     settings: { insurance_total: 0, realestate_total: 0, debt: 0 },
   },
 
@@ -306,7 +308,7 @@ async function initSheets() {
 // DATA LOAD / SAVE
 // ══════════════════════════════════════════════════════════════
 async function loadAll() {
-  const [cash, tw, us, crypto, snap, daily, sett, rw, hist, twHist, usHist, otherHist] = await Promise.allSettled([
+  const [cash, tw, us, crypto, snap, daily, sett, rw, hist, twHist, usHist, otherHist, expBudget] = await Promise.allSettled([
     sheetGet('cash_accounts!A:C'),
     sheetGet('holdings_tw!A:B'),
     sheetGet('holdings_us!A:B'),
@@ -319,6 +321,7 @@ async function loadAll() {
     sheetGet('tw_history!A:G'),
     sheetGet('us_history!A:G'),
     sheetGet('other_history!A:F'),
+    sheetGet('expense_budget!A:D'),
   ]);
 
   S.data.cash            = rows(cash);
@@ -337,6 +340,7 @@ async function loadAll() {
   S.data.tw_history      = rows(twHist);
   S.data.us_history      = rows(usHist);
   S.data.other_history   = rows(otherHist);
+  S.data.expense_budget  = rows(expBudget);
 
   S.data.settings = { insurance_total: 0, realestate_total: 0, debt: 0 };
   rows(sett).forEach(r => { if (r[0]) S.data.settings[r[0]] = parseFloat(r[1]) || 0; });
@@ -583,6 +587,10 @@ function setPriceStatus(state) {
 // ══════════════════════════════════════════════════════════════
 // CALCULATIONS
 // ══════════════════════════════════════════════════════════════
+function calcBudgetTotal() {
+  return S.data.expense_budget.reduce((s, r) => s + (parseFloat(r[2]) || 0), 0);
+}
+
 function calcTotals() {
   const rate = S.prices.usdtwd;
   const cashT = S.data.cash.reduce((s, r) => s + cashToTWD(r), 0);
@@ -591,23 +599,25 @@ function calcTotals() {
   const cryT  = S.data.crypto.reduce((s, r) => s + (parseFloat(r[1]) || 0) * (S.prices.crypto[r[0]?.toUpperCase()] || 0) * rate, 0);
   const ins   = (S.data.settings.insurance_total || 0) * rate;  // stored in USD
   const re    = S.data.settings.realestate_total || 0;
-  const debt  = S.data.settings.debt || 0;
+  const debt   = S.data.settings.debt || 0;
+  const budget = calcBudgetTotal();
   const total  = cashT + twT + usT + cryT + ins + re;
   const net    = total - debt;
   const liquid = total - re;
-  return { cashT, twT, usT, cryT, ins, re, debt, total, net, liquid };
+  const available = liquid - budget;
+  return { cashT, twT, usT, cryT, ins, re, debt, budget, total, net, liquid, available };
 }
 
 // ══════════════════════════════════════════════════════════════
 // RENDER — KPIs
 // ══════════════════════════════════════════════════════════════
 function renderKPIs() {
-  const { total, net, liquid } = calcTotals();
+  const { total, net, liquid, available, budget } = calcTotals();
   const snaps = S.data.snapshots;
 
   setKPI('kv-total', fmt(total), 'ks-total', '');
   setKPI('kv-net', fmt(net), 'ks-net', '');
-  setKPI('kv-liquid', fmt(liquid), 'ks-liquid', '總資產 − 房地產');
+  setKPI('kv-liquid', fmt(liquid), 'ks-liquid', budget > 0 ? `可用：${fmtWan(available)}` : '總資產 − 房地產');
 
   // 本月收益：可用資產 − 上月底快照基準
   const monthlyDiff = liquid - LAST_MONTH_AVAILABLE_SNAPSHOT;
@@ -691,7 +701,7 @@ function setKPI(vid, val, sid, sub) {
 // RENDER — MANAGEMENT TABLES
 // ══════════════════════════════════════════════════════════════
 function renderManagement() {
-  renderCash(); renderTW(); renderUS(); renderCrypto(); renderOther(); renderRewards();
+  renderCash(); renderTW(); renderUS(); renderCrypto(); renderOther(); renderRewards(); renderBudget();
   initAccordion();
 }
 
@@ -857,7 +867,18 @@ function renderCash() {
       <td><button class="btn-icon edit" onclick="editItem('cash',${i})">✏</button><button class="btn-icon del" onclick="deleteItem('cash',${i})">✕</button></td>
     </tr>`;
   }).join('') : '<tr><td colspan="5" style="text-align:center;padding:16px;color:var(--muted)">尚無帳戶</td></tr>';
-  $('tot-cash').textContent = fmt(rows.reduce((s, r) => s + cashToTWD(r), 0));
+  const cashTotal = rows.reduce((s, r) => s + cashToTWD(r), 0);
+  $('tot-cash').textContent = fmt(cashTotal);
+  const availEl = $('avail-cash');
+  if (availEl) {
+    const budget = calcBudgetTotal();
+    if (budget > 0) {
+      availEl.textContent = `(可用：${fmtWan(cashTotal - budget)})`;
+      availEl.style.display = '';
+    } else {
+      availEl.style.display = 'none';
+    }
+  }
 
   // ── 手機卡片 ──
   const totalCashTWD = rows.reduce((s, r) => s + cashToTWD(r), 0);
@@ -1369,6 +1390,127 @@ async function autoAddReward(sym, interestQty) {
   renderRewards();
   renderRewardsSummary();
   showToast(`已自動新增 ${sym} 利息收益記錄 (${fmt(valueTWD)} TWD)`, 'ok');
+}
+
+// ══════════════════════════════════════════════════════════════
+// RENDER — EXPENSE BUDGET
+// ══════════════════════════════════════════════════════════════
+function renderBudget() {
+  const items = S.data.expense_budget;
+  const cntEl = $('cnt-budget');
+  const totEl = $('tot-budget');
+  const catsEl = $('budget-cats');
+  if (!catsEl) return;
+
+  if (cntEl) cntEl.textContent = items.length;
+  const grandTotal = calcBudgetTotal();
+  if (totEl) totEl.textContent = fmt(grandTotal);
+
+  if (!items.length) {
+    catsEl.innerHTML = '<div class="budget-empty">尚無支出項目</div>';
+    return;
+  }
+
+  // 依 category 分組
+  const groups = {};
+  items.forEach((r, i) => {
+    const cat = r[0] || '未分類';
+    if (!groups[cat]) groups[cat] = [];
+    groups[cat].push({ r, i });
+  });
+
+  catsEl.innerHTML = Object.entries(groups).map(([cat, list]) => {
+    const catTotal = list.reduce((s, { r }) => s + (parseFloat(r[2]) || 0), 0);
+    const rows = list.map(({ r, i }) => `
+      <div class="budget-item">
+        <div class="budget-item-name">${esc(r[1] || '—')}</div>
+        <div class="budget-item-source">${esc(r[3] || '—')}</div>
+        <div class="budget-item-amt">${fmt(parseFloat(r[2]) || 0)}</div>
+        <div class="budget-item-actions">
+          <button class="btn-icon edit" onclick="editBudgetItem(${i})">✏</button>
+          <button class="btn-icon del" onclick="deleteBudgetItem(${i})">✕</button>
+        </div>
+      </div>`).join('');
+    return `
+      <div class="budget-cat">
+        <div class="budget-cat-header">
+          <span class="budget-cat-name">${esc(cat)}</span>
+          <span class="budget-cat-total">${fmt(catTotal)}</span>
+        </div>
+        <div class="budget-cat-items">${rows}</div>
+      </div>`;
+  }).join('');
+}
+
+function addBudgetItem() {
+  openModal('新增支出項目', `
+    <div class="field"><label>類別</label>
+      <select id="mf-cat">
+        <option value="固定">固定</option>
+        <option value="浮動">浮動</option>
+      </select>
+    </div>
+    <div class="field"><label>項目名稱</label>
+      <input id="mf-name" type="text" placeholder="例：房租、水電" autocomplete="off">
+    </div>
+    <div class="field"><label>金額 (TWD)</label>
+      <input id="mf-amount" type="number" step="1" min="0" placeholder="0">
+    </div>
+    <div class="field"><label>扣款帳戶 <small style="color:var(--muted)">(選填)</small></label>
+      <input id="mf-source" type="text" placeholder="對應流動現金帳戶名稱" autocomplete="off">
+    </div>
+  `, async () => {
+    const cat    = $('mf-cat').value.trim();
+    const name   = $('mf-name').value.trim();
+    const amount = parseFloat($('mf-amount').value) || 0;
+    const source = $('mf-source').value.trim();
+    if (!name) { showToast('請輸入項目名稱', 'err'); return; }
+    S.data.expense_budget.push([cat, name, String(amount), source]);
+    await saveSheet('expense_budget', S.data.expense_budget);
+    renderBudget(); renderKPIs(); renderCash();
+    showToast('已新增支出項目', 'ok');
+  });
+}
+
+function editBudgetItem(idx) {
+  const r = S.data.expense_budget[idx];
+  if (!r) return;
+  openModal('編輯支出項目', `
+    <div class="field"><label>類別</label>
+      <select id="mf-cat">
+        <option value="固定" ${r[0]==='固定'?'selected':''}>固定</option>
+        <option value="浮動" ${r[0]==='浮動'?'selected':''}>浮動</option>
+      </select>
+    </div>
+    <div class="field"><label>項目名稱</label>
+      <input id="mf-name" type="text" value="${esc(r[1]||'')}" autocomplete="off">
+    </div>
+    <div class="field"><label>金額 (TWD)</label>
+      <input id="mf-amount" type="number" step="1" min="0" value="${esc(r[2]||'0')}">
+    </div>
+    <div class="field"><label>扣款帳戶</label>
+      <input id="mf-source" type="text" value="${esc(r[3]||'')}" autocomplete="off">
+    </div>
+  `, async () => {
+    const cat    = $('mf-cat').value.trim();
+    const name   = $('mf-name').value.trim();
+    const amount = parseFloat($('mf-amount').value) || 0;
+    const source = $('mf-source').value.trim();
+    if (!name) { showToast('請輸入項目名稱', 'err'); return; }
+    S.data.expense_budget[idx] = [cat, name, String(amount), source];
+    await saveSheet('expense_budget', S.data.expense_budget);
+    renderBudget(); renderKPIs(); renderCash();
+    showToast('已更新支出項目', 'ok');
+  });
+}
+
+function deleteBudgetItem(idx) {
+  openConfirm('確認刪除', '刪除此支出項目？', async () => {
+    S.data.expense_budget.splice(idx, 1);
+    await saveSheet('expense_budget', S.data.expense_budget);
+    renderBudget(); renderKPIs(); renderCash();
+    showToast('已刪除支出項目', 'ok');
+  });
 }
 
 function skelSpan() {
@@ -2241,6 +2383,14 @@ function fmt(n) {
   if (abs >= 10000) {
     return sign + (abs/10000).toLocaleString('zh-TW', {minimumFractionDigits:1,maximumFractionDigits:1}) + '萬';
   }
+  return sign + Math.round(abs).toLocaleString('zh-TW');
+}
+
+// 萬元簡略格式（不加單位符號，用於副標題）
+function fmtWan(n) {
+  if (n === null || n === undefined || isNaN(n)) return '—';
+  const abs = Math.abs(n), sign = n < 0 ? '-' : '';
+  if (abs >= 10000) return sign + (abs/10000).toLocaleString('zh-TW', {minimumFractionDigits:1,maximumFractionDigits:1}) + '萬';
   return sign + Math.round(abs).toLocaleString('zh-TW');
 }
 
