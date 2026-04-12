@@ -2,7 +2,7 @@
 // CONFIG
 // ══════════════════════════════════════════════════════════════
 // Build 時間：每次修改 code 後手動更新此時間（UTC+8 台北時間）
-const BUILD_DATE = '2026/04/12 11:00';
+const BUILD_DATE = '2026/04/12 11:30';
 
 const SPREADSHEET_ID = '1lpRpxVzWaYUqL-jVPOAJCtjsJUIedPYYyOx4gg4PPFU';
 const CLIENT_ID = '149884248440-85f8dhc6ub9up10sv0f89e3e0itrnooj.apps.googleusercontent.com';
@@ -127,7 +127,7 @@ const COIN_MAP = {
   SAND:'the-sandbox', SHIB:'shiba-inu', TRX:'tron', FIL:'filecoin',
   NEAR:'near', APT:'aptos', SUI:'sui', ARB:'arbitrum',
   OP:'optimism', INJ:'injective-protocol', PEPE:'pepe',
-  CRO:'crypto-com-chain', BGB:'bitget-token', IMX:'immutable-x', FET:'fetch-ai',
+  CRO:'cronos', BGB:'bitget-token', IMX:'immutable-x', FET:'fetch-ai',
   TAO:'bittensor', USDT:'tether', USDC:'usd-coin', DAI:'dai',
 };
 
@@ -513,10 +513,15 @@ async function fetchCryptoFromCoinGecko(syms) {
     const url = `https://api.coingecko.com/api/v3/simple/price?ids=${ids.join(',')}&vs_currencies=usd`;
     const r = await proxyFetch(url);
     const d = await r.json();
+    if (d.status?.error_code) {
+      console.warn('CoinGecko API error:', d.status.error_message);
+      syms.forEach(sym => { S.prices.errs[`c_${sym}`] = true; });
+      return;
+    }
     syms.forEach((sym, i) => {
       const id = ids[i];
       if (d[id]?.usd) { S.prices.crypto[sym] = d[id].usd; delete S.prices.errs[`c_${sym}`]; }
-      else S.prices.errs[`c_${sym}`] = true;
+      else { S.prices.errs[`c_${sym}`] = true; console.warn(`CoinGecko: no price for ${sym} (id="${id}")`); }
     });
   } catch (e) {
     syms.forEach(sym => { S.prices.errs[`c_${sym}`] = true; });
