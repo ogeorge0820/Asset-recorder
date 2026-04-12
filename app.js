@@ -2,7 +2,7 @@
 // CONFIG
 // ══════════════════════════════════════════════════════════════
 // Build 時間：每次修改 code 後手動更新此時間（UTC+8 台北時間）
-const BUILD_DATE = '2026/04/12 10:18';
+const BUILD_DATE = '2026/04/12 11:00';
 
 const SPREADSHEET_ID = '1lpRpxVzWaYUqL-jVPOAJCtjsJUIedPYYyOx4gg4PPFU';
 const CLIENT_ID = '149884248440-85f8dhc6ub9up10sv0f89e3e0itrnooj.apps.googleusercontent.com';
@@ -1443,29 +1443,14 @@ function renderBudget() {
 }
 
 function addBudgetItem() {
-  openModal('新增支出項目', `
-    <div class="field"><label>類別</label>
-      <select id="mf-cat">
-        <option value="固定">固定</option>
-        <option value="浮動">浮動</option>
-      </select>
-    </div>
-    <div class="field"><label>項目名稱</label>
-      <input id="mf-name" type="text" placeholder="例：房租、水電" autocomplete="off">
-    </div>
-    <div class="field"><label>金額 (TWD)</label>
-      <input id="mf-amount" type="number" step="1" min="0" placeholder="0">
-    </div>
-    <div class="field"><label>扣款帳戶 <small style="color:var(--muted)">(選填)</small></label>
-      <input id="mf-source" type="text" placeholder="對應流動現金帳戶名稱" autocomplete="off">
-    </div>
-  `, async () => {
-    const cat    = $('mf-cat').value.trim();
-    const name   = $('mf-name').value.trim();
-    const amount = parseFloat($('mf-amount').value) || 0;
-    const source = $('mf-source').value.trim();
-    if (!name) { showToast('請輸入項目名稱', 'err'); return; }
-    S.data.expense_budget.push([cat, name, String(amount), source]);
+  openModal('新增支出項目', [
+    { id: 'cat',    label: '類別',    type: 'select', options: ['固定','浮動'] },
+    { id: 'name',   label: '項目名稱', type: 'text',   ph: '例：房租、水電' },
+    { id: 'amount', label: '金額 (TWD)', type: 'number', step: '1', min: 0, ph: '0' },
+    { id: 'source', label: '扣款帳戶（選填）', type: 'text', ph: '對應流動現金帳戶名稱', opt: true },
+  ], async (vals) => {
+    const amount = parseFloat(vals.amount) || 0;
+    S.data.expense_budget.push([vals.cat, vals.name, String(amount), vals.source || '']);
     await saveSheet('expense_budget', S.data.expense_budget);
     renderBudget(); renderKPIs(); renderCash();
     showToast('已新增支出項目', 'ok');
@@ -1475,29 +1460,14 @@ function addBudgetItem() {
 function editBudgetItem(idx) {
   const r = S.data.expense_budget[idx];
   if (!r) return;
-  openModal('編輯支出項目', `
-    <div class="field"><label>類別</label>
-      <select id="mf-cat">
-        <option value="固定" ${r[0]==='固定'?'selected':''}>固定</option>
-        <option value="浮動" ${r[0]==='浮動'?'selected':''}>浮動</option>
-      </select>
-    </div>
-    <div class="field"><label>項目名稱</label>
-      <input id="mf-name" type="text" value="${esc(r[1]||'')}" autocomplete="off">
-    </div>
-    <div class="field"><label>金額 (TWD)</label>
-      <input id="mf-amount" type="number" step="1" min="0" value="${esc(r[2]||'0')}">
-    </div>
-    <div class="field"><label>扣款帳戶</label>
-      <input id="mf-source" type="text" value="${esc(r[3]||'')}" autocomplete="off">
-    </div>
-  `, async () => {
-    const cat    = $('mf-cat').value.trim();
-    const name   = $('mf-name').value.trim();
-    const amount = parseFloat($('mf-amount').value) || 0;
-    const source = $('mf-source').value.trim();
-    if (!name) { showToast('請輸入項目名稱', 'err'); return; }
-    S.data.expense_budget[idx] = [cat, name, String(amount), source];
+  openModal('編輯支出項目', [
+    { id: 'cat',    label: '類別',    type: 'select', options: ['固定','浮動'], val: r[0] },
+    { id: 'name',   label: '項目名稱', type: 'text',   val: r[1] || '' },
+    { id: 'amount', label: '金額 (TWD)', type: 'number', step: '1', min: 0, val: r[2] || '0' },
+    { id: 'source', label: '扣款帳戶（選填）', type: 'text', val: r[3] || '', opt: true },
+  ], async (vals) => {
+    const amount = parseFloat(vals.amount) || 0;
+    S.data.expense_budget[idx] = [vals.cat, vals.name, String(amount), vals.source || ''];
     await saveSheet('expense_budget', S.data.expense_budget);
     renderBudget(); renderKPIs(); renderCash();
     showToast('已更新支出項目', 'ok');
@@ -2005,7 +1975,7 @@ function openModal(title, fields, onOK) {
     fields.forEach(f => {
       const el = $(`mf-${f.id}`);
       const v = el?.value?.trim();
-      if (!v && f.type !== 'number' && f.type !== 'select') { el.classList.add('invalid'); ok = false; }
+      if (!v && f.type !== 'number' && f.type !== 'select' && !f.opt) { el.classList.add('invalid'); ok = false; }
       else { el?.classList.remove('invalid'); vals[f.id] = v; }
     });
     if (!ok) return;
