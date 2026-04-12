@@ -2,7 +2,7 @@
 // CONFIG
 // ══════════════════════════════════════════════════════════════
 // Build 時間：每次修改 code 後手動更新此時間（UTC+8 台北時間）
-const BUILD_DATE = '2026/04/12 00:00';
+const BUILD_DATE = '2026/04/12 09:00';
 
 const SPREADSHEET_ID = '1lpRpxVzWaYUqL-jVPOAJCtjsJUIedPYYyOx4gg4PPFU';
 const CLIENT_ID = '149884248440-85f8dhc6ub9up10sv0f89e3e0itrnooj.apps.googleusercontent.com';
@@ -612,19 +612,29 @@ function renderKPIs() {
   // 本月收益：可用資產 − 上月底快照基準
   const monthlyDiff = liquid - LAST_MONTH_AVAILABLE_SNAPSHOT;
   const elMonthly = $('kv-monthly');
-  elMonthly.textContent = (monthlyDiff >= 0 ? '+' : '') + fmt(monthlyDiff);
-  elMonthly.className = `kpi-value ${monthlyDiff >= 0 ? 'pos' : 'neg'}`;
   const cardMonthly = $('card-monthly');
-  if (cardMonthly) cardMonthly.className = `kpi-card ${monthlyDiff >= 0 ? 'kpi-gain' : 'kpi-loss'}`;
+  if (monthlyDiff === 0) {
+    elMonthly.textContent = '持平'; elMonthly.className = 'kpi-value neutral';
+    if (cardMonthly) cardMonthly.className = 'kpi-card';
+  } else {
+    elMonthly.textContent = (monthlyDiff > 0 ? '+' : '') + fmt(monthlyDiff);
+    elMonthly.className = `kpi-value ${monthlyDiff > 0 ? 'pos' : 'neg'}`;
+    if (cardMonthly) cardMonthly.className = `kpi-card ${monthlyDiff > 0 ? 'kpi-gain' : 'kpi-loss'}`;
+  }
   const sMonthly = $('ks-monthly'); if (sMonthly) sMonthly.textContent = '可用資產 − 3/31 基準';
 
   // 本年收益：可用資產 − 2025/12/31 快照基準
   const yearlyDiff = liquid - LAST_YEAR_END_AVAILABLE_SNAPSHOT;
   const elGrowth = $('kv-growth');
-  elGrowth.textContent = (yearlyDiff >= 0 ? '+' : '') + fmt(yearlyDiff);
-  elGrowth.className = `kpi-value ${yearlyDiff >= 0 ? 'pos' : 'neg'}`;
   const cardGrowth = $('card-growth');
-  if (cardGrowth) cardGrowth.className = `kpi-card ${yearlyDiff >= 0 ? 'kpi-gain' : 'kpi-loss'}`;
+  if (yearlyDiff === 0) {
+    elGrowth.textContent = '持平'; elGrowth.className = 'kpi-value neutral';
+    if (cardGrowth) cardGrowth.className = 'kpi-card';
+  } else {
+    elGrowth.textContent = (yearlyDiff > 0 ? '+' : '') + fmt(yearlyDiff);
+    elGrowth.className = `kpi-value ${yearlyDiff > 0 ? 'pos' : 'neg'}`;
+    if (cardGrowth) cardGrowth.className = `kpi-card ${yearlyDiff > 0 ? 'kpi-gain' : 'kpi-loss'}`;
+  }
   const sGrowth = $('ks-growth'); if (sGrowth) sGrowth.textContent = '可用資產 − 2025/12/31 基準';
 
   // 匯率 — header + sidebar + mobile menu
@@ -647,12 +657,12 @@ function renderKPIs() {
         const prevNet = parseFloat(prevSnap[8]) || 0;
         const diff = curNet - prevNet;
         if (Math.abs(diff) < 100) {
-          dgEl.textContent = '持平'; dgEl.className = 'kpi-value';
+          dgEl.textContent = '持平'; dgEl.className = 'kpi-value neutral';
           if (dgCard) dgCard.className = 'kpi-card';
         } else {
-          dgEl.textContent = (diff >= 0 ? '+' : '') + fmt(diff);
-          dgEl.className = `kpi-value ${diff >= 0 ? 'pos' : 'neg'}`;
-          if (dgCard) dgCard.className = `kpi-card ${diff >= 0 ? 'kpi-gain' : 'kpi-loss'}`;
+          dgEl.textContent = (diff > 0 ? '+' : '') + fmt(diff);
+          dgEl.className = `kpi-value ${diff > 0 ? 'pos' : 'neg'}`;
+          if (dgCard) dgCard.className = `kpi-card ${diff > 0 ? 'kpi-gain' : 'kpi-loss'}`;
         }
         if (dgSub) dgSub.textContent = '淨資產日變化';
       } else {
@@ -888,8 +898,13 @@ function updateSectionGain(elId, curTotal, colIdx) {
   const yesterday = getDailySnapYesterday(colIdx);
   if (yesterday === null) { el.textContent = ''; return; }
   const diff = curTotal - yesterday;
-  el.textContent = (diff >= 0 ? '(+' : '(') + fmt(diff) + ')';
-  el.className = `section-gain ${diff >= 0 ? 'pos' : 'neg'}`;
+  if (Math.abs(diff) < 10) {
+    el.textContent = '(持平)';
+    el.className = 'section-gain neutral';
+  } else {
+    el.textContent = (diff > 0 ? '(+' : '(') + fmt(diff) + ')';
+    el.className = `section-gain ${diff > 0 ? 'pos' : 'neg'}`;
+  }
 }
 
 function renderTW() {

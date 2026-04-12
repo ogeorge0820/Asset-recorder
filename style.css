@@ -154,6 +154,7 @@ body {
 .kpi-sub { font-size: 0.75rem; color: var(--muted); margin-top: 5px; }
 .kpi-value.pos { color: var(--green); }
 .kpi-value.neg { color: var(--red); }
+.kpi-value.neutral { color: #8E8E93; }
 .kpi-card.kpi-gain { border-left: 3px solid var(--green); }
 .kpi-card.kpi-loss { border-left: 3px solid var(--red); }
 
@@ -231,6 +232,7 @@ h3.section-header {
 }
 .section-gain.pos { color: var(--green); }
 .section-gain.neg { color: var(--red); }
+.section-gain.neutral { color: #8E8E93; }
 .badge {
   background: var(--accent); color: #fff;
   border-radius: 10px; padding: 1px 7px; font-size: 0.72rem;
