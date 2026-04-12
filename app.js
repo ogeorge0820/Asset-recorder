@@ -2,7 +2,7 @@
 // CONFIG
 // ══════════════════════════════════════════════════════════════
 // Build 時間：每次修改 code 後手動更新此時間（UTC+8 台北時間）
-const BUILD_DATE = '2026/04/12 21:55';
+const BUILD_DATE = '2026/04/12 22:10';
 
 const SPREADSHEET_ID = '1lpRpxVzWaYUqL-jVPOAJCtjsJUIedPYYyOx4gg4PPFU';
 const CLIENT_ID = '149884248440-85f8dhc6ub9up10sv0f89e3e0itrnooj.apps.googleusercontent.com';
@@ -127,7 +127,7 @@ const COIN_MAP = {
   SAND:'the-sandbox', SHIB:'shiba-inu', TRX:'tron', FIL:'filecoin',
   NEAR:'near', APT:'aptos', SUI:'sui', ARB:'arbitrum',
   OP:'optimism', INJ:'injective-protocol', PEPE:'pepe',
-  CRO:'cronos', BGB:'bitget-token', IMX:'immutable-x', FET:'fetch-ai',
+  CRO:'crypto-com-coin', BGB:'bitget-token', IMX:'immutable-x', FET:'fetch-ai',
   TAO:'bittensor', USDT:'tether', USDC:'usd-coin', DAI:'dai',
 };
 
