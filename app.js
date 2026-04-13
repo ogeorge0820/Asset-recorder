@@ -2,7 +2,7 @@
 // CONFIG
 // ══════════════════════════════════════════════════════════════
 // Build 時間：每次修改 code 後手動更新此時間（UTC+8 台北時間）
-const BUILD_DATE = '2026/04/13 09:40';
+const BUILD_DATE = '2026/04/13 10:30';
 
 const SPREADSHEET_ID = '1lpRpxVzWaYUqL-jVPOAJCtjsJUIedPYYyOx4gg4PPFU';
 const CLIENT_ID = '149884248440-85f8dhc6ub9up10sv0f89e3e0itrnooj.apps.googleusercontent.com';
@@ -880,7 +880,8 @@ function renderCash() {
   const rows = S.data.cash;
 
   // USDT 從加密貨幣移植至此顯示（視覺重分類，不改 Sheet 結構）
-  const usdtEntry = S.data.crypto.find(r => r[0]?.toUpperCase() === 'USDT');
+  const usdtIdx   = S.data.crypto.findIndex(r => r[0]?.toUpperCase() === 'USDT');
+  const usdtEntry = usdtIdx >= 0 ? S.data.crypto[usdtIdx] : null;
   const usdtQty   = usdtEntry ? (parseFloat(usdtEntry[1]) || 0) : 0;
   const usdtTWD   = usdtQty * S.prices.usdtwd; // USDT = $1 USD
 
@@ -908,7 +909,7 @@ function renderCash() {
     <td data-label="幣別"><span class="sym-tag" style="font-size:0.78rem;color:var(--accent-light)">USDT</span></td>
     <td data-label="金額" class="amt">${usdtQty.toLocaleString('zh-TW',{minimumFractionDigits:2,maximumFractionDigits:2})}</td>
     <td data-label="台幣現值" class="amt">${fmt(usdtTWD)}</td>
-    <td></td>
+    <td><button class="btn-icon edit" onclick="editItem('crypto',${usdtIdx})">✏</button><button class="btn-icon del" onclick="deleteItem('crypto',${usdtIdx})">✕</button></td>
   </tr>` : '';
   $('tb-cash').innerHTML = cashRows + usdtRow;
 
@@ -947,7 +948,7 @@ function renderCash() {
     </div>`;
   }).join('');
 
-  const usdtCard = usdtQty > 0 ? `<div class="asset-card">
+  const usdtCard = usdtQty > 0 ? `<div class="asset-card" onclick="openUsdtDetail()" role="button" tabindex="0">
     <div class="asset-card-pct">${totalCashTWD > 0 ? Math.round(usdtTWD / totalCashTWD * 100) + '%' : '—'}</div>
     <div class="asset-card-sym">USDT</div>
     <div class="asset-card-mid">
@@ -2107,6 +2108,24 @@ function openCashDetail(idx) {
     <div class="modal-actions" style="flex-direction:column;gap:10px">
       <button class="btn-ok" style="width:100%" onclick="closeModal();setTimeout(()=>editItem('cash',${idx}),80)">✏ 修改金額</button>
       <button class="btn-cp-delete" onclick="closeModal();setTimeout(()=>deleteItem('cash',${idx}),80)">✕ 刪除帳戶</button>
+    </div>`;
+  $('modal').classList.add('open');
+}
+
+function openUsdtDetail() {
+  const idx = S.data.crypto.findIndex(r => r[0]?.toUpperCase() === 'USDT');
+  if (idx < 0) return;
+  const qty = parseFloat(S.data.crypto[idx][1]) || 0;
+  const twd = qty * S.prices.usdtwd;
+  $('modal-title').textContent = 'USDT';
+  $('modal-body').innerHTML = `
+    <div style="text-align:center;padding:8px 0 20px">
+      <div style="font-size:1.6rem;font-weight:800;color:var(--text);line-height:1.2">${fmt(twd)}</div>
+      <div style="font-size:0.85rem;color:var(--muted);margin-top:6px">USDT ${qty.toLocaleString('zh-TW',{minimumFractionDigits:2,maximumFractionDigits:2})}</div>
+    </div>
+    <div class="modal-actions" style="flex-direction:column;gap:10px">
+      <button class="btn-ok" style="width:100%" onclick="closeModal();setTimeout(()=>editItem('crypto',${idx}),80)">✏ 修改數量</button>
+      <button class="btn-cp-delete" onclick="closeModal();setTimeout(()=>deleteItem('crypto',${idx}),80)">✕ 刪除 USDT</button>
     </div>`;
   $('modal').classList.add('open');
 }
