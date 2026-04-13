@@ -251,14 +251,10 @@
 
         <!-- Row 5: 質押/活存收益記錄 全寬 -->
         <div class="section-card collapsed" id="section-rewards" style="grid-column: 1 / -1">
-          <h3 class="section-header" onclick="toggleSection('rewards')"><span>🎁 質押 / 活存收益記錄</span><span class="section-header-right"><span class="section-chevron">▾</span></span></h3>
+          <h3 class="section-header" onclick="toggleSection('rewards')"><span>🎁 質押 / 活存收益記錄</span><span class="section-header-right"><span class="section-total" id="tot-rewards-month">—</span><span class="section-chevron">▾</span></span></h3>
           <div class="section-body">
             <div id="rewards-accordion"></div>
             <button class="btn-add" onclick="addReward()">+ 新增收益記錄</button>
-            <div class="section-footer">
-              <span class="total-lbl">歷史總收益合計 (TWD)</span>
-              <span class="total-val" id="tot-rewards-month">—</span>
-            </div>
           </div>
         </div>
 
