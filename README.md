@@ -108,6 +108,46 @@ asset-recorder/
 
 ## 📋 版本歷史
 
+### v0.5 (2026/04/13 22:30)
+
+#### ✨ 新功能
+
+- **統一資產 Detail Panel（全資產類型 × 雙平台）**：
+  - 流動現金、台股、美股、加密貨幣全部支援點擊 → 底部滑入式 Detail Panel
+  - 桌機版 Panel 為 600px 置中 Modal（scale 動畫），手機版維持底部 sheet
+  - Panel 功能統一：**＋ 增減數量**、**✎ 設定餘額**、**變動記錄 table**、**刪除資產**
+- **變動歷史全類型覆蓋**：
+  - 新增 `cash_history` Google Sheet（欄位：`date / account / amount_before / amount_after / delta / currency / value_twd`）
+  - 所有 4 種資產類型（現金、台股、美股、加密貨幣）每次修改均自動寫入對應 history sheet
+  - 桌機版 ✏ 編輯操作同樣觸發歷史記錄（與 Panel 操作完全一致）
+  - 每次資產變動後自動觸發 `doSaveDailySnapshot(true)` 靜默快照，趨勢圖即時更新
+- **變動記錄以完整 Table 呈現**：Panel 內歷史記錄改為 `<table>` 結構（日期／增減／餘額／單價），所有資產類型格式統一
+- **質押收益區塊重構**：
+  - 歷史累計總收益顯示於標題列右側（與其他資產區塊完全對齊），格式自動轉換為萬（如：2.4萬）
+  - 區塊預設摺疊，點擊標題展開，保持頁面極簡
+  - 子月份 Accordion 維持最新月份預設展開
+
+#### 🎨 UI / UX 優化
+
+- **管理頁移除所有編輯／刪除圖示按鈕**：表格最後一欄回歸「現值 (TWD)」靠右對齊，操作完全轉移至 Detail Panel
+- **資產列整行可點擊**：所有桌機 table 列加入 `cursor: pointer` + hover 背景效果，明確告知使用者可點擊
+- **流動現金排序修正**：USDT（加密錢包）併入台幣現值統一排序，不再固定顯示於末位
+- **USDT 手機卡片修正**：點擊 USDT 卡片正確開啟 Detail Panel（增減數量 / 設定餘額 / 變動記錄），取代舊版 `openUsdtDetail()`
+- **加密錢包文字顏色修正**：桌機流動現金表格中「加密錢包」標籤顏色與其他帳戶一致
+
+#### 🔧 系統優化
+
+- `appendHistory(type, sym, qtyBefore, qtyAfter, extra)` 統一歷史寫入函數，覆蓋全部 4 種資產類型
+- `openAssetDetail(type, idx)` 統一 Panel 開啟入口，取代舊版 `openCryptoDetail` / `openCashDetail`
+- `renderHistoryInPanel(type, sym)` 統一歷史渲染，依資產類型自動切換欄位標題
+- Toast 訊息統一為「已儲存並記錄變動」
+
+#### 🐛 Bug Fix
+
+- **修正台股／美股／加密貨幣全部顯示 0**：`renderCash()` 中 `sorted` 變數重命名為 `allItems` 後，手機卡片區遺漏同步更新，導致 `ReferenceError` 阻斷整個 `renderManagement()` 執行，已修正
+
+---
+
 ### v0.4 (2026/04/10 21:08)
 
 #### ✨ 新功能
