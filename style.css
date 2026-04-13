@@ -993,6 +993,54 @@ h3.section-header {
 [data-theme="light"] .crypto-panel-close:hover { background: var(--card2); }
 [data-theme="light"] .btn-cp-delete:hover { background: rgba(155,107,58,.08); }
 
+/* ── 電腦版 panel：置中 Modal（≥641px）── */
+@media (min-width: 641px) {
+  .crypto-panel-sheet {
+    position: fixed;
+    inset: auto;
+    top: 50%;
+    left: 50%;
+    right: auto;
+    bottom: auto;
+    width: min(600px, 92vw);
+    max-height: 82vh;
+    border-radius: 16px;
+    transform: translate(-50%, -46%) scale(0.96);
+    opacity: 0;
+    transition: transform .28s cubic-bezier(.32,1,.45,1), opacity .28s;
+  }
+  .crypto-panel-overlay.open .crypto-panel-sheet {
+    transform: translate(-50%, -50%) scale(1);
+    opacity: 1;
+  }
+  /* 歷史記錄 table 高度放大 */
+  .crypto-panel-history { max-height: 340px; }
+}
+
+/* 可點擊 table row */
+.clickable-row { cursor: pointer; transition: background .15s; }
+.clickable-row:hover { background: var(--card2); }
+
+/* 歷史記錄 Table 樣式 */
+.cp-history-table {
+  width: 100%; border-collapse: collapse;
+  font-size: 0.8rem;
+}
+.cp-history-table thead th {
+  text-align: left; padding: 4px 6px;
+  color: var(--muted); font-weight: 600;
+  font-size: 0.72rem; letter-spacing: .3px;
+  border-bottom: 1px solid var(--border);
+}
+.cp-history-table tbody tr + tr { border-top: 1px solid rgba(128,128,128,.08); }
+.cp-history-table td { padding: 6px 6px; vertical-align: middle; }
+.cp-history-table .ch-date { color: var(--muted); white-space: nowrap; }
+.cp-history-table .ch-delta { font-weight: 700; white-space: nowrap; }
+.cp-history-table .ch-delta.pos { color: var(--green); }
+.cp-history-table .ch-delta.neg { color: var(--red); }
+.cp-history-table .ch-qty { color: var(--text); }
+.cp-history-table .ch-price { color: var(--muted); text-align: right; white-space: nowrap; }
+
 
 /* ── 收益記錄類型 Tag ── */
 .reward-type-tag {
