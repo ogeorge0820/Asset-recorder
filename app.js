@@ -2,7 +2,7 @@
 // CONFIG
 // ══════════════════════════════════════════════════════════════
 // Build 時間：每次修改 code 後手動更新此時間（UTC+8 台北時間）
-const BUILD_DATE = '2026/04/13 21:10';
+const BUILD_DATE = '2026/04/13 21:30';
 
 const SPREADSHEET_ID = '1lpRpxVzWaYUqL-jVPOAJCtjsJUIedPYYyOx4gg4PPFU';
 const CLIENT_ID = '149884248440-85f8dhc6ub9up10sv0f89e3e0itrnooj.apps.googleusercontent.com';
@@ -1189,7 +1189,8 @@ function rewardTWD(r) {
 
 function renderRewards() {
   const rw = S.data.rewards;
-  if ($('cnt-rewards')) $('cnt-rewards').textContent = rw.length;
+  const allTimeTWD = rw.reduce((s, r) => s + rewardTWD(r), 0);
+  if ($('cnt-rewards')) $('cnt-rewards').textContent = allTimeTWD >= 10000 ? fmtWan(allTimeTWD) : fmt(allTimeTWD);
 
   const now = new Date();
   const curMonth = `${now.getFullYear()}/${String(now.getMonth()+1).padStart(2,'0')}`;
@@ -1209,6 +1210,7 @@ function renderRewards() {
     if ($('tot-rewards-month')) $('tot-rewards-month').textContent = '—';
     return;
   }
+
 
   accordion.innerHTML = sortedMonths.map(month => {
     const items = groups[month];
@@ -1267,9 +1269,8 @@ function renderRewards() {
   const curToggle = $(`rwd-toggle-${curGid}`);
   if (curToggle) curToggle.textContent = '▲';
 
-  // 本月收益合計 for footer
-  const monthTot = (groups[curMonth] || []).reduce((s, { r }) => s + rewardTWD(r), 0);
-  if ($('tot-rewards-month')) $('tot-rewards-month').textContent = monthTot > 0 ? fmt(monthTot) : '—';
+  // 歷史總收益合計 for footer（與 badge 一致）
+  if ($('tot-rewards-month')) $('tot-rewards-month').textContent = allTimeTWD > 0 ? fmt(allTimeTWD) : '—';
 }
 
 function toggleRewardGroup(gid) {
