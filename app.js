@@ -2,7 +2,7 @@
 // CONFIG
 // ══════════════════════════════════════════════════════════════
 // Build 時間：每次修改 code 後手動更新此時間（UTC+8 台北時間）
-const BUILD_DATE = '2026/04/13 13:15';
+const BUILD_DATE = '2026/04/13 13:30';
 
 const SPREADSHEET_ID = '1lpRpxVzWaYUqL-jVPOAJCtjsJUIedPYYyOx4gg4PPFU';
 const CLIENT_ID = '149884248440-85f8dhc6ub9up10sv0f89e3e0itrnooj.apps.googleusercontent.com';
@@ -1674,7 +1674,18 @@ function renderDailyTrend() {
         const fy = isUp ? py - poleLen - flagH : py + poleLen;
         const fx = Math.min(Math.max(px - flagW / 2, 2), chart.width - flagW - 6);
         c.fillStyle = color;
-        c.beginPath(); c.roundRect(fx, fy, flagW, flagH, flagR); c.fill();
+        // 手動畫圓角矩形（相容不支援 roundRect 的瀏覽器）
+        c.beginPath();
+        c.moveTo(fx + flagR, fy);
+        c.lineTo(fx + flagW - flagR, fy);
+        c.arcTo(fx + flagW, fy, fx + flagW, fy + flagR, flagR);
+        c.lineTo(fx + flagW, fy + flagH - flagR);
+        c.arcTo(fx + flagW, fy + flagH, fx + flagW - flagR, fy + flagH, flagR);
+        c.lineTo(fx + flagR, fy + flagH);
+        c.arcTo(fx, fy + flagH, fx, fy + flagH - flagR, flagR);
+        c.lineTo(fx, fy + flagR);
+        c.arcTo(fx, fy, fx + flagR, fy, flagR);
+        c.closePath(); c.fill();
         // 文字
         c.fillStyle = '#fff';
         c.font = '700 10px -apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif';
