@@ -2,7 +2,7 @@
 // CONFIG
 // ══════════════════════════════════════════════════════════════
 // Build 時間：每次修改 code 後手動更新此時間（UTC+8 台北時間）
-const BUILD_DATE = '2026/04/13 15:48';
+const BUILD_DATE = '2026/04/13 16:30';
 
 const SPREADSHEET_ID = '1lpRpxVzWaYUqL-jVPOAJCtjsJUIedPYYyOx4gg4PPFU';
 const CLIENT_ID = '149884248440-85f8dhc6ub9up10sv0f89e3e0itrnooj.apps.googleusercontent.com';
@@ -904,16 +904,14 @@ function renderCash() {
       <td data-label="幣別"><span class="sym-tag" style="font-size:0.78rem;color:var(--accent-light)">${esc(ccy)}</span></td>
       <td data-label="金額" class="amt">${fmtCashAmt(amt, ccy)}</td>
       <td data-label="台幣現值" class="amt">${fmt(twd)}${hasErr ? '<span class="price-err">匯率失敗</span>' : ''}</td>
-      <td onclick="event.stopPropagation()"><button class="btn-icon edit" onclick="editItem('cash',${i})">✏</button><button class="btn-icon del" onclick="deleteItem('cash',${i})">✕</button></td>
     </tr>`;
-  }).join('') : '<tr><td colspan="5" style="text-align:center;padding:16px;color:var(--muted)">尚無帳戶</td></tr>';
+  }).join('') : '<tr><td colspan="4" style="text-align:center;padding:16px;color:var(--muted)">尚無帳戶</td></tr>';
 
   const usdtRow = usdtQty > 0 ? `<tr class="clickable-row" onclick="openAssetDetail('crypto',${usdtIdx})">
     <td data-label="帳戶"><span style="color:var(--muted);font-size:0.8rem">加密錢包</span></td>
     <td data-label="幣別"><span class="sym-tag" style="font-size:0.78rem;color:var(--accent-light)">USDT</span></td>
     <td data-label="金額" class="amt">${usdtQty.toLocaleString('zh-TW',{minimumFractionDigits:2,maximumFractionDigits:2})}</td>
     <td data-label="台幣現值" class="amt">${fmt(usdtTWD)}</td>
-    <td onclick="event.stopPropagation()"><button class="btn-icon edit" onclick="editItem('crypto',${usdtIdx})">✏</button><button class="btn-icon del" onclick="deleteItem('crypto',${usdtIdx})">✕</button></td>
   </tr>` : '';
   $('tb-cash').innerHTML = cashRows + usdtRow;
 
@@ -1002,7 +1000,7 @@ function renderTW() {
   const totalTWTWD = rows.reduce((s, r) => s + (parseFloat(r[1]) || 0) * (S.prices.tw[r[0]] || 0), 0);
 
   if (!sorted.length) {
-    $('tb-tw').innerHTML = '<tr><td colspan="5" style="text-align:center;padding:16px;color:var(--muted)">尚無持股</td></tr>';
+    $('tb-tw').innerHTML = '<tr><td colspan="4" style="text-align:center;padding:16px;color:var(--muted)">尚無持股</td></tr>';
     $('tw-cards').innerHTML = '<div style="text-align:center;padding:20px;color:var(--muted);font-size:0.88rem">尚無持股</div>';
   } else {
     $('tb-tw').innerHTML = sorted.map(({r, i}) => {
@@ -1016,7 +1014,6 @@ function renderTW() {
         <td data-label="股數">${(parseFloat(r[1]) || 0).toLocaleString()}</td>
         <td data-label="股價 (TWD)" class="amt">${priceCell}</td>
         <td data-label="現值 (TWD)" class="amt">${v !== null ? fmt(v) : skelSpan()}${err ? '<span class="price-err">更新失敗</span>' : ''}</td>
-        <td onclick="event.stopPropagation()"><button class="btn-icon edit" onclick="editItem('tw',${i})">✏</button><button class="btn-icon del" onclick="deleteItem('tw',${i})">✕</button></td>
       </tr>`;
     }).join('');
 
@@ -1057,7 +1054,7 @@ function renderUS() {
   const totalUSTWD = rows.reduce((s, r) => s + (parseFloat(r[1]) || 0) * (S.prices.us[r[0]] || 0) * rate, 0);
 
   if (!sorted.length) {
-    $('tb-us').innerHTML = '<tr><td colspan="5" style="text-align:center;padding:16px;color:var(--muted)">尚無持股</td></tr>';
+    $('tb-us').innerHTML = '<tr><td colspan="4" style="text-align:center;padding:16px;color:var(--muted)">尚無持股</td></tr>';
     $('us-cards').innerHTML = '<div style="text-align:center;padding:20px;color:var(--muted);font-size:0.88rem">尚無持股</div>';
   } else {
     $('tb-us').innerHTML = sorted.map(({r, i}) => {
@@ -1071,7 +1068,6 @@ function renderUS() {
         <td data-label="股數">${(parseFloat(r[1]) || 0).toLocaleString(undefined, {maximumFractionDigits:4})}</td>
         <td data-label="股價 (USD)" class="amt">${priceCell}</td>
         <td data-label="現值 (TWD)" class="amt">${v !== null ? fmt(v) : skelSpan()}${err ? '<span class="price-err">更新失敗</span>' : ''}</td>
-        <td onclick="event.stopPropagation()"><button class="btn-icon edit" onclick="editItem('us',${i})">✏</button><button class="btn-icon del" onclick="deleteItem('us',${i})">✕</button></td>
       </tr>`;
     }).join('');
 
@@ -1126,7 +1122,7 @@ function renderCrypto() {
   }, 0);
 
   if (!sorted.length) {
-    const empty = '<tr><td colspan="5" style="text-align:center;padding:16px;color:var(--muted)">尚無持幣</td></tr>';
+    const empty = '<tr><td colspan="4" style="text-align:center;padding:16px;color:var(--muted)">尚無持幣</td></tr>';
     $('tb-crypto').innerHTML = empty;
     $('crypto-cards').innerHTML = '<div style="text-align:center;padding:20px;color:var(--muted);font-size:0.88rem">尚無持幣</div>';
   } else {
@@ -1144,7 +1140,6 @@ function renderCrypto() {
         <td data-label="數量">${qty.toFixed(3)}</td>
         <td data-label="幣價 (USD)" class="amt">${priceCell}</td>
         <td data-label="現值 (TWD)" class="amt">${v !== null ? fmt(v) : skelSpan()}${err ? '<span class="price-err">更新失敗</span>' : ''}</td>
-        <td onclick="event.stopPropagation()"><button class="btn-icon edit" onclick="editItem('crypto',${i})">✏</button><button class="btn-icon del" onclick="deleteItem('crypto',${i})">✕</button></td>
       </tr>`;
     }).join('');
 
