@@ -2,7 +2,7 @@
 // CONFIG
 // ══════════════════════════════════════════════════════════════
 // Build 時間：每次修改 code 後手動更新此時間（UTC+8 台北時間）
-const BUILD_DATE = '2026/04/13 13:45';
+const BUILD_DATE = '2026/04/13 14:00';
 
 const SPREADSHEET_ID = '1lpRpxVzWaYUqL-jVPOAJCtjsJUIedPYYyOx4gg4PPFU';
 const CLIENT_ID = '149884248440-85f8dhc6ub9up10sv0f89e3e0itrnooj.apps.googleusercontent.com';
@@ -1625,22 +1625,67 @@ function renderDailyTrend() {
   if (S.charts.dailyTrend) S.charts.dailyTrend.destroy();
 
   const nodata = $('daily-trend-nodata');
-  if (snaps.length < 2) {
+  if (snaps.length < 1) {
     ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
     if (nodata) nodata.style.display = 'flex';
     return;
   }
   if (nodata) nodata.style.display = 'none';
 
-  // 最近 14 天（取最多 15 筆快照，計算 14 個日損益差值）
-  const window14 = snaps.slice(-15);
-  const labels = [], plData = [], netData = [];
-  for (let i = 1; i < window14.length; i++) {
-    const prev = parseFloat(window14[i-1][8]) || 0;
-    const cur  = parseFloat(window14[i][8])  || 0;
-    labels.push(window14[i][0].slice(5)); // MM/DD
-    plData.push(cur - prev);
-    netData.push(cur);
+  // ── Step 1：取最近 15 筆快照，做缺日補全 ──
+  const recent = snaps.slice(-15);
+
+  function dateStr(d) {
+    return `${d.getFullYear()}/${String(d.getMonth()+1).padStart(2,'0')}/${String(d.getDate()).padStart(2,'0')}`;
+  }
+  function nextDay(str) {
+    const d = new Date(str.replace(/\//g, '-') + 'T00:00:00');
+    d.setDate(d.getDate() + 1);
+    return dateStr(d);
+  }
+
+  // 將快照展開，填補跳過的日期（delta = 0，淨值沿用前日）
+  const filled = []; // { date, net, isLive }
+  for (let i = 0; i < recent.length; i++) {
+    const net = parseFloat(recent[i][8]) || 0;
+    if (i > 0) {
+      let d = filled[filled.length - 1].date;
+      while (nextDay(d) < recent[i][0]) {
+        d = nextDay(d);
+        filled.push({ date: d, net: filled[filled.length - 1].net, isLive: false });
+      }
+    }
+    filled.push({ date: recent[i][0], net, isLive: false });
+  }
+
+  // ── Step 2：追加今日即時點（若今日尚無快照）──
+  const todayStr = getNowTW8().slice(0, 10);
+  const lastFilled = filled[filled.length - 1];
+  if (lastFilled.date < todayStr) {
+    // 補全最後快照到昨日之間的空白
+    let d = lastFilled.date;
+    while (nextDay(d) < todayStr) {
+      d = nextDay(d);
+      filled.push({ date: d, net: filled[filled.length - 1].net, isLive: false });
+    }
+    // 今日即時點
+    const { net: liveNet } = calcTotals();
+    filled.push({ date: todayStr, net: liveNet, isLive: true });
+  }
+
+  // ── Step 3：取最後 15 個節點計算損益差值 ──
+  const win = filled.slice(-15);
+  if (win.length < 2) {
+    ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+    if (nodata) nodata.style.display = 'flex';
+    return;
+  }
+  const labels = [], plData = [], netData = [], isLiveArr = [];
+  for (let i = 1; i < win.length; i++) {
+    labels.push(win[i].date.slice(5)); // MM/DD
+    plData.push(win[i].net - win[i-1].net);
+    netData.push(win[i].net);
+    isLiveArr.push(win[i].isLive);
   }
 
   const maxAbs = Math.max(...plData.map(Math.abs), 1);
@@ -1648,12 +1693,6 @@ function renderDailyTrend() {
   const cc = chartColors();
   const isDark = document.documentElement.dataset.theme !== 'light';
   const zeroLine = isDark ? 'rgba(255,255,255,0.20)' : 'rgba(0,0,0,0.13)';
-
-  // 最高獲利 / 最大虧損 index
-  const maxPl  = Math.max(...plData);
-  const minPl  = Math.min(...plData);
-  const maxIdx = plData.indexOf(maxPl);
-  const minIdx = plData.indexOf(minPl);
 
   // Inline plugin：繪製旗標標註（防禦性寫法，任何例外均靜默處理）
   const annotPlugin = {
@@ -1695,11 +1734,23 @@ function renderDailyTrend() {
           c.restore();
         }
 
-        if (maxPl > 1000)  drawFlag(maxIdx, maxPl, '#34C759', '+' + fmtWan(maxPl));
-        if (minPl < -1000) drawFlag(minIdx, minPl, '#FF3B30', fmtWan(minPl));
+        // 旗標只標歷史最高/最低（不標即時點）
+        const histPlData = plData.filter((_, i) => !isLiveArr[i]);
+        const histMaxPl = histPlData.length ? Math.max(...histPlData) : -Infinity;
+        const histMinPl = histPlData.length ? Math.min(...histPlData) : Infinity;
+        const histMaxIdx = plData.findIndex((v, i) => !isLiveArr[i] && v === histMaxPl);
+        const histMinIdx = plData.findIndex((v, i) => !isLiveArr[i] && v === histMinPl);
+        if (histMaxPl > 1000)  drawFlag(histMaxIdx, histMaxPl, '#34C759', '+' + fmtWan(histMaxPl));
+        if (histMinPl < -1000) drawFlag(histMinIdx, histMinPl, '#FF3B30', fmtWan(histMinPl));
       } catch (e) { /* 旗標繪製失敗不影響主圖表 */ }
     },
   };
+
+  // 點顏色：即時點空心、歷史點實心
+  const ptBg     = plData.map((v, i) => isLiveArr[i] ? 'transparent'  : (v >= 0 ? '#34C759' : '#FF3B30'));
+  const ptBorder = plData.map((_v, i) => isLiveArr[i] ? cc.line1        : 'transparent');
+  const ptRadius = plData.map((_, i) => isLiveArr[i] ? 5               : 3);
+  const ptBorderW= plData.map((_, i) => isLiveArr[i] ? 2               : 0);
 
   S.charts.dailyTrend = new Chart(ctx, {
     type: 'line',
@@ -1711,13 +1762,18 @@ function renderDailyTrend() {
         borderColor: cc.line1,
         borderWidth: 2,
         tension: 0.42,
-        pointRadius: 3,
-        pointHoverRadius: 6,
-        pointBackgroundColor: plData.map(v => v >= 0 ? '#34C759' : '#FF3B30'),
-        pointBorderColor: 'transparent',
+        pointRadius: ptRadius,
+        pointHoverRadius: 7,
+        pointBackgroundColor: ptBg,
+        pointBorderColor: ptBorder,
+        pointBorderWidth: ptBorderW,
         fill: true,
+        // 最後一段（連向即時點）改為虛線
+        segment: {
+          borderDash: ctx2 => isLiveArr[ctx2.p1DataIndex] ? [5, 4] : [],
+          borderColor: ctx2 => isLiveArr[ctx2.p1DataIndex] ? cc.line1 + 'bb' : cc.line1,
+        },
         backgroundColor(context) {
-          // 防禦：chartArea 未就緒或高度為零時返回靜態色
           const ca = context.chart?.chartArea;
           const c2 = context.chart?.ctx;
           if (!ca || !c2 || ca.bottom <= ca.top) return 'rgba(52,199,89,0.12)';
@@ -1744,7 +1800,11 @@ function renderDailyTrend() {
         legend: { display: false },
         tooltip: {
           callbacks: {
-            title(items) { return window14[items[0].dataIndex + 1]?.[0] || labels[items[0].dataIndex]; },
+            title(items) {
+              const i = items[0].dataIndex;
+              const fullDate = win[i + 1]?.date || labels[i];
+              return isLiveArr[i] ? `${fullDate}  ▸ 即時` : fullDate;
+            },
             label(c) {
               const pl  = c.parsed.y;
               const net = netData[c.dataIndex];
