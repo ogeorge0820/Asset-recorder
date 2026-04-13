@@ -2,7 +2,7 @@
 // CONFIG
 // ══════════════════════════════════════════════════════════════
 // Build 時間：每次修改 code 後手動更新此時間（UTC+8 台北時間）
-const BUILD_DATE = '2026/04/12 22:40';
+const BUILD_DATE = '2026/04/13 00:30';
 
 const SPREADSHEET_ID = '1lpRpxVzWaYUqL-jVPOAJCtjsJUIedPYYyOx4gg4PPFU';
 const CLIENT_ID = '149884248440-85f8dhc6ub9up10sv0f89e3e0itrnooj.apps.googleusercontent.com';
@@ -878,15 +878,22 @@ function toggleSection(id) {
 
 function renderCash() {
   const rows = S.data.cash;
+
+  // USDT 從加密貨幣移植至此顯示（視覺重分類，不改 Sheet 結構）
+  const usdtEntry = S.data.crypto.find(r => r[0]?.toUpperCase() === 'USDT');
+  const usdtQty   = usdtEntry ? (parseFloat(usdtEntry[1]) || 0) : 0;
+  const usdtTWD   = usdtQty * S.prices.usdtwd; // USDT = $1 USD
+
   $('cnt-cash').textContent = rows.length;
   const sorted = rows.map((r,i) => ({r,i})).sort((a,b) => cashToTWD(b.r) - cashToTWD(a.r));
-  $('tb-cash').innerHTML = sorted.length ? sorted.map(({r, i}) => {
+
+  // ── 桌機 table ──
+  const cashRows = sorted.length ? sorted.map(({r, i}) => {
     const ccy = (r[2] || 'TWD').toUpperCase();
     const amt = parseFloat(r[1]) || 0;
     const twd = cashToTWD(r);
     const isTWD = ccy === 'TWD';
-    const errKey = `fx_${ccy}`;
-    const hasErr = !isTWD && S.prices.errs[errKey];
+    const hasErr = !isTWD && S.prices.errs[`fx_${ccy}`];
     return `<tr>
       <td data-label="帳戶">${esc(r[0])}</td>
       <td data-label="幣別"><span class="sym-tag" style="font-size:0.78rem;color:var(--accent-light)">${esc(ccy)}</span></td>
@@ -895,13 +902,25 @@ function renderCash() {
       <td><button class="btn-icon edit" onclick="editItem('cash',${i})">✏</button><button class="btn-icon del" onclick="deleteItem('cash',${i})">✕</button></td>
     </tr>`;
   }).join('') : '<tr><td colspan="5" style="text-align:center;padding:16px;color:var(--muted)">尚無帳戶</td></tr>';
-  const cashTotal = rows.reduce((s, r) => s + cashToTWD(r), 0);
-  $('tot-cash').textContent = fmt(cashTotal);
+
+  const usdtRow = usdtQty > 0 ? `<tr>
+    <td data-label="帳戶"><span style="color:var(--muted);font-size:0.8rem">加密錢包</span></td>
+    <td data-label="幣別"><span class="sym-tag" style="font-size:0.78rem;color:var(--accent-light)">USDT</span></td>
+    <td data-label="金額" class="amt">${usdtQty.toLocaleString('zh-TW',{minimumFractionDigits:2,maximumFractionDigits:2})}</td>
+    <td data-label="台幣現值" class="amt">${fmt(usdtTWD)}</td>
+    <td></td>
+  </tr>` : '';
+  $('tb-cash').innerHTML = cashRows + usdtRow;
+
+  const cashTotal   = rows.reduce((s, r) => s + cashToTWD(r), 0);
+  const displayTotal = cashTotal + usdtTWD;
+  $('tot-cash').textContent = fmt(displayTotal);
+
   const availEl = $('avail-cash');
   if (availEl) {
     const budget = calcBudgetTotal();
     if (budget > 0) {
-      availEl.textContent = `(可用：${fmtWan(cashTotal - budget)})`;
+      availEl.textContent = `(可用：${fmtWan(displayTotal - budget)})`;
       availEl.style.display = '';
     } else {
       availEl.style.display = 'none';
@@ -909,25 +928,36 @@ function renderCash() {
   }
 
   // ── 手機卡片 ──
-  const totalCashTWD = rows.reduce((s, r) => s + cashToTWD(r), 0);
-  $('cash-cards').innerHTML = sorted.length ? sorted.map(({r, i}) => {
+  const totalCashTWD = displayTotal; // 含 USDT
+  const cashCards = sorted.map(({r, i}) => {
     const ccy = (r[2] || 'TWD').toUpperCase();
     const amt = parseFloat(r[1]) || 0;
     const twd = cashToTWD(r);
     const hasErr = ccy !== 'TWD' && S.prices.errs[`fx_${ccy}`];
-    const pct = (totalCashTWD > 0) ? Math.round(twd / totalCashTWD * 100) : null;
+    const pct = totalCashTWD > 0 ? Math.round(twd / totalCashTWD * 100) : null;
     const pctStr = pct !== null ? pct + '%' : '—';
     const twdStr = hasErr ? '匯率失敗' : fmt(twd);
-    const detailStr = `${esc(ccy)} ${fmtCashAmt(amt, ccy)}`;
     return `<div class="asset-card${hasErr ? ' err' : ''}" onclick="openCashDetail(${i})" role="button" tabindex="0">
       <div class="asset-card-pct">${pctStr}</div>
       <div class="asset-card-sym">${esc(r[0])}</div>
       <div class="asset-card-mid">
         <div class="asset-card-twd">${twdStr}</div>
-        <div class="asset-card-detail">${detailStr}</div>
+        <div class="asset-card-detail">${esc(ccy)} ${fmtCashAmt(amt, ccy)}</div>
       </div>
     </div>`;
-  }).join('') : '<div style="text-align:center;padding:20px;color:var(--muted);font-size:0.88rem">尚無帳戶</div>';
+  }).join('');
+
+  const usdtCard = usdtQty > 0 ? `<div class="asset-card">
+    <div class="asset-card-pct">${totalCashTWD > 0 ? Math.round(usdtTWD / totalCashTWD * 100) + '%' : '—'}</div>
+    <div class="asset-card-sym">USDT</div>
+    <div class="asset-card-mid">
+      <div class="asset-card-twd">${fmt(usdtTWD)}</div>
+      <div class="asset-card-detail">USDT ${usdtQty.toLocaleString('zh-TW',{minimumFractionDigits:2,maximumFractionDigits:2})}</div>
+    </div>
+  </div>` : '';
+
+  $('cash-cards').innerHTML = (cashCards + usdtCard) ||
+    '<div style="text-align:center;padding:20px;color:var(--muted);font-size:0.88rem">尚無帳戶</div>';
 }
 
 // 取昨日 daily_snapshots 某欄位數值（colIdx: 2=tw,3=us,4=crypto）
@@ -1068,14 +1098,24 @@ function renderUS() {
 
 function renderCrypto() {
   const rows = S.data.crypto, rate = S.prices.usdtwd;
-  $('cnt-crypto').textContent = rows.length;
-  const sorted = rows.map((r,i) => ({r,i})).sort((a,b) => {
-    const val = r => (parseFloat(r[1])||0) * (S.prices.crypto[r[0]?.toUpperCase()]||0) * rate;
-    return val(b.r) - val(a.r);
+
+  // 收益計算含全部 crypto（含 USDT），與 daily_snapshots col 4 一致
+  const gainTot = rows.reduce((s, r) => {
+    const sym = r[0]?.toUpperCase(), p = S.prices.crypto[sym];
+    return s + (p ? (parseFloat(r[1]) || 0) * p * rate : 0);
+  }, 0);
+
+  // 顯示清單：隱藏 USDT（已移至流動現金區）
+  const displayRows = rows.map((r,i) => ({r,i})).filter(({r}) => r[0]?.toUpperCase() !== 'USDT');
+  $('cnt-crypto').textContent = displayRows.length;
+
+  const sorted = [...displayRows].sort((a,b) => {
+    const val = ({r}) => (parseFloat(r[1])||0) * (S.prices.crypto[r[0]?.toUpperCase()]||0) * rate;
+    return val(b) - val(a);
   });
 
-  // 計算總值（用於百分比）
-  const totalCryptoTWD = rows.reduce((s, r) => {
+  // 顯示總值（不含 USDT）
+  const totalCryptoTWD = displayRows.reduce((s, {r}) => {
     const sym = r[0]?.toUpperCase(), p = S.prices.crypto[sym];
     return s + (p ? (parseFloat(r[1]) || 0) * p * rate : 0);
   }, 0);
@@ -1126,9 +1166,8 @@ function renderCrypto() {
     }).join('');
   }
 
-  const tot = rows.reduce((s, r) => s + (parseFloat(r[1]) || 0) * (S.prices.crypto[r[0]?.toUpperCase()] || 0) * rate, 0);
-  $('tot-crypto').textContent = fmt(tot);
-  updateSectionGain('gain-crypto', tot, 4);
+  $('tot-crypto').textContent = fmt(totalCryptoTWD); // 顯示不含 USDT
+  updateSectionGain('gain-crypto', gainTot, 4);       // 收益含 USDT，與快照對齊
 }
 
 // ── 質押/活存收益記錄 ──────────────────────────────────────────
@@ -1633,13 +1672,16 @@ function renderDailyTrend() {
 
 function renderPie() {
   const { cashT, twT, usT, cryT, ins, re, total } = calcTotals();
+  // USDT 視覺歸類至「流動現金」，不改變整體加總
+  const usdtEntry = S.data.crypto.find(r => r[0]?.toUpperCase() === 'USDT');
+  const usdtTWD   = usdtEntry ? (parseFloat(usdtEntry[1]) || 0) * S.prices.usdtwd : 0;
   const entries = [
-    { label:'流動現金', value:cashT, color:'#22c55e' },
-    { label:'台股',     value:twT,   color:'#6366f1' },
-    { label:'美股',     value:usT,   color:'#3b82f6' },
-    { label:'加密貨幣', value:cryT,  color:'#f59e0b' },
-    { label:'儲蓄險',   value:ins,   color:'#ec4899' },
-    { label:'房地產',   value:re,    color:'#14b8a6' },
+    { label:'流動現金', value:cashT + usdtTWD,   color:'#22c55e' },
+    { label:'台股',     value:twT,               color:'#6366f1' },
+    { label:'美股',     value:usT,               color:'#3b82f6' },
+    { label:'加密貨幣', value:cryT - usdtTWD,    color:'#f59e0b' },
+    { label:'儲蓄險',   value:ins,               color:'#ec4899' },
+    { label:'房地產',   value:re,                color:'#14b8a6' },
   ].filter(e => e.value > 0);
 
   const ctx = $('pie-chart').getContext('2d');
