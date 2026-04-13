@@ -2,7 +2,7 @@
 // CONFIG
 // ══════════════════════════════════════════════════════════════
 // Build 時間：每次修改 code 後手動更新此時間（UTC+8 台北時間）
-const BUILD_DATE = '2026/04/13 16:45';
+const BUILD_DATE = '2026/04/13 16:50';
 
 const SPREADSHEET_ID = '1lpRpxVzWaYUqL-jVPOAJCtjsJUIedPYYyOx4gg4PPFU';
 const CLIENT_ID = '149884248440-85f8dhc6ub9up10sv0f89e3e0itrnooj.apps.googleusercontent.com';
@@ -937,7 +937,7 @@ function renderCash() {
 
   // ── 手機卡片 ──
   const totalCashTWD = displayTotal; // 含 USDT
-  const cashCards = sorted.map(({r, i}) => {
+  const cashCards = allItems.filter(item => item.type === 'cash').map(({r, i}) => {
     const ccy = (r[2] || 'TWD').toUpperCase();
     const amt = parseFloat(r[1]) || 0;
     const twd = cashToTWD(r);
