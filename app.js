@@ -2,7 +2,7 @@
 // CONFIG
 // ══════════════════════════════════════════════════════════════
 // Build 時間：每次修改 code 後手動更新此時間（UTC+8 台北時間）
-const BUILD_DATE = '2026/04/13 10:30';
+const BUILD_DATE = '2026/04/13 11:00';
 
 const SPREADSHEET_ID = '1lpRpxVzWaYUqL-jVPOAJCtjsJUIedPYYyOx4gg4PPFU';
 const CLIENT_ID = '149884248440-85f8dhc6ub9up10sv0f89e3e0itrnooj.apps.googleusercontent.com';
@@ -1625,47 +1625,93 @@ function renderDailyTrend() {
   if (S.charts.dailyTrend) S.charts.dailyTrend.destroy();
 
   const nodata = $('daily-trend-nodata');
-  if (!snaps.length) {
+  if (snaps.length < 2) {
     ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
     if (nodata) nodata.style.display = 'flex';
     return;
   }
   if (nodata) nodata.style.display = 'none';
 
-  // Show last 90 days max for readability
-  const recent = snaps.slice(-90);
+  // 最近 14 天（需至少前一天作為基準）
+  const window14 = snaps.slice(-15); // 最多取 15 筆，計算 14 個差值
+  const labels = [], plData = [], netData = [], barColors = [];
+
+  for (let i = 1; i < window14.length; i++) {
+    const prev = parseFloat(window14[i-1][8]) || 0;
+    const cur  = parseFloat(window14[i][8])  || 0;
+    const pl   = cur - prev;
+    labels.push(window14[i][0]);
+    plData.push(pl);
+    netData.push(cur);
+    // 閾值：絕對值 < 1000 視為持平
+    if (Math.abs(pl) < 1000)  barColors.push('rgba(160,160,160,0.75)');
+    else if (pl > 0)           barColors.push('rgba(52,199,89,0.85)');
+    else                       barColors.push('rgba(255,59,48,0.82)');
+  }
+
+  // Y 軸範圍：取最大絕對值，留 20% 上下空間
+  const maxAbs = Math.max(...plData.map(Math.abs), 1);
+  const yPad   = maxAbs * 1.25;
 
   const cc = chartColors();
+  const isDark = document.documentElement.classList.contains('dark');
+  const zeroLineColor = isDark ? 'rgba(255,255,255,0.25)' : 'rgba(0,0,0,0.18)';
+
   S.charts.dailyTrend = new Chart(ctx, {
-    type: 'line',
+    type: 'bar',
     data: {
-      labels: recent.map(s => s[0]),
-      datasets: [
-        { label:'總資產', data: recent.map(s => [1,2,3,4,5,6].reduce((a,i)=>a+(parseFloat(s[i])||0), 0)),
-          borderColor: cc.line1,
-          backgroundColor(context) {
-            const {ctx: c, chartArea} = context.chart;
-            if (!chartArea) return 'rgba(0,122,255,0)';
-            const g = c.createLinearGradient(0, chartArea.top, 0, chartArea.bottom);
-            g.addColorStop(0, cc.line1 === '#007AFF' ? 'rgba(0,122,255,0.18)' : 'rgba(99,102,241,0.18)');
-            g.addColorStop(1, 'rgba(0,0,0,0)');
-            return g;
-          },
-          fill:true, tension:.42, pointRadius:3, pointHoverRadius:6, borderWidth:2 },
-        { label:'淨資產', data: recent.map(s => parseFloat(s[8])||0),
-          borderColor: cc.line2, backgroundColor:'transparent',
-          borderDash:[5,3], tension:.42, pointRadius:3, pointHoverRadius:6, borderWidth:1.5 },
-      ],
+      labels,
+      datasets: [{
+        label: '每日損益',
+        data: plData,
+        backgroundColor: barColors,
+        borderColor: barColors.map(c => c.replace(/[\d.]+\)$/, '1)')),
+        borderWidth: 0,
+        borderRadius: 4,
+        borderSkipped: false,
+      }],
     },
     options: {
-      responsive:true, maintainAspectRatio:false,
+      responsive: true, maintainAspectRatio: false,
       plugins: {
-        legend: { labels:{ color:cc.legend, font:{size:11}, usePointStyle:true, pointStyleWidth:10 } },
-        tooltip: { callbacks: { label(c) { return ` ${c.dataset.label}: ${fmt(c.parsed.y)}`; } } },
+        legend: { display: false },
+        tooltip: {
+          callbacks: {
+            title(items) { return items[0].label; },
+            label(c) {
+              const pl  = c.parsed.y;
+              const net = netData[c.dataIndex];
+              const sign = pl >= 0 ? '+' : '';
+              return [
+                ` 損益：${sign}${fmt(pl)}`,
+                ` 總淨值：${fmt(net)}`,
+              ];
+            },
+          },
+        },
       },
       scales: {
-        x: { grid:{ display:false }, ticks:{ color:cc.tick, font:{size:9}, maxTicksLimit:10 }, border:{display:false} },
-        y: { display:false },
+        x: {
+          grid: { display: false },
+          ticks: { color: cc.tick, font: { size: 9 }, maxTicksLimit: 7 },
+          border: { display: false },
+        },
+        y: {
+          min: -yPad, max: yPad,
+          grid: {
+            color(ctx2) {
+              return ctx2.tick.value === 0 ? zeroLineColor : 'transparent';
+            },
+            lineWidth(ctx2) { return ctx2.tick.value === 0 ? 2 : 0; },
+          },
+          ticks: {
+            color: cc.tick,
+            font: { size: 9 },
+            maxTicksLimit: 5,
+            callback(v) { return fmtWan(v); },
+          },
+          border: { display: false },
+        },
       },
     },
   });
