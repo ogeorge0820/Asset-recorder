@@ -2,7 +2,7 @@
 // CONFIG
 // ══════════════════════════════════════════════════════════════
 // Build 時間：每次修改 code 後手動更新此時間（UTC+8 台北時間）
-const BUILD_DATE = '2026/04/13 16:50';
+const BUILD_DATE = '2026/04/13 21:10';
 
 const SPREADSHEET_ID = '1lpRpxVzWaYUqL-jVPOAJCtjsJUIedPYYyOx4gg4PPFU';
 const CLIENT_ID = '149884248440-85f8dhc6ub9up10sv0f89e3e0itrnooj.apps.googleusercontent.com';
@@ -935,12 +935,24 @@ function renderCash() {
     }
   }
 
-  // ── 手機卡片 ──
+  // ── 手機卡片（與桌機同一 allItems，排序一致）──
   const totalCashTWD = displayTotal; // 含 USDT
-  const cashCards = allItems.filter(item => item.type === 'cash').map(({r, i}) => {
+  const allCards = allItems.map(item => {
+    if (item.type === 'usdt') {
+      const pct = totalCashTWD > 0 ? Math.round(usdtTWD / totalCashTWD * 100) : null;
+      return `<div class="asset-card" onclick="openAssetDetail('crypto',${usdtIdx})" role="button" tabindex="0">
+        <div class="asset-card-pct">${pct !== null ? pct + '%' : '—'}</div>
+        <div class="asset-card-sym">USDT</div>
+        <div class="asset-card-mid">
+          <div class="asset-card-twd">${fmt(usdtTWD)}</div>
+          <div class="asset-card-detail">USDT ${usdtQty.toLocaleString('zh-TW',{minimumFractionDigits:2,maximumFractionDigits:2})}</div>
+        </div>
+      </div>`;
+    }
+    const { r, i } = item;
     const ccy = (r[2] || 'TWD').toUpperCase();
     const amt = parseFloat(r[1]) || 0;
-    const twd = cashToTWD(r);
+    const twd = item.twd;
     const hasErr = ccy !== 'TWD' && S.prices.errs[`fx_${ccy}`];
     const pct = totalCashTWD > 0 ? Math.round(twd / totalCashTWD * 100) : null;
     const pctStr = pct !== null ? pct + '%' : '—';
@@ -955,16 +967,7 @@ function renderCash() {
     </div>`;
   }).join('');
 
-  const usdtCard = usdtQty > 0 ? `<div class="asset-card" onclick="openUsdtDetail()" role="button" tabindex="0">
-    <div class="asset-card-pct">${totalCashTWD > 0 ? Math.round(usdtTWD / totalCashTWD * 100) + '%' : '—'}</div>
-    <div class="asset-card-sym">USDT</div>
-    <div class="asset-card-mid">
-      <div class="asset-card-twd">${fmt(usdtTWD)}</div>
-      <div class="asset-card-detail">USDT ${usdtQty.toLocaleString('zh-TW',{minimumFractionDigits:2,maximumFractionDigits:2})}</div>
-    </div>
-  </div>` : '';
-
-  $('cash-cards').innerHTML = (cashCards + usdtCard) ||
+  $('cash-cards').innerHTML = allCards ||
     '<div style="text-align:center;padding:20px;color:var(--muted);font-size:0.88rem">尚無帳戶</div>';
 }
 
