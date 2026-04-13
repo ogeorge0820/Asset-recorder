@@ -2,7 +2,7 @@
 // CONFIG
 // ══════════════════════════════════════════════════════════════
 // Build 時間：每次修改 code 後手動更新此時間（UTC+8 台北時間）
-const BUILD_DATE = '2026/04/13 16:30';
+const BUILD_DATE = '2026/04/13 16:45';
 
 const SPREADSHEET_ID = '1lpRpxVzWaYUqL-jVPOAJCtjsJUIedPYYyOx4gg4PPFU';
 const CLIENT_ID = '149884248440-85f8dhc6ub9up10sv0f89e3e0itrnooj.apps.googleusercontent.com';
@@ -890,15 +890,27 @@ function renderCash() {
   const usdtTWD   = usdtQty * S.prices.usdtwd; // USDT = $1 USD
 
   $('cnt-cash').textContent = rows.length;
-  const sorted = rows.map((r,i) => ({r,i})).sort((a,b) => cashToTWD(b.r) - cashToTWD(a.r));
+
+  // 將 USDT 併入排序清單，統一按台幣現值由大到小
+  const allItems = rows.map((r, i) => ({ type: 'cash', r, i, twd: cashToTWD(r) }));
+  if (usdtQty > 0) allItems.push({ type: 'usdt', r: null, i: usdtIdx, twd: usdtTWD });
+  allItems.sort((a, b) => b.twd - a.twd);
 
   // ── 桌機 table ──
-  const cashRows = sorted.length ? sorted.map(({r, i}) => {
+  const tableRows = allItems.length ? allItems.map(item => {
+    if (item.type === 'usdt') {
+      return `<tr class="clickable-row" onclick="openAssetDetail('crypto',${usdtIdx})">
+        <td data-label="帳戶">加密錢包</td>
+        <td data-label="幣別"><span class="sym-tag" style="font-size:0.78rem;color:var(--accent-light)">USDT</span></td>
+        <td data-label="金額" class="amt">${usdtQty.toLocaleString('zh-TW',{minimumFractionDigits:2,maximumFractionDigits:2})}</td>
+        <td data-label="台幣現值" class="amt">${fmt(usdtTWD)}</td>
+      </tr>`;
+    }
+    const { r, i } = item;
     const ccy = (r[2] || 'TWD').toUpperCase();
     const amt = parseFloat(r[1]) || 0;
-    const twd = cashToTWD(r);
-    const isTWD = ccy === 'TWD';
-    const hasErr = !isTWD && S.prices.errs[`fx_${ccy}`];
+    const twd = item.twd;
+    const hasErr = ccy !== 'TWD' && S.prices.errs[`fx_${ccy}`];
     return `<tr class="clickable-row" onclick="openAssetDetail('cash',${i})">
       <td data-label="帳戶">${esc(r[0])}</td>
       <td data-label="幣別"><span class="sym-tag" style="font-size:0.78rem;color:var(--accent-light)">${esc(ccy)}</span></td>
@@ -906,14 +918,7 @@ function renderCash() {
       <td data-label="台幣現值" class="amt">${fmt(twd)}${hasErr ? '<span class="price-err">匯率失敗</span>' : ''}</td>
     </tr>`;
   }).join('') : '<tr><td colspan="4" style="text-align:center;padding:16px;color:var(--muted)">尚無帳戶</td></tr>';
-
-  const usdtRow = usdtQty > 0 ? `<tr class="clickable-row" onclick="openAssetDetail('crypto',${usdtIdx})">
-    <td data-label="帳戶"><span style="color:var(--muted);font-size:0.8rem">加密錢包</span></td>
-    <td data-label="幣別"><span class="sym-tag" style="font-size:0.78rem;color:var(--accent-light)">USDT</span></td>
-    <td data-label="金額" class="amt">${usdtQty.toLocaleString('zh-TW',{minimumFractionDigits:2,maximumFractionDigits:2})}</td>
-    <td data-label="台幣現值" class="amt">${fmt(usdtTWD)}</td>
-  </tr>` : '';
-  $('tb-cash').innerHTML = cashRows + usdtRow;
+  $('tb-cash').innerHTML = tableRows;
 
   const cashTotal   = rows.reduce((s, r) => s + cashToTWD(r), 0);
   const displayTotal = cashTotal + usdtTWD;
