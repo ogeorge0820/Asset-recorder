@@ -2,7 +2,7 @@
 // CONFIG
 // ══════════════════════════════════════════════════════════════
 // Build 時間：每次修改 code 後手動更新此時間（UTC+8 台北時間）
-const BUILD_DATE = '2026/04/13 13:30';
+const BUILD_DATE = '2026/04/13 13:45';
 
 const SPREADSHEET_ID = '1lpRpxVzWaYUqL-jVPOAJCtjsJUIedPYYyOx4gg4PPFU';
 const CLIENT_ID = '149884248440-85f8dhc6ub9up10sv0f89e3e0itrnooj.apps.googleusercontent.com';
@@ -1655,47 +1655,49 @@ function renderDailyTrend() {
   const maxIdx = plData.indexOf(maxPl);
   const minIdx = plData.indexOf(minPl);
 
-  // Inline plugin：繪製旗標標註
+  // Inline plugin：繪製旗標標註（防禦性寫法，任何例外均靜默處理）
   const annotPlugin = {
     id: 'plFlags',
     afterDatasetsDraw(chart) {
-      const { ctx: c, scales: { x: xSc, y: ySc } } = chart;
-      const poleLen = 34, flagW = 66, flagH = 17, flagR = 3;
+      try {
+        const xSc = chart.scales?.x;
+        const ySc = chart.scales?.y;
+        if (!xSc || !ySc) return;
+        const c = chart.ctx;
+        const poleLen = 30, flagW = 64, flagH = 16, flagR = 3;
 
-      function drawFlag(idx, value, color, text) {
-        const px = xSc.getPixelForIndex(idx);
-        const py = ySc.getPixelForValue(value);
-        const isUp = value >= 0;
-        c.save();
-        // 旗桿
-        c.strokeStyle = color; c.lineWidth = 1.5; c.setLineDash([]);
-        c.beginPath(); c.moveTo(px, py); c.lineTo(px, isUp ? py - poleLen : py + poleLen); c.stroke();
-        // 旗面
-        const fy = isUp ? py - poleLen - flagH : py + poleLen;
-        const fx = Math.min(Math.max(px - flagW / 2, 2), chart.width - flagW - 6);
-        c.fillStyle = color;
-        // 手動畫圓角矩形（相容不支援 roundRect 的瀏覽器）
-        c.beginPath();
-        c.moveTo(fx + flagR, fy);
-        c.lineTo(fx + flagW - flagR, fy);
-        c.arcTo(fx + flagW, fy, fx + flagW, fy + flagR, flagR);
-        c.lineTo(fx + flagW, fy + flagH - flagR);
-        c.arcTo(fx + flagW, fy + flagH, fx + flagW - flagR, fy + flagH, flagR);
-        c.lineTo(fx + flagR, fy + flagH);
-        c.arcTo(fx, fy + flagH, fx, fy + flagH - flagR, flagR);
-        c.lineTo(fx, fy + flagR);
-        c.arcTo(fx, fy, fx + flagR, fy, flagR);
-        c.closePath(); c.fill();
-        // 文字
-        c.fillStyle = '#fff';
-        c.font = '700 10px -apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif';
-        c.textAlign = 'center'; c.textBaseline = 'middle';
-        c.fillText(text, fx + flagW / 2, fy + flagH / 2);
-        c.restore();
-      }
+        function drawFlag(idx, value, color, text) {
+          const px = xSc.getPixelForIndex(idx);
+          const py = ySc.getPixelForValue(value);
+          if (!isFinite(px) || !isFinite(py)) return;
+          const isUp = value >= 0;
+          c.save();
+          c.strokeStyle = color; c.lineWidth = 1.5; c.setLineDash([]);
+          c.beginPath(); c.moveTo(px, py); c.lineTo(px, isUp ? py - poleLen : py + poleLen); c.stroke();
+          const fy = isUp ? py - poleLen - flagH : py + poleLen;
+          const fx = Math.min(Math.max(px - flagW / 2, 2), (chart.width || 300) - flagW - 6);
+          c.fillStyle = color;
+          c.beginPath();
+          c.moveTo(fx + flagR, fy);
+          c.lineTo(fx + flagW - flagR, fy);
+          c.arcTo(fx + flagW, fy, fx + flagW, fy + flagR, flagR);
+          c.lineTo(fx + flagW, fy + flagH - flagR);
+          c.arcTo(fx + flagW, fy + flagH, fx + flagW - flagR, fy + flagH, flagR);
+          c.lineTo(fx + flagR, fy + flagH);
+          c.arcTo(fx, fy + flagH, fx, fy + flagH - flagR, flagR);
+          c.lineTo(fx, fy + flagR);
+          c.arcTo(fx, fy, fx + flagR, fy, flagR);
+          c.closePath(); c.fill();
+          c.fillStyle = '#fff';
+          c.font = '700 10px -apple-system, BlinkMacSystemFont, sans-serif';
+          c.textAlign = 'center'; c.textBaseline = 'middle';
+          c.fillText(text, fx + flagW / 2, fy + flagH / 2);
+          c.restore();
+        }
 
-      if (maxPl > 1000)  drawFlag(maxIdx, maxPl, '#34C759', '+' + fmtWan(maxPl));
-      if (minPl < -1000) drawFlag(minIdx, minPl, '#FF3B30', fmtWan(minPl));
+        if (maxPl > 1000)  drawFlag(maxIdx, maxPl, '#34C759', '+' + fmtWan(maxPl));
+        if (minPl < -1000) drawFlag(minIdx, minPl, '#FF3B30', fmtWan(minPl));
+      } catch (e) { /* 旗標繪製失敗不影響主圖表 */ }
     },
   };
 
@@ -1715,30 +1717,29 @@ function renderDailyTrend() {
         pointBorderColor: 'transparent',
         fill: true,
         backgroundColor(context) {
-          const { ctx: c, chartArea, scales } = context.chart;
-          if (!chartArea || !scales?.y) return 'rgba(52,199,89,0.15)';
-          const zeroY = scales.y.getPixelForValue(0);
-          const top   = chartArea.top, bot = chartArea.bottom;
-          const frac  = Math.max(0, Math.min(1, (zeroY - top) / (bot - top)));
-          const g = c.createLinearGradient(0, top, 0, bot);
-          if (frac <= 0.01) {
-            g.addColorStop(0, 'rgba(255,59,48,0.22)'); g.addColorStop(1, 'rgba(255,59,48,0.03)');
-          } else if (frac >= 0.99) {
-            g.addColorStop(0, 'rgba(52,199,89,0.22)'); g.addColorStop(1, 'rgba(52,199,89,0.03)');
-          } else {
-            g.addColorStop(0,            'rgba(52,199,89,0.28)');
-            g.addColorStop(Math.max(0, frac - 0.03), 'rgba(52,199,89,0.06)');
-            g.addColorStop(frac,         'rgba(128,128,128,0.0)');
-            g.addColorStop(Math.min(1, frac + 0.03), 'rgba(255,59,48,0.06)');
-            g.addColorStop(1,            'rgba(255,59,48,0.28)');
-          }
-          return g;
+          // 防禦：chartArea 未就緒或高度為零時返回靜態色
+          const ca = context.chart?.chartArea;
+          const c2 = context.chart?.ctx;
+          if (!ca || !c2 || ca.bottom <= ca.top) return 'rgba(52,199,89,0.12)';
+          try {
+            const ySc2 = context.chart.scales?.y;
+            const top = ca.top, bot = ca.bottom;
+            const zeroY = ySc2 ? ySc2.getPixelForValue(0) : (top + bot) / 2;
+            const frac = Math.max(0.01, Math.min(0.99, (zeroY - top) / (bot - top)));
+            const g = c2.createLinearGradient(0, top, 0, bot);
+            g.addColorStop(0,                        'rgba(52,199,89,0.26)');
+            g.addColorStop(Math.max(0, frac - 0.04), 'rgba(52,199,89,0.05)');
+            g.addColorStop(frac,                     'rgba(128,128,128,0.0)');
+            g.addColorStop(Math.min(1, frac + 0.04), 'rgba(255,59,48,0.05)');
+            g.addColorStop(1,                        'rgba(255,59,48,0.26)');
+            return g;
+          } catch { return 'rgba(52,199,89,0.12)'; }
         },
       }],
     },
     options: {
       responsive: true, maintainAspectRatio: false,
-      layout: { padding: { top: 54, right: 8, bottom: 0, left: 4 } },
+      layout: { padding: { top: 50, right: 6, bottom: 0, left: 4 } },
       plugins: {
         legend: { display: false },
         tooltip: {
@@ -1755,7 +1756,6 @@ function renderDailyTrend() {
       },
       scales: {
         x: {
-          offset: false,
           grid: { display: false },
           ticks: { color: cc.tick, font: { size: 9 }, maxRotation: 0, autoSkip: true, maxTicksLimit: 14 },
           border: { display: false },
