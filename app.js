@@ -2,7 +2,7 @@
 // CONFIG
 // ══════════════════════════════════════════════════════════════
 // Build 時間：每次修改 code 後手動更新此時間（UTC+8 台北時間）
-const BUILD_DATE = '2026/04/13 13:00';
+const BUILD_DATE = '2026/04/13 13:15';
 
 const SPREADSHEET_ID = '1lpRpxVzWaYUqL-jVPOAJCtjsJUIedPYYyOx4gg4PPFU';
 const CLIENT_ID = '149884248440-85f8dhc6ub9up10sv0f89e3e0itrnooj.apps.googleusercontent.com';
@@ -1632,88 +1632,135 @@ function renderDailyTrend() {
   }
   if (nodata) nodata.style.display = 'none';
 
-  // 最近 14 天（需至少前一天作為基準）
-  const window14 = snaps.slice(-15); // 最多取 15 筆，計算 14 個差值
-  const labels = [], plData = [], netData = [], barColors = [];
-
+  // 最近 14 天（取最多 15 筆快照，計算 14 個日損益差值）
+  const window14 = snaps.slice(-15);
+  const labels = [], plData = [], netData = [];
   for (let i = 1; i < window14.length; i++) {
     const prev = parseFloat(window14[i-1][8]) || 0;
     const cur  = parseFloat(window14[i][8])  || 0;
-    const pl   = cur - prev;
-    labels.push(window14[i][0]);
-    plData.push(pl);
+    labels.push(window14[i][0].slice(5)); // MM/DD
+    plData.push(cur - prev);
     netData.push(cur);
-    // 閾值：絕對值 < 1000 視為持平
-    if (Math.abs(pl) < 1000)  barColors.push('rgba(160,160,160,0.75)');
-    else if (pl > 0)           barColors.push('rgba(52,199,89,0.85)');
-    else                       barColors.push('rgba(255,59,48,0.82)');
   }
 
-  // Y 軸範圍：取最大絕對值，留 20% 上下空間
   const maxAbs = Math.max(...plData.map(Math.abs), 1);
-  const yPad   = maxAbs * 1.25;
-
+  const yPad   = maxAbs * 1.38;
   const cc = chartColors();
-  const isDark = document.documentElement.classList.contains('dark');
-  const zeroLineColor = isDark ? 'rgba(255,255,255,0.25)' : 'rgba(0,0,0,0.18)';
+  const isDark = document.documentElement.dataset.theme !== 'light';
+  const zeroLine = isDark ? 'rgba(255,255,255,0.20)' : 'rgba(0,0,0,0.13)';
+
+  // 最高獲利 / 最大虧損 index
+  const maxPl  = Math.max(...plData);
+  const minPl  = Math.min(...plData);
+  const maxIdx = plData.indexOf(maxPl);
+  const minIdx = plData.indexOf(minPl);
+
+  // Inline plugin：繪製旗標標註
+  const annotPlugin = {
+    id: 'plFlags',
+    afterDatasetsDraw(chart) {
+      const { ctx: c, scales: { x: xSc, y: ySc } } = chart;
+      const poleLen = 34, flagW = 66, flagH = 17, flagR = 3;
+
+      function drawFlag(idx, value, color, text) {
+        const px = xSc.getPixelForIndex(idx);
+        const py = ySc.getPixelForValue(value);
+        const isUp = value >= 0;
+        c.save();
+        // 旗桿
+        c.strokeStyle = color; c.lineWidth = 1.5; c.setLineDash([]);
+        c.beginPath(); c.moveTo(px, py); c.lineTo(px, isUp ? py - poleLen : py + poleLen); c.stroke();
+        // 旗面
+        const fy = isUp ? py - poleLen - flagH : py + poleLen;
+        const fx = Math.min(Math.max(px - flagW / 2, 2), chart.width - flagW - 6);
+        c.fillStyle = color;
+        c.beginPath(); c.roundRect(fx, fy, flagW, flagH, flagR); c.fill();
+        // 文字
+        c.fillStyle = '#fff';
+        c.font = '700 10px -apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif';
+        c.textAlign = 'center'; c.textBaseline = 'middle';
+        c.fillText(text, fx + flagW / 2, fy + flagH / 2);
+        c.restore();
+      }
+
+      if (maxPl > 1000)  drawFlag(maxIdx, maxPl, '#34C759', '+' + fmtWan(maxPl));
+      if (minPl < -1000) drawFlag(minIdx, minPl, '#FF3B30', fmtWan(minPl));
+    },
+  };
 
   S.charts.dailyTrend = new Chart(ctx, {
-    type: 'bar',
+    type: 'line',
     data: {
       labels,
       datasets: [{
         label: '每日損益',
         data: plData,
-        backgroundColor: barColors,
-        borderColor: barColors.map(c => c.replace(/[\d.]+\)$/, '1)')),
-        borderWidth: 0,
-        borderRadius: 4,
-        borderSkipped: false,
+        borderColor: cc.line1,
+        borderWidth: 2,
+        tension: 0.42,
+        pointRadius: 3,
+        pointHoverRadius: 6,
+        pointBackgroundColor: plData.map(v => v >= 0 ? '#34C759' : '#FF3B30'),
+        pointBorderColor: 'transparent',
+        fill: true,
+        backgroundColor(context) {
+          const { ctx: c, chartArea, scales } = context.chart;
+          if (!chartArea || !scales?.y) return 'rgba(52,199,89,0.15)';
+          const zeroY = scales.y.getPixelForValue(0);
+          const top   = chartArea.top, bot = chartArea.bottom;
+          const frac  = Math.max(0, Math.min(1, (zeroY - top) / (bot - top)));
+          const g = c.createLinearGradient(0, top, 0, bot);
+          if (frac <= 0.01) {
+            g.addColorStop(0, 'rgba(255,59,48,0.22)'); g.addColorStop(1, 'rgba(255,59,48,0.03)');
+          } else if (frac >= 0.99) {
+            g.addColorStop(0, 'rgba(52,199,89,0.22)'); g.addColorStop(1, 'rgba(52,199,89,0.03)');
+          } else {
+            g.addColorStop(0,            'rgba(52,199,89,0.28)');
+            g.addColorStop(Math.max(0, frac - 0.03), 'rgba(52,199,89,0.06)');
+            g.addColorStop(frac,         'rgba(128,128,128,0.0)');
+            g.addColorStop(Math.min(1, frac + 0.03), 'rgba(255,59,48,0.06)');
+            g.addColorStop(1,            'rgba(255,59,48,0.28)');
+          }
+          return g;
+        },
       }],
     },
     options: {
       responsive: true, maintainAspectRatio: false,
+      layout: { padding: { top: 54, right: 8, bottom: 0, left: 4 } },
       plugins: {
         legend: { display: false },
         tooltip: {
           callbacks: {
-            title(items) { return items[0].label; },
+            title(items) { return window14[items[0].dataIndex + 1]?.[0] || labels[items[0].dataIndex]; },
             label(c) {
               const pl  = c.parsed.y;
               const net = netData[c.dataIndex];
               const sign = pl >= 0 ? '+' : '';
-              return [
-                ` 損益：${sign}${fmt(pl)}`,
-                ` 總淨值：${fmt(net)}`,
-              ];
+              return [` 損益：${sign}${fmt(pl)}`, ` 總淨值：${fmt(net)}`];
             },
           },
         },
       },
       scales: {
         x: {
+          offset: false,
           grid: { display: false },
-          ticks: { color: cc.tick, font: { size: 9 }, maxTicksLimit: 7 },
+          ticks: { color: cc.tick, font: { size: 9 }, maxRotation: 0, autoSkip: true, maxTicksLimit: 14 },
           border: { display: false },
         },
         y: {
           min: -yPad, max: yPad,
           grid: {
-            color(ctx2) {
-              return ctx2.tick.value === 0 ? zeroLineColor : 'transparent';
-            },
-            lineWidth(ctx2) { return ctx2.tick.value === 0 ? 2 : 0; },
+            color(ctx2) { return ctx2.tick.value === 0 ? zeroLine : 'transparent'; },
+            lineWidth(ctx2) { return ctx2.tick.value === 0 ? 1.5 : 0; },
           },
-          ticks: {
-            color: cc.tick,
-            font: { size: 9 },
-            maxTicksLimit: 5,
-            callback(v) { return fmtWan(v); },
-          },
+          ticks: { color: cc.tick, font: { size: 9 }, maxTicksLimit: 5, callback(v) { return fmtWan(v); } },
           border: { display: false },
         },
       },
     },
+    plugins: [annotPlugin],
   });
 }
 
@@ -1845,29 +1892,37 @@ function renderTrend() {
     type: 'line',
     data: {
       labels: snaps.map(s => s[0]),
-      datasets: [
-        { label:'淨資產', data: snaps.map(s => parseFloat(s[8])||0),
-          borderColor: cc.line1,
-          backgroundColor(context) {
-            const {ctx: c, chartArea} = context.chart;
-            if (!chartArea) return 'rgba(0,0,0,0)';
-            const g = c.createLinearGradient(0, chartArea.top, 0, chartArea.bottom);
-            g.addColorStop(0, cc.line1 === '#007AFF' ? 'rgba(0,122,255,0.2)' : 'rgba(99,102,241,0.2)');
-            g.addColorStop(1, 'rgba(0,0,0,0)');
-            return g;
-          },
-          fill:true, tension:.42, pointRadius:4, pointHoverRadius:7, borderWidth:2.5 },
-      ],
+      datasets: [{
+        label: '淨資產',
+        data: snaps.map(s => parseFloat(s[8]) || 0),
+        borderColor: cc.line1,
+        borderWidth: 2.5,
+        tension: 0.42,
+        pointRadius: 4,
+        pointHoverRadius: 7,
+        pointBackgroundColor: cc.line1,
+        pointBorderColor: 'transparent',
+        fill: true,
+        backgroundColor(context) {
+          const { ctx: c, chartArea } = context.chart;
+          if (!chartArea) return 'rgba(0,0,0,0)';
+          const g = c.createLinearGradient(0, chartArea.top, 0, chartArea.bottom);
+          g.addColorStop(0, cc.line1 === '#007AFF' ? 'rgba(0,122,255,0.22)' : 'rgba(99,102,241,0.22)');
+          g.addColorStop(1, 'rgba(0,0,0,0)');
+          return g;
+        },
+      }],
     },
     options: {
-      responsive:true, maintainAspectRatio:false,
+      responsive: true, maintainAspectRatio: false,
+      layout: { padding: { top: 8, right: 8, bottom: 0, left: 4 } },
       plugins: {
         legend: { display: false },
         tooltip: { callbacks: { label(c) { return ` 淨資產: ${fmt(c.parsed.y)}`; } } },
       },
       scales: {
-        x: { grid:{ display:false }, ticks:{ color:cc.tick, font:{size:10}, maxTicksLimit:6, maxRotation:0 }, border:{display:false} },
-        y: { display:false },
+        x: { offset: false, grid: { display: false }, ticks: { color: cc.tick, font: { size: 10 }, maxTicksLimit: 6, maxRotation: 0 }, border: { display: false } },
+        y: { display: false },
       },
     },
   });
