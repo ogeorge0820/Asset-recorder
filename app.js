@@ -2,7 +2,7 @@
 // CONFIG
 // ══════════════════════════════════════════════════════════════
 // Build 時間：每次修改 code 後手動更新此時間（UTC+8 台北時間）
-const BUILD_DATE = '2026/04/13 14:00';
+const BUILD_DATE = '2026/04/13 15:15';
 
 const SPREADSHEET_ID = '1lpRpxVzWaYUqL-jVPOAJCtjsJUIedPYYyOx4gg4PPFU';
 const CLIENT_ID = '149884248440-85f8dhc6ub9up10sv0f89e3e0itrnooj.apps.googleusercontent.com';
@@ -146,6 +146,7 @@ const HEADERS = {
   crypto_history: ['date','symbol','qty_before','qty_after','delta','price_usd','value_twd'],
   tw_history: ['date','symbol','qty_before','qty_after','delta','price_twd','value_twd'],
   us_history: ['date','symbol','qty_before','qty_after','delta','price_usd','value_twd'],
+  cash_history: ['date','account','amount_before','amount_after','delta','currency','value_twd'],
   other_history: ['date','key','value_before','value_after','delta','note'],
   expense_budget: ['category','item_name','amount','payment_source'],
 };
@@ -170,6 +171,7 @@ const S = {
     crypto_history: [], // [date, symbol, qty_before, qty_after, delta, price_usd, value_twd]
     tw_history: [],     // [date, symbol, qty_before, qty_after, delta, price_twd, value_twd]
     us_history: [],     // [date, symbol, qty_before, qty_after, delta, price_usd, value_twd]
+    cash_history: [],   // [date, account, amount_before, amount_after, delta, currency, value_twd]
     other_history: [],  // [date, key, value_before, value_after, delta, note]
     expense_budget: [], // [category, item_name, amount, payment_source]
     settings: { insurance_total: 0, realestate_total: 0, debt: 0 },
@@ -308,7 +310,7 @@ async function initSheets() {
 // DATA LOAD / SAVE
 // ══════════════════════════════════════════════════════════════
 async function loadAll() {
-  const [cash, tw, us, crypto, snap, daily, sett, rw, hist, twHist, usHist, otherHist, expBudget] = await Promise.allSettled([
+  const [cash, tw, us, crypto, snap, daily, sett, rw, hist, twHist, usHist, cashHist, otherHist, expBudget] = await Promise.allSettled([
     sheetGet('cash_accounts!A:C'),
     sheetGet('holdings_tw!A:B'),
     sheetGet('holdings_us!A:B'),
@@ -320,6 +322,7 @@ async function loadAll() {
     sheetGet('crypto_history!A:G'),
     sheetGet('tw_history!A:G'),
     sheetGet('us_history!A:G'),
+    sheetGet('cash_history!A:G'),
     sheetGet('other_history!A:F'),
     sheetGet('expense_budget!A:D'),
   ]);
@@ -339,6 +342,7 @@ async function loadAll() {
   S.data.crypto_history  = rows(hist);
   S.data.tw_history      = rows(twHist);
   S.data.us_history      = rows(usHist);
+  S.data.cash_history    = rows(cashHist);
   S.data.other_history   = rows(otherHist);
   S.data.expense_budget  = rows(expBudget);
 
@@ -2104,8 +2108,12 @@ function editItem(type, idx) {
   const c = configs[type];
   openModal(c.title, c.fields, async vals => {
     if (type === 'cash') {
-      S.data.cash[idx] = [vals.bank_name, parseFloat(vals.amount)||0, vals.currency||'TWD'];
+      const amtBefore = parseFloat(r[1]) || 0;
+      const amtAfter  = parseFloat(vals.amount) || 0;
+      const currency  = vals.currency || 'TWD';
+      S.data.cash[idx] = [vals.bank_name, amtAfter, currency];
       await persistAndRefresh(type);
+      await appendHistory('cash', vals.bank_name, amtBefore, amtAfter, currency);
     } else if (type === 'tw') {
       const qtyBefore = parseFloat(r[1]) || 0;
       const qtyAfter = parseFloat(vals.shares) || 0;
@@ -2125,7 +2133,8 @@ function editItem(type, idx) {
       await persistAndRefresh(type);
       await appendHistory('crypto', r[0].toUpperCase(), qtyBefore, qtyAfter);
     }
-    showToast('已更新', 'ok');
+    doSaveDailySnapshot(true);
+    showToast('已儲存並記錄變動', 'ok');
     return true;
   });
 }
@@ -2314,25 +2323,31 @@ function getNowTW8() {
   return `${d.getUTCFullYear()}/${pad(d.getUTCMonth()+1)}/${pad(d.getUTCDate())} ${pad(d.getUTCHours())}:${pad(d.getUTCMinutes())}`;
 }
 
-// 通用歷史寫入（支援 crypto / tw / us）
-async function appendHistory(type, sym, qtyBefore, qtyAfter) {
+// 通用歷史寫入（支援 cash / crypto / tw / us）
+async function appendHistory(type, sym, qtyBefore, qtyAfter, extra) {
   const delta = qtyAfter - qtyBefore;
-  let price = '', valueTwd = '';
+  let col5 = '', col6 = '';
   if (type === 'crypto') {
     const p = S.prices.crypto[sym];
-    price = p !== undefined ? p : '';
-    valueTwd = p !== undefined ? delta * p * S.prices.usdtwd : '';
+    col5 = p !== undefined ? p : '';
+    col6 = p !== undefined ? delta * p * S.prices.usdtwd : '';
   } else if (type === 'tw') {
     const p = S.prices.tw[sym];
-    price = p !== undefined ? p : '';
-    valueTwd = p !== undefined ? delta * p : '';
+    col5 = p !== undefined ? p : '';
+    col6 = p !== undefined ? delta * p : '';
   } else if (type === 'us') {
     const p = S.prices.us[sym];
-    price = p !== undefined ? p : '';
-    valueTwd = p !== undefined ? delta * p * S.prices.usdtwd : '';
+    col5 = p !== undefined ? p : '';
+    col6 = p !== undefined ? delta * p * S.prices.usdtwd : '';
+  } else if (type === 'cash') {
+    // sym = account name, extra = currency
+    const currency = extra || 'TWD';
+    col5 = currency;
+    const fx = S.prices.fx[currency] || 1;
+    col6 = delta * fx;
   }
   const histKey = `${type}_history`;
-  const row = [getNowTW8(), sym, qtyBefore, qtyAfter, delta, price, valueTwd];
+  const row = [getNowTW8(), sym, qtyBefore, qtyAfter, delta, col5, col6];
   S.data[histKey].push(row);
   await saveSheet(histKey, S.data[histKey]);
 }
@@ -2462,8 +2477,9 @@ async function adjustAssetQty() {
     await saveSheet(sheetMap[type], dataMap[type]);
     await appendHistory(type, sym, qtyBefore, qtyAfter);
     renderKPIs(); renderCharts(); renderManagement();
+    doSaveDailySnapshot(true);
     _refreshPanelDisplay(sym);
-    showToast('已更新', 'ok');
+    showToast('已儲存並記錄變動', 'ok');
     // 自動換算利息收益（僅 crypto）
     if (type === 'crypto') {
       const manualAdj = parseFloat(vals.manual_adj) || 0;
@@ -2497,8 +2513,9 @@ async function setAssetQty() {
     await saveSheet(sheetMap[type], dataMap[type]);
     await appendHistory(type, sym, qtyBefore, qtyAfter);
     renderKPIs(); renderCharts(); renderManagement();
+    doSaveDailySnapshot(true);
     _refreshPanelDisplay(sym);
-    showToast('已更新', 'ok');
+    showToast('已儲存並記錄變動', 'ok');
     // 自動換算利息收益（僅 crypto）
     if (type === 'crypto') {
       const delta = qtyAfter - qtyBefore;
