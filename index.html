@@ -22,6 +22,9 @@
     <button class="sidebar-nav-item" id="snav-management" onclick="switchTab('management')">
       <span class="snav-icon">💼</span><span>管理</span>
     </button>
+    <button class="sidebar-nav-item" id="snav-dwz" onclick="switchTab('dwz')">
+      <span class="snav-icon">⏳</span><span>Die With Zero</span>
+    </button>
   </nav>
   <div class="sidebar-spacer"></div>
   <div class="sidebar-footer">
@@ -60,6 +63,7 @@
     <nav class="tab-nav">
       <button class="tab-btn active" onclick="switchTab('overview')">總覽</button>
       <button class="tab-btn" onclick="switchTab('management')">管理</button>
+      <button class="tab-btn" onclick="switchTab('dwz')">Die With Zero</button>
     </nav>
     <div class="header-right">
       <div class="build-badge" id="build-badge"></div>
@@ -270,6 +274,69 @@
       </div><!-- /mgmt-grid -->
 
     </div><!-- /tab-management -->
+
+    <!-- ══ Die With Zero Tab ══ -->
+    <div id="tab-dwz" style="display:none">
+
+      <div class="dwz-params-card">
+        <h3 class="dwz-section-title">⚙️ 模擬參數</h3>
+        <div class="dwz-params-grid">
+          <div class="dwz-param-group">
+            <label class="dwz-param-label">目前年齡</label>
+            <input id="dwz-age" class="dwz-param-input" type="number" min="20" max="80" value="35">
+          </div>
+          <div class="dwz-param-group">
+            <label class="dwz-param-label">退休年齡</label>
+            <input id="dwz-retire" class="dwz-param-input" type="number" min="30" max="80" value="55">
+          </div>
+          <div class="dwz-param-group">
+            <label class="dwz-param-label">預計壽命</label>
+            <input id="dwz-life" class="dwz-param-input" type="number" min="60" max="120" value="90">
+          </div>
+          <div class="dwz-param-group">
+            <label class="dwz-param-label">年化報酬率 %</label>
+            <input id="dwz-return" class="dwz-param-input" type="number" min="0" max="30" step="0.1" value="7">
+          </div>
+          <div class="dwz-param-group">
+            <label class="dwz-param-label">年通膨率 %</label>
+            <input id="dwz-inflation" class="dwz-param-input" type="number" min="0" max="20" step="0.1" value="3">
+          </div>
+          <div class="dwz-param-group">
+            <label class="dwz-param-label">留給下一代（萬元）</label>
+            <input id="dwz-legacy" class="dwz-param-input" type="number" min="0" step="1" value="0">
+          </div>
+        </div>
+        <div class="dwz-params-footer">
+          <span class="dwz-params-note">起始淨資產、月支出自動從目前帳戶資料讀取</span>
+          <button class="btn-dwz-run" onclick="renderDWZ()">重新計算</button>
+        </div>
+      </div>
+
+      <div class="chart-card dwz-chart-card">
+        <div class="chart-title-row">
+          <h3>財富生命曲線</h3>
+          <span class="dwz-click-hint">點擊曲線年齡可新增體驗支出</span>
+        </div>
+        <div id="dwz-warning" class="dwz-warning" style="display:none"></div>
+        <div style="position:relative;height:300px">
+          <canvas id="dwz-chart"></canvas>
+        </div>
+        <div class="dwz-legend-row">
+          <span class="dwz-legend-dot dwz-legend-ok"></span><span>資產健康</span>
+          <span class="dwz-legend-dot dwz-legend-bad"></span><span>低於遺產目標</span>
+          <span class="dwz-legend-exp"></span><span>重大體驗</span>
+        </div>
+      </div>
+
+      <div class="dwz-expenses-card">
+        <div class="dwz-expenses-header">
+          <h3 class="dwz-section-title">🎯 重大體驗支出</h3>
+          <button class="btn-dwz-add" onclick="addDWZExpense()">＋ 手動新增</button>
+        </div>
+        <div id="dwz-expenses-list"></div>
+      </div>
+
+    </div><!-- /tab-dwz -->
 
   </div><!-- /app-content -->
 

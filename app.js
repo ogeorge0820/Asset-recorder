@@ -2,7 +2,7 @@
 // CONFIG
 // ══════════════════════════════════════════════════════════════
 // Build 時間：每次修改 code 後手動更新此時間（UTC+8 台北時間）
-const BUILD_DATE = '2026/04/14 13:10';
+const BUILD_DATE = '2026/04/14 14:19';
 
 const SPREADSHEET_ID = '1lpRpxVzWaYUqL-jVPOAJCtjsJUIedPYYyOx4gg4PPFU';
 const CLIENT_ID = '149884248440-85f8dhc6ub9up10sv0f89e3e0itrnooj.apps.googleusercontent.com';
@@ -2732,17 +2732,283 @@ function updateThemeBtn() {
 // ══════════════════════════════════════════════════════════════
 // UI UTILITIES
 // ══════════════════════════════════════════════════════════════
+// ══════════════════════════════════════════════════════════════
+// DIE WITH ZERO SIMULATOR
+// ══════════════════════════════════════════════════════════════
+
+let _dwzChart = null;
+let _dwzExpenses = JSON.parse(localStorage.getItem('dwz_expenses') || '[]');
+let _dwzInited = false;
+
+function _dwzParam(id) { return parseFloat(document.getElementById(id)?.value) || 0; }
+
+function _saveDWZParams() {
+  localStorage.setItem('dwz_params', JSON.stringify({
+    age:      _dwzParam('dwz-age'),
+    retire:   _dwzParam('dwz-retire'),
+    life:     _dwzParam('dwz-life'),
+    ret:      _dwzParam('dwz-return'),
+    inf:      _dwzParam('dwz-inflation'),
+    legacy:   _dwzParam('dwz-legacy'),
+  }));
+}
+
+function _loadDWZParams() {
+  const p = JSON.parse(localStorage.getItem('dwz_params') || '{}');
+  if (p.age)    document.getElementById('dwz-age').value    = p.age;
+  if (p.retire) document.getElementById('dwz-retire').value = p.retire;
+  if (p.life)   document.getElementById('dwz-life').value   = p.life;
+  if (p.ret)    document.getElementById('dwz-return').value = p.ret;
+  if (p.inf)    document.getElementById('dwz-inflation').value = p.inf;
+  if (p.legacy !== undefined) document.getElementById('dwz-legacy').value = p.legacy;
+}
+
+function initDWZ() {
+  if (!_dwzInited) { _loadDWZParams(); _dwzInited = true; }
+  renderDWZ();
+}
+
+function renderDWZ() {
+  _saveDWZParams();
+
+  const currentAge = _dwzParam('dwz-age');
+  const lifeAge    = _dwzParam('dwz-life');
+  const r          = _dwzParam('dwz-return') / 100;
+  const inf        = _dwzParam('dwz-inflation') / 100;
+  const legacyTWD  = _dwzParam('dwz-legacy') * 10000;
+
+  const { net, budget } = calcTotals();
+  const annualBase = budget * 12;
+
+  // Build curve from currentAge to lifeAge
+  const ages = [];
+  const wealth = [];
+  let nw = net;
+
+  for (let age = currentAge; age <= lifeAge; age++) {
+    const n = age - currentAge;
+    // Compound first, then subtract expenses (end-of-year model)
+    nw = nw * (1 + r);
+    nw -= annualBase * Math.pow(1 + inf, n);
+    _dwzExpenses.filter(e => e.age === age).forEach(e => { nw -= e.amount * 10000; });
+    ages.push(age);
+    wealth.push(Math.round(nw));
+  }
+
+  const finalWealth = wealth[wealth.length - 1] || 0;
+  const surplus     = finalWealth - legacyTWD;
+
+  // Warning
+  const warnEl = $('dwz-warning');
+  if (warnEl) {
+    if (surplus > net * 0.1 && surplus > 500000) {
+      warnEl.style.display = 'block';
+      warnEl.className = 'dwz-warning surplus';
+      warnEl.innerHTML = `⚠️ 注意：你正在浪費你的生命力去換取無法使用的金錢<br>預計 ${lifeAge} 歲時仍剩餘 <b>${fmtWan(surplus)}</b>（超出遺產目標）<br><span>建議增加 40–60 歲的體驗支出，讓人生值回票價</span>`;
+    } else if (finalWealth < legacyTWD) {
+      warnEl.style.display = 'block';
+      warnEl.className = 'dwz-warning';
+      const runOutAge = ages.find((_a, i) => wealth[i] < 0);
+      const msg = runOutAge
+        ? `⚠️ 預計 <b>${runOutAge} 歲</b>時資金耗盡，距離目標壽命 ${lifeAge} 歲還有 ${lifeAge - runOutAge} 年`
+        : `⚠️ ${lifeAge} 歲時資產 <b>${fmtWan(finalWealth)}</b> 低於遺產目標 ${fmtWan(legacyTWD)}`;
+      warnEl.innerHTML = msg;
+    } else {
+      warnEl.style.display = 'none';
+    }
+  }
+
+  // Chart colors: indigo when above legacy, red when below
+  const pointColors = wealth.map(w => w >= legacyTWD ? '#6366f1' : '#ef4444');
+
+  // Experience expense markers for annotation
+  const expAges = new Set(_dwzExpenses.map(e => e.age));
+
+  if (_dwzChart) { _dwzChart.destroy(); _dwzChart = null; }
+
+  const ctx = document.getElementById('dwz-chart');
+  if (!ctx) return;
+  const isDark = document.documentElement.dataset.theme !== 'light';
+  const gridColor = isDark ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.07)';
+
+  const grad = ctx.getContext('2d').createLinearGradient(0, 0, 0, 300);
+  grad.addColorStop(0, 'rgba(99,102,241,0.3)');
+  grad.addColorStop(1, 'rgba(99,102,241,0)');
+
+  _dwzChart = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: ages,
+      datasets: [{
+        label: '淨資產',
+        data: wealth,
+        borderColor: '#6366f1',
+        backgroundColor: grad,
+        borderWidth: 2.5,
+        pointRadius: ages.map(a => expAges.has(a) ? 7 : 3),
+        pointBackgroundColor: ages.map((a, i) =>
+          expAges.has(a) ? '#f59e0b' : pointColors[i]),
+        pointBorderColor: ages.map((a, i) =>
+          expAges.has(a) ? '#f59e0b' : pointColors[i]),
+        fill: true,
+        tension: 0.35,
+        segment: {
+          borderColor: ctx2 => {
+            const i = ctx2.p1DataIndex;
+            return wealth[i] >= legacyTWD ? '#6366f1' : '#ef4444';
+          },
+        },
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      onClick: (evt, _els, chart) => {
+        const pts = chart.getElementsAtEventForMode(evt, 'index', { intersect: false }, true);
+        if (pts.length) addDWZExpenseAtAge(ages[pts[0].index]);
+      },
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          callbacks: {
+            title: items => `${items[0].label} 歲`,
+            label: item => {
+              const v = item.raw;
+              const exps = _dwzExpenses.filter(e => e.age === ages[item.dataIndex]);
+              const lines = [`資產：${v < 0 ? '−' : ''}${fmtWan(Math.abs(v))}${v < 0 ? '（已耗盡）' : ''}`];
+              exps.forEach(e => lines.push(`💸 ${e.name}：${e.amount} 萬`));
+              return lines;
+            }
+          }
+        }
+      },
+      scales: {
+        x: {
+          grid: { color: gridColor },
+          ticks: {
+            font: { size: 11 },
+            callback: (_, i) => ages[i] % 5 === 0 ? `${ages[i]}歲` : '',
+            maxRotation: 0,
+          },
+        },
+        y: {
+          grid: { color: gridColor },
+          ticks: { font: { size: 11 }, callback: v => fmtWan(v) },
+        }
+      }
+    }
+  });
+
+  _renderDWZExpensesList();
+}
+
+function _renderDWZExpensesList() {
+  const el = $('dwz-expenses-list');
+  if (!el) return;
+  if (_dwzExpenses.length === 0) {
+    el.innerHTML = '<div class="dwz-exp-empty">尚無體驗支出。點擊圖表上的年齡，或手動新增。</div>';
+    return;
+  }
+  el.innerHTML = _dwzExpenses.map((e, i) => `
+    <div class="dwz-exp-item">
+      <span class="dwz-exp-age">${e.age} 歲</span>
+      <span class="dwz-exp-name">${esc(e.name)}</span>
+      <span class="dwz-exp-amt">${e.amount} 萬</span>
+      <button class="dwz-exp-del" onclick="deleteDWZExpense(${i})" title="移除">✕</button>
+    </div>`).join('');
+}
+
+function addDWZExpenseAtAge(age) {
+  $('modal-title').textContent = `新增 ${age} 歲體驗支出`;
+  $('modal-body').innerHTML = `
+    <div class="dwz-modal-form">
+      <div class="dwz-modal-group">
+        <label class="dwz-modal-label">支出名稱</label>
+        <input id="m-dwz-name" class="dwz-modal-input" placeholder="例：澳洲自駕旅行">
+      </div>
+      <div class="dwz-modal-group">
+        <label class="dwz-modal-label">金額（萬台幣）</label>
+        <input id="m-dwz-amt" class="dwz-modal-input" type="number" min="0" step="0.1" placeholder="例：50">
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeModal()">取消</button>
+      <button class="btn-ok" onclick="_confirmDWZExpense(${age})">新增</button>
+    </div>`;
+  $('modal').classList.add('open');
+  setTimeout(() => document.getElementById('m-dwz-name')?.focus(), 80);
+}
+
+function addDWZExpense() {
+  const minAge = _dwzParam('dwz-age');
+  const maxAge = _dwzParam('dwz-life');
+  $('modal-title').textContent = '新增重大體驗支出';
+  $('modal-body').innerHTML = `
+    <div class="dwz-modal-form">
+      <div class="dwz-modal-group">
+        <label class="dwz-modal-label">年齡</label>
+        <input id="m-dwz-age2" class="dwz-modal-input" type="number" min="${minAge}" max="${maxAge}" placeholder="例：45">
+      </div>
+      <div class="dwz-modal-group">
+        <label class="dwz-modal-label">支出名稱</label>
+        <input id="m-dwz-name" class="dwz-modal-input" placeholder="例：澳洲自駕旅行">
+      </div>
+      <div class="dwz-modal-group">
+        <label class="dwz-modal-label">金額（萬台幣）</label>
+        <input id="m-dwz-amt" class="dwz-modal-input" type="number" min="0" step="0.1" placeholder="例：50">
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeModal()">取消</button>
+      <button class="btn-ok" onclick="_confirmDWZExpenseManual()">新增</button>
+    </div>`;
+  $('modal').classList.add('open');
+  setTimeout(() => document.getElementById('m-dwz-age2')?.focus(), 80);
+}
+
+function _confirmDWZExpense(age) {
+  const name = document.getElementById('m-dwz-name')?.value.trim();
+  const amt  = parseFloat(document.getElementById('m-dwz-amt')?.value);
+  if (!name) { showToast('請填寫支出名稱', 'err'); return; }
+  if (!amt || amt <= 0) { showToast('請填寫正確金額', 'err'); return; }
+  _dwzExpenses.push({ age, name, amount: amt });
+  _dwzExpenses.sort((a, b) => a.age - b.age);
+  localStorage.setItem('dwz_expenses', JSON.stringify(_dwzExpenses));
+  closeModal();
+  renderDWZ();
+}
+
+function _confirmDWZExpenseManual() {
+  const age    = parseInt(document.getElementById('m-dwz-age2')?.value);
+  const minAge = _dwzParam('dwz-age');
+  const maxAge = _dwzParam('dwz-life');
+  if (!age || age < minAge || age > maxAge) {
+    showToast(`年齡需介於 ${minAge}–${maxAge} 歲`, 'err'); return;
+  }
+  _confirmDWZExpense(age);
+}
+
+function deleteDWZExpense(idx) {
+  _dwzExpenses.splice(idx, 1);
+  localStorage.setItem('dwz_expenses', JSON.stringify(_dwzExpenses));
+  renderDWZ();
+}
+
 function switchTab(tab) {
   $('tab-overview').style.display   = tab==='overview'   ? 'block' : 'none';
   $('tab-management').style.display = tab==='management' ? 'block' : 'none';
+  $('tab-dwz').style.display        = tab==='dwz'        ? 'block' : 'none';
   document.querySelectorAll('.tab-btn').forEach((b,i) => {
-    b.classList.toggle('active', (i===0&&tab==='overview')||(i===1&&tab==='management'));
+    b.classList.toggle('active',
+      (i===0&&tab==='overview')||(i===1&&tab==='management')||(i===2&&tab==='dwz'));
   });
   // Sidebar nav
-  const sO = $('snav-overview'), sM = $('snav-management');
+  const sO = $('snav-overview'), sM = $('snav-management'), sD = $('snav-dwz');
   if (sO) sO.classList.toggle('active', tab === 'overview');
   if (sM) sM.classList.toggle('active', tab === 'management');
+  if (sD) sD.classList.toggle('active', tab === 'dwz');
   if (tab === 'management') renderManagement();
+  if (tab === 'dwz') initDWZ();
 }
 
 // ── Mobile Menu Sheet ──

@@ -1244,3 +1244,128 @@ h3.section-header {
 .budget-cats { margin-top: 12px; margin-bottom: 8px; }
 
 [data-theme="light"] .budget-cat-total { color: var(--accent); }
+
+/* ── Die With Zero Simulator ── */
+.dwz-params-card {
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: var(--r); padding: 20px 24px; margin-bottom: 16px;
+}
+.dwz-section-title {
+  font-size: 1rem; font-weight: 700; color: var(--text); margin-bottom: 16px;
+}
+.dwz-params-grid {
+  display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px 20px;
+  margin-bottom: 16px;
+}
+.dwz-param-group { display: flex; flex-direction: column; gap: 5px; }
+.dwz-param-label { font-size: 0.78rem; color: var(--muted); font-weight: 600; }
+.dwz-param-input {
+  background: var(--bg); border: 1px solid var(--border);
+  border-radius: 8px; padding: 8px 12px; color: var(--text);
+  font-size: 0.9rem; outline: none; width: 100%;
+  transition: border-color .2s;
+}
+.dwz-param-input:focus { border-color: var(--accent); }
+.dwz-params-footer {
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+}
+.dwz-params-note { font-size: 0.75rem; color: var(--muted); }
+.btn-dwz-run {
+  background: var(--accent); color: #fff; border: none;
+  padding: 8px 20px; border-radius: 8px; font-size: 0.875rem;
+  font-weight: 600; cursor: pointer; white-space: nowrap;
+  transition: background .2s;
+}
+.btn-dwz-run:hover { background: var(--accent-light); }
+
+.dwz-chart-card { margin-bottom: 16px; }
+.dwz-click-hint {
+  font-size: 0.75rem; color: var(--muted); font-style: italic;
+}
+.dwz-warning {
+  background: rgba(239,68,68,0.12); border: 1px solid rgba(239,68,68,0.3);
+  border-radius: 8px; padding: 12px 16px; margin-bottom: 14px;
+  font-size: 0.85rem; color: var(--text); line-height: 1.6;
+}
+.dwz-warning b { color: var(--red); }
+.dwz-warning span { font-size: 0.8rem; color: var(--muted); }
+.dwz-warning.surplus {
+  background: rgba(250,204,21,0.1); border-color: rgba(250,204,21,0.3);
+}
+.dwz-warning.surplus b { color: #fbbf24; }
+.dwz-legend-row {
+  display: flex; align-items: center; gap: 8px;
+  margin-top: 10px; font-size: 0.75rem; color: var(--muted);
+}
+.dwz-legend-dot {
+  width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0;
+}
+.dwz-legend-ok { background: #6366f1; }
+.dwz-legend-bad { background: #ef4444; }
+.dwz-legend-exp {
+  width: 14px; height: 4px; background: #f59e0b;
+  border-radius: 2px; flex-shrink: 0;
+}
+
+.dwz-expenses-card {
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: var(--r); padding: 20px 24px;
+}
+.dwz-expenses-header {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 14px;
+}
+.btn-dwz-add {
+  background: none; border: 1px solid var(--accent); color: var(--accent);
+  padding: 6px 14px; border-radius: 8px; font-size: 0.82rem;
+  font-weight: 600; cursor: pointer; transition: all .2s;
+}
+.btn-dwz-add:hover { background: var(--accent); color: #fff; }
+.dwz-exp-empty {
+  color: var(--muted); font-size: 0.875rem; text-align: center; padding: 20px 0;
+}
+.dwz-exp-item {
+  display: grid; grid-template-columns: 60px 1fr auto auto;
+  align-items: center; gap: 10px;
+  padding: 10px 12px; background: var(--card2);
+  border-radius: 8px; margin-bottom: 6px;
+}
+.dwz-exp-item:last-child { margin-bottom: 0; }
+.dwz-exp-age {
+  font-size: 0.82rem; font-weight: 700; color: var(--accent-light);
+  white-space: nowrap;
+}
+.dwz-exp-name { font-size: 0.875rem; font-weight: 500; }
+.dwz-exp-amt {
+  font-size: 0.875rem; font-weight: 700; color: #f59e0b; white-space: nowrap;
+}
+.dwz-exp-del {
+  background: none; border: none; color: var(--muted);
+  cursor: pointer; padding: 2px 6px; border-radius: 4px;
+  font-size: 0.75rem; transition: color .2s;
+}
+.dwz-exp-del:hover { color: var(--red); }
+
+/* DWZ modal form */
+.dwz-modal-form { display: flex; flex-direction: column; gap: 14px; }
+.dwz-modal-group { display: flex; flex-direction: column; gap: 5px; }
+.dwz-modal-label { font-size: 0.78rem; color: var(--muted); font-weight: 600; }
+.dwz-modal-input {
+  background: var(--bg); border: 1px solid var(--border);
+  border-radius: 8px; padding: 9px 12px; color: var(--text);
+  font-size: 0.9rem; outline: none; width: 100%;
+  transition: border-color .2s;
+}
+.dwz-modal-input:focus { border-color: var(--accent); }
+
+@media (max-width: 640px) {
+  .dwz-params-grid { grid-template-columns: 1fr 1fr; }
+  .dwz-params-footer { flex-direction: column; align-items: flex-start; gap: 8px; }
+  .btn-dwz-run { width: 100%; text-align: center; }
+  .dwz-params-card, .dwz-expenses-card { padding: 16px; }
+  .dwz-exp-item { grid-template-columns: 50px 1fr auto auto; gap: 8px; }
+  .dwz-click-hint { display: none; }
+}
+
+[data-theme="light"] .dwz-param-input,
+[data-theme="light"] .dwz-modal-input { background: #f8f7f4; }
