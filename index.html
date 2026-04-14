@@ -118,6 +118,11 @@
           <div class="kpi-value skel" id="kv-daily-gain">—</div>
           <div class="kpi-sub" id="ks-daily-gain">淨資產日變化</div>
         </div>
+        <div class="kpi-card" id="card-invest-gain">
+          <div class="kpi-label">本日投資損益</div>
+          <div class="kpi-value skel" id="kv-invest-gain">—</div>
+          <div class="kpi-sub" id="ks-invest-gain">僅含台美股與加密貨幣</div>
+        </div>
       </div>
 
       <!-- Two-column layout: main (trends) | side (pie + net worth) -->
@@ -126,7 +131,7 @@
         <div class="overview-main">
           <!-- Daily trend -->
           <div class="chart-card">
-            <div class="chart-title-row"><h3>每日資產趨勢</h3></div>
+            <div class="chart-title-row"><h3>每日投資損益</h3></div>
             <div style="position:relative;height:240px" id="daily-trend-wrap">
               <canvas id="daily-trend-chart"></canvas>
               <div id="daily-trend-nodata" class="chart-nodata" style="display:none">

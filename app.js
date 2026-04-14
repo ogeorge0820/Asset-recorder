@@ -2,7 +2,7 @@
 // CONFIG
 // ══════════════════════════════════════════════════════════════
 // Build 時間：每次修改 code 後手動更新此時間（UTC+8 台北時間）
-const BUILD_DATE = '2026/04/13 22:30';
+const BUILD_DATE = '2026/04/14 14:00';
 
 const SPREADSHEET_ID = '1lpRpxVzWaYUqL-jVPOAJCtjsJUIedPYYyOx4gg4PPFU';
 const CLIENT_ID = '149884248440-85f8dhc6ub9up10sv0f89e3e0itrnooj.apps.googleusercontent.com';
@@ -714,6 +714,33 @@ function renderKPIs() {
     } else {
       dgEl.textContent = '—'; dgEl.className = 'kpi-value';
       if (dgSub) dgSub.textContent = '尚無每日快照';
+    }
+  }
+
+  // 本日投資損益（台股 + 美股 + 加密貨幣，排除現金與其他資產）
+  const igEl = $('kv-invest-gain');
+  const igSub = $('ks-invest-gain');
+  const igCard = $('card-invest-gain');
+  if (igEl) {
+    const { twT, usT, cryT } = calcTotals();
+    const curInvest = twT + usT + cryT;
+    const todayStrIG = (() => { const n = new Date(); return `${n.getFullYear()}/${String(n.getMonth()+1).padStart(2,'0')}/${String(n.getDate()).padStart(2,'0')}`; })();
+    const prevSnapIG = [...dailySnaps].reverse().find(s => s[0] < todayStrIG);
+    if (prevSnapIG) {
+      const prevInvest = (parseFloat(prevSnapIG[2]) || 0) + (parseFloat(prevSnapIG[3]) || 0) + (parseFloat(prevSnapIG[4]) || 0);
+      const igDiff = curInvest - prevInvest;
+      if (Math.abs(igDiff) < 100) {
+        igEl.textContent = '持平'; igEl.className = 'kpi-value neutral';
+        if (igCard) igCard.className = 'kpi-card';
+      } else {
+        igEl.textContent = (igDiff > 0 ? '+' : '') + fmt(igDiff);
+        igEl.className = `kpi-value ${igDiff > 0 ? 'pos' : 'neg'}`;
+        if (igCard) igCard.className = `kpi-card ${igDiff > 0 ? 'kpi-gain' : 'kpi-loss'}`;
+      }
+      if (igSub) igSub.textContent = '僅含台美股與加密貨幣';
+    } else {
+      igEl.textContent = '—'; igEl.className = 'kpi-value';
+      if (igSub) igSub.textContent = '尚無前日快照';
     }
   }
 
@@ -1652,10 +1679,11 @@ function renderDailyTrend() {
     return dateStr(d);
   }
 
-  // 將快照展開，填補跳過的日期（delta = 0，淨值沿用前日）
+  // 將快照展開，填補跳過的日期（delta = 0，投資值沿用前日）
+  // net 欄位改為台股+美股+加密貨幣合計（排除現金與其他資產）
   const filled = []; // { date, net, isLive }
   for (let i = 0; i < recent.length; i++) {
-    const net = parseFloat(recent[i][8]) || 0;
+    const net = (parseFloat(recent[i][2]) || 0) + (parseFloat(recent[i][3]) || 0) + (parseFloat(recent[i][4]) || 0);
     if (i > 0) {
       let d = filled[filled.length - 1].date;
       while (nextDay(d) < recent[i][0]) {
@@ -1676,9 +1704,9 @@ function renderDailyTrend() {
       d = nextDay(d);
       filled.push({ date: d, net: filled[filled.length - 1].net, isLive: false });
     }
-    // 今日即時點
-    const { net: liveNet } = calcTotals();
-    filled.push({ date: todayStr, net: liveNet, isLive: true });
+    // 今日即時點（台股+美股+加密貨幣即時合計）
+    const { twT, usT, cryT } = calcTotals();
+    filled.push({ date: todayStr, net: twT + usT + cryT, isLive: true });
   }
 
   // ── Step 3：取最後 15 個節點計算損益差值 ──
@@ -1765,7 +1793,7 @@ function renderDailyTrend() {
     data: {
       labels,
       datasets: [{
-        label: '每日損益',
+        label: '每日投資損益',
         data: plData,
         borderColor: cc.line1,
         borderWidth: 2,
@@ -1817,7 +1845,7 @@ function renderDailyTrend() {
               const pl  = c.parsed.y;
               const net = netData[c.dataIndex];
               const sign = pl >= 0 ? '+' : '';
-              return [` 損益：${sign}${fmt(pl)}`, ` 總淨值：${fmt(net)}`];
+              return [` 投資損益：${sign}${fmt(pl)}`, ` 投資總值：${fmt(net)}`];
             },
           },
         },
