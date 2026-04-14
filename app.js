@@ -2,7 +2,7 @@
 // CONFIG
 // ══════════════════════════════════════════════════════════════
 // Build 時間：每次修改 code 後手動更新此時間（UTC+8 台北時間）
-const BUILD_DATE = '2026/04/14 11:38';
+const BUILD_DATE = '2026/04/14 12:25';
 
 const SPREADSHEET_ID = '1lpRpxVzWaYUqL-jVPOAJCtjsJUIedPYYyOx4gg4PPFU';
 const CLIENT_ID = '149884248440-85f8dhc6ub9up10sv0f89e3e0itrnooj.apps.googleusercontent.com';
@@ -644,7 +644,7 @@ function calcTotals() {
 // RENDER — KPIs
 // ══════════════════════════════════════════════════════════════
 function renderKPIs() {
-  const { total, net, liquid, available, budget } = calcTotals();
+  const { cashT, total, net, liquid, available, budget } = calcTotals();
   const snaps = S.data.snapshots;
 
   setKPI('kv-total', fmt(total), 'ks-total', '');
@@ -742,6 +742,20 @@ function renderKPIs() {
       igEl.textContent = '—'; igEl.className = 'kpi-value';
       if (igSub) igSub.textContent = '尚無前日快照';
     }
+  }
+
+  // 財務存活月數（流動現金 / 月支出預算）
+  const svEl = $('kv-survival');
+  const svSub = $('ks-survival');
+  if (svEl) {
+    if (budget > 0) {
+      const months = cashT / budget;
+      svEl.textContent = months.toFixed(1) + ' 個月';
+      svEl.className = 'kpi-value' + (months >= 6 ? '' : months >= 3 ? ' neutral' : ' neg');
+    } else {
+      svEl.textContent = '—'; svEl.className = 'kpi-value';
+    }
+    if (svSub) svSub.textContent = '流動現金 / 月支出';
   }
 
   ['build-badge', 'sidebar-build-badge'].forEach(id => {
