@@ -63,7 +63,7 @@
     <nav class="tab-nav">
       <button class="tab-btn active" onclick="switchTab('overview')">總覽</button>
       <button class="tab-btn" onclick="switchTab('management')">管理</button>
-      <button class="tab-btn" onclick="switchTab('dwz')">Die With Zero</button>
+      <button class="tab-btn" onclick="switchTab('dwz')"><span class="tab-full">Die With Zero</span><span class="tab-short">DWZ</span></button>
     </nav>
     <div class="header-right">
       <div class="build-badge" id="build-badge"></div>
@@ -422,7 +422,8 @@
       <span>切換深色 / 淺色模式</span>
     </button>
     <button class="mobile-menu-item mobile-menu-item-danger" onclick="signOut()">
-      <span class="mobile-menu-item-icon">登出</span>
+      <span class="mobile-menu-item-icon">🚪</span>
+      <span style="white-space:nowrap">登出</span>
     </button>
   </div>
 </div>
