@@ -2,7 +2,7 @@
 // CONFIG
 // ══════════════════════════════════════════════════════════════
 // Build 時間：每次修改 code 後手動更新此時間（UTC+8 台北時間）
-const BUILD_DATE = '2026/04/14 12:40';
+const BUILD_DATE = '2026/04/14 13:10';
 
 const SPREADSHEET_ID = '1lpRpxVzWaYUqL-jVPOAJCtjsJUIedPYYyOx4gg4PPFU';
 const CLIENT_ID = '149884248440-85f8dhc6ub9up10sv0f89e3e0itrnooj.apps.googleusercontent.com';
@@ -1540,6 +1540,7 @@ function renderBudget() {
 
   catsEl.innerHTML = Object.entries(groups).map(([cat, list]) => {
     const catTotal = list.reduce((s, { r }) => s + (parseFloat(r[2]) || 0), 0);
+    list.sort((a, b) => (parseFloat(b.r[2]) || 0) - (parseFloat(a.r[2]) || 0));
     const rows = list.map(({ r, i }) => `
       <div class="budget-item">
         <div class="budget-item-name">${esc(r[1] || '—')}</div>
