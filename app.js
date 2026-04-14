@@ -2,7 +2,7 @@
 // CONFIG
 // ══════════════════════════════════════════════════════════════
 // Build 時間：每次修改 code 後手動更新此時間（UTC+8 台北時間）
-const BUILD_DATE = '2026/04/14 14:19';
+const BUILD_DATE = '2026/04/14 14:55';
 
 const SPREADSHEET_ID = '1lpRpxVzWaYUqL-jVPOAJCtjsJUIedPYYyOx4gg4PPFU';
 const CLIENT_ID = '149884248440-85f8dhc6ub9up10sv0f89e3e0itrnooj.apps.googleusercontent.com';
@@ -2739,28 +2739,45 @@ function updateThemeBtn() {
 let _dwzChart = null;
 let _dwzExpenses = JSON.parse(localStorage.getItem('dwz_expenses') || '[]');
 let _dwzInited = false;
+let _dwzDebounce = null;
 
 function _dwzParam(id) { return parseFloat(document.getElementById(id)?.value) || 0; }
 
+function dwzAutoCalc() {
+  clearTimeout(_dwzDebounce);
+  _dwzDebounce = setTimeout(renderDWZ, 120);
+}
+
 function _saveDWZParams() {
   localStorage.setItem('dwz_params', JSON.stringify({
-    age:      _dwzParam('dwz-age'),
-    retire:   _dwzParam('dwz-retire'),
-    life:     _dwzParam('dwz-life'),
-    ret:      _dwzParam('dwz-return'),
-    inf:      _dwzParam('dwz-inflation'),
-    legacy:   _dwzParam('dwz-legacy'),
+    age:        _dwzParam('dwz-age'),
+    retire:     _dwzParam('dwz-retire'),
+    life:       _dwzParam('dwz-life'),
+    ret:        _dwzParam('dwz-return'),
+    inf:        _dwzParam('dwz-inflation'),
+    legacy:     _dwzParam('dwz-legacy'),
+    illiquid:   _dwzParam('dwz-illiquid'),
+    multEarly:  _dwzParam('dwz-mult-early'),
+    multLate:   _dwzParam('dwz-mult-late'),
+    safeFloor:  _dwzParam('dwz-safe-floor'),
+    giftAge:    _dwzParam('dwz-gift-age'),
   }));
 }
 
 function _loadDWZParams() {
   const p = JSON.parse(localStorage.getItem('dwz_params') || '{}');
-  if (p.age)    document.getElementById('dwz-age').value    = p.age;
-  if (p.retire) document.getElementById('dwz-retire').value = p.retire;
-  if (p.life)   document.getElementById('dwz-life').value   = p.life;
-  if (p.ret)    document.getElementById('dwz-return').value = p.ret;
-  if (p.inf)    document.getElementById('dwz-inflation').value = p.inf;
-  if (p.legacy !== undefined) document.getElementById('dwz-legacy').value = p.legacy;
+  const set = (id, v) => { if (v !== undefined && v !== null && document.getElementById(id)) document.getElementById(id).value = v; };
+  set('dwz-age',        p.age);
+  set('dwz-retire',     p.retire);
+  set('dwz-life',       p.life);
+  set('dwz-return',     p.ret);
+  set('dwz-inflation',  p.inf);
+  set('dwz-legacy',     p.legacy);
+  set('dwz-illiquid',   p.illiquid);
+  set('dwz-mult-early', p.multEarly);
+  set('dwz-mult-late',  p.multLate);
+  set('dwz-safe-floor', p.safeFloor);
+  set('dwz-gift-age',   p.giftAge);
 }
 
 function initDWZ() {
@@ -2771,98 +2788,143 @@ function initDWZ() {
 function renderDWZ() {
   _saveDWZParams();
 
-  const currentAge = _dwzParam('dwz-age');
-  const lifeAge    = _dwzParam('dwz-life');
-  const r          = _dwzParam('dwz-return') / 100;
-  const inf        = _dwzParam('dwz-inflation') / 100;
-  const legacyTWD  = _dwzParam('dwz-legacy') * 10000;
+  const currentAge  = _dwzParam('dwz-age');
+  const retireAge   = _dwzParam('dwz-retire');
+  const lifeAge     = _dwzParam('dwz-life');
+  const r           = _dwzParam('dwz-return') / 100;
+  const inf         = _dwzParam('dwz-inflation') / 100;
+  const legacyTWD   = _dwzParam('dwz-legacy') * 10000;
+  const illiquidTWD = _dwzParam('dwz-illiquid') * 10000;
+  const multEarly   = _dwzParam('dwz-mult-early') / 100 || 1.2;
+  const multLate    = _dwzParam('dwz-mult-late')  / 100 || 0.8;
+  const safeFloor   = _dwzParam('dwz-safe-floor') * 10000;
+  const giftAge     = _dwzParam('dwz-gift-age') || 60;
 
   const { net, budget } = calcTotals();
+  const startNW    = net - illiquidTWD;   // 可動用金流
   const annualBase = budget * 12;
 
-  // Build curve from currentAge to lifeAge
-  const ages = [];
+  // Show live context
+  const snwEl = $('dwz-start-nw'), sbuEl = $('dwz-start-budget');
+  if (snwEl) snwEl.textContent = fmtWan(startNW);
+  if (sbuEl) sbuEl.textContent = fmtWan(annualBase) + '/年';
+
+  // ── Build wealth curve ──
+  const ages   = [];
   const wealth = [];
-  let nw = net;
+  let nw = startNW;
+  let peakNW = -Infinity, peakAge = currentAge;
 
   for (let age = currentAge; age <= lifeAge; age++) {
     const n = age - currentAge;
-    // Compound first, then subtract expenses (end-of-year model)
-    nw = nw * (1 + r);
-    nw -= annualBase * Math.pow(1 + inf, n);
+
+    // Annual expense with inflation + retirement phase multiplier
+    let mult = 1;
+    if (age >= retireAge) {
+      const yearsRetired = age - retireAge;
+      mult = yearsRetired < 15 ? multEarly : multLate;
+    }
+    const annualExpense = annualBase * Math.pow(1 + inf, n) * mult;
+
+    // End-of-year model: compound then spend
+    nw = nw * (1 + r) - annualExpense;
+
+    // One-time experience expenses
     _dwzExpenses.filter(e => e.age === age).forEach(e => { nw -= e.amount * 10000; });
+
+    // Life-time legacy gift deducted at giftAge
+    if (age === giftAge && legacyTWD > 0) nw -= legacyTWD;
+
     ages.push(age);
     wealth.push(Math.round(nw));
+
+    if (nw > peakNW) { peakNW = nw; peakAge = age; }
   }
 
-  const finalWealth = wealth[wealth.length - 1] || 0;
-  const surplus     = finalWealth - legacyTWD;
+  const finalWealth  = wealth[wealth.length - 1] || 0;
+  const wealthAt80   = wealth[ages.indexOf(80)] ?? finalWealth;
+  const wealthAt90   = wealth[ages.indexOf(90)] ?? finalWealth;
 
-  // Warning
+  // ── Warning ──
   const warnEl = $('dwz-warning');
   if (warnEl) {
-    if (surplus > net * 0.1 && surplus > 500000) {
-      warnEl.style.display = 'block';
-      warnEl.className = 'dwz-warning surplus';
-      warnEl.innerHTML = `⚠️ 注意：你正在浪費你的生命力去換取無法使用的金錢<br>預計 ${lifeAge} 歲時仍剩餘 <b>${fmtWan(surplus)}</b>（超出遺產目標）<br><span>建議增加 40–60 歲的體驗支出，讓人生值回票價</span>`;
-    } else if (finalWealth < legacyTWD) {
+    if (wealthAt80 < 0) {
       warnEl.style.display = 'block';
       warnEl.className = 'dwz-warning';
       const runOutAge = ages.find((_a, i) => wealth[i] < 0);
-      const msg = runOutAge
-        ? `⚠️ 預計 <b>${runOutAge} 歲</b>時資金耗盡，距離目標壽命 ${lifeAge} 歲還有 ${lifeAge - runOutAge} 年`
-        : `⚠️ ${lifeAge} 歲時資產 <b>${fmtWan(finalWealth)}</b> 低於遺產目標 ${fmtWan(legacyTWD)}`;
-      warnEl.innerHTML = msg;
+      warnEl.innerHTML = `🚨 資金缺口預警：預計 <b>${runOutAge} 歲</b>時資金耗盡！<br><span>建議延後退休年齡，或調低投資報酬率的樂觀預期。</span>`;
+    } else if (wealthAt90 > 20000000) {
+      warnEl.style.display = 'block';
+      warnEl.className = 'dwz-warning surplus';
+      warnEl.innerHTML = `💸 遺產過剩！你辛苦工作換來的生命力正在被浪費。<br>預計 90 歲時剩餘 <b>${fmtWan(wealthAt90)}</b>，建議增加 45–65 歲的體驗支出。`;
     } else {
       warnEl.style.display = 'none';
     }
   }
 
-  // Chart colors: indigo when above legacy, red when below
-  const pointColors = wealth.map(w => w >= legacyTWD ? '#6366f1' : '#ef4444');
+  // ── Peak info ──
+  const peakEl = $('dwz-peak-info');
+  if (peakEl && peakNW > -Infinity) {
+    peakEl.style.display = 'flex';
+    peakEl.innerHTML = `<span class="dwz-peak-label">📈 資產巔峰</span><span class="dwz-peak-age">${peakAge} 歲</span><span class="dwz-peak-val">${fmtWan(peakNW)}</span>`;
+  }
 
-  // Experience expense markers for annotation
-  const expAges = new Set(_dwzExpenses.map(e => e.age));
+  // ── Chart ──
+  const floorVal   = safeFloor;
+  const expAgeSet  = new Set(_dwzExpenses.map(e => e.age));
+  const pointColors = wealth.map(w => w >= floorVal ? '#6366f1' : '#ef4444');
 
   if (_dwzChart) { _dwzChart.destroy(); _dwzChart = null; }
-
   const ctx = document.getElementById('dwz-chart');
   if (!ctx) return;
-  const isDark = document.documentElement.dataset.theme !== 'light';
+  const isDark    = document.documentElement.dataset.theme !== 'light';
   const gridColor = isDark ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.07)';
 
   const grad = ctx.getContext('2d').createLinearGradient(0, 0, 0, 300);
-  grad.addColorStop(0, 'rgba(99,102,241,0.3)');
+  grad.addColorStop(0, 'rgba(99,102,241,0.28)');
   grad.addColorStop(1, 'rgba(99,102,241,0)');
 
   _dwzChart = new Chart(ctx, {
     type: 'line',
     data: {
       labels: ages,
-      datasets: [{
-        label: '淨資產',
-        data: wealth,
-        borderColor: '#6366f1',
-        backgroundColor: grad,
-        borderWidth: 2.5,
-        pointRadius: ages.map(a => expAges.has(a) ? 7 : 3),
-        pointBackgroundColor: ages.map((a, i) =>
-          expAges.has(a) ? '#f59e0b' : pointColors[i]),
-        pointBorderColor: ages.map((a, i) =>
-          expAges.has(a) ? '#f59e0b' : pointColors[i]),
-        fill: true,
-        tension: 0.35,
-        segment: {
-          borderColor: ctx2 => {
-            const i = ctx2.p1DataIndex;
-            return wealth[i] >= legacyTWD ? '#6366f1' : '#ef4444';
+      datasets: [
+        // Main wealth curve
+        {
+          label: '淨資產',
+          data: wealth,
+          borderColor: '#6366f1',
+          backgroundColor: grad,
+          borderWidth: 2.5,
+          pointRadius: ages.map(a => expAgeSet.has(a) ? 7 : 3),
+          pointBackgroundColor: ages.map((a, i) => expAgeSet.has(a) ? '#f59e0b' : pointColors[i]),
+          pointBorderColor:     ages.map((a, i) => expAgeSet.has(a) ? '#f59e0b' : pointColors[i]),
+          fill: true,
+          tension: 0.35,
+          segment: {
+            borderColor: c => wealth[c.p1DataIndex] >= floorVal ? '#6366f1' : '#ef4444',
           },
+          order: 1,
         },
-      }]
+        // Safety floor line
+        {
+          label: '生活保底線',
+          data: ages.map(() => floorVal),
+          borderColor: 'rgba(34,197,94,0.7)',
+          backgroundColor: 'transparent',
+          borderWidth: 1.5,
+          borderDash: [6, 4],
+          pointRadius: 0,
+          fill: false,
+          tension: 0,
+          order: 2,
+        },
+      ]
     },
     options: {
       responsive: true,
       maintainAspectRatio: false,
+      animation: { duration: 180 },
       onClick: (evt, _els, chart) => {
         const pts = chart.getElementsAtEventForMode(evt, 'index', { intersect: false }, true);
         if (pts.length) addDWZExpenseAtAge(ages[pts[0].index]);
@@ -2870,13 +2932,20 @@ function renderDWZ() {
       plugins: {
         legend: { display: false },
         tooltip: {
+          filter: item => item.datasetIndex === 0,
           callbacks: {
             title: items => `${items[0].label} 歲`,
             label: item => {
               const v = item.raw;
               const exps = _dwzExpenses.filter(e => e.age === ages[item.dataIndex]);
               const lines = [`資產：${v < 0 ? '−' : ''}${fmtWan(Math.abs(v))}${v < 0 ? '（已耗盡）' : ''}`];
+              if (item.dataIndex > 0) {
+                const delta = wealth[item.dataIndex] - wealth[item.dataIndex - 1];
+                lines.push(`年變化：${delta >= 0 ? '+' : ''}${fmtWan(delta)}`);
+              }
               exps.forEach(e => lines.push(`💸 ${e.name}：${e.amount} 萬`));
+              if (ages[item.dataIndex] === giftAge && legacyTWD > 0)
+                lines.push(`🎁 生前贈與：${fmtWan(legacyTWD)}`);
               return lines;
             }
           }
