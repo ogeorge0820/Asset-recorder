@@ -2,7 +2,7 @@
 // CONFIG
 // ══════════════════════════════════════════════════════════════
 // Build 時間：每次修改 code 後手動更新此時間（UTC+8 台北時間）
-const BUILD_DATE = '2026/04/14 21:29';
+const BUILD_DATE = '2026/04/14 22:52';
 
 const SPREADSHEET_ID = '1lpRpxVzWaYUqL-jVPOAJCtjsJUIedPYYyOx4gg4PPFU';
 const CLIENT_ID = '149884248440-85f8dhc6ub9up10sv0f89e3e0itrnooj.apps.googleusercontent.com';
@@ -2761,6 +2761,7 @@ function _saveDWZParams() {
     multLate:   _dwzParam('dwz-mult-late'),
     safeFloor:  _dwzParam('dwz-safe-floor'),
     giftAge:    _dwzParam('dwz-gift-age'),
+    expBudget:  _dwzParam('dwz-exp-budget'),
   }));
 }
 
@@ -2778,6 +2779,7 @@ function _loadDWZParams() {
   set('dwz-mult-late',  p.multLate);
   set('dwz-safe-floor', p.safeFloor);
   set('dwz-gift-age',   p.giftAge);
+  set('dwz-exp-budget', p.expBudget);
 }
 
 function initDWZ() {
@@ -2799,9 +2801,10 @@ function renderDWZ() {
   const multLate    = _dwzParam('dwz-mult-late')  / 100 || 0.8;
   const safeFloor   = _dwzParam('dwz-safe-floor') * 10000;
   const giftAge     = _dwzParam('dwz-gift-age') || 60;
+  const expBudgetTWD = _dwzParam('dwz-exp-budget') * 10000;  // 40–65 歲年度體驗預算
 
-  const { net, budget } = calcTotals();
-  const startNW    = net - illiquidTWD;   // 可動用金流
+  const { liquid, budget } = calcTotals();
+  const startNW    = liquid - illiquidTWD;   // 可用資產（排除非流動）
   const annualBase = budget * 12;
 
   // Show live context
@@ -2812,6 +2815,7 @@ function renderDWZ() {
   // ── Build wealth curve ──
   const ages   = [];
   const wealth = [];
+  const totalYears = lifeAge - currentAge || 1;
   let nw = startNW;
   let peakNW = -Infinity, peakAge = currentAge;
 
@@ -2829,7 +2833,10 @@ function renderDWZ() {
     // End-of-year model: compound then spend
     nw = nw * (1 + r) - annualExpense;
 
-    // One-time experience expenses
+    // 40–65 歲年度體驗預算
+    if (expBudgetTWD > 0 && age >= 40 && age <= 65) nw -= expBudgetTWD;
+
+    // One-time experience expenses (Bucket List)
     _dwzExpenses.filter(e => e.age === age).forEach(e => { nw -= e.amount * 10000; });
 
     // Life-time legacy gift deducted at giftAge
@@ -2845,18 +2852,24 @@ function renderDWZ() {
   const wealthAt80   = wealth[ages.indexOf(80)] ?? finalWealth;
   const wealthAt90   = wealth[ages.indexOf(90)] ?? finalWealth;
 
+  // ── Life energy curve (100% at currentAge → 0% at lifeAge) ──
+  const lifeEnergy = ages.map(a => Math.max(0, ((lifeAge - a) / totalYears) * 100));
+
+  // ── Waste indicator: unspent surplus above safety floor at end of life ──
+  const wastedWealth = Math.max(0, finalWealth - safeFloor);
+
   // ── Warning ──
   const warnEl = $('dwz-warning');
   if (warnEl) {
     if (wealthAt80 < 0) {
       warnEl.style.display = 'block';
       warnEl.className = 'dwz-warning';
-      const runOutAge = ages.find((_a, i) => wealth[i] < 0);
-      warnEl.innerHTML = `🚨 資金缺口預警：預計 <b>${runOutAge} 歲</b>時資金耗盡！<br><span>建議延後退休年齡，或調低投資報酬率的樂觀預期。</span>`;
+      const retireAge2 = ages.find((_a, i) => wealth[i] < 0);
+      warnEl.innerHTML = `🚨 資金缺口預警：預計 <b>${retireAge2} 歲</b>財富功成身退。<br><span>建議延後退休年齡，或降低生活費倍率。</span>`;
     } else if (wealthAt90 > 20000000) {
       warnEl.style.display = 'block';
-      warnEl.className = 'dwz-warning surplus';
-      warnEl.innerHTML = `💸 遺產過剩！你辛苦工作換來的生命力正在被浪費。<br>預計 90 歲時剩餘 <b>${fmtWan(wealthAt90)}</b>，建議增加 45–65 歲的體驗支出。`;
+      warnEl.className = 'dwz-warning overworked';
+      warnEl.innerHTML = `⚠️ <b>Over-worked 警告</b>：你在 90 歲時仍剩 <b>${fmtWan(wealthAt90)}</b>！<br><span>也許你工作得太努力了。建議在 45–65 歲黃金期大幅增加體驗支出。</span>`;
     } else {
       warnEl.style.display = 'none';
     }
@@ -2869,9 +2882,20 @@ function renderDWZ() {
     peakEl.innerHTML = `<span class="dwz-peak-label">📈 資產巔峰</span><span class="dwz-peak-age">${peakAge} 歲</span><span class="dwz-peak-val">${fmtWan(peakNW)}</span>`;
   }
 
+  // ── Waste indicator ──
+  const wasteEl = $('dwz-waste-info');
+  if (wasteEl) {
+    if (wastedWealth > 0) {
+      wasteEl.style.display = 'flex';
+      wasteEl.innerHTML = `<span class="dwz-waste-icon">💀</span><span class="dwz-waste-text">按目前規劃，你將在 <b>${lifeAge} 歲</b>時帶走 <b class="dwz-waste-val">${fmtWan(wastedWealth)}</b> 未兌換的生命能量，這些財富將永遠消逝。</span>`;
+    } else {
+      wasteEl.style.display = 'none';
+    }
+  }
+
   // ── Chart ──
-  const floorVal   = safeFloor;
-  const expAgeSet  = new Set(_dwzExpenses.map(e => e.age));
+  const floorVal    = safeFloor;
+  const expAgeSet   = new Set(_dwzExpenses.map(e => e.age));
   const pointColors = wealth.map(w => w >= floorVal ? '#6366f1' : '#ef4444');
 
   if (_dwzChart) { _dwzChart.destroy(); _dwzChart = null; }
@@ -2891,7 +2915,7 @@ function renderDWZ() {
       datasets: [
         // Main wealth curve
         {
-          label: '淨資產',
+          label: '可用資產',
           data: wealth,
           borderColor: '#6366f1',
           backgroundColor: grad,
@@ -2904,6 +2928,7 @@ function renderDWZ() {
           segment: {
             borderColor: c => wealth[c.p1DataIndex] >= floorVal ? '#6366f1' : '#ef4444',
           },
+          yAxisID: 'y',
           order: 1,
         },
         // Safety floor line
@@ -2917,7 +2942,22 @@ function renderDWZ() {
           pointRadius: 0,
           fill: false,
           tension: 0,
+          yAxisID: 'y',
           order: 2,
+        },
+        // Life energy curve (right axis, 0–100%)
+        {
+          label: '生命能量',
+          data: lifeEnergy,
+          borderColor: 'rgba(251,191,36,0.65)',
+          backgroundColor: 'transparent',
+          borderWidth: 1.5,
+          borderDash: [3, 3],
+          pointRadius: 0,
+          fill: false,
+          tension: 0.4,
+          yAxisID: 'y2',
+          order: 3,
         },
       ]
     },
@@ -2938,7 +2978,11 @@ function renderDWZ() {
             label: item => {
               const v = item.raw;
               const exps = _dwzExpenses.filter(e => e.age === ages[item.dataIndex]);
-              const lines = [`資產：${v < 0 ? '−' : ''}${fmtWan(Math.abs(v))}${v < 0 ? '（已耗盡）' : ''}`];
+              const energy = Math.round(lifeEnergy[item.dataIndex]);
+              const lines = [
+                `資產：${v < 0 ? '−' : ''}${fmtWan(Math.abs(v))}${v < 0 ? '（財富功成身退）' : ''}`,
+                `生命能量：${energy}%`,
+              ];
               if (item.dataIndex > 0) {
                 const delta = wealth[item.dataIndex] - wealth[item.dataIndex - 1];
                 lines.push(`年變化：${delta >= 0 ? '+' : ''}${fmtWan(delta)}`);
@@ -2963,7 +3007,18 @@ function renderDWZ() {
         y: {
           grid: { color: gridColor },
           ticks: { font: { size: 11 }, callback: v => fmtWan(v) },
-        }
+        },
+        y2: {
+          position: 'right',
+          min: 0,
+          max: 100,
+          grid: { drawOnChartArea: false },
+          ticks: {
+            font: { size: 10 },
+            color: 'rgba(251,191,36,0.6)',
+            callback: v => v % 25 === 0 ? `${v}%` : '',
+          },
+        },
       }
     }
   });

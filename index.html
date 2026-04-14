@@ -329,11 +329,19 @@
             <label class="dwz-param-label">生前贈與年齡 <span class="dwz-param-unit">歲</span></label>
             <input id="dwz-gift-age" class="dwz-param-input" type="number" min="40" max="90" value="60" oninput="dwzAutoCalc()">
           </div>
-          <div class="dwz-param-group dwz-param-info">
-            <span class="dwz-param-info-label">起始資產</span>
-            <span class="dwz-param-info-val" id="dwz-start-nw">—</span>
-            <span class="dwz-param-info-label">月支出</span>
-            <span class="dwz-param-info-val" id="dwz-start-budget">—</span>
+          <div class="dwz-param-group">
+            <label class="dwz-param-label">40–65 歲年度體驗預算 <span class="dwz-param-unit">萬元/年</span></label>
+            <input id="dwz-exp-budget" class="dwz-param-input" type="number" min="0" step="5" value="0" oninput="dwzAutoCalc()" placeholder="如旅遊、進修">
+          </div>
+          <div class="dwz-param-info" style="grid-column: 1 / -1">
+            <div class="dwz-param-info-item">
+              <span class="dwz-param-info-label">起始資產（可用資產）</span>
+              <span class="dwz-param-info-val" id="dwz-start-nw">—</span>
+            </div>
+            <div class="dwz-param-info-item">
+              <span class="dwz-param-info-label">年支出基準</span>
+              <span class="dwz-param-info-val" id="dwz-start-budget">—</span>
+            </div>
           </div>
         </div>
       </div>
@@ -345,20 +353,22 @@
         </div>
         <div id="dwz-warning" class="dwz-warning" style="display:none"></div>
         <div id="dwz-peak-info" class="dwz-peak-info" style="display:none"></div>
+        <div id="dwz-waste-info" class="dwz-waste-info" style="display:none"></div>
         <div style="position:relative;height:300px">
           <canvas id="dwz-chart"></canvas>
         </div>
         <div class="dwz-legend-row">
           <span class="dwz-legend-dot dwz-legend-ok"></span><span>資產健康</span>
-          <span class="dwz-legend-dot dwz-legend-bad"></span><span>低於保底線</span>
+          <span class="dwz-legend-dot dwz-legend-bad"></span><span>財富功成身退</span>
           <span class="dwz-legend-floor"></span><span>生活保底線</span>
           <span class="dwz-legend-exp"></span><span>重大體驗</span>
+          <span class="dwz-legend-energy"></span><span>生命能量</span>
         </div>
       </div>
 
       <div class="dwz-expenses-card">
         <div class="dwz-expenses-header">
-          <h3 class="dwz-section-title">🎯 重大體驗支出</h3>
+          <h3 class="dwz-section-title">🪣 Bucket List 體驗清單</h3>
           <button class="btn-dwz-add" onclick="addDWZExpense()">＋ 手動新增</button>
         </div>
         <div id="dwz-expenses-list"></div>
