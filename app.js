@@ -2,7 +2,7 @@
 // CONFIG
 // ══════════════════════════════════════════════════════════════
 // Build 時間：每次修改 code 後手動更新此時間（UTC+8 台北時間）
-const BUILD_DATE = '2026/04/15 08:55';
+const BUILD_DATE = '2026/04/15 16:33';
 
 const SPREADSHEET_ID = '1lpRpxVzWaYUqL-jVPOAJCtjsJUIedPYYyOx4gg4PPFU';
 const CLIENT_ID = '149884248440-85f8dhc6ub9up10sv0f89e3e0itrnooj.apps.googleusercontent.com';
@@ -149,6 +149,7 @@ const HEADERS = {
   cash_history: ['date','account','amount_before','amount_after','delta','currency','value_twd'],
   other_history: ['date','key','value_before','value_after','delta','note'],
   expense_budget: ['category','item_name','amount','payment_source'],
+  experience_plan: ['name','year','month','amount_twd','paid'],
 };
 
 // ══════════════════════════════════════════════════════════════
@@ -174,6 +175,7 @@ const S = {
     cash_history: [],   // [date, account, amount_before, amount_after, delta, currency, value_twd]
     other_history: [],  // [date, key, value_before, value_after, delta, note]
     expense_budget: [], // [category, item_name, amount, payment_source]
+    experience_plan: [], // [name, year, month, amount_twd, paid]
     settings: { insurance_total: 0, realestate_total: 0, debt: 0 },
   },
 
@@ -310,7 +312,7 @@ async function initSheets() {
 // DATA LOAD / SAVE
 // ══════════════════════════════════════════════════════════════
 async function loadAll() {
-  const [cash, tw, us, crypto, snap, daily, sett, rw, hist, twHist, usHist, cashHist, otherHist, expBudget] = await Promise.allSettled([
+  const [cash, tw, us, crypto, snap, daily, sett, rw, hist, twHist, usHist, cashHist, otherHist, expBudget, expPlan] = await Promise.allSettled([
     sheetGet('cash_accounts!A:C'),
     sheetGet('holdings_tw!A:B'),
     sheetGet('holdings_us!A:B'),
@@ -325,6 +327,7 @@ async function loadAll() {
     sheetGet('cash_history!A:G'),
     sheetGet('other_history!A:F'),
     sheetGet('expense_budget!A:D'),
+    sheetGet('experience_plan!A:E'),
   ]);
 
   S.data.cash            = rows(cash);
@@ -345,6 +348,7 @@ async function loadAll() {
   S.data.cash_history    = rows(cashHist);
   S.data.other_history   = rows(otherHist);
   S.data.expense_budget  = rows(expBudget);
+  S.data.experience_plan = rows(expPlan);
 
   S.data.settings = { insurance_total: 0, realestate_total: 0, debt: 0 };
   rows(sett).forEach(r => { if (r[0]) S.data.settings[r[0]] = parseFloat(r[1]) || 0; });
@@ -623,6 +627,21 @@ function calcBudgetTotal() {
   return S.data.expense_budget.reduce((s, r) => s + (parseFloat(r[2]) || 0), 0);
 }
 
+// 計算未來 12 個月內尚未支付的重大體驗支出總額
+function calcUpcomingExpenses() {
+  const now = new Date();
+  const nowYear = now.getFullYear();
+  const nowMonth = now.getMonth() + 1;
+  return (S.data.experience_plan || []).reduce((sum, r) => {
+    if (r[4] === '1') return sum; // 已支付跳過
+    const year = parseInt(r[1]) || 0;
+    const month = parseInt(r[2]) || 1;
+    const monthsDiff = (year - nowYear) * 12 + (month - nowMonth);
+    if (monthsDiff >= 0 && monthsDiff <= 12) sum += parseFloat(r[3]) || 0;
+    return sum;
+  }, 0);
+}
+
 function calcTotals() {
   const rate = S.prices.usdtwd;
   const cashT = S.data.cash.reduce((s, r) => s + cashToTWD(r), 0);
@@ -649,7 +668,13 @@ function renderKPIs() {
 
   setKPI('kv-total', fmt(total), 'ks-total', '');
   setKPI('kv-net', fmt(net), 'ks-net', '');
-  setKPI('kv-liquid', fmt(liquid), 'ks-liquid', budget > 0 ? `可用：${fmtWan(available)}` : '總資產 − 房地產');
+  const upcoming = calcUpcomingExpenses();
+  const availableAdj = available - upcoming;
+  setKPI('kv-liquid', fmt(liquid), 'ks-liquid',
+    budget > 0
+      ? (upcoming > 0 ? `可用：${fmtWan(availableAdj)}（含規劃支出）` : `可用：${fmtWan(available)}`)
+      : '總資產 − 房地產'
+  );
 
   // 本月收益：可用資產 − 上月底快照基準
   const monthlyDiff = liquid - LAST_MONTH_AVAILABLE_SNAPSHOT;
@@ -761,13 +786,19 @@ function renderKPIs() {
     if (budget > 0) {
       const usdtEntry = S.data.crypto.find(r => r[0]?.toUpperCase() === 'USDT');
       const usdtTWD = usdtEntry ? (parseFloat(usdtEntry[1]) || 0) * S.prices.usdtwd : 0;
-      const months = (cashT + usdtTWD) / budget;
+      const upcoming = calcUpcomingExpenses();
+      const liquidCash = cashT + usdtTWD;
+      const months = liquidCash / budget;
+      const monthsAdj = Math.max(0, liquidCash - upcoming) / budget;
       svEl.textContent = months.toFixed(1) + ' 個月';
       svEl.className = 'kpi-value' + (months >= 6 ? '' : months >= 3 ? ' neutral' : ' neg');
+      if (svSub) svSub.textContent = upcoming > 0
+        ? `扣除近12月規劃支出後 ${monthsAdj.toFixed(1)} 個月`
+        : '流動現金 / 月支出';
     } else {
       svEl.textContent = '—'; svEl.className = 'kpi-value';
+      if (svSub) svSub.textContent = '流動現金 / 月支出';
     }
-    if (svSub) svSub.textContent = '流動現金 / 月支出';
   }
 
   ['build-badge', 'sidebar-build-badge'].forEach(id => {
@@ -786,7 +817,7 @@ function setKPI(vid, val, sid, sub) {
 // RENDER — MANAGEMENT TABLES
 // ══════════════════════════════════════════════════════════════
 function renderManagement() {
-  renderCash(); renderTW(); renderUS(); renderCrypto(); renderOther(); renderRewards(); renderBudget();
+  renderCash(); renderTW(); renderUS(); renderCrypto(); renderOther(); renderRewards(); renderBudget(); renderExperiencePlan();
   initAccordion();
 }
 
@@ -1610,6 +1641,114 @@ function deleteBudgetItem(idx) {
     await saveSheet('expense_budget', S.data.expense_budget);
     renderBudget(); renderKPIs(); renderCash();
     showToast('已刪除支出項目', 'ok');
+  });
+}
+
+// ══════════════════════════════════════════════════════════════
+// RENDER — 重大體驗支出規劃
+// ══════════════════════════════════════════════════════════════
+function renderExperiencePlan() {
+  const items = S.data.experience_plan || [];
+  const cntEl = $('cnt-exp-plan');
+  const totEl = $('tot-exp-plan');
+  const listEl = $('exp-plan-list');
+  if (!listEl) return;
+
+  const unpaidTotal = items.reduce((s, r) => r[4] !== '1' ? s + (parseFloat(r[3]) || 0) : s, 0);
+  if (cntEl) cntEl.textContent = items.length;
+  if (totEl) totEl.textContent = items.length ? fmt(unpaidTotal) + ' 未付' : '—';
+
+  if (!items.length) {
+    listEl.innerHTML = '<div class="exp-plan-empty">尚無規劃。新增後將自動同步至 Die With Zero 模擬器。</div>';
+    return;
+  }
+
+  // 依年份排序
+  const sorted = items.map((r, i) => ({ r, i })).sort((a, b) => {
+    const yA = parseInt(a.r[1]) || 9999, yB = parseInt(b.r[1]) || 9999;
+    const mA = parseInt(a.r[2]) || 12, mB = parseInt(b.r[2]) || 12;
+    return yA !== yB ? yA - yB : mA - mB;
+  });
+
+  const MONTHS = ['1月','2月','3月','4月','5月','6月','7月','8月','9月','10月','11月','12月'];
+  listEl.innerHTML = sorted.map(({ r, i }) => {
+    const paid = r[4] === '1';
+    const amount = parseFloat(r[3]) || 0;
+    const dateStr = r[1] ? `${r[1]}年 ${MONTHS[(parseInt(r[2]) || 1) - 1]}` : '—';
+    return `
+      <div class="exp-plan-item${paid ? ' paid' : ''}">
+        <label class="exp-plan-checkbox" title="${paid ? '標記為未支付' : '標記為已支付'}">
+          <input type="checkbox" ${paid ? 'checked' : ''} onchange="toggleExpPlanPaid(${i})">
+          <span class="exp-plan-check-icon"></span>
+        </label>
+        <div class="exp-plan-main">
+          <div class="exp-plan-name">${esc(r[0] || '—')}</div>
+          <div class="exp-plan-date">${dateStr}</div>
+        </div>
+        <div class="exp-plan-amt${paid ? ' muted' : ''}">${paid ? '<s>' : ''}${fmt(amount)}${paid ? '</s>' : ''}</div>
+        <div class="exp-plan-actions">
+          <button class="btn-icon edit" onclick="editExpPlanItem(${i})">✏</button>
+          <button class="btn-icon del" onclick="deleteExpPlanItem(${i})">✕</button>
+        </div>
+      </div>`;
+  }).join('');
+}
+
+function addExpPlanItem() {
+  const curYear = new Date().getFullYear();
+  openModal('新增體驗支出規劃', [
+    { id: 'name',   label: '支出名稱',        type: 'text',   ph: '例：日本深度旅遊' },
+    { id: 'year',   label: '預計年份',         type: 'number', step: '1', min: curYear, max: curYear + 50, ph: String(curYear + 1) },
+    { id: 'month',  label: '預計月份',         type: 'select', options: ['1','2','3','4','5','6','7','8','9','10','11','12'] },
+    { id: 'amount', label: '金額 (TWD)',       type: 'number', step: '1', min: 0, ph: '0' },
+  ], async (vals) => {
+    const amount = parseFloat(vals.amount) || 0;
+    S.data.experience_plan.push([vals.name, String(vals.year || ''), vals.month, String(amount), '0']);
+    S.data.experience_plan.sort((a, b) => {
+      const yA = parseInt(a[1]) || 9999, yB = parseInt(b[1]) || 9999;
+      return yA !== yB ? yA - yB : (parseInt(a[2]) || 12) - (parseInt(b[2]) || 12);
+    });
+    await saveSheet('experience_plan', S.data.experience_plan);
+    renderExperiencePlan(); renderKPIs();
+    showToast('已新增體驗支出規劃', 'ok');
+  });
+}
+
+function editExpPlanItem(idx) {
+  const r = S.data.experience_plan[idx];
+  if (!r) return;
+  openModal('編輯體驗支出規劃', [
+    { id: 'name',   label: '支出名稱',  type: 'text',   val: r[0] || '' },
+    { id: 'year',   label: '預計年份',  type: 'number', step: '1', min: new Date().getFullYear(), val: r[1] || '' },
+    { id: 'month',  label: '預計月份',  type: 'select', options: ['1','2','3','4','5','6','7','8','9','10','11','12'], val: r[2] || '1' },
+    { id: 'amount', label: '金額 (TWD)', type: 'number', step: '1', min: 0, val: r[3] || '0' },
+  ], async (vals) => {
+    const amount = parseFloat(vals.amount) || 0;
+    S.data.experience_plan[idx] = [vals.name, String(vals.year || ''), vals.month, String(amount), r[4] || '0'];
+    S.data.experience_plan.sort((a, b) => {
+      const yA = parseInt(a[1]) || 9999, yB = parseInt(b[1]) || 9999;
+      return yA !== yB ? yA - yB : (parseInt(a[2]) || 12) - (parseInt(b[2]) || 12);
+    });
+    await saveSheet('experience_plan', S.data.experience_plan);
+    renderExperiencePlan(); renderKPIs();
+    showToast('已更新體驗支出規劃', 'ok');
+  });
+}
+
+async function toggleExpPlanPaid(idx) {
+  const r = S.data.experience_plan[idx];
+  if (!r) return;
+  r[4] = r[4] === '1' ? '0' : '1';
+  await saveSheet('experience_plan', S.data.experience_plan);
+  renderExperiencePlan(); renderKPIs();
+}
+
+function deleteExpPlanItem(idx) {
+  openConfirm('確認刪除', '刪除此體驗支出規劃？', async () => {
+    S.data.experience_plan.splice(idx, 1);
+    await saveSheet('experience_plan', S.data.experience_plan);
+    renderExperiencePlan(); renderKPIs();
+    showToast('已刪除體驗支出規劃', 'ok');
   });
 }
 
@@ -2786,6 +2925,29 @@ let _dwzExpenses = JSON.parse(localStorage.getItem('dwz_expenses') || '[]');
 let _dwzInited = false;
 let _dwzDebounce = null;
 
+// experience_plan 項目（未付）轉換為 DWZ 格式，依年份/月份計算年齡
+function _expPlanToDWZ() {
+  if (!S.data.experience_plan?.length) return [];
+  const currentAge = _dwzParam('dwz-age');
+  const now = new Date();
+  const nowYear = now.getFullYear();
+  const nowMonth = now.getMonth() + 1;
+  return S.data.experience_plan
+    .filter(r => r[4] !== '1') // 未付才匯入
+    .map(r => {
+      const year = parseInt(r[1]) || nowYear;
+      const month = parseInt(r[2]) || 1;
+      const monthOffset = (year - nowYear) * 12 + (month - nowMonth);
+      const age = Math.max(currentAge, Math.round(currentAge + monthOffset / 12));
+      return { age, name: r[0] || '未命名', amount: (parseFloat(r[3]) || 0) / 10000, source: 'plan' };
+    });
+}
+
+// 手動清單 + experience_plan 合併（供模擬用）
+function _allDWZExpenses() {
+  return [..._dwzExpenses, ..._expPlanToDWZ()];
+}
+
 function _dwzParam(id) { return parseFloat(document.getElementById(id)?.value) || 0; }
 
 function dwzAutoCalc() {
@@ -2881,8 +3043,8 @@ function renderDWZ() {
     // 40–65 歲年度體驗預算
     if (expBudgetTWD > 0 && age >= 40 && age <= 65) nw -= expBudgetTWD;
 
-    // One-time experience expenses (Bucket List)
-    _dwzExpenses.filter(e => e.age === age).forEach(e => { nw -= e.amount * 10000; });
+    // One-time experience expenses (Bucket List + 規劃清單)
+    _allDWZExpenses().filter(e => e.age === age).forEach(e => { nw -= e.amount * 10000; });
 
     // Life-time legacy gift deducted at giftAge
     if (age === giftAge && legacyTWD > 0) nw -= legacyTWD;
@@ -2940,7 +3102,8 @@ function renderDWZ() {
 
   // ── Chart ──
   const floorVal    = safeFloor;
-  const expAgeSet   = new Set(_dwzExpenses.map(e => e.age));
+  const allExps     = _allDWZExpenses();
+  const expAgeSet   = new Set(allExps.map(e => e.age));
   const pointColors = wealth.map(w => w >= floorVal ? '#6366f1' : '#ef4444');
 
   if (_dwzChart) { _dwzChart.destroy(); _dwzChart = null; }
@@ -3022,7 +3185,7 @@ function renderDWZ() {
             title: items => `${items[0].label} 歲`,
             label: item => {
               const v = item.raw;
-              const exps = _dwzExpenses.filter(e => e.age === ages[item.dataIndex]);
+              const exps = allExps.filter(e => e.age === ages[item.dataIndex]);
               const energy = Math.round(lifeEnergy[item.dataIndex]);
               const lines = [
                 `資產：${v < 0 ? '−' : ''}${fmtWan(Math.abs(v))}${v < 0 ? '（財富功成身退）' : ''}`,
@@ -3074,17 +3237,33 @@ function renderDWZ() {
 function _renderDWZExpensesList() {
   const el = $('dwz-expenses-list');
   if (!el) return;
-  if (_dwzExpenses.length === 0) {
+  const planItems = _expPlanToDWZ();
+  const allItems = [
+    ..._dwzExpenses.map((e, i) => ({ ...e, source: 'manual', idx: i })),
+    ...planItems.map(e => ({ ...e, source: 'plan' })),
+  ].sort((a, b) => a.age - b.age);
+
+  if (allItems.length === 0) {
     el.innerHTML = '<div class="dwz-exp-empty">尚無體驗支出。點擊圖表上的年齡，或手動新增。</div>';
     return;
   }
-  el.innerHTML = _dwzExpenses.map((e, i) => `
-    <div class="dwz-exp-item">
-      <span class="dwz-exp-age">${e.age} 歲</span>
-      <span class="dwz-exp-name">${esc(e.name)}</span>
-      <span class="dwz-exp-amt">${e.amount} 萬</span>
-      <button class="dwz-exp-del" onclick="deleteDWZExpense(${i})" title="移除">✕</button>
-    </div>`).join('');
+  el.innerHTML = allItems.map(e => {
+    const isPlan = e.source === 'plan';
+    const badge = isPlan
+      ? '<span class="dwz-exp-badge plan">規劃清單</span>'
+      : '<span class="dwz-exp-badge manual">手動</span>';
+    const action = isPlan
+      ? '<span class="dwz-exp-plan-hint">在管理頁編輯</span>'
+      : `<button class="dwz-exp-del" onclick="deleteDWZExpense(${e.idx})" title="移除">✕</button>`;
+    return `
+      <div class="dwz-exp-item">
+        <span class="dwz-exp-age">${e.age} 歲</span>
+        ${badge}
+        <span class="dwz-exp-name">${esc(e.name)}</span>
+        <span class="dwz-exp-amt">${e.amount.toFixed(1)} 萬</span>
+        ${action}
+      </div>`;
+  }).join('');
 }
 
 function addDWZExpenseAtAge(age) {

@@ -1134,6 +1134,62 @@ h3.section-header {
 [data-theme="light"] .rwd-group.current { border-color: #8b6f47; }
 [data-theme="light"] .rwd-item { border-bottom-color: rgba(139,111,71,.2); }
 
+/* ══ 重大體驗支出規劃 ══ */
+.exp-plan-empty {
+  color: var(--muted); font-size: 0.88rem;
+  text-align: center; padding: 20px 0;
+}
+.exp-plan-item {
+  display: grid;
+  grid-template-columns: 32px 1fr auto auto;
+  align-items: center; gap: 10px;
+  padding: 10px 4px;
+  border-bottom: 1px solid rgba(45,49,85,.35);
+}
+.exp-plan-item:last-child { border-bottom: none; }
+.exp-plan-item.paid { opacity: .55; }
+
+/* Checkbox */
+.exp-plan-checkbox { cursor: pointer; display: flex; align-items: center; justify-content: center; }
+.exp-plan-checkbox input[type="checkbox"] { display: none; }
+.exp-plan-check-icon {
+  width: 20px; height: 20px; border-radius: 50%;
+  border: 2px solid var(--border);
+  display: flex; align-items: center; justify-content: center;
+  transition: all .18s; flex-shrink: 0;
+}
+.exp-plan-checkbox input:checked ~ .exp-plan-check-icon {
+  background: var(--green); border-color: var(--green);
+}
+.exp-plan-checkbox input:checked ~ .exp-plan-check-icon::after {
+  content: '✓'; font-size: 0.72rem; color: #fff; font-weight: 700;
+}
+
+/* Main info */
+.exp-plan-main { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.exp-plan-name { font-size: 0.88rem; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.exp-plan-date { font-size: 0.75rem; color: var(--muted); }
+.exp-plan-amt { font-size: 0.9rem; font-weight: 700; color: var(--accent-light); white-space: nowrap; }
+.exp-plan-amt.muted { color: var(--muted); }
+.exp-plan-actions { display: flex; gap: 4px; flex-shrink: 0; }
+
+/* DWZ 清單 Badge */
+.dwz-exp-badge {
+  font-size: 0.65rem; font-weight: 600;
+  padding: 2px 6px; border-radius: 20px;
+  white-space: nowrap; flex-shrink: 0;
+}
+.dwz-exp-badge.plan { background: rgba(245,158,11,.18); color: #f59e0b; }
+.dwz-exp-badge.manual { background: rgba(99,102,241,.15); color: var(--accent-light); }
+.dwz-exp-plan-hint { font-size: 0.72rem; color: var(--muted); white-space: nowrap; }
+
+/* Light mode */
+[data-theme="light"] .exp-plan-item { border-bottom-color: rgba(0,0,0,.08); }
+[data-theme="light"] .exp-plan-check-icon { border-color: #c5b99a; }
+[data-theme="light"] .exp-plan-amt { color: #4f46e5; }
+[data-theme="light"] .dwz-exp-badge.plan { background: rgba(217,119,6,.12); color: #d97706; }
+[data-theme="light"] .dwz-exp-badge.manual { background: rgba(99,102,241,.1); color: #4f46e5; }
+
 /* ══ Mobile Menu Sheet ══ */
 .mobile-menu-overlay {
   visibility: hidden; pointer-events: none;
