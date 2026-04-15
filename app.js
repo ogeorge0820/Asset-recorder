@@ -2,7 +2,7 @@
 // CONFIG
 // ══════════════════════════════════════════════════════════════
 // Build 時間：每次修改 code 後手動更新此時間（UTC+8 台北時間）
-const BUILD_DATE = '2026/04/14 22:52';
+const BUILD_DATE = '2026/04/15 08:23';
 
 const SPREADSHEET_ID = '1lpRpxVzWaYUqL-jVPOAJCtjsJUIedPYYyOx4gg4PPFU';
 const CLIENT_ID = '149884248440-85f8dhc6ub9up10sv0f89e3e0itrnooj.apps.googleusercontent.com';
@@ -727,17 +727,27 @@ function renderKPIs() {
     const todayStrIG = (() => { const n = new Date(); return `${n.getFullYear()}/${String(n.getMonth()+1).padStart(2,'0')}/${String(n.getDate()).padStart(2,'0')}`; })();
     const prevSnapIG = [...dailySnaps].reverse().find(s => s[0] < todayStrIG);
     if (prevSnapIG) {
-      const prevInvest = (parseFloat(prevSnapIG[2]) || 0) + (parseFloat(prevSnapIG[3]) || 0) + (parseFloat(prevSnapIG[4]) || 0);
-      const igDiff = curInvest - prevInvest;
-      if (Math.abs(igDiff) < 100) {
-        igEl.textContent = '持平'; igEl.className = 'kpi-value neutral';
-        if (igCard) igCard.className = 'kpi-card';
+      const prevTW  = parseFloat(prevSnapIG[2]) || 0;
+      const prevUS  = parseFloat(prevSnapIG[3]) || 0;
+      const prevCry = parseFloat(prevSnapIG[4]) || 0;
+      const prevInvest = prevTW + prevUS + prevCry;
+      // Guard：前日快照投資合計為 0 但現有持倉非空 → 快照可能為無效記錄
+      const hasHoldings = S.data.tw.length || S.data.us.length || S.data.crypto.length;
+      if (prevInvest === 0 && hasHoldings) {
+        igEl.textContent = '—'; igEl.className = 'kpi-value';
+        if (igSub) igSub.textContent = `${prevSnapIG[0]} 快照異常，資料不可靠`;
       } else {
-        igEl.textContent = (igDiff > 0 ? '+' : '') + fmt(igDiff);
-        igEl.className = `kpi-value ${igDiff > 0 ? 'pos' : 'neg'}`;
-        if (igCard) igCard.className = `kpi-card ${igDiff > 0 ? 'kpi-gain' : 'kpi-loss'}`;
+        const igDiff = curInvest - prevInvest;
+        if (Math.abs(igDiff) < 100) {
+          igEl.textContent = '持平'; igEl.className = 'kpi-value neutral';
+          if (igCard) igCard.className = 'kpi-card';
+        } else {
+          igEl.textContent = (igDiff > 0 ? '+' : '') + fmt(igDiff);
+          igEl.className = `kpi-value ${igDiff > 0 ? 'pos' : 'neg'}`;
+          if (igCard) igCard.className = `kpi-card ${igDiff > 0 ? 'kpi-gain' : 'kpi-loss'}`;
+        }
+        if (igSub) igSub.textContent = `對比 ${prevSnapIG[0]} 快照`;
       }
-      if (igSub) igSub.textContent = '僅含台美股與加密貨幣';
     } else {
       igEl.textContent = '—'; igEl.className = 'kpi-value';
       if (igSub) igSub.textContent = '尚無前日快照';
@@ -1696,34 +1706,35 @@ function renderDailyTrend() {
     return dateStr(d);
   }
 
-  // 將快照展開，填補跳過的日期（delta = 0，投資值沿用前日）
+  // 將快照展開，填補跳過的日期（gap 日標記 isGap:true，不參與 delta 計算）
   // net 欄位改為台股+美股+加密貨幣合計（排除現金與其他資產）
-  const filled = []; // { date, net, isLive }
+  const filled = []; // { date, net, isLive, isGap }
   for (let i = 0; i < recent.length; i++) {
     const net = (parseFloat(recent[i][2]) || 0) + (parseFloat(recent[i][3]) || 0) + (parseFloat(recent[i][4]) || 0);
     if (i > 0) {
       let d = filled[filled.length - 1].date;
       while (nextDay(d) < recent[i][0]) {
         d = nextDay(d);
-        filled.push({ date: d, net: filled[filled.length - 1].net, isLive: false });
+        // 缺失日期：net=null，不帶入計算以免製造假 0
+        filled.push({ date: d, net: null, isLive: false, isGap: true });
       }
     }
-    filled.push({ date: recent[i][0], net, isLive: false });
+    filled.push({ date: recent[i][0], net, isLive: false, isGap: false });
   }
 
   // ── Step 2：追加今日即時點（若今日尚無快照）──
   const todayStr = getNowTW8().slice(0, 10);
   const lastFilled = filled[filled.length - 1];
   if (lastFilled.date < todayStr) {
-    // 補全最後快照到昨日之間的空白
+    // 補全最後快照到昨日之間的空白（gap 標記，不製造假 delta）
     let d = lastFilled.date;
     while (nextDay(d) < todayStr) {
       d = nextDay(d);
-      filled.push({ date: d, net: filled[filled.length - 1].net, isLive: false });
+      filled.push({ date: d, net: null, isLive: false, isGap: true });
     }
     // 今日即時點（台股+美股+加密貨幣即時合計）
     const { twT, usT, cryT } = calcTotals();
-    filled.push({ date: todayStr, net: twT + usT + cryT, isLive: true });
+    filled.push({ date: todayStr, net: twT + usT + cryT, isLive: true, isGap: false });
   }
 
   // ── Step 3：取最後 15 個節點計算損益差值 ──
@@ -1736,8 +1747,14 @@ function renderDailyTrend() {
   const labels = [], plData = [], netData = [], isLiveArr = [];
   for (let i = 1; i < win.length; i++) {
     labels.push(win[i].date.slice(5)); // MM/DD
-    plData.push(win[i].net - win[i-1].net);
-    netData.push(win[i].net);
+    // gap 日或前日為 gap → delta 無意義，推 null（Chart.js 不繪製）
+    if (win[i].isGap || win[i-1].isGap || win[i].net === null || win[i-1].net === null) {
+      plData.push(null);
+      netData.push(null);
+    } else {
+      plData.push(win[i].net - win[i-1].net);
+      netData.push(win[i].net);
+    }
     isLiveArr.push(win[i].isLive);
   }
 
@@ -1787,23 +1804,23 @@ function renderDailyTrend() {
           c.restore();
         }
 
-        // 旗標只標歷史最高/最低（不標即時點）
-        const histPlData = plData.filter((_, i) => !isLiveArr[i]);
+        // 旗標只標歷史最高/最低（不標即時點、不標 null gap）
+        const histPlData = plData.filter((v, i) => !isLiveArr[i] && v !== null);
         const histMaxPl = histPlData.length ? Math.max(...histPlData) : -Infinity;
         const histMinPl = histPlData.length ? Math.min(...histPlData) : Infinity;
-        const histMaxIdx = plData.findIndex((v, i) => !isLiveArr[i] && v === histMaxPl);
-        const histMinIdx = plData.findIndex((v, i) => !isLiveArr[i] && v === histMinPl);
+        const histMaxIdx = plData.findIndex((v, i) => !isLiveArr[i] && v !== null && v === histMaxPl);
+        const histMinIdx = plData.findIndex((v, i) => !isLiveArr[i] && v !== null && v === histMinPl);
         if (histMaxPl > 1000)  drawFlag(histMaxIdx, histMaxPl, '#34C759', '+' + fmtWan(histMaxPl));
         if (histMinPl < -1000) drawFlag(histMinIdx, histMinPl, '#FF3B30', fmtWan(histMinPl));
       } catch (e) { /* 旗標繪製失敗不影響主圖表 */ }
     },
   };
 
-  // 點顏色：即時點空心、歷史點實心
-  const ptBg     = plData.map((v, i) => isLiveArr[i] ? 'transparent'  : (v >= 0 ? '#34C759' : '#FF3B30'));
-  const ptBorder = plData.map((_v, i) => isLiveArr[i] ? cc.line1        : 'transparent');
-  const ptRadius = plData.map((_, i) => isLiveArr[i] ? 5               : 3);
-  const ptBorderW= plData.map((_, i) => isLiveArr[i] ? 2               : 0);
+  // 點顏色：即時點空心、歷史點實心、null(gap) 隱藏
+  const ptBg     = plData.map((v, i) => v === null ? 'transparent' : isLiveArr[i] ? 'transparent'  : (v >= 0 ? '#34C759' : '#FF3B30'));
+  const ptBorder = plData.map((v, i) => v === null ? 'transparent' : isLiveArr[i] ? cc.line1        : 'transparent');
+  const ptRadius = plData.map((v, i) => v === null ? 0              : isLiveArr[i] ? 5               : 3);
+  const ptBorderW= plData.map((v, i) => v === null ? 0              : isLiveArr[i] ? 2               : 0);
 
   S.charts.dailyTrend = new Chart(ctx, {
     type: 'line',
@@ -1821,6 +1838,7 @@ function renderDailyTrend() {
         pointBorderColor: ptBorder,
         pointBorderWidth: ptBorderW,
         fill: true,
+        spanGaps: false,  // null gap 不連線
         // 最後一段（連向即時點）改為虛線
         segment: {
           borderDash: ctx2 => isLiveArr[ctx2.p1DataIndex] ? [5, 4] : [],
@@ -2209,6 +2227,17 @@ async function persistAndRefresh(type) {
 // ══════════════════════════════════════════════════════════════
 async function doSaveDailySnapshot(silent = false) {
   const { cashT, twT, usT, cryT, ins, re, debt, net } = calcTotals();
+  // Guard：有持倉但投資總值為 0，代表價格尚未載入，跳過以防寫入壞快照
+  const hasHoldings = S.data.tw.length || S.data.us.length || S.data.crypto.length;
+  if (hasHoldings && (twT + usT + cryT) === 0) {
+    console.warn('[snapshot] Skipped: prices not loaded (investment total = 0)');
+    return;
+  }
+  // Guard：匯率不合理（< 10 代表未正確載入）
+  if (S.prices.usdtwd < 10) {
+    console.warn('[snapshot] Skipped: usdtwd rate implausible', S.prices.usdtwd);
+    return;
+  }
   const now = new Date();
   const ds = `${now.getFullYear()}/${String(now.getMonth()+1).padStart(2,'0')}/${String(now.getDate()).padStart(2,'0')}`;
   const row = [ds, cashT.toFixed(0), twT.toFixed(0), usT.toFixed(0), cryT.toFixed(0), ins.toFixed(0), re.toFixed(0), debt.toFixed(0), net.toFixed(0)];
@@ -3249,6 +3278,15 @@ async function initApp() {
     if (marchCount > 0) showToast(`已新增 ${marchCount} 筆 3 月份質押收益`, 'ok');
 
     renderKPIs();
+
+    // 啟動時補快照：若今日無快照（用戶昨晚未開 app 導致昨日斷點），立即寫入當日開盤基準
+    {
+      const _today = getNowTW8().slice(0, 10);
+      if (!S.data.daily_snapshots.some(s => s[0] === _today)) {
+        doSaveDailySnapshot(true);
+      }
+    }
+
     renderCharts();
     showToast('載入完成', 'ok');
 
