@@ -2,7 +2,7 @@
 // CONFIG
 // ══════════════════════════════════════════════════════════════
 // Build 時間：每次修改 code 後手動更新此時間（UTC+8 台北時間）
-const BUILD_DATE = '2026/04/17 17:56';
+const BUILD_DATE = '2026/04/17 18:01';
 
 const SPREADSHEET_ID = '1lpRpxVzWaYUqL-jVPOAJCtjsJUIedPYYyOx4gg4PPFU';
 const CLIENT_ID = '149884248440-85f8dhc6ub9up10sv0f89e3e0itrnooj.apps.googleusercontent.com';
@@ -847,17 +847,31 @@ function renderKPIs() {
       const m = sim.months;
       svEl.textContent = sim.isInfinite ? '∞ 個月' : m + ' 個月';
       svEl.className = 'kpi-value' + (sim.isInfinite || m >= 6 ? '' : m >= 3 ? ' neutral' : ' neg');
-      // === DIAG：把 sim 實際抓到的資料暴露出來 ===
+      // === DIAG：列出 runway 視窗內每筆未付體驗（timeline-based deduction 已在 sim 內實作）===
       const allRecs = S.data.income_records || [];
       const status0 = allRecs.filter(r => r[5] === '0');
       const incSum = status0.reduce((s, r) => s + (parseFloat(r[3]) || 0), 0);
-      const allExp = S.data.experience_plan || [];
-      const expUnpaid = allExp.filter(r => r[4] !== '1');
-      const expSum = expUnpaid.reduce((s, r) => s + (parseFloat(r[3]) || 0), 0);
       const liqDisp = fmtWan(cashT + usdtTWD);
       const budDisp = fmtWan(budget);
+      // 取落在 runway 視窗內的未付體驗（按月份排序）
+      const now = new Date(Date.now() + 8 * 3600 * 1000);
+      const nowYM = now.getUTCFullYear() * 12 + now.getUTCMonth();
+      const windowMonths = sim.isInfinite ? 24 : Math.max(m + 1, 1);
+      const expInWindow = (S.data.experience_plan || [])
+        .filter(r => r[4] !== '1')
+        .map(r => ({
+          y: parseInt(r[1]) || 0,
+          mo: parseInt(r[2]) || 0,
+          name: r[0] || '未命名',
+          amt: parseFloat(r[3]) || 0,
+        }))
+        .filter(e => e.y && e.mo && (e.y * 12 + (e.mo - 1) - nowYM) >= 0 && (e.y * 12 + (e.mo - 1) - nowYM) < windowMonths)
+        .sort((a, b) => (a.y - b.y) || (a.mo - b.mo));
+      const expInWindowStr = expInWindow.length
+        ? expInWindow.map(e => `${e.y}/${e.mo}「${e.name}」${fmtWan(e.amt)}`).join('、')
+        : '無';
       if (svSub) {
-        svSub.textContent = `現金${liqDisp}/預算${budDisp} | 預計收入${status0.length}筆共${fmtWan(incSum)} | 未付體驗${expUnpaid.length}筆共${fmtWan(expSum)}`;
+        svSub.textContent = `現金${liqDisp}/預算${budDisp}/月 | 預計收入${status0.length}筆共${fmtWan(incSum)} | runway視窗內未付體驗: ${expInWindowStr}`;
         svSub.style.fontSize = '10px';
         svSub.style.wordBreak = 'break-all';
         svSub.style.lineHeight = '1.3';
