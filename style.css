@@ -1311,6 +1311,78 @@ h3.section-header {
 
 [data-theme="light"] .budget-cat-total { color: var(--accent); }
 
+/* ══ 主動收入管理 ══ */
+.income-empty { color: var(--muted); font-size: 0.9rem; text-align: center; padding: 20px 0; }
+.income-group {
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  overflow: hidden;
+  margin-bottom: 8px;
+}
+.income-group:last-child { margin-bottom: 0; }
+.income-group.current { border-color: var(--accent); }
+.income-group-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 11px 14px;
+  cursor: pointer;
+  background: rgba(255,255,255,.03);
+  transition: background .15s;
+}
+.income-group-header:hover { background: rgba(99,102,241,.08); }
+.income-group-left { display: flex; align-items: center; gap: 8px; }
+.income-month-label { font-weight: 600; font-size: 0.9rem; color: var(--text); }
+.income-group-sub { font-size: 0.75rem; color: var(--muted); }
+.income-group-right { display: flex; align-items: center; gap: 10px; }
+.income-group-total { font-weight: 700; font-size: 0.95rem; color: var(--accent-light); }
+.income-group-toggle { font-size: 0.72rem; color: var(--muted); user-select: none; }
+.income-group-body { padding: 0 14px 10px; }
+.income-item {
+  display: grid;
+  grid-template-columns: 28px 1fr auto auto auto;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 4px;
+  border-bottom: 1px solid rgba(45,49,85,.25);
+}
+.income-item:last-child { border-bottom: none; }
+.income-item.income-settled { background: rgba(255,255,255,.03); border-radius: 6px; }
+.income-status-btn {
+  background: none; border: 1.5px solid var(--muted);
+  border-radius: 4px; width: 22px; height: 22px;
+  cursor: pointer; font-size: 0.95rem; line-height: 1;
+  display: flex; align-items: center; justify-content: center;
+  color: var(--muted); flex-shrink: 0;
+  transition: border-color .15s, color .15s;
+}
+.income-status-btn.settled { border-color: #10b981; color: #10b981; }
+.income-status-btn:hover { border-color: var(--accent-light); }
+.income-item-info { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; min-width: 0; }
+.income-item-name { font-size: 0.88rem; font-weight: 600; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.income-cat-badge {
+  font-size: 0.7rem; font-weight: 600; white-space: nowrap;
+  background: rgba(99,102,241,.14); color: #818cf8;
+  padding: 1px 6px; border-radius: 20px;
+}
+.income-payer { font-size: 0.72rem; color: var(--muted); white-space: nowrap; }
+.income-item-date { font-size: 0.78rem; color: var(--muted); white-space: nowrap; }
+.income-item-amt { font-size: 0.88rem; font-weight: 700; color: var(--text); white-space: nowrap; text-align: right; }
+.income-item-actions { display: flex; gap: 4px; flex-shrink: 0; }
+.income-forecast {
+  font-size: 0.82rem; color: var(--muted);
+  padding: 10px 4px 4px;
+  border-top: 1px solid var(--border);
+  margin-top: 8px;
+}
+.income-header-label { font-size: 0.75rem; color: var(--muted); margin-right: 2px; }
+[data-theme="light"] .income-group { border-color: #e2d9c8; }
+[data-theme="light"] .income-group.current { border-color: #8b6f47; }
+[data-theme="light"] .income-group-header { background: rgba(0,0,0,.02); }
+[data-theme="light"] .income-group-header:hover { background: rgba(99,102,241,.06); }
+[data-theme="light"] .income-group-total { color: var(--accent); }
+[data-theme="light"] .income-item { border-bottom-color: rgba(139,111,71,.2); }
+[data-theme="light"] .income-item.income-settled { background: rgba(0,0,0,.02); }
+[data-theme="light"] .income-cat-badge { background: rgba(99,102,241,.1); color: #4f46e5; }
+
 /* ── Die With Zero Simulator ── */
 .dwz-params-card {
   background: var(--card); border: 1px solid var(--border);
