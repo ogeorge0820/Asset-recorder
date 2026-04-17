@@ -2,7 +2,7 @@
 // CONFIG
 // ══════════════════════════════════════════════════════════════
 // Build 時間：每次修改 code 後手動更新此時間（UTC+8 台北時間）
-const BUILD_DATE = '2026/04/17 14:59';
+const BUILD_DATE = '2026/04/17 15:30';
 
 const SPREADSHEET_ID = '1lpRpxVzWaYUqL-jVPOAJCtjsJUIedPYYyOx4gg4PPFU';
 const CLIENT_ID = '149884248440-85f8dhc6ub9up10sv0f89e3e0itrnooj.apps.googleusercontent.com';
@@ -646,6 +646,56 @@ function calcUpcomingExpenses() {
   }, 0);
 }
 
+// 逐月現金流模擬：從 startYM 起每月加預計收入、扣月支出預算、扣當月重大體驗。
+// 餘額 < 0 停止；maxMonths 內未耗盡視為 ∞ (isInfinite=true)。
+function simulateMonthly({
+  startBalance,
+  maxMonths = 600,
+  monthlyBudget,
+  startYM = null,
+  includeIncome = true,
+  includeExperience = true,
+} = {}) {
+  if (startYM === null) {
+    const now = new Date(Date.now() + 8 * 3600 * 1000);
+    startYM = `${now.getUTCFullYear()}-${String(now.getUTCMonth() + 1).padStart(2, '0')}`;
+  }
+
+  const incomeByYM = new Map();
+  if (includeIncome) {
+    (S.data.income_records || []).forEach(r => {
+      if (r[5] !== '0') return; // 只計預計，已入帳已反映在現金中
+      const ym = String(r[4] || '').slice(0, 7);
+      if (ym.length !== 7) return;
+      incomeByYM.set(ym, (incomeByYM.get(ym) || 0) + (parseFloat(r[3]) || 0));
+    });
+  }
+
+  const expByYM = new Map();
+  if (includeExperience) {
+    (S.data.experience_plan || []).forEach(r => {
+      if (r[4] === '1') return; // 已付跳過
+      const y = parseInt(r[1]) || 0;
+      const m = parseInt(r[2]) || 0;
+      if (!y || !m) return;
+      const ym = `${y}-${String(m).padStart(2, '0')}`;
+      expByYM.set(ym, (expByYM.get(ym) || 0) + (parseFloat(r[3]) || 0));
+    });
+  }
+
+  const balances = [];
+  let balance = startBalance;
+  for (let i = 0; i < maxMonths; i++) {
+    const ym = addMonths(startYM + '-01', i).slice(0, 7);
+    balance += (incomeByYM.get(ym) || 0) - monthlyBudget - (expByYM.get(ym) || 0);
+    if (balance < 0) {
+      return { months: i, balances, isInfinite: false, finalBalance: balance };
+    }
+    balances.push(balance);
+  }
+  return { months: maxMonths, balances, isInfinite: true, finalBalance: balance };
+}
+
 function calcTotals() {
   const rate = S.prices.usdtwd;
   const cashT = S.data.cash.reduce((s, r) => s + cashToTWD(r), 0);
@@ -783,25 +833,24 @@ function renderKPIs() {
     }
   }
 
-  // 財務存活月數（流動現金 + USDT / 月支出預算）
+  // 財務存活月數（逐月現金流模擬：起始流動現金 + USDT，每月加預計收入、扣月支出預算、扣當月重大體驗）
   const svEl = $('kv-survival');
   const svSub = $('ks-survival');
   if (svEl) {
     if (budget > 0) {
       const usdtEntry = S.data.crypto.find(r => r[0]?.toUpperCase() === 'USDT');
       const usdtTWD = usdtEntry ? (parseFloat(usdtEntry[1]) || 0) * S.prices.usdtwd : 0;
-      const upcoming = calcUpcomingExpenses();
-      const liquidCash = cashT + usdtTWD;
-      const months = liquidCash / budget;
-      const monthsAdj = Math.max(0, liquidCash - upcoming) / budget;
-      svEl.textContent = months.toFixed(1) + ' 個月';
-      svEl.className = 'kpi-value' + (months >= 6 ? '' : months >= 3 ? ' neutral' : ' neg');
-      if (svSub) svSub.textContent = upcoming > 0
-        ? `扣除近12月規劃支出後 ${monthsAdj.toFixed(1)} 個月`
-        : '流動現金 / 月支出';
+      const sim = simulateMonthly({
+        startBalance: cashT + usdtTWD,
+        monthlyBudget: budget,
+      });
+      const m = sim.months;
+      svEl.textContent = sim.isInfinite ? '∞ 個月' : m + ' 個月';
+      svEl.className = 'kpi-value' + (sim.isInfinite || m >= 6 ? '' : m >= 3 ? ' neutral' : ' neg');
+      if (svSub) svSub.textContent = '含未來預計收入模擬';
     } else {
       svEl.textContent = '—'; svEl.className = 'kpi-value';
-      if (svSub) svSub.textContent = '流動現金 / 月支出';
+      if (svSub) svSub.textContent = '含未來預計收入模擬';
     }
   }
 
@@ -3189,6 +3238,7 @@ let _dwzInited = false;
 let _dwzDebounce = null;
 
 // experience_plan 項目（未付）轉換為 DWZ 格式，依年份/月份計算年齡
+// 注意：前 12 個月內的項目會由 renderDWZ 的月度模擬處理，這裡僅保留 monthOffset >= 12 者
 function _expPlanToDWZ() {
   if (!S.data.experience_plan?.length) return [];
   const currentAge = _dwzParam('dwz-age');
@@ -3202,8 +3252,9 @@ function _expPlanToDWZ() {
       const month = parseInt(r[2]) || 1;
       const monthOffset = (year - nowYear) * 12 + (month - nowMonth);
       const age = Math.max(currentAge, Math.round(currentAge + monthOffset / 12));
-      return { age, name: r[0] || '未命名', amount: (parseFloat(r[3]) || 0) / 10000, source: 'plan' };
-    });
+      return { age, monthOffset, name: r[0] || '未命名', amount: (parseFloat(r[3]) || 0) / 10000, source: 'plan' };
+    })
+    .filter(e => e.monthOffset >= 12); // 避免與 year-0 月度模擬重複扣款
 }
 
 // 手動清單 + experience_plan 合併（供模擬用）
@@ -3274,10 +3325,20 @@ function renderDWZ() {
   const expBudgetTWD = _dwzParam('dwz-exp-budget') * 10000;  // 40–65 歲年度體驗預算
 
   const { liquid, budget } = calcTotals();
-  const startNW    = liquid - illiquidTWD;   // 可用資產（排除非流動）
+  const rawStartNW = liquid - illiquidTWD;   // 可用資產（排除非流動）
+  // Year-0 以逐月現金流模擬：計入未來 12 個月預計收入與重大體驗，作為年度迴圈起點
+  const sim = simulateMonthly({
+    startBalance: rawStartNW,
+    maxMonths: 12,
+    monthlyBudget: budget,
+  });
+  let startNW = sim.finalBalance;
+  // 手動 Bucket List 若設在 currentAge，需在 year-0 扣掉（年度迴圈自 currentAge+1 起）
+  _dwzExpenses.filter(e => e.age === currentAge).forEach(e => { startNW -= e.amount * 10000; });
+  if (giftAge === currentAge && legacyTWD > 0) startNW -= legacyTWD;
   const annualBase = budget * 12;
 
-  // Show live context
+  // Show live context (顯示 year-0 模擬後的資產，讓使用者看到墊高效果)
   const snwEl = $('dwz-start-nw'), sbuEl = $('dwz-start-budget');
   if (snwEl) snwEl.textContent = fmtWan(startNW);
   if (sbuEl) sbuEl.textContent = fmtWan(annualBase) + '/年';
@@ -3287,9 +3348,13 @@ function renderDWZ() {
   const wealth = [];
   const totalYears = lifeAge - currentAge || 1;
   let nw = startNW;
-  let peakNW = -Infinity, peakAge = currentAge;
+  let peakNW = startNW, peakAge = currentAge;
 
-  for (let age = currentAge; age <= lifeAge; age++) {
+  // 先 push year-0 起點（由月度模擬產生），年度迴圈再從 currentAge + 1 推進
+  ages.push(currentAge);
+  wealth.push(Math.round(startNW));
+
+  for (let age = currentAge + 1; age <= lifeAge; age++) {
     const n = age - currentAge;
 
     // Annual expense with inflation + retirement phase multiplier
