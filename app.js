@@ -2,7 +2,7 @@
 // CONFIG
 // ══════════════════════════════════════════════════════════════
 // Build 時間：每次修改 code 後手動更新此時間（UTC+8 台北時間）
-const BUILD_DATE = '2026/04/17 20:00';
+const BUILD_DATE = '2026/04/17 22:11';
 
 const SPREADSHEET_ID = '1lpRpxVzWaYUqL-jVPOAJCtjsJUIedPYYyOx4gg4PPFU';
 const CLIENT_ID = '149884248440-85f8dhc6ub9up10sv0f89e3e0itrnooj.apps.googleusercontent.com';
@@ -2187,7 +2187,10 @@ function renderDailyTrend() {
   if (nodata) nodata.style.display = 'none';
 
   // ── Step 1：取最近 15 筆快照，做缺日補全 ──
-  const recent = snaps.slice(-15);
+  // ⚠ 關鍵修正：排除今日的快照（若有），避免晨間存下的舊值覆蓋即時值，
+  //   造成圖表與「投資收益」KPI 不一致
+  const todayStr = getNowTW8().slice(0, 10);
+  const recent = snaps.filter(s => s[0] < todayStr).slice(-15);
 
   function dateStr(d) {
     return `${d.getFullYear()}/${String(d.getMonth()+1).padStart(2,'0')}/${String(d.getDate()).padStart(2,'0')}`;
@@ -2214,20 +2217,19 @@ function renderDailyTrend() {
     filled.push({ date: recent[i][0], net, isLive: false, isGap: false });
   }
 
-  // ── Step 2：追加今日即時點（若今日尚無快照）──
-  const todayStr = getNowTW8().slice(0, 10);
+  // ── Step 2：永遠以即時值追加今日點（與 KPI「投資收益」同源 = calcTotals()）──
   const lastFilled = filled[filled.length - 1];
-  if (lastFilled.date < todayStr) {
+  if (lastFilled) {
     // 補全最後快照到昨日之間的空白（gap 標記，不製造假 delta）
     let d = lastFilled.date;
     while (nextDay(d) < todayStr) {
       d = nextDay(d);
       filled.push({ date: d, net: null, isLive: false, isGap: true });
     }
-    // 今日即時點（台股+美股+加密貨幣即時合計）
-    const { twT, usT, cryT } = calcTotals();
-    filled.push({ date: todayStr, net: twT + usT + cryT, isLive: true, isGap: false });
   }
+  // 今日即時點：與 renderKPIs 的 curInvest 同源，確保兩者完全吻合
+  const { twT: _twT, usT: _usT, cryT: _cryT } = calcTotals();
+  filled.push({ date: todayStr, net: _twT + _usT + _cryT, isLive: true, isGap: false });
 
   // ── Step 3：取最後 15 個節點計算損益差值 ──
   const win = filled.slice(-15);
@@ -3844,10 +3846,21 @@ async function initApp() {
     renderKPIs();
 
     // 啟動時補快照：若今日無快照（用戶昨晚未開 app 導致昨日斷點），立即寫入當日開盤基準
+    // 若今日已有快照但與即時值明顯偏離（例：早盤存的舊值 vs 美股收盤後的新值），也 upsert 覆寫
     {
       const _today = getNowTW8().slice(0, 10);
-      if (!S.data.daily_snapshots.some(s => s[0] === _today)) {
+      const _existing = S.data.daily_snapshots.find(s => s[0] === _today);
+      if (!_existing) {
         doSaveDailySnapshot(true);
+      } else {
+        const { twT, usT, cryT } = calcTotals();
+        const storedInvest = (parseFloat(_existing[2]) || 0) + (parseFloat(_existing[3]) || 0) + (parseFloat(_existing[4]) || 0);
+        const liveInvest = twT + usT + cryT;
+        // 差異 > 1 萬 TWD 視為需要同步（避免極小價格浮動頻繁寫入）
+        if (Math.abs(liveInvest - storedInvest) > 10000) {
+          console.log('[snapshot] Stale today snapshot detected, upserting', { storedInvest, liveInvest });
+          doSaveDailySnapshot(true);
+        }
       }
     }
 
@@ -3861,6 +3874,8 @@ async function initApp() {
       await fetchAllPrices(true);
       renderKPIs(); renderCharts();
       if ($('tab-management').style.display !== 'none') renderManagement();
+      // 每次刷新後同步更新今日快照（upsert），讓 reload 後資料仍一致
+      try { await doSaveDailySnapshot(true); } catch(e) { console.warn('Auto snapshot update failed:', e); }
     }, 10 * 60 * 1000);
 
   } catch(e) {
