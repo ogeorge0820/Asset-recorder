@@ -821,7 +821,7 @@ function setKPI(vid, val, sid, sub) {
 // RENDER — MANAGEMENT TABLES
 // ══════════════════════════════════════════════════════════════
 function renderManagement() {
-  renderCash(); renderTW(); renderUS(); renderCrypto(); renderOther(); renderRewards(); renderBudget(); renderExperiencePlan();
+  renderCash(); renderTW(); renderUS(); renderCrypto(); renderOther(); renderRewards(); renderBudget(); renderExperiencePlan(); renderIncome();
   initAccordion();
 }
 
@@ -1696,6 +1696,108 @@ function renderExperiencePlan() {
         </div>
       </div>`;
   }).join('');
+}
+
+// ══════════════════════════════════════════════════════════════
+// RENDER — 主動收入管理
+// ══════════════════════════════════════════════════════════════
+function renderIncome() {
+  const items = S.data.income_records;
+  const cntEl = $('cnt-income');
+  const totEl = $('tot-income');
+  const accordionEl = $('income-accordion');
+  const forecastEl = $('income-month-forecast');
+  if (!accordionEl) return;
+
+  const now = new Date(Date.now() + 8 * 3600 * 1000);
+  const curYMDash  = `${now.getUTCFullYear()}-${String(now.getUTCMonth()+1).padStart(2,'0')}`;
+  const curYMSlash = `${now.getUTCFullYear()}/${String(now.getUTCMonth()+1).padStart(2,'0')}`;
+
+  if (cntEl) cntEl.textContent = items.length;
+
+  const monthSettled = items
+    .filter(r => r[5] === '1' && (r[7] || '').startsWith(curYMSlash))
+    .reduce((s, r) => s + (parseFloat(r[3]) || 0), 0);
+  if (totEl) totEl.textContent = monthSettled > 0 ? fmt(monthSettled) : '—';
+
+  const monthForecast = items
+    .filter(r => (r[4] || '').startsWith(curYMDash))
+    .reduce((s, r) => s + (parseFloat(r[3]) || 0), 0);
+  if (forecastEl) {
+    forecastEl.textContent = monthForecast > 0
+      ? `本月預計總收入（含未入帳）：${fmt(monthForecast)}`
+      : '';
+    forecastEl.style.display = monthForecast > 0 ? '' : 'none';
+  }
+
+  if (!items.length) {
+    accordionEl.innerHTML = '<div class="income-empty">尚無收入記錄</div>';
+    return;
+  }
+
+  const groups = {};
+  items.forEach((r, i) => {
+    const ym = (r[4] || '').slice(0, 7) || '未知';
+    if (!groups[ym]) groups[ym] = [];
+    groups[ym].push({ r, i });
+  });
+
+  const sortedYMs = Object.keys(groups).sort((a, b) => b.localeCompare(a));
+
+  accordionEl.innerHTML = sortedYMs.map(ym => {
+    const list = groups[ym];
+    const [yr, mo] = ym.split('-');
+    const label = yr && mo ? `${yr}年${parseInt(mo, 10)}月` : ym;
+    const monthTotal = list.reduce((s, { r }) => s + (parseFloat(r[3]) || 0), 0);
+    const isCur = ym === curYMDash;
+
+    const rowsHTML = list.map(({ r, i }) => {
+      const settled = r[5] === '1';
+      const amt = parseFloat(r[3]) || 0;
+      return `<div class="income-item${settled ? ' income-settled' : ''}">
+        <button class="income-status-btn${settled ? ' settled' : ''}" onclick="toggleIncomeStatus(${i})" title="${settled ? '點擊取消入帳' : '點擊標記已入帳'}">${settled ? '☑' : '☐'}</button>
+        <div class="income-item-info">
+          <span class="income-item-name">${esc(r[1] || '—')}</span>
+          ${r[2] ? `<span class="income-cat-badge">${esc(r[2])}</span>` : ''}
+          ${r[8] ? `<span class="income-payer">${esc(r[8])}</span>` : ''}
+        </div>
+        <span class="income-item-date">${esc(r[4] || '—')}</span>
+        <span class="income-item-amt">${fmt(amt)}</span>
+        <div class="income-item-actions">
+          <button class="btn-icon edit" onclick="editIncomeItem(${i})">✏</button>
+          <button class="btn-icon del" onclick="deleteIncomeItem(${i})">✕</button>
+        </div>
+      </div>`;
+    }).join('');
+
+    return `<div class="income-group${isCur ? ' current' : ''}">
+      <div class="income-group-header" onclick="toggleIncomeGroup('${ym}')">
+        <div class="income-group-left">
+          <span class="income-month-label">${esc(label)}</span>
+          <span class="income-group-sub">${list.length} 筆</span>
+        </div>
+        <div class="income-group-right">
+          <span class="income-group-total">${fmt(monthTotal)}</span>
+          <span class="income-group-toggle" id="inc-toggle-${ym}">▼</span>
+        </div>
+      </div>
+      <div class="income-group-body" id="inc-body-${ym}" style="${isCur ? 'display:block' : 'display:none'}">
+        ${rowsHTML}
+      </div>
+    </div>`;
+  }).join('');
+
+  const curToggle = $(`inc-toggle-${curYMDash}`);
+  if (curToggle) curToggle.textContent = '▲';
+}
+
+function toggleIncomeGroup(ym) {
+  const body   = $(`inc-body-${ym}`);
+  const toggle = $(`inc-toggle-${ym}`);
+  if (!body) return;
+  const open = body.style.display !== 'none';
+  body.style.display = open ? 'none' : 'block';
+  if (toggle) toggle.textContent = open ? '▼' : '▲';
 }
 
 function addExpPlanItem() {
