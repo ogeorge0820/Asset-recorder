@@ -2,7 +2,7 @@
 // CONFIG
 // ══════════════════════════════════════════════════════════════
 // Build 時間：每次修改 code 後手動更新此時間（UTC+8 台北時間）
-const BUILD_DATE = '2026/04/17 18:05';
+const BUILD_DATE = '2026/04/17 18:11';
 
 const SPREADSHEET_ID = '1lpRpxVzWaYUqL-jVPOAJCtjsJUIedPYYyOx4gg4PPFU';
 const CLIENT_ID = '149884248440-85f8dhc6ub9up10sv0f89e3e0itrnooj.apps.googleusercontent.com';
@@ -1788,61 +1788,43 @@ function renderIncome() {
     return;
   }
 
-  const groups = {};
-  items.forEach((r, i) => {
-    const ym = (r[4] || '').slice(0, 7) || '未知';
-    if (!groups[ym]) groups[ym] = [];
-    groups[ym].push({ r, i });
+  // 週期性 fingerprint：同名 + 同金額出現 ≥ 2 次 → 標「週期」
+  const fp = new Map();
+  items.forEach(r => {
+    const key = `${r[1] || ''}|${r[3] || ''}`;
+    fp.set(key, (fp.get(key) || 0) + 1);
   });
 
-  const sortedYMs = Object.keys(groups).sort((a, b) => b.localeCompare(a));
+  // 排序：status=0 (未入帳) 在上、status=1 (已入帳) 在下；各自按 expected_date ASC（由近到遠）
+  const sorted = items.map((r, idx) => ({ r, idx })).sort((a, b) => {
+    const sA = a.r[5] === '1' ? 1 : 0;
+    const sB = b.r[5] === '1' ? 1 : 0;
+    if (sA !== sB) return sA - sB;
+    return (a.r[4] || '').localeCompare(b.r[4] || '');
+  });
 
-  accordionEl.innerHTML = sortedYMs.map(ym => {
-    const list = groups[ym];
-    const [yr, mo] = ym.split('-');
-    const label = yr && mo ? `${yr}年${parseInt(mo, 10)}月` : ym;
-    const monthTotal = list.reduce((s, { r }) => s + (parseFloat(r[3]) || 0), 0);
-    const isCur = ym === curYMDash;
-
-    const rowsHTML = list.map(({ r, i }) => {
-      const settled = r[5] === '1';
-      const amt = parseFloat(r[3]) || 0;
-      return `<div class="income-item${settled ? ' income-settled' : ''}">
-        <button class="income-status-btn${settled ? ' settled' : ''}" onclick="toggleIncomeStatus(${i})" title="${settled ? '點擊取消入帳' : '點擊標記已入帳'}">${settled ? '☑' : '☐'}</button>
-        <div class="income-item-info">
-          <span class="income-item-name">${esc(r[1] || '—')}</span>
-          ${r[2] ? `<span class="income-cat-badge">${esc(r[2])}</span>` : ''}
-          ${r[8] ? `<span class="income-payer">${esc(r[8])}</span>` : ''}
-        </div>
-        <span class="income-item-date">${esc(r[4] || '—')}</span>
-        <span class="income-item-amt">${fmt(amt)}</span>
-        <div class="income-item-actions">
-          <button class="btn-icon copy" onclick="copyIncomeToNextMonth(${i})" title="複製到下月">🔁</button>
-          <button class="btn-icon edit" onclick="editIncomeItem(${i})">✏</button>
-          <button class="btn-icon del" onclick="deleteIncomeItem(${i})">✕</button>
-        </div>
-      </div>`;
-    }).join('');
-
-    return `<div class="income-group${isCur ? ' current' : ''}">
-      <div class="income-group-header" onclick="toggleIncomeGroup('${ym}')">
-        <div class="income-group-left">
-          <span class="income-month-label">${esc(label)}</span>
-          <span class="income-group-sub">${list.length} 筆</span>
-        </div>
-        <div class="income-group-right">
-          <span class="income-group-total">${fmt(monthTotal)}</span>
-          <span class="income-group-toggle" id="inc-toggle-${ym}">▼</span>
-        </div>
+  accordionEl.innerHTML = sorted.map(({ r, idx }) => {
+    const settled = r[5] === '1';
+    const amt = parseFloat(r[3]) || 0;
+    const isCurMonth = (r[4] || '').startsWith(curYMDash);
+    const recurring = (fp.get(`${r[1] || ''}|${r[3] || ''}`) || 0) >= 2;
+    return `<div class="income-item${settled ? ' income-settled' : ''}${isCurMonth ? ' income-current' : ''}">
+      <button class="income-status-btn${settled ? ' settled' : ''}" onclick="toggleIncomeStatus(${idx})" title="${settled ? '點擊取消入帳' : '點擊標記已入帳'}">${settled ? '☑' : '☐'}</button>
+      <div class="income-item-info">
+        <span class="income-item-name">${esc(r[1] || '—')}</span>
+        ${recurring ? '<span class="income-recurring-badge" title="同名同金額重複出現">🔁 週期</span>' : ''}
+        ${r[2] ? `<span class="income-cat-badge">${esc(r[2])}</span>` : ''}
+        ${r[8] ? `<span class="income-payer">${esc(r[8])}</span>` : ''}
       </div>
-      <div class="income-group-body" id="inc-body-${ym}" style="${isCur ? 'display:block' : 'display:none'}">
-        ${rowsHTML}
+      <span class="income-item-date">${esc(r[4] || '—')}</span>
+      <span class="income-item-amt">${fmt(amt)}</span>
+      <div class="income-item-actions">
+        <button class="btn-icon copy" onclick="copyIncomeToNextMonth(${idx})" title="複製到下月">🔁</button>
+        <button class="btn-icon edit" onclick="editIncomeItem(${idx})">✏</button>
+        <button class="btn-icon del" onclick="deleteIncomeItem(${idx})">✕</button>
       </div>
     </div>`;
   }).join('');
-
-  const curToggle = $(`inc-toggle-${curYMDash}`);
-  if (curToggle) curToggle.textContent = '▲';
 }
 
 function toggleIncomeGroup(ym) {
