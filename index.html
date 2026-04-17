@@ -280,6 +280,16 @@
           </div>
         </div>
 
+        <!-- Row 8: 主動收入管理 全寬 -->
+        <div class="section-card collapsed" id="section-income" style="grid-column: 1 / -1">
+          <h3 class="section-header" onclick="toggleSection('income')"><span>💰 主動收入管理 (Active Income) <span class="badge" id="cnt-income">0</span></span><span class="section-header-right"><span class="income-header-label">本月已入帳：</span><span class="section-total" id="tot-income">—</span><span class="section-chevron">▾</span></span></h3>
+          <div class="section-body">
+            <div id="income-accordion"></div>
+            <div class="income-forecast" id="income-month-forecast" style="display:none"></div>
+            <button class="btn-add" onclick="addIncomeItem()">+ 新增收入</button>
+          </div>
+        </div>
+
       </div><!-- /mgmt-grid -->
 
     </div><!-- /tab-management -->
