@@ -2,7 +2,7 @@
 // CONFIG
 // ══════════════════════════════════════════════════════════════
 // Build 時間：每次修改 code 後手動更新此時間（UTC+8 台北時間）
-const BUILD_DATE = '2026/04/17 17:48';
+const BUILD_DATE = '2026/04/17 17:56';
 
 const SPREADSHEET_ID = '1lpRpxVzWaYUqL-jVPOAJCtjsJUIedPYYyOx4gg4PPFU';
 const CLIENT_ID = '149884248440-85f8dhc6ub9up10sv0f89e3e0itrnooj.apps.googleusercontent.com';
@@ -851,12 +851,13 @@ function renderKPIs() {
       const allRecs = S.data.income_records || [];
       const status0 = allRecs.filter(r => r[5] === '0');
       const incSum = status0.reduce((s, r) => s + (parseFloat(r[3]) || 0), 0);
-      const firstDate = status0[0]?.[4] ?? 'n/a';
-      const firstStatusRaw = JSON.stringify(allRecs[0]?.[5] ?? 'n/a');
+      const allExp = S.data.experience_plan || [];
+      const expUnpaid = allExp.filter(r => r[4] !== '1');
+      const expSum = expUnpaid.reduce((s, r) => s + (parseFloat(r[3]) || 0), 0);
       const liqDisp = fmtWan(cashT + usdtTWD);
       const budDisp = fmtWan(budget);
       if (svSub) {
-        svSub.textContent = `現金${liqDisp}/預算${budDisp} | 收入${allRecs.length}筆/status0=${status0.length}筆/總${fmtWan(incSum)} | firstDate=${firstDate} firstStatus=${firstStatusRaw}`;
+        svSub.textContent = `現金${liqDisp}/預算${budDisp} | 預計收入${status0.length}筆共${fmtWan(incSum)} | 未付體驗${expUnpaid.length}筆共${fmtWan(expSum)}`;
         svSub.style.fontSize = '10px';
         svSub.style.wordBreak = 'break-all';
         svSub.style.lineHeight = '1.3';
