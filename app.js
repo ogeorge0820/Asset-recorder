@@ -1844,6 +1844,62 @@ function editIncomeItem(idx) {
   });
 }
 
+async function _revertIncomeSettlement(r) {
+  const linkedAccount = r[6];
+  if (!linkedAccount) return;
+  const amt = parseFloat(r[3]) || 0;
+  const cashIdx = S.data.cash.findIndex(c => c[0] === linkedAccount);
+  if (cashIdx < 0) return;
+  const ccy       = (S.data.cash[cashIdx][2] || 'TWD').toUpperCase();
+  const amtBefore = parseFloat(S.data.cash[cashIdx][1]) || 0;
+  const amtAfter  = amtBefore - amt;
+  S.data.cash[cashIdx] = [linkedAccount, amtAfter, ccy];
+  await saveSheet('cash_accounts', S.data.cash);
+  await appendHistory('cash', linkedAccount, amtBefore, amtAfter, 'TWD');
+}
+
+function toggleIncomeStatus(idx) {
+  const r = S.data.income_records[idx];
+  if (!r) return;
+
+  if (r[5] === '1') {
+    const amt = parseFloat(r[3]) || 0;
+    openConfirm('取消入帳',
+      `確認取消入帳？將自動從「${r[6]}」扣回 ${fmt(amt)}。`,
+      async () => {
+        await _revertIncomeSettlement(r);
+        r[5] = '0'; r[6] = ''; r[7] = '';
+        await saveSheet('income_records', S.data.income_records);
+        renderIncome(); renderKPIs(); renderCash();
+        doSaveDailySnapshot(true);
+        showToast('已取消入帳並還原帳戶金額', 'ok');
+      }
+    );
+  } else {
+    if (!S.data.cash.length) { showToast('請先新增流動現金帳戶', 'err'); return; }
+    const cashOptions = S.data.cash.map(c => `${c[0]} (${c[2] || 'TWD'})`);
+    openModal(`標記已入帳 · ${esc(r[1])}`, [
+      { id: 'account', label: '此筆收入已存入哪個帳戶？', type: 'select', options: cashOptions },
+    ], async vals => {
+      const cashIdx = S.data.cash.findIndex(c => `${c[0]} (${c[2] || 'TWD'})` === vals.account);
+      if (cashIdx < 0) { showToast('找不到對應帳戶', 'err'); return false; }
+      const bankName  = S.data.cash[cashIdx][0];
+      const ccy       = (S.data.cash[cashIdx][2] || 'TWD').toUpperCase();
+      const amt       = parseFloat(r[3]) || 0;
+      const amtBefore = parseFloat(S.data.cash[cashIdx][1]) || 0;
+      const amtAfter  = amtBefore + amt;
+      S.data.cash[cashIdx] = [bankName, amtAfter, ccy];
+      r[5] = '1'; r[6] = bankName; r[7] = getNowTW8();
+      await saveSheet('cash_accounts', S.data.cash);
+      await appendHistory('cash', bankName, amtBefore, amtAfter, 'TWD');
+      await saveSheet('income_records', S.data.income_records);
+      renderIncome(); renderKPIs(); renderCash();
+      doSaveDailySnapshot(true);
+      showToast('已標記入帳並更新帳戶餘額', 'ok');
+    });
+  }
+}
+
 async function deleteIncomeItem(idx) {
   const r = S.data.income_records[idx];
   if (!r) return;
