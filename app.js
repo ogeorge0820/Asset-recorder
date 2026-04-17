@@ -2,7 +2,7 @@
 // CONFIG
 // ══════════════════════════════════════════════════════════════
 // Build 時間：每次修改 code 後手動更新此時間（UTC+8 台北時間）
-const BUILD_DATE = '2026/04/17 18:01';
+const BUILD_DATE = '2026/04/17 18:05';
 
 const SPREADSHEET_ID = '1lpRpxVzWaYUqL-jVPOAJCtjsJUIedPYYyOx4gg4PPFU';
 const CLIENT_ID = '149884248440-85f8dhc6ub9up10sv0f89e3e0itrnooj.apps.googleusercontent.com';
@@ -687,13 +687,17 @@ function simulateMonthly({
   let balance = startBalance;
   for (let i = 0; i < maxMonths; i++) {
     const ym = addMonths(startYM + '-01', i).slice(0, 7);
-    balance += (incomeByYM.get(ym) || 0) - monthlyBudget - (expByYM.get(ym) || 0);
+    const netChange = (incomeByYM.get(ym) || 0) - monthlyBudget - (expByYM.get(ym) || 0);
+    const prevBalance = balance;
+    balance += netChange;
     if (balance < 0) {
-      return { months: i, balances, isInfinite: false, finalBalance: balance };
+      // 線性插值：前一月末餘額佔本月淨消耗的比例 = 實際撐過本月的分數
+      const fraction = netChange < 0 ? prevBalance / (-netChange) : 0;
+      return { months: i, monthsFloat: i + fraction, balances, isInfinite: false, finalBalance: balance };
     }
     balances.push(balance);
   }
-  return { months: maxMonths, balances, isInfinite: true, finalBalance: balance };
+  return { months: maxMonths, monthsFloat: maxMonths, balances, isInfinite: true, finalBalance: balance };
 }
 
 function calcTotals() {
@@ -844,38 +848,10 @@ function renderKPIs() {
         startBalance: cashT + usdtTWD,
         monthlyBudget: budget,
       });
-      const m = sim.months;
-      svEl.textContent = sim.isInfinite ? '∞ 個月' : m + ' 個月';
-      svEl.className = 'kpi-value' + (sim.isInfinite || m >= 6 ? '' : m >= 3 ? ' neutral' : ' neg');
-      // === DIAG：列出 runway 視窗內每筆未付體驗（timeline-based deduction 已在 sim 內實作）===
-      const allRecs = S.data.income_records || [];
-      const status0 = allRecs.filter(r => r[5] === '0');
-      const incSum = status0.reduce((s, r) => s + (parseFloat(r[3]) || 0), 0);
-      const liqDisp = fmtWan(cashT + usdtTWD);
-      const budDisp = fmtWan(budget);
-      // 取落在 runway 視窗內的未付體驗（按月份排序）
-      const now = new Date(Date.now() + 8 * 3600 * 1000);
-      const nowYM = now.getUTCFullYear() * 12 + now.getUTCMonth();
-      const windowMonths = sim.isInfinite ? 24 : Math.max(m + 1, 1);
-      const expInWindow = (S.data.experience_plan || [])
-        .filter(r => r[4] !== '1')
-        .map(r => ({
-          y: parseInt(r[1]) || 0,
-          mo: parseInt(r[2]) || 0,
-          name: r[0] || '未命名',
-          amt: parseFloat(r[3]) || 0,
-        }))
-        .filter(e => e.y && e.mo && (e.y * 12 + (e.mo - 1) - nowYM) >= 0 && (e.y * 12 + (e.mo - 1) - nowYM) < windowMonths)
-        .sort((a, b) => (a.y - b.y) || (a.mo - b.mo));
-      const expInWindowStr = expInWindow.length
-        ? expInWindow.map(e => `${e.y}/${e.mo}「${e.name}」${fmtWan(e.amt)}`).join('、')
-        : '無';
-      if (svSub) {
-        svSub.textContent = `現金${liqDisp}/預算${budDisp}/月 | 預計收入${status0.length}筆共${fmtWan(incSum)} | runway視窗內未付體驗: ${expInWindowStr}`;
-        svSub.style.fontSize = '10px';
-        svSub.style.wordBreak = 'break-all';
-        svSub.style.lineHeight = '1.3';
-      }
+      const mf = sim.monthsFloat;
+      svEl.textContent = sim.isInfinite ? '∞ 個月' : mf.toFixed(1) + ' 個月';
+      svEl.className = 'kpi-value' + (sim.isInfinite || mf >= 6 ? '' : mf >= 3 ? ' neutral' : ' neg');
+      if (svSub) svSub.textContent = '含未來預計收入模擬';
     } else {
       svEl.textContent = '—'; svEl.className = 'kpi-value';
       if (svSub) svSub.textContent = '含未來預計收入模擬';
