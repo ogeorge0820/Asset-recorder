@@ -2,7 +2,7 @@
 // CONFIG
 // ══════════════════════════════════════════════════════════════
 // Build 時間：每次修改 code 後手動更新此時間（UTC+8 台北時間）
-const BUILD_DATE = '2026/04/17 15:30';
+const BUILD_DATE = '2026/04/17 15:39';
 
 const SPREADSHEET_ID = '1lpRpxVzWaYUqL-jVPOAJCtjsJUIedPYYyOx4gg4PPFU';
 const CLIENT_ID = '149884248440-85f8dhc6ub9up10sv0f89e3e0itrnooj.apps.googleusercontent.com';
@@ -1883,7 +1883,7 @@ function addIncomeItem() {
     }
     S.data.income_records.sort((a, b) => (b[4] || '').localeCompare(a[4] || ''));
     await saveSheet('income_records', S.data.income_records);
-    renderIncome();
+    renderIncome(); renderKPIs();
     showToast(months > 1 ? `已新增 ${months} 筆收入記錄` : '已新增收入記錄', 'ok');
   });
 }
@@ -1905,7 +1905,7 @@ function editIncomeItem(idx) {
     ];
     S.data.income_records.sort((a, b) => (b[4] || '').localeCompare(a[4] || ''));
     await saveSheet('income_records', S.data.income_records);
-    renderIncome();
+    renderIncome(); renderKPIs();
     showToast('已更新收入記錄', 'ok');
   });
 }
@@ -1920,7 +1920,7 @@ async function copyIncomeToNextMonth(idx) {
   ]);
   S.data.income_records.sort((a, b) => (b[4] || '').localeCompare(a[4] || ''));
   await saveSheet('income_records', S.data.income_records);
-  renderIncome();
+  renderIncome(); renderKPIs();
   showToast(`已複製到 ${nextDate}`, 'ok');
 }
 
@@ -2000,7 +2000,7 @@ async function deleteIncomeItem(idx) {
     openConfirm('確認刪除', '刪除此收入記錄？', async () => {
       S.data.income_records.splice(idx, 1);
       await saveSheet('income_records', S.data.income_records);
-      renderIncome();
+      renderIncome(); renderKPIs();
       showToast('已刪除收入記錄', 'ok');
     });
   }
