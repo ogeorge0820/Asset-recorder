@@ -150,6 +150,7 @@ const HEADERS = {
   other_history: ['date','key','value_before','value_after','delta','note'],
   expense_budget: ['category','item_name','amount','payment_source'],
   experience_plan: ['name','year','month','amount_twd','paid'],
+  income_records: ['id','name','category','amount_twd','expected_date','status','linked_account','settled_date','payer'],
 };
 
 // ══════════════════════════════════════════════════════════════
@@ -176,6 +177,7 @@ const S = {
     other_history: [],  // [date, key, value_before, value_after, delta, note]
     expense_budget: [], // [category, item_name, amount, payment_source]
     experience_plan: [], // [name, year, month, amount_twd, paid]
+    income_records: [],  // [id, name, category, amount_twd, expected_date, status, linked_account, settled_date, payer]
     settings: { insurance_total: 0, realestate_total: 0, debt: 0 },
   },
 
@@ -312,7 +314,7 @@ async function initSheets() {
 // DATA LOAD / SAVE
 // ══════════════════════════════════════════════════════════════
 async function loadAll() {
-  const [cash, tw, us, crypto, snap, daily, sett, rw, hist, twHist, usHist, cashHist, otherHist, expBudget, expPlan] = await Promise.allSettled([
+  const [cash, tw, us, crypto, snap, daily, sett, rw, hist, twHist, usHist, cashHist, otherHist, expBudget, expPlan, incomeRec] = await Promise.allSettled([
     sheetGet('cash_accounts!A:C'),
     sheetGet('holdings_tw!A:B'),
     sheetGet('holdings_us!A:B'),
@@ -328,6 +330,7 @@ async function loadAll() {
     sheetGet('other_history!A:F'),
     sheetGet('expense_budget!A:D'),
     sheetGet('experience_plan!A:E'),
+    sheetGet('income_records!A:I'),
   ]);
 
   S.data.cash            = rows(cash);
@@ -349,6 +352,7 @@ async function loadAll() {
   S.data.other_history   = rows(otherHist);
   S.data.expense_budget  = rows(expBudget);
   S.data.experience_plan = rows(expPlan);
+  S.data.income_records  = rows(incomeRec);
 
   S.data.settings = { insurance_total: 0, realestate_total: 0, debt: 0 };
   rows(sett).forEach(r => { if (r[0]) S.data.settings[r[0]] = parseFloat(r[1]) || 0; });
