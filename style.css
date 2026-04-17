@@ -1295,13 +1295,44 @@ h3.section-header {
 .budget-ratio-lbl-fixed { color: var(--accent-light); font-weight: 600; }
 .budget-ratio-lbl-var { color: var(--muted); }
 
-/* 容器：最多 400px 可捲動 */
+/* 容器：最多 400px 可捲動 + 底部漸層遮罩 */
+.budget-scroll-wrap {
+  position: relative;
+  margin: 8px 0 10px;
+}
 .budget-cats {
   display: flex; flex-direction: column; gap: 6px;
-  margin-top: 8px; margin-bottom: 8px;
-  max-height: 400px; overflow-y: auto;
-  padding-right: 2px;
+  max-height: 400px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+  padding: 2px 8px 18px 2px;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(148,163,184,.35) transparent;
 }
+.budget-cats::-webkit-scrollbar { width: 5px; }
+.budget-cats::-webkit-scrollbar-track { background: transparent; }
+.budget-cats::-webkit-scrollbar-thumb {
+  background: rgba(148,163,184,.35);
+  border-radius: 999px;
+}
+.budget-cats::-webkit-scrollbar-thumb:hover { background: rgba(148,163,184,.55); }
+
+.budget-scroll-fade {
+  position: absolute;
+  left: 0; right: 10px; bottom: 0;
+  height: 26px;
+  background: linear-gradient(to bottom, transparent, var(--card) 85%);
+  pointer-events: none;
+  border-radius: 0 0 10px 10px;
+}
+
+/* 新增按鈕：永遠固定於捲動區域之外、底部可見 */
+.btn-add.budget-add-btn { margin-top: 2px; }
+
+/* 避免 section-body 的 overflow:hidden 把內部捲動容器切掉（僅展開時生效） */
+#section-budget:not(.collapsed) .section-body { overflow: visible; }
 
 /* 類別分組（預設摺疊） */
 .budget-cat {
