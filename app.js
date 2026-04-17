@@ -2,7 +2,7 @@
 // CONFIG
 // ══════════════════════════════════════════════════════════════
 // Build 時間：每次修改 code 後手動更新此時間（UTC+8 台北時間）
-const BUILD_DATE = '2026/04/17 14:12';
+const BUILD_DATE = '2026/04/17 14:59';
 
 const SPREADSHEET_ID = '1lpRpxVzWaYUqL-jVPOAJCtjsJUIedPYYyOx4gg4PPFU';
 const CLIENT_ID = '149884248440-85f8dhc6ub9up10sv0f89e3e0itrnooj.apps.googleusercontent.com';
@@ -1764,6 +1764,7 @@ function renderIncome() {
         <span class="income-item-date">${esc(r[4] || '—')}</span>
         <span class="income-item-amt">${fmt(amt)}</span>
         <div class="income-item-actions">
+          <button class="btn-icon copy" onclick="copyIncomeToNextMonth(${i})" title="複製到下月">🔁</button>
           <button class="btn-icon edit" onclick="editIncomeItem(${i})">✏</button>
           <button class="btn-icon del" onclick="deleteIncomeItem(${i})">✕</button>
         </div>
@@ -1800,6 +1801,17 @@ function toggleIncomeGroup(ym) {
   if (toggle) toggle.textContent = open ? '▼' : '▲';
 }
 
+function addMonths(ymd, n) {
+  const [y, m, d] = String(ymd).split('-').map(Number);
+  if (!y || !m || !d) return ymd;
+  const total = (y * 12 + (m - 1)) + n;
+  const targetY = Math.floor(total / 12);
+  const targetM = (total % 12) + 1;
+  const lastDay = new Date(targetY, targetM, 0).getDate();
+  const targetD = Math.min(d, lastDay);
+  return `${targetY}-${String(targetM).padStart(2,'0')}-${String(targetD).padStart(2,'0')}`;
+}
+
 function addIncomeItem() {
   openModal('新增收入', [
     { id: 'name',     label: '收入名稱',             type: 'text',   ph: '例：四月薪資' },
@@ -1807,18 +1819,23 @@ function addIncomeItem() {
     { id: 'payer',    label: '付款人 / 平台（選填）', type: 'text',   ph: '例：A 客戶、Upwork', opt: true },
     { id: 'amount',   label: '金額 (TWD)',            type: 'number', step: '1', min: 0, ph: '0' },
     { id: 'date',     label: '預計入帳日',             type: 'date' },
+    { id: 'months',   label: '同時建立未來幾個月（含本月）', type: 'number', step: '1', min: 1, val: '1' },
   ], async vals => {
     const amount = parseFloat(vals.amount) || 0;
+    const months = Math.max(1, Math.min(24, parseInt(vals.months, 10) || 1));
     if (!vals.name) { showToast('請填寫收入名稱', 'err'); return false; }
     if (!vals.date) { showToast('請選擇預計入帳日', 'err'); return false; }
-    S.data.income_records.push([
-      String(Date.now()), vals.name, vals.category || '', String(amount),
-      vals.date, '0', '', '', vals.payer || ''
-    ]);
+    const baseId = Date.now();
+    for (let n = 0; n < months; n++) {
+      S.data.income_records.push([
+        String(baseId + n), vals.name, vals.category || '', String(amount),
+        addMonths(vals.date, n), '0', '', '', vals.payer || ''
+      ]);
+    }
     S.data.income_records.sort((a, b) => (b[4] || '').localeCompare(a[4] || ''));
     await saveSheet('income_records', S.data.income_records);
     renderIncome();
-    showToast('已新增收入記錄', 'ok');
+    showToast(months > 1 ? `已新增 ${months} 筆收入記錄` : '已新增收入記錄', 'ok');
   });
 }
 
@@ -1842,6 +1859,20 @@ function editIncomeItem(idx) {
     renderIncome();
     showToast('已更新收入記錄', 'ok');
   });
+}
+
+async function copyIncomeToNextMonth(idx) {
+  const r = S.data.income_records[idx];
+  if (!r) return;
+  const nextDate = addMonths(r[4] || '', 1);
+  S.data.income_records.push([
+    String(Date.now()), r[1] || '', r[2] || '', r[3] || '0',
+    nextDate, '0', '', '', r[8] || ''
+  ]);
+  S.data.income_records.sort((a, b) => (b[4] || '').localeCompare(a[4] || ''));
+  await saveSheet('income_records', S.data.income_records);
+  renderIncome();
+  showToast(`已複製到 ${nextDate}`, 'ok');
 }
 
 async function _revertIncomeSettlement(r) {

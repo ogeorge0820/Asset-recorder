@@ -259,6 +259,7 @@ h3.section-header {
 }
 .btn-icon.edit { color: var(--accent-light); }
 .btn-icon.edit:hover { background: rgba(99,102,241,.1); }
+.btn-icon.copy:hover { background: rgba(59,130,246,.12); }
 .btn-icon.del { color: var(--red); }
 .btn-icon.del:hover { background: rgba(239,68,68,.1); }
 
