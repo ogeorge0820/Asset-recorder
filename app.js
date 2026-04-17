@@ -2,7 +2,7 @@
 // CONFIG
 // ══════════════════════════════════════════════════════════════
 // Build 時間：每次修改 code 後手動更新此時間（UTC+8 台北時間）
-const BUILD_DATE = '2026/04/17 15:45';
+const BUILD_DATE = '2026/04/17 17:48';
 
 const SPREADSHEET_ID = '1lpRpxVzWaYUqL-jVPOAJCtjsJUIedPYYyOx4gg4PPFU';
 const CLIENT_ID = '149884248440-85f8dhc6ub9up10sv0f89e3e0itrnooj.apps.googleusercontent.com';
@@ -847,14 +847,19 @@ function renderKPIs() {
       const m = sim.months;
       svEl.textContent = sim.isInfinite ? '∞ 個月' : m + ' 個月';
       svEl.className = 'kpi-value' + (sim.isInfinite || m >= 6 ? '' : m >= 3 ? ' neutral' : ' neg');
-      // 副標：顯示預計收入總額（讓使用者確認 sim 有抓到 income_records）
-      const incSum = (S.data.income_records || [])
-        .filter(r => r[5] === '0')
-        .reduce((s, r) => s + (parseFloat(r[3]) || 0), 0);
+      // === DIAG：把 sim 實際抓到的資料暴露出來 ===
+      const allRecs = S.data.income_records || [];
+      const status0 = allRecs.filter(r => r[5] === '0');
+      const incSum = status0.reduce((s, r) => s + (parseFloat(r[3]) || 0), 0);
+      const firstDate = status0[0]?.[4] ?? 'n/a';
+      const firstStatusRaw = JSON.stringify(allRecs[0]?.[5] ?? 'n/a');
+      const liqDisp = fmtWan(cashT + usdtTWD);
+      const budDisp = fmtWan(budget);
       if (svSub) {
-        svSub.textContent = incSum > 0
-          ? `含未來預計收入 ${fmtWan(incSum)}`
-          : '含未來預計收入模擬';
+        svSub.textContent = `現金${liqDisp}/預算${budDisp} | 收入${allRecs.length}筆/status0=${status0.length}筆/總${fmtWan(incSum)} | firstDate=${firstDate} firstStatus=${firstStatusRaw}`;
+        svSub.style.fontSize = '10px';
+        svSub.style.wordBreak = 'break-all';
+        svSub.style.lineHeight = '1.3';
       }
     } else {
       svEl.textContent = '—'; svEl.className = 'kpi-value';
