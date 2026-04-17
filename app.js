@@ -1800,6 +1800,76 @@ function toggleIncomeGroup(ym) {
   if (toggle) toggle.textContent = open ? '▼' : '▲';
 }
 
+function addIncomeItem() {
+  openModal('新增收入', [
+    { id: 'name',     label: '收入名稱',             type: 'text',   ph: '例：四月薪資' },
+    { id: 'category', label: '類別（選填）',          type: 'text',   ph: '例：薪資、獎金', opt: true },
+    { id: 'payer',    label: '付款人 / 平台（選填）', type: 'text',   ph: '例：A 客戶、Upwork', opt: true },
+    { id: 'amount',   label: '金額 (TWD)',            type: 'number', step: '1', min: 0, ph: '0' },
+    { id: 'date',     label: '預計入帳日',             type: 'date' },
+  ], async vals => {
+    const amount = parseFloat(vals.amount) || 0;
+    if (!vals.name) { showToast('請填寫收入名稱', 'err'); return false; }
+    if (!vals.date) { showToast('請選擇預計入帳日', 'err'); return false; }
+    S.data.income_records.push([
+      String(Date.now()), vals.name, vals.category || '', String(amount),
+      vals.date, '0', '', '', vals.payer || ''
+    ]);
+    S.data.income_records.sort((a, b) => (b[4] || '').localeCompare(a[4] || ''));
+    await saveSheet('income_records', S.data.income_records);
+    renderIncome();
+    showToast('已新增收入記錄', 'ok');
+  });
+}
+
+function editIncomeItem(idx) {
+  const r = S.data.income_records[idx];
+  if (!r) return;
+  openModal('編輯收入', [
+    { id: 'name',     label: '收入名稱',             type: 'text',   val: r[1] || '' },
+    { id: 'category', label: '類別（選填）',          type: 'text',   val: r[2] || '', opt: true },
+    { id: 'payer',    label: '付款人 / 平台（選填）', type: 'text',   val: r[8] || '', opt: true },
+    { id: 'amount',   label: '金額 (TWD)',            type: 'number', step: '1', min: 0, val: r[3] || '0' },
+    { id: 'date',     label: '預計入帳日',             type: 'date',   val: r[4] || '' },
+  ], async vals => {
+    const amount = parseFloat(vals.amount) || 0;
+    S.data.income_records[idx] = [
+      r[0], vals.name, vals.category || '', String(amount),
+      vals.date, r[5], r[6], r[7], vals.payer || ''
+    ];
+    S.data.income_records.sort((a, b) => (b[4] || '').localeCompare(a[4] || ''));
+    await saveSheet('income_records', S.data.income_records);
+    renderIncome();
+    showToast('已更新收入記錄', 'ok');
+  });
+}
+
+async function deleteIncomeItem(idx) {
+  const r = S.data.income_records[idx];
+  if (!r) return;
+  if (r[5] === '1') {
+    const amt = parseFloat(r[3]) || 0;
+    openConfirm('刪除已入帳記錄',
+      `此筆收入已併入「${r[6]}」，刪除紀錄將同步扣除 ${fmt(amt)}，是否確定？`,
+      async () => {
+        await _revertIncomeSettlement(r);
+        const newIdx = S.data.income_records.findIndex(rec => rec[0] === r[0]);
+        if (newIdx >= 0) S.data.income_records.splice(newIdx, 1);
+        await saveSheet('income_records', S.data.income_records);
+        renderIncome(); renderKPIs(); renderCash();
+        showToast('已刪除收入記錄並還原帳戶金額', 'ok');
+      }
+    );
+  } else {
+    openConfirm('確認刪除', '刪除此收入記錄？', async () => {
+      S.data.income_records.splice(idx, 1);
+      await saveSheet('income_records', S.data.income_records);
+      renderIncome();
+      showToast('已刪除收入記錄', 'ok');
+    });
+  }
+}
+
 function addExpPlanItem() {
   const curYear = new Date().getFullYear();
   openModal('新增體驗支出規劃', [
