@@ -1272,45 +1272,156 @@ h3.section-header {
   color: var(--muted); font-size: 0.9rem;
   text-align: center; padding: 20px 0;
 }
-.budget-cat {
-  margin-bottom: 12px;
+/* 固定/浮動 比例條（常駐可見，摺疊仍顯示） */
+.budget-ratio-bar {
+  display: flex; flex-direction: column; gap: 4px;
+  margin: 2px 0 6px;
 }
-.budget-cat:last-child { margin-bottom: 0; }
+.budget-ratio-bar:empty { display: none; }
+.budget-ratio-track {
+  height: 6px; border-radius: 999px;
+  background: rgba(148,163,184,.22);
+  overflow: hidden;
+}
+.budget-ratio-fixed {
+  height: 100%; border-radius: 999px 0 0 999px;
+  background: linear-gradient(90deg, #6366f1, #8b5cf6);
+  transition: width .35s ease;
+}
+.budget-ratio-labels {
+  display: flex; justify-content: space-between;
+  font-size: 0.72rem; color: var(--muted); font-weight: 500;
+}
+.budget-ratio-lbl-fixed { color: var(--accent-light); font-weight: 600; }
+.budget-ratio-lbl-var { color: var(--muted); }
+
+/* 容器：最多 400px 可捲動 */
+.budget-cats {
+  display: flex; flex-direction: column; gap: 6px;
+  margin-top: 8px; margin-bottom: 8px;
+  max-height: 400px; overflow-y: auto;
+  padding-right: 2px;
+}
+
+/* 類別分組（預設摺疊） */
+.budget-cat {
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  overflow: hidden;
+  background: rgba(255,255,255,.02);
+}
 .budget-cat-header {
-  display: flex; align-items: center; justify-content: space-between;
-  padding: 6px 4px 6px 0;
-  border-bottom: 1px solid var(--border);
-  margin-bottom: 6px;
+  display: grid; grid-template-columns: 1fr auto auto;
+  align-items: center; gap: 8px;
+  padding: 7px 12px;
+  cursor: pointer; user-select: none;
+  border-bottom: 1px solid transparent;
+  transition: background .15s ease, border-color .2s ease;
+}
+.budget-cat:not(.collapsed) .budget-cat-header {
+  border-bottom-color: var(--border);
+  background: rgba(99,102,241,.04);
 }
 .budget-cat-name {
-  font-size: 0.78rem; font-weight: 700;
-  color: var(--muted); text-transform: uppercase; letter-spacing: 0.04em;
+  font-size: 0.88rem; font-weight: 700; color: var(--text);
+  display: inline-flex; align-items: center; gap: 2px;
+}
+.budget-cat-count {
+  font-size: 0.68rem; font-weight: 600;
+  background: rgba(99,102,241,.16); color: var(--accent-light);
+  padding: 1px 7px; border-radius: 999px;
+  margin-left: 6px;
 }
 .budget-cat-total {
-  font-size: 0.88rem; font-weight: 700; color: var(--accent-light);
+  font-size: 0.9rem; font-weight: 700; color: var(--accent-light);
 }
-.budget-cat-items { display: flex; flex-direction: column; gap: 4px; }
+.budget-cat-chevron {
+  font-size: 0.75rem; color: var(--muted);
+  transition: transform .25s ease;
+}
+.budget-cat.collapsed .budget-cat-chevron { transform: rotate(-90deg); }
+.budget-cat-items {
+  display: flex; flex-direction: column; gap: 3px;
+  padding: 6px 8px;
+  max-height: 2000px;
+  transition: max-height .3s ease, padding .3s ease, opacity .2s ease;
+  opacity: 1;
+}
+.budget-cat.collapsed .budget-cat-items {
+  max-height: 0; padding: 0 8px; opacity: 0; overflow: hidden;
+}
+
+/* 項目列（較緊湊） */
 .budget-item {
   display: grid;
   grid-template-columns: 1fr auto auto auto;
   align-items: center;
   gap: 8px;
-  padding: 8px 10px;
+  padding: 4px 10px;
   background: var(--card2);
-  border-radius: 8px;
+  border-radius: 7px;
 }
-.budget-item-name { font-size: 0.88rem; font-weight: 600; }
+.budget-item-name { font-size: 0.85rem; font-weight: 600; }
 .budget-item-source {
-  font-size: 0.75rem; color: var(--muted); white-space: nowrap;
+  font-size: 0.72rem; color: var(--muted); white-space: nowrap;
 }
 .budget-item-amt {
-  font-size: 0.88rem; font-weight: 700; color: var(--text);
+  font-size: 0.85rem; font-weight: 700; color: var(--text);
   white-space: nowrap; text-align: right;
 }
 .budget-item-actions { display: flex; gap: 4px; }
-.budget-cats { margin-top: 12px; margin-bottom: 8px; }
+
+/* 數位服務與通訊 折疊子群組 */
+.budget-bundle {
+  border: 1px dashed var(--border);
+  border-radius: 8px;
+  overflow: hidden;
+  margin-top: 3px;
+  background: rgba(99,102,241,.03);
+}
+.budget-bundle-header {
+  display: grid; grid-template-columns: 1fr auto auto;
+  align-items: center; gap: 8px;
+  padding: 5px 10px;
+  cursor: pointer; user-select: none;
+}
+.budget-bundle-name {
+  font-size: 0.8rem; font-weight: 600; color: var(--text);
+  display: inline-flex; align-items: center; gap: 2px;
+}
+.budget-bundle-count {
+  font-size: 0.66rem; font-weight: 600;
+  background: rgba(16,185,129,.14); color: #10b981;
+  padding: 1px 6px; border-radius: 999px;
+  margin-left: 4px;
+}
+.budget-bundle-total {
+  font-size: 0.82rem; font-weight: 700; color: var(--text);
+}
+.budget-bundle-chevron {
+  font-size: 0.7rem; color: var(--muted);
+  transition: transform .25s ease;
+}
+.budget-bundle.collapsed .budget-bundle-chevron { transform: rotate(-90deg); }
+.budget-bundle-items {
+  display: flex; flex-direction: column; gap: 2px;
+  padding: 4px 6px 6px;
+  max-height: 1000px;
+  transition: max-height .3s ease, padding .3s ease, opacity .2s ease;
+  opacity: 1;
+}
+.budget-bundle.collapsed .budget-bundle-items {
+  max-height: 0; padding: 0 6px; opacity: 0; overflow: hidden;
+}
 
 [data-theme="light"] .budget-cat-total { color: var(--accent); }
+[data-theme="light"] .budget-cat { background: rgba(139,111,71,.03); }
+[data-theme="light"] .budget-cat:not(.collapsed) .budget-cat-header { background: rgba(139,111,71,.06); }
+[data-theme="light"] .budget-cat-count { background: rgba(139,111,71,.12); color: var(--accent); }
+[data-theme="light"] .budget-ratio-lbl-fixed { color: var(--accent); }
+[data-theme="light"] .budget-ratio-fixed { background: linear-gradient(90deg, #8b6f47, #a78960); }
+[data-theme="light"] .budget-bundle { background: rgba(139,111,71,.04); }
+[data-theme="light"] .budget-bundle-count { background: rgba(16,185,129,.1); color: #059669; }
 
 /* ══ 主動收入管理 ══ */
 .income-empty { color: var(--muted); font-size: 0.9rem; text-align: center; padding: 20px 0; }

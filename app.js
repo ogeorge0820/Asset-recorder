@@ -2,7 +2,7 @@
 // CONFIG
 // ══════════════════════════════════════════════════════════════
 // Build 時間：每次修改 code 後手動更新此時間（UTC+8 台北時間）
-const BUILD_DATE = '2026/04/17 18:11';
+const BUILD_DATE = '2026/04/17 19:43';
 
 const SPREADSHEET_ID = '1lpRpxVzWaYUqL-jVPOAJCtjsJUIedPYYyOx4gg4PPFU';
 const CLIENT_ID = '149884248440-85f8dhc6ub9up10sv0f89e3e0itrnooj.apps.googleusercontent.com';
@@ -1612,52 +1612,107 @@ async function autoAddReward(sym, interestQty) {
 // ══════════════════════════════════════════════════════════════
 // RENDER — EXPENSE BUDGET
 // ══════════════════════════════════════════════════════════════
+// 數位服務與通訊 自動歸類的名稱關鍵字（不分大小寫）
+const BUDGET_DIGITAL_RE = /gemini|claude|chatgpt|openai|youtube|netflix|spotify|apple\s*music|icloud|disney|prime|premium|網路|電話|中華電信|遠傳|台哥大|台灣大哥大|hbo|notion|dropbox|office\s*365|microsoft\s*365/i;
+
 function renderBudget() {
   const items = S.data.expense_budget;
   const cntEl = $('cnt-budget');
   const totEl = $('tot-budget');
   const catsEl = $('budget-cats');
+  const ratioEl = $('budget-ratio-bar');
   if (!catsEl) return;
 
   if (cntEl) cntEl.textContent = items.length;
-  const grandTotal = calcBudgetTotal();
+
+  // 小計（以類別）
+  const fixedTotal = items.filter(r => (r[0] || '') === '固定').reduce((s, r) => s + (parseFloat(r[2]) || 0), 0);
+  const varTotal   = items.filter(r => (r[0] || '') === '浮動').reduce((s, r) => s + (parseFloat(r[2]) || 0), 0);
+  const grandTotal = fixedTotal + varTotal;
   if (totEl) totEl.textContent = fmt(grandTotal);
+
+  // 固定/浮動 比例條
+  if (ratioEl) {
+    if (grandTotal > 0) {
+      const fixedPct = (fixedTotal / grandTotal) * 100;
+      const varPct   = 100 - fixedPct;
+      ratioEl.innerHTML = `
+        <div class="budget-ratio-track">
+          <div class="budget-ratio-fixed" style="width:${fixedPct.toFixed(1)}%"></div>
+        </div>
+        <div class="budget-ratio-labels">
+          <span class="budget-ratio-lbl-fixed">🔒 固定 ${fmt(fixedTotal)} · ${fixedPct.toFixed(0)}%</span>
+          <span class="budget-ratio-lbl-var">💨 浮動 ${fmt(varTotal)} · ${varPct.toFixed(0)}%</span>
+        </div>`;
+    } else {
+      ratioEl.innerHTML = '';
+    }
+  }
 
   if (!items.length) {
     catsEl.innerHTML = '<div class="budget-empty">尚無支出項目</div>';
     return;
   }
 
-  // 依 category 分組
-  const groups = {};
+  // 兩類固定順序渲染：固定 → 浮動；未分類併入最後
+  const groups = { 固定: [], 浮動: [], 未分類: [] };
   items.forEach((r, i) => {
     const cat = r[0] || '未分類';
-    if (!groups[cat]) groups[cat] = [];
-    groups[cat].push({ r, i });
+    (groups[cat] || groups['未分類']).push({ r, i });
   });
 
-  catsEl.innerHTML = Object.entries(groups).map(([cat, list]) => {
+  const renderItem = ({ r, i }) => `
+    <div class="budget-item">
+      <div class="budget-item-name">${esc(r[1] || '—')}</div>
+      <div class="budget-item-source">${esc(r[3] || '—')}</div>
+      <div class="budget-item-amt">${fmt(parseFloat(r[2]) || 0)}</div>
+      <div class="budget-item-actions">
+        <button class="btn-icon edit" onclick="editBudgetItem(${i})">✏</button>
+        <button class="btn-icon del" onclick="deleteBudgetItem(${i})">✕</button>
+      </div>
+    </div>`;
+
+  catsEl.innerHTML = Object.entries(groups).filter(([_, list]) => list.length).map(([cat, list]) => {
     const catTotal = list.reduce((s, { r }) => s + (parseFloat(r[2]) || 0), 0);
     list.sort((a, b) => (parseFloat(b.r[2]) || 0) - (parseFloat(a.r[2]) || 0));
-    const rows = list.map(({ r, i }) => `
-      <div class="budget-item">
-        <div class="budget-item-name">${esc(r[1] || '—')}</div>
-        <div class="budget-item-source">${esc(r[3] || '—')}</div>
-        <div class="budget-item-amt">${fmt(parseFloat(r[2]) || 0)}</div>
-        <div class="budget-item-actions">
-          <button class="btn-icon edit" onclick="editBudgetItem(${i})">✏</button>
-          <button class="btn-icon del" onclick="deleteBudgetItem(${i})">✕</button>
+
+    // 拆成一般 / 數位服務
+    const digitalList = list.filter(({ r }) => BUDGET_DIGITAL_RE.test(r[1] || ''));
+    const normalList  = list.filter(({ r }) => !BUDGET_DIGITAL_RE.test(r[1] || ''));
+    const digitalTotal = digitalList.reduce((s, { r }) => s + (parseFloat(r[2]) || 0), 0);
+
+    const bundleId = `budget-digital-${cat}`;
+    const digitalBlock = digitalList.length >= 2 ? `
+      <div class="budget-bundle collapsed" id="${bundleId}">
+        <div class="budget-bundle-header" onclick="toggleBudgetBundle('${bundleId}')">
+          <span class="budget-bundle-name">🌐 數位服務與通訊 <span class="budget-bundle-count">${digitalList.length}</span></span>
+          <span class="budget-bundle-total">${fmt(digitalTotal)}</span>
+          <span class="budget-bundle-chevron">▾</span>
         </div>
-      </div>`).join('');
+        <div class="budget-bundle-items">${digitalList.map(renderItem).join('')}</div>
+      </div>` : digitalList.map(renderItem).join('');
+
+    const icon = cat === '固定' ? '🔒' : (cat === '浮動' ? '💨' : '📦');
     return `
-      <div class="budget-cat">
-        <div class="budget-cat-header">
-          <span class="budget-cat-name">${esc(cat)}</span>
+      <div class="budget-cat collapsed" id="budget-cat-${cat}">
+        <div class="budget-cat-header" onclick="toggleBudgetCat('${cat}')">
+          <span class="budget-cat-name">${icon} ${esc(cat)}支出 <span class="budget-cat-count">${list.length}</span></span>
           <span class="budget-cat-total">${fmt(catTotal)}</span>
+          <span class="budget-cat-chevron">▾</span>
         </div>
-        <div class="budget-cat-items">${rows}</div>
+        <div class="budget-cat-items">${normalList.map(renderItem).join('')}${digitalBlock}</div>
       </div>`;
   }).join('');
+}
+
+function toggleBudgetCat(cat) {
+  const el = document.getElementById(`budget-cat-${cat}`);
+  if (el) el.classList.toggle('collapsed');
+}
+
+function toggleBudgetBundle(id) {
+  const el = document.getElementById(id);
+  if (el) el.classList.toggle('collapsed');
 }
 
 function addBudgetItem() {

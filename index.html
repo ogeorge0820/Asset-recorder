@@ -265,6 +265,7 @@
         <!-- Row 6: 生活支出預算 全寬 -->
         <div class="section-card collapsed" id="section-budget" style="grid-column: 1 / -1">
           <h3 class="section-header" onclick="toggleSection('budget')"><span>💳 生活支出預算 <span class="badge" id="cnt-budget">0</span></span><span class="section-header-right"><span class="budget-total-label">月支出：</span><span class="section-total" id="tot-budget">—</span><span class="section-chevron">▾</span></span></h3>
+          <div class="budget-ratio-bar" id="budget-ratio-bar"></div>
           <div class="section-body">
             <div class="budget-cats" id="budget-cats"></div>
             <button class="btn-add" onclick="addBudgetItem()">+ 新增支出項目</button>
@@ -460,6 +461,6 @@
 <!-- ── Toast ── -->
 <div class="toast" id="toast"></div>
 
-<script src="app.js?v=202604171811"></script>
+<script src="app.js?v=202604171943"></script>
 </body>
 </html>
