@@ -13,8 +13,10 @@
 
 ## 資料模型
 
-### Google Sheets — `Income_Records` 工作表（8 欄）
+### Google Sheets — `Income_Records` 工作表（9 欄）
 
+| 欄位索引 | 欄位名稱 | 說明 |
+|---------|---------|------|
 | 欄位索引 | 欄位名稱 | 說明 |
 |---------|---------|------|
 | 0 | `id` | 唯一識別碼（`Date.now()` 字串） |
@@ -25,10 +27,11 @@
 | 5 | `status` | `0` = 預計，`1` = 已入帳 |
 | 6 | `linked_account` | 入帳帳戶名稱（空白 = 尚未入帳） |
 | 7 | `settled_date` | 實際入帳時間戳記（空白 = 尚未入帳） |
+| 8 | `payer` | 付款人 / 平台（選填，例如：「A 客戶」、「Upwork」） |
 
 **SHEETS_COLS 宣告：**
 ```js
-income_records: ['id','name','category','amount_twd','expected_date','status','linked_account','settled_date']
+income_records: ['id','name','category','amount_twd','expected_date','status','linked_account','settled_date','payer']
 ```
 
 ---
@@ -58,7 +61,7 @@ income_records: ['id','name','category','amount_twd','expected_date','status','l
 
 **每筆記錄列：**
 ```
-[狀態切換按鈕]  收入名稱  類別tag  預計入帳日  NT$金額  [✏編輯]  [✕刪除]
+[狀態切換按鈕]  收入名稱  類別tag  付款人  預計入帳日  NT$金額  [✏編輯]  [✕刪除]
 ```
 - 狀態切換按鈕：`☐` (預計) / `☑` (已入帳，顯示綠色)
 - 已入帳的列整體加 `settled` class（輕灰底色）
@@ -79,8 +82,9 @@ ID：`income-month-forecast`
 欄位：
 1. 收入名稱（text，必填）
 2. 類別（text，選填，placeholder：「例如：薪資、獎金」）
-3. 金額 TWD（number，必填）
-4. 預計入帳日（date，必填）
+3. 付款人 / 平台（text，選填，placeholder：「例如：A 客戶、Upwork」）
+4. 金額 TWD（number，必填）
+5. 預計入帳日（date，必填）
 
 ### 入帳確認 Modal（`status: 0 → 1`）
 
@@ -91,6 +95,19 @@ ID：`income-month-forecast`
 ### 反悔確認 Modal（`status: 1 → 0`）
 
 > 確認取消入帳？將自動從「{linked_account}」扣回 NT${amount_twd}。
+
+### 刪除已入帳記錄確認 Modal
+
+當使用者點擊 `[✕刪除]` 且該筆 `status === '1'` 時，**禁止靜默刪除**，必須彈出：
+
+> 此筆收入已併入「{linked_account}」，刪除紀錄將同步扣除 NT${amount_twd}，是否確定？
+
+使用者確認後：
+1. 執行反悔流程（扣回帳戶金額、寫入負向 `cash_history`）
+2. 再從 `S.data.income_records` 移除該筆
+3. `saveSheet` + render
+
+`status === '0'` 的記錄可直接刪除，無需額外確認。
 
 ---
 
@@ -139,10 +156,10 @@ ID：`income-month-forecast`
 
 | 項目 | 說明 |
 |------|------|
-| 新增 Sheet | `Income_Records`（8 欄，見上方） |
+| 新增 Sheet | `Income_Records`（9 欄，見上方） |
 | `SHEETS_COLS` | 新增 `income_records` 欄位宣告 |
 | `S.data` | 新增 `income_records: []` 初始值 |
-| `loadData()` | 新增 `sheetGet('income_records!A:H')` |
+| `loadData()` | 新增 `sheetGet('income_records!A:I')` |
 | `renderAll()` | 新增呼叫 `renderIncome()` |
 
 ---
