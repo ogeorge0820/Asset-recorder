@@ -1295,40 +1295,13 @@ h3.section-header {
 .budget-ratio-lbl-fixed { color: var(--accent-light); font-weight: 600; }
 .budget-ratio-lbl-var { color: var(--muted); }
 
-/* 容器：最多 400px 可捲動 + 底部漸層遮罩 */
-.budget-scroll-wrap {
-  position: relative;
-  margin: 8px 0 10px;
-}
+/* 外層：自然高度、不捲動（捲動下放到各 .budget-cat-items） */
 .budget-cats {
   display: flex; flex-direction: column; gap: 6px;
-  max-height: 400px;
-  overflow-y: auto;
-  overflow-x: hidden;
-  overscroll-behavior: contain;
-  -webkit-overflow-scrolling: touch;
-  padding: 2px 8px 18px 2px;
-  scrollbar-width: thin;
-  scrollbar-color: rgba(148,163,184,.35) transparent;
-}
-.budget-cats::-webkit-scrollbar { width: 5px; }
-.budget-cats::-webkit-scrollbar-track { background: transparent; }
-.budget-cats::-webkit-scrollbar-thumb {
-  background: rgba(148,163,184,.35);
-  border-radius: 999px;
-}
-.budget-cats::-webkit-scrollbar-thumb:hover { background: rgba(148,163,184,.55); }
-
-.budget-scroll-fade {
-  position: absolute;
-  left: 0; right: 10px; bottom: 0;
-  height: 26px;
-  background: linear-gradient(to bottom, transparent, var(--card) 85%);
-  pointer-events: none;
-  border-radius: 0 0 10px 10px;
+  margin: 8px 0 10px;
 }
 
-/* 新增按鈕：永遠固定於捲動區域之外、底部可見 */
+/* 新增按鈕：永遠固定於捲動區之外、底部可見 */
 .btn-add.budget-add-btn { margin-top: 2px; }
 
 /* 避免 section-body 的 overflow:hidden 把內部捲動容器切掉（僅展開時生效） */
@@ -1338,7 +1311,7 @@ h3.section-header {
 .budget-cat {
   border: 1px solid var(--border);
   border-radius: 10px;
-  overflow: hidden;
+  overflow: hidden; /* 供 border-radius 裁切 header；內層 .budget-cat-items 自有捲動，不受影響 */
   background: rgba(255,255,255,.02);
 }
 .budget-cat-header {
@@ -1371,15 +1344,46 @@ h3.section-header {
   transition: transform .25s ease;
 }
 .budget-cat.collapsed .budget-cat-chevron { transform: rotate(-90deg); }
+/* ⚠ 這是「固定 / 浮動 Accordion 的內容容器」— 13 項目必須能捲動 */
 .budget-cat-items {
-  display: flex; flex-direction: column; gap: 3px;
+  display: block !important;          /* 明確 block：不是 flex，避免部分引擎吃掉捲軸 */
   padding: 6px 8px;
-  max-height: 2000px;
+  max-height: 400px !important;
+  overflow-y: auto !important;
+  overflow-x: hidden;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(148,163,184,.45) rgba(148,163,184,.1);
   transition: max-height .3s ease, padding .3s ease, opacity .2s ease;
   opacity: 1;
 }
+.budget-cat-items::-webkit-scrollbar {
+  width: 6px;
+  -webkit-appearance: none;
+}
+.budget-cat-items::-webkit-scrollbar-track {
+  background: rgba(148,163,184,.1);
+  border-radius: 999px;
+  margin: 4px 0;
+}
+.budget-cat-items::-webkit-scrollbar-thumb {
+  background: rgba(148,163,184,.45);
+  border-radius: 999px;
+}
+.budget-cat-items::-webkit-scrollbar-thumb:hover { background: rgba(148,163,184,.65); }
+
+/* block layout 下恢復行距（原本靠 flex gap） */
+.budget-cat-items > .budget-item,
+.budget-cat-items > .budget-bundle { margin-bottom: 3px; }
+.budget-cat-items > :last-child { margin-bottom: 0; }
+
+/* 摺疊狀態：覆寫強制規則（!important 需要同等或更高 specificity + !important） */
 .budget-cat.collapsed .budget-cat-items {
-  max-height: 0; padding: 0 8px; opacity: 0; overflow: hidden;
+  max-height: 0 !important;
+  padding: 0 8px;
+  opacity: 0;
+  overflow: hidden !important;
 }
 
 /* 項目列（較緊湊） */
