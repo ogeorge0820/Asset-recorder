@@ -1691,3 +1691,102 @@ h3.section-header {
 
 [data-theme="light"] .dwz-param-input,
 [data-theme="light"] .dwz-modal-input { background: #f8f7f4; }
+
+/* ── DWZ 標的級別精算按鈕（inline in label） ── */
+.dwz-roi-precise {
+  font-size: 0.7rem; font-weight: 600;
+  background: linear-gradient(90deg, rgba(99,102,241,.15), rgba(139,92,246,.15));
+  color: var(--accent-light);
+  border: 1px solid rgba(99,102,241,.35);
+  padding: 2px 8px; border-radius: 999px;
+  cursor: pointer; user-select: none;
+  margin-left: 6px;
+  transition: background .18s ease, transform .1s ease;
+}
+.dwz-roi-precise:hover { background: linear-gradient(90deg, rgba(99,102,241,.25), rgba(139,92,246,.25)); }
+.dwz-roi-precise:active { transform: scale(0.96); }
+[data-theme="light"] .dwz-roi-precise { color: var(--accent); border-color: rgba(139,111,71,.35); }
+
+/* ── ROI Editor Modal ── */
+.roi-editor-hint {
+  font-size: 0.8rem; color: var(--muted); line-height: 1.55;
+  margin-bottom: 12px;
+}
+.roi-editor-hint b { color: var(--accent-light); }
+.roi-editor-table {
+  border: 1px solid var(--border); border-radius: 10px;
+  overflow: hidden; background: rgba(255,255,255,.02);
+  max-height: 340px; overflow-y: auto;
+  scrollbar-width: thin;
+}
+.roi-editor-table::-webkit-scrollbar { width: 5px; }
+.roi-editor-table::-webkit-scrollbar-thumb { background: rgba(148,163,184,.4); border-radius: 999px; }
+.roi-editor-row {
+  display: grid;
+  grid-template-columns: 1.4fr 0.9fr 1.2fr 80px;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px;
+  border-bottom: 1px solid rgba(45,49,85,.25);
+  font-size: 0.84rem;
+}
+.roi-editor-row:last-child { border-bottom: none; }
+.roi-editor-head {
+  background: rgba(99,102,241,.08);
+  color: var(--muted); font-weight: 700;
+  font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.04em;
+  padding: 7px 10px;
+}
+.roi-editor-cash { background: rgba(16,185,129,.06); }
+.roi-editor-empty {
+  padding: 20px; text-align: center; color: var(--muted); font-size: 0.9rem;
+}
+.roi-sym { font-weight: 700; color: var(--text); }
+.roi-type {
+  font-size: 0.68rem; font-weight: 600;
+  padding: 1px 7px; border-radius: 999px;
+  white-space: nowrap; text-align: center;
+  display: inline-block; width: fit-content;
+}
+.roi-type-tw     { background: rgba(239,68,68,.14); color: #ef4444; }
+.roi-type-us     { background: rgba(59,130,246,.14); color: #3b82f6; }
+.roi-type-crypto { background: rgba(245,158,11,.14); color: #f59e0b; }
+.roi-type-cash   { background: rgba(16,185,129,.14); color: #10b981; }
+.roi-mv { font-weight: 600; color: var(--text); text-align: right; font-variant-numeric: tabular-nums; }
+.roi-input {
+  background: var(--bg); border: 1px solid var(--border);
+  border-radius: 6px; padding: 5px 8px; color: var(--text);
+  font-size: 0.85rem; font-weight: 700; outline: none;
+  width: 100%; text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+.roi-input:focus { border-color: var(--accent); }
+
+.roi-editor-summary {
+  margin-top: 12px; padding: 10px 14px;
+  border: 1px solid var(--border); border-radius: 10px;
+  background: rgba(99,102,241,.05);
+  display: flex; flex-direction: column; gap: 6px;
+}
+.roi-summary-row {
+  display: flex; justify-content: space-between; align-items: center;
+  font-size: 0.85rem;
+}
+.roi-summary-label { color: var(--muted); }
+.roi-summary-val { font-weight: 700; color: var(--text); font-variant-numeric: tabular-nums; }
+.roi-summary-hl .roi-summary-label { color: var(--accent-light); font-weight: 600; }
+.roi-summary-hl .roi-summary-val { color: var(--accent-light); font-size: 1.05rem; }
+
+@media (max-width: 520px) {
+  .roi-editor-row { grid-template-columns: 1fr 70px 1fr 70px; gap: 6px; padding: 6px 8px; font-size: 0.78rem; }
+  .roi-editor-head { font-size: 0.65rem; }
+  .roi-mv { font-size: 0.76rem; }
+  .roi-input { font-size: 0.8rem; padding: 4px 6px; }
+}
+
+[data-theme="light"] .roi-editor-table { background: rgba(139,111,71,.03); }
+[data-theme="light"] .roi-editor-head { background: rgba(139,111,71,.08); }
+[data-theme="light"] .roi-editor-cash { background: rgba(16,185,129,.04); }
+[data-theme="light"] .roi-editor-summary { background: rgba(139,111,71,.05); }
+[data-theme="light"] .roi-summary-hl .roi-summary-label,
+[data-theme="light"] .roi-summary-hl .roi-summary-val { color: var(--accent); }

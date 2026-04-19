@@ -316,7 +316,7 @@
           </div>
           <!-- Row 2: 報酬率與非流動資產 -->
           <div class="dwz-param-group">
-            <label class="dwz-param-label">年化報酬率 %</label>
+            <label class="dwz-param-label">年化報酬率 % <button type="button" class="dwz-roi-precise" onclick="openROIEditor()" title="以個別持倉 ROI 推算加權平均">📊 標的級別精算</button></label>
             <input id="dwz-return" class="dwz-param-input" type="number" min="0" max="30" step="0.1" value="7" oninput="dwzAutoCalc()">
           </div>
           <div class="dwz-param-group">
@@ -461,6 +461,6 @@
 <!-- ── Toast ── -->
 <div class="toast" id="toast"></div>
 
-<script src="app.js?v=202604172211"></script>
+<script src="app.js?v=202604192132"></script>
 </body>
 </html>

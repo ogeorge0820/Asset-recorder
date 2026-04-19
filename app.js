@@ -2,7 +2,7 @@
 // CONFIG
 // ══════════════════════════════════════════════════════════════
 // Build 時間：每次修改 code 後手動更新此時間（UTC+8 台北時間）
-const BUILD_DATE = '2026/04/17 22:11';
+const BUILD_DATE = '2026/04/19 21:32';
 
 const SPREADSHEET_ID = '1lpRpxVzWaYUqL-jVPOAJCtjsJUIedPYYyOx4gg4PPFU';
 const CLIENT_ID = '149884248440-85f8dhc6ub9up10sv0f89e3e0itrnooj.apps.googleusercontent.com';
@@ -3344,6 +3344,149 @@ function _loadDWZParams() {
   set('dwz-safe-floor', p.safeFloor);
   set('dwz-gift-age',   p.giftAge);
   set('dwz-exp-budget', p.expBudget);
+}
+
+// ── 標的級別 ROI：預設映射表 + 類別 fallback ──
+const DWZ_ROI_PRESETS = {
+  // 穩健大盤 / 高股息 ETF
+  'VTI':8,'VOO':8,'SPY':8,'VT':8,'0050':8,'006208':8,'00878':8,'00929':8,'00713':8,'00919':8,'00940':8,
+  // 成長型科技
+  'QQQ':12,'NVDA':12,'TSLA':12,'AAPL':10,'MSFT':10,'GOOGL':10,'GOOG':10,'META':10,'AMZN':10,'AVGO':10,
+  // 主流加密貨幣
+  'BTC':30,'ETH':30,
+  // 穩定幣（當作生息現金看）
+  'USDT':4,'USDC':4,'DAI':4,
+};
+const DWZ_ROI_DEFAULT = { tw: 8, us: 10, crypto: 40, cash: 2 };
+
+function _readAssetROIStore() { return JSON.parse(localStorage.getItem('dwz_asset_roi') || '{}'); }
+function _writeAssetROIStore(obj) { localStorage.setItem('dwz_asset_roi', JSON.stringify(obj)); }
+
+// 組出「所有非零持倉 + 市值 + 當前 ROI」清單
+function buildHoldingsROIList() {
+  const rate = S.prices.usdtwd || 31;
+  const store = _readAssetROIStore();
+  const pick = (key, sym, defVal) => {
+    if (store[key] !== undefined && !isNaN(parseFloat(store[key]))) return parseFloat(store[key]);
+    if (DWZ_ROI_PRESETS[sym] !== undefined) return DWZ_ROI_PRESETS[sym];
+    return defVal;
+  };
+  const items = [];
+  (S.data.tw || []).forEach(r => {
+    const sym = String(r[0] || '').trim();
+    const qty = parseFloat(r[1]) || 0;
+    if (!sym || qty <= 0) return;
+    const mv = qty * (S.prices.tw[sym] || 0);
+    if (mv <= 0) return;
+    items.push({ key: `tw:${sym}`, symbol: sym, type: 'tw', label: '台股', marketValue: mv, roi: pick(`tw:${sym}`, sym, DWZ_ROI_DEFAULT.tw) });
+  });
+  (S.data.us || []).forEach(r => {
+    const sym = String(r[0] || '').trim().toUpperCase();
+    const qty = parseFloat(r[1]) || 0;
+    if (!sym || qty <= 0) return;
+    const mv = qty * (S.prices.us[sym] || 0) * rate;
+    if (mv <= 0) return;
+    items.push({ key: `us:${sym}`, symbol: sym, type: 'us', label: '美股', marketValue: mv, roi: pick(`us:${sym}`, sym, DWZ_ROI_DEFAULT.us) });
+  });
+  (S.data.crypto || []).forEach(r => {
+    const sym = String(r[0] || '').trim().toUpperCase();
+    const qty = parseFloat(r[1]) || 0;
+    if (!sym || qty <= 0) return;
+    const mv = qty * (S.prices.crypto[sym] || 0) * rate;
+    if (mv <= 0) return;
+    items.push({ key: `crypto:${sym}`, symbol: sym, type: 'crypto', label: '加密', marketValue: mv, roi: pick(`crypto:${sym}`, sym, DWZ_ROI_DEFAULT.crypto) });
+  });
+  return items.sort((a, b) => b.marketValue - a.marketValue);
+}
+
+// 加權年化：分母 = 所有持倉市值 + 現金，現金用獨立 ROI（預設 2%）
+function computeWeightedROI(items, cashTWD, cashRoi) {
+  const totalAsset = items.reduce((s, x) => s + (x.marketValue || 0), 0) + (cashTWD || 0);
+  if (totalAsset <= 0) return 0;
+  const weighted = items.reduce((s, x) => s + (x.marketValue || 0) * ((x.roi || 0) / 100), 0)
+                 + (cashTWD || 0) * ((cashRoi || 0) / 100);
+  return (weighted / totalAsset) * 100;
+}
+
+function openROIEditor() {
+  const items = buildHoldingsROIList();
+  const { cashT } = calcTotals();
+  const store = _readAssetROIStore();
+  const cashRoi = store['cash'] !== undefined ? parseFloat(store['cash']) : DWZ_ROI_DEFAULT.cash;
+
+  $('modal-title').textContent = '📊 標的級別精算';
+  const typeBadge = t => ({ tw:'🇹🇼 台股', us:'🇺🇸 美股', crypto:'₿ 加密' })[t] || t;
+  $('modal-body').innerHTML = `
+    <div class="roi-editor-hint">每個持倉的預期年化報酬率（%）可獨立調整。未列出的現金部分預設 <b>${DWZ_ROI_DEFAULT.cash}%</b>（可修改）。</div>
+    <div class="roi-editor-table">
+      <div class="roi-editor-row roi-editor-head">
+        <span>標的</span><span>類別</span><span>市值</span><span>ROI %</span>
+      </div>
+      ${items.length ? items.map(x => `
+        <div class="roi-editor-row">
+          <span class="roi-sym">${esc(x.symbol)}</span>
+          <span class="roi-type roi-type-${x.type}">${typeBadge(x.type)}</span>
+          <span class="roi-mv">${fmt(x.marketValue)}</span>
+          <input type="number" class="roi-input" min="-20" max="80" step="0.5" value="${x.roi}" data-key="${esc(x.key)}">
+        </div>`).join('') : '<div class="roi-editor-empty">尚無持倉</div>'}
+      <div class="roi-editor-row roi-editor-cash">
+        <span class="roi-sym">💵 現金</span>
+        <span class="roi-type roi-type-cash">現金</span>
+        <span class="roi-mv">${fmt(cashT)}</span>
+        <input type="number" class="roi-input" min="-5" max="30" step="0.1" value="${cashRoi}" data-key="cash">
+      </div>
+    </div>
+    <div class="roi-editor-summary">
+      <div class="roi-summary-row">
+        <span class="roi-summary-label">總可用資產</span>
+        <span class="roi-summary-val" id="roi-total-asset">—</span>
+      </div>
+      <div class="roi-summary-row roi-summary-hl">
+        <span class="roi-summary-label">⭐ 加權總平均年化</span>
+        <span class="roi-summary-val" id="roi-weighted">—</span>
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeModal()">取消</button>
+      <button class="btn-ok" id="roi-apply">套用到 DWZ</button>
+    </div>`;
+  $('modal').classList.add('open');
+
+  const body = $('modal-body');
+  const getCurrent = () => {
+    const snap = items.map(x => {
+      const inp = body.querySelector(`.roi-input[data-key="${CSS.escape(x.key)}"]`);
+      return { ...x, roi: parseFloat(inp?.value) || 0 };
+    });
+    const cashInp = body.querySelector('.roi-input[data-key="cash"]');
+    const cashV = parseFloat(cashInp?.value) || 0;
+    return { snap, cashV };
+  };
+  const recalc = () => {
+    const { snap, cashV } = getCurrent();
+    const totalAsset = snap.reduce((s, x) => s + x.marketValue, 0) + cashT;
+    const weighted = computeWeightedROI(snap, cashT, cashV);
+    $('roi-total-asset').textContent = fmt(totalAsset);
+    $('roi-weighted').textContent = weighted.toFixed(2) + ' %';
+  };
+  body.querySelectorAll('.roi-input').forEach(inp => inp.addEventListener('input', recalc));
+  recalc();
+
+  $('roi-apply').onclick = () => {
+    const { snap, cashV } = getCurrent();
+    const saved = {};
+    snap.forEach(x => { saved[x.key] = x.roi; });
+    saved['cash'] = cashV;
+    _writeAssetROIStore(saved);
+    const weighted = computeWeightedROI(snap, cashT, cashV);
+    const retInp = $('dwz-return');
+    if (retInp) {
+      retInp.value = weighted.toFixed(2);
+      dwzAutoCalc();
+    }
+    showToast(`已套用加權 ROI ${weighted.toFixed(2)}%`, 'ok');
+    closeModal();
+  };
 }
 
 function initDWZ() {
