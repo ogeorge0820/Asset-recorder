@@ -2,7 +2,7 @@
 // CONFIG
 // ══════════════════════════════════════════════════════════════
 // Build 時間：每次修改 code 後手動更新此時間（UTC+8 台北時間）
-const BUILD_DATE = '2026/04/19 21:44';
+const BUILD_DATE = '2026/04/19 21:56';
 
 const SPREADSHEET_ID = '1lpRpxVzWaYUqL-jVPOAJCtjsJUIedPYYyOx4gg4PPFU';
 const CLIENT_ID = '149884248440-85f8dhc6ub9up10sv0f89e3e0itrnooj.apps.googleusercontent.com';
@@ -3281,7 +3281,8 @@ let _dwzInited = false;
 let _dwzDebounce = null;
 
 // experience_plan 項目（未付）轉換為 DWZ 格式，依年份/月份計算年齡
-// 注意：前 12 個月內的項目會由 renderDWZ 的月度模擬處理，這裡僅保留 monthOffset >= 12 者
+// 起點統一為 currentAge（= 首頁可用資產），所有未付體驗交由年度迴圈扣除。
+// 12 個月內（含過期未付）的項目歸入 currentAge + 1，避免在 startNW 上預扣。
 function _expPlanToDWZ() {
   if (!S.data.experience_plan?.length) return [];
   const currentAge = _dwzParam('dwz-age');
@@ -3294,10 +3295,9 @@ function _expPlanToDWZ() {
       const year = parseInt(r[1]) || nowYear;
       const month = parseInt(r[2]) || 1;
       const monthOffset = (year - nowYear) * 12 + (month - nowMonth);
-      const age = Math.max(currentAge, Math.round(currentAge + monthOffset / 12));
+      const age = Math.max(currentAge + 1, currentAge + Math.ceil(monthOffset / 12));
       return { age, monthOffset, name: r[0] || '未命名', amount: (parseFloat(r[3]) || 0) / 10000, source: 'plan' };
-    })
-    .filter(e => e.monthOffset >= 12); // 避免與 year-0 月度模擬重複扣款
+    });
 }
 
 // 手動清單 + experience_plan 合併（供模擬用）
@@ -3357,12 +3357,13 @@ const DWZ_ROI_PRESETS = {
   // 穩定幣（USDT 維持低生息預期；USDC/DAI 套用類別預設 20%，使用者可自行改）
   'USDT':4,
 };
-const DWZ_ROI_DEFAULT = { tw: 8, us: 10, crypto: 20, cash: 2 };
+const DWZ_ROI_DEFAULT = { tw: 8, us: 10, crypto: 20, ins: 2, cash: 2 };
 
 function _readAssetROIStore() { return JSON.parse(localStorage.getItem('dwz_asset_roi') || '{}'); }
 function _writeAssetROIStore(obj) { localStorage.setItem('dwz_asset_roi', JSON.stringify(obj)); }
 
-// 組出「所有非零持倉 + 市值 + 當前 ROI」清單
+// 組出「所有非零持倉 + 現金 + 儲蓄險 + 市值 + 當前 ROI」清單
+// 加總 = 首頁「可用資產」（liquid = cashT + twT + usT + cryT + ins）
 function buildHoldingsROIList() {
   const rate = S.prices.usdtwd || 31;
   const store = _readAssetROIStore();
@@ -3399,12 +3400,11 @@ function buildHoldingsROIList() {
   return items.sort((a, b) => b.marketValue - a.marketValue);
 }
 
-// 加權年化：分母 = 所有持倉市值 + 現金，現金用獨立 ROI（預設 2%）
-function computeWeightedROI(items, cashTWD, cashRoi) {
-  const totalAsset = items.reduce((s, x) => s + (x.marketValue || 0), 0) + (cashTWD || 0);
+// 加權年化：items 需已包含所有參與計算的資產（含現金、儲蓄險）
+function computeWeightedROI(items) {
+  const totalAsset = items.reduce((s, x) => s + (x.marketValue || 0), 0);
   if (totalAsset <= 0) return 0;
-  const weighted = items.reduce((s, x) => s + (x.marketValue || 0) * ((x.roi || 0) / 100), 0)
-                 + (cashTWD || 0) * ((cashRoi || 0) / 100);
+  const weighted = items.reduce((s, x) => s + (x.marketValue || 0) * ((x.roi || 0) / 100), 0);
   return (weighted / totalAsset) * 100;
 }
 
@@ -3413,14 +3413,16 @@ const DWZ_ROI_GROUP_META = {
   crypto: { icon: '₿', label: '加密貨幣', order: 1 },
   us:     { icon: '🇺🇸', label: '美股',   order: 2 },
   tw:     { icon: '🇹🇼', label: '台股',   order: 3 },
-  cash:   { icon: '💵', label: '現金',   order: 4 },
+  ins:    { icon: '🛡️', label: '儲蓄險', order: 4 },
+  cash:   { icon: '💵', label: '現金',   order: 5 },
 };
 
+// 讀取抽屜當前所有 row（type 含 tw/us/crypto/ins/cash），一律視為 items 參與加權
 function _roiDrawerGetState() {
   const body = $('roi-drawer-body');
   if (!body) return null;
   const items = [];
-  body.querySelectorAll('.roi-input[data-type]:not([data-key="cash"])').forEach(inp => {
+  body.querySelectorAll('.roi-input[data-type]').forEach(inp => {
     items.push({
       key: inp.dataset.key,
       type: inp.dataset.type,
@@ -3429,21 +3431,18 @@ function _roiDrawerGetState() {
       roi: parseFloat(inp.value) || 0,
     });
   });
-  const cashInp = body.querySelector('.roi-input[data-key="cash"]');
-  const cashT = parseFloat(cashInp?.dataset.mv) || 0;
-  const cashRoi = parseFloat(cashInp?.value) || 0;
-  return { items, cashT, cashRoi };
+  return { items };
 }
 
 function _roiDrawerRecalc() {
   const st = _roiDrawerGetState();
   if (!st) return;
-  const totalAsset = st.items.reduce((s, x) => s + x.marketValue, 0) + st.cashT;
-  const weighted = computeWeightedROI(st.items, st.cashT, st.cashRoi);
+  const totalAsset = st.items.reduce((s, x) => s + x.marketValue, 0);
+  const weighted = computeWeightedROI(st.items);
   $('roi-drawer-total').textContent = fmt(totalAsset);
   $('roi-drawer-weighted').textContent = weighted.toFixed(2) + ' %';
   // 更新每個分組小計的 avgROI
-  const byGroup = { tw: [], us: [], crypto: [] };
+  const byGroup = { tw: [], us: [], crypto: [], ins: [], cash: [] };
   st.items.forEach(x => byGroup[x.type]?.push(x));
   Object.entries(byGroup).forEach(([type, arr]) => {
     const mv = arr.reduce((s, x) => s + x.marketValue, 0);
@@ -3472,8 +3471,6 @@ function resetROIToPresets() {
       : (DWZ_ROI_DEFAULT[type] ?? 0);
     inp.value = preset;
   });
-  const cashInp = body.querySelector('.roi-input[data-key="cash"]');
-  if (cashInp) cashInp.value = DWZ_ROI_DEFAULT.cash;
   _roiDrawerRecalc();
   showToast('已重置為系統預設', 'ok');
 }
@@ -3486,9 +3483,10 @@ function closeROIDrawer() {
 
 function openROIEditor() {
   const items = buildHoldingsROIList();
-  const { cashT } = calcTotals();
+  const { cashT, ins } = calcTotals();
   const store = _readAssetROIStore();
   const cashRoi = store['cash'] !== undefined ? parseFloat(store['cash']) : DWZ_ROI_DEFAULT.cash;
+  const insRoi  = store['ins']  !== undefined ? parseFloat(store['ins'])  : DWZ_ROI_DEFAULT.ins;
 
   // 分組
   const byType = { tw: [], us: [], crypto: [] };
@@ -3532,6 +3530,29 @@ function openROIEditor() {
     renderGroup('crypto', byType.crypto, [20, 30, 10]) +
     renderGroup('us',     byType.us,     [8, 10, 12])  +
     renderGroup('tw',     byType.tw,     [6, 8, 10])   +
+    (ins > 0 ? `
+    <section class="roi-drawer-group roi-group-ins">
+       <header class="roi-drawer-group-head">
+         <div class="roi-group-titleline">
+           <span class="roi-group-icon">🛡️</span>
+           <span class="roi-group-name">儲蓄險</span>
+           <span class="roi-group-count">1</span>
+         </div>
+         <div class="roi-group-stats">
+           <span class="roi-group-stat"><span class="roi-group-stat-lbl">小計</span><span class="roi-group-stat-val">${fmt(ins)}</span></span>
+           <span class="roi-group-stat"><span class="roi-group-stat-lbl">平均 ROI</span><span class="roi-group-stat-val" id="roi-group-avg-ins">—</span></span>
+         </div>
+       </header>
+       <div class="roi-drawer-group-body">
+         <div class="roi-drawer-row">
+           <span class="roi-sym">🛡️ 儲蓄險總額</span>
+           <span class="roi-mv">${fmt(ins)}</span>
+           <input type="number" class="roi-input" min="-5" max="15" step="0.1"
+                  value="${insRoi}" data-key="ins" data-type="ins"
+                  data-sym="INS" data-mv="${ins}">
+         </div>
+       </div>
+     </section>` : '') +
     `<section class="roi-drawer-group roi-group-cash">
        <header class="roi-drawer-group-head">
          <div class="roi-group-titleline">
@@ -3541,6 +3562,7 @@ function openROIEditor() {
          </div>
          <div class="roi-group-stats">
            <span class="roi-group-stat"><span class="roi-group-stat-lbl">小計</span><span class="roi-group-stat-val">${fmt(cashT)}</span></span>
+           <span class="roi-group-stat"><span class="roi-group-stat-lbl">平均 ROI</span><span class="roi-group-stat-val" id="roi-group-avg-cash">—</span></span>
          </div>
        </header>
        <div class="roi-drawer-group-body">
@@ -3570,9 +3592,8 @@ function openROIEditor() {
     if (!st) return;
     const saved = {};
     st.items.forEach(x => { saved[x.key] = x.roi; });
-    saved['cash'] = st.cashRoi;
     _writeAssetROIStore(saved);
-    const weighted = computeWeightedROI(st.items, st.cashT, st.cashRoi);
+    const weighted = computeWeightedROI(st.items);
     const retInp = $('dwz-return');
     if (retInp) {
       retInp.value = weighted.toFixed(2);
@@ -3610,17 +3631,13 @@ function renderDWZ() {
   const expBudgetTWD = _dwzParam('dwz-exp-budget') * 10000;  // 40–65 歲年度體驗預算
 
   const { liquid, budget } = calcTotals();
-  const rawStartNW = liquid - illiquidTWD;   // 可用資產（排除非流動）
-  // Year-0 以逐月現金流模擬：計入未來 12 個月預計收入與重大體驗，作為年度迴圈起點
-  const sim = simulateMonthly({
-    startBalance: rawStartNW,
-    maxMonths: 12,
-    monthlyBudget: budget,
-  });
-  let startNW = sim.finalBalance;
-  // 手動 Bucket List 若設在 currentAge，需在 year-0 扣掉（年度迴圈自 currentAge+1 起）
-  _dwzExpenses.filter(e => e.age === currentAge).forEach(e => { startNW -= e.amount * 10000; });
-  if (giftAge === currentAge && legacyTWD > 0) startNW -= legacyTWD;
+  // 起點統一為可用資產（與首頁同步）：不再在 startNW 上預扣 12 個月生活費
+  const startNW = liquid - illiquidTWD;
+  // 年度迴圈從 currentAge + 1 起算，第一年的支出（含月支出預算 + 本年未付體驗
+  // + 本年手動 bucket list + 本年生前贈與）都由第一年迭代一併扣除
+  const year0ManualItems = _dwzExpenses.filter(e => e.age === currentAge);
+  const year0ManualTotal = year0ManualItems.reduce((s, e) => s + e.amount * 10000, 0);
+  const year0GiftTotal = (giftAge === currentAge && legacyTWD > 0) ? legacyTWD : 0;
   const annualBase = budget * 12;
 
   // Show live context (顯示 year-0 模擬後的資產，讓使用者看到墊高效果)
@@ -3648,7 +3665,8 @@ function renderDWZ() {
       const yearsRetired = age - retireAge;
       mult = yearsRetired < 15 ? multEarly : multLate;
     }
-    const annualExpense = annualBase * Math.pow(1 + inf, n) * mult;
+    // 第一年（n=1）不套通膨（首年支出即為當前年度預算）
+    const annualExpense = annualBase * (n === 1 ? 1 : Math.pow(1 + inf, n - 1)) * mult;
 
     // End-of-year model: compound then spend
     nw = nw * (1 + r) - annualExpense;
@@ -3661,6 +3679,11 @@ function renderDWZ() {
 
     // Life-time legacy gift deducted at giftAge
     if (age === giftAge && legacyTWD > 0) nw -= legacyTWD;
+
+    // 第一年額外扣：手動 bucket list 排在 currentAge 的項目 + 生前贈與排在 currentAge 者
+    if (age === currentAge + 1) {
+      nw -= year0ManualTotal + year0GiftTotal;
+    }
 
     ages.push(age);
     wealth.push(Math.round(nw));
