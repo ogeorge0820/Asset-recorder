@@ -415,6 +415,33 @@
   </div>
 </div>
 
+<!-- ── ROI Side Drawer（標的級別精算）── -->
+<div class="roi-drawer-backdrop" id="roi-drawer-backdrop" onclick="closeROIDrawer()"></div>
+<aside class="roi-drawer" id="roi-drawer" aria-hidden="true">
+  <header class="roi-drawer-head">
+    <div>
+      <div class="roi-drawer-title">📊 標的級別精算</div>
+      <div class="roi-drawer-subtitle">逐一調整，或用分組批次套用</div>
+    </div>
+    <button class="roi-drawer-close" onclick="closeROIDrawer()" aria-label="關閉">✕</button>
+  </header>
+  <div class="roi-drawer-body" id="roi-drawer-body"></div>
+  <footer class="roi-drawer-foot">
+    <div class="roi-foot-row">
+      <span class="roi-foot-label">總可用資產</span>
+      <span class="roi-foot-val" id="roi-drawer-total">—</span>
+    </div>
+    <div class="roi-foot-row roi-foot-hl">
+      <span class="roi-foot-label">⭐ 加權總平均年化</span>
+      <span class="roi-foot-val" id="roi-drawer-weighted">—</span>
+    </div>
+    <div class="roi-foot-actions">
+      <button class="btn-cancel" onclick="resetROIToPresets()">↺ 重置為預設</button>
+      <button class="btn-ok" id="roi-drawer-apply">套用到 DWZ</button>
+    </div>
+  </footer>
+</aside>
+
 <!-- ── Crypto Detail Panel ── -->
 <div class="crypto-panel-overlay" id="crypto-panel" onclick="cryptoPanelBgClick(event)">
   <div class="crypto-panel-sheet" id="crypto-panel-sheet">
@@ -461,6 +488,6 @@
 <!-- ── Toast ── -->
 <div class="toast" id="toast"></div>
 
-<script src="app.js?v=202604192132"></script>
+<script src="app.js?v=202604192138"></script>
 </body>
 </html>

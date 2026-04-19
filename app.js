@@ -2,7 +2,7 @@
 // CONFIG
 // ══════════════════════════════════════════════════════════════
 // Build 時間：每次修改 code 後手動更新此時間（UTC+8 台北時間）
-const BUILD_DATE = '2026/04/19 21:32';
+const BUILD_DATE = '2026/04/19 21:38';
 
 const SPREADSHEET_ID = '1lpRpxVzWaYUqL-jVPOAJCtjsJUIedPYYyOx4gg4PPFU';
 const CLIENT_ID = '149884248440-85f8dhc6ub9up10sv0f89e3e0itrnooj.apps.googleusercontent.com';
@@ -3408,85 +3408,184 @@ function computeWeightedROI(items, cashTWD, cashRoi) {
   return (weighted / totalAsset) * 100;
 }
 
+// ── Side Drawer 版精算介面 ──
+const DWZ_ROI_GROUP_META = {
+  crypto: { icon: '₿', label: '加密貨幣', order: 1 },
+  us:     { icon: '🇺🇸', label: '美股',   order: 2 },
+  tw:     { icon: '🇹🇼', label: '台股',   order: 3 },
+  cash:   { icon: '💵', label: '現金',   order: 4 },
+};
+
+function _roiDrawerGetState() {
+  const body = $('roi-drawer-body');
+  if (!body) return null;
+  const items = [];
+  body.querySelectorAll('.roi-input[data-type]:not([data-key="cash"])').forEach(inp => {
+    items.push({
+      key: inp.dataset.key,
+      type: inp.dataset.type,
+      symbol: inp.dataset.sym,
+      marketValue: parseFloat(inp.dataset.mv) || 0,
+      roi: parseFloat(inp.value) || 0,
+    });
+  });
+  const cashInp = body.querySelector('.roi-input[data-key="cash"]');
+  const cashT = parseFloat(cashInp?.dataset.mv) || 0;
+  const cashRoi = parseFloat(cashInp?.value) || 0;
+  return { items, cashT, cashRoi };
+}
+
+function _roiDrawerRecalc() {
+  const st = _roiDrawerGetState();
+  if (!st) return;
+  const totalAsset = st.items.reduce((s, x) => s + x.marketValue, 0) + st.cashT;
+  const weighted = computeWeightedROI(st.items, st.cashT, st.cashRoi);
+  $('roi-drawer-total').textContent = fmt(totalAsset);
+  $('roi-drawer-weighted').textContent = weighted.toFixed(2) + ' %';
+  // 更新每個分組小計的 avgROI
+  const byGroup = { tw: [], us: [], crypto: [] };
+  st.items.forEach(x => byGroup[x.type]?.push(x));
+  Object.entries(byGroup).forEach(([type, arr]) => {
+    const mv = arr.reduce((s, x) => s + x.marketValue, 0);
+    const avg = mv > 0 ? arr.reduce((s, x) => s + x.marketValue * x.roi, 0) / mv : 0;
+    const el = $(`roi-group-avg-${type}`);
+    if (el) el.textContent = avg > 0 ? avg.toFixed(1) + ' %' : '—';
+  });
+}
+
+function applyGroupFill(type, val) {
+  const body = $('roi-drawer-body');
+  if (!body) return;
+  body.querySelectorAll(`.roi-input[data-type="${type}"]`).forEach(inp => { inp.value = val; });
+  _roiDrawerRecalc();
+  showToast(`${DWZ_ROI_GROUP_META[type]?.label || type} 已批次套用 ${val}%`, 'ok');
+}
+
+function resetROIToPresets() {
+  const body = $('roi-drawer-body');
+  if (!body) return;
+  body.querySelectorAll('.roi-input[data-type]').forEach(inp => {
+    const sym = inp.dataset.sym;
+    const type = inp.dataset.type;
+    const preset = DWZ_ROI_PRESETS[sym] !== undefined
+      ? DWZ_ROI_PRESETS[sym]
+      : (DWZ_ROI_DEFAULT[type] ?? 0);
+    inp.value = preset;
+  });
+  const cashInp = body.querySelector('.roi-input[data-key="cash"]');
+  if (cashInp) cashInp.value = DWZ_ROI_DEFAULT.cash;
+  _roiDrawerRecalc();
+  showToast('已重置為系統預設', 'ok');
+}
+
+function closeROIDrawer() {
+  $('roi-drawer')?.classList.remove('open');
+  $('roi-drawer-backdrop')?.classList.remove('open');
+  document.body.classList.remove('roi-drawer-open');
+}
+
 function openROIEditor() {
   const items = buildHoldingsROIList();
   const { cashT } = calcTotals();
   const store = _readAssetROIStore();
   const cashRoi = store['cash'] !== undefined ? parseFloat(store['cash']) : DWZ_ROI_DEFAULT.cash;
 
-  $('modal-title').textContent = '📊 標的級別精算';
-  const typeBadge = t => ({ tw:'🇹🇼 台股', us:'🇺🇸 美股', crypto:'₿ 加密' })[t] || t;
-  $('modal-body').innerHTML = `
-    <div class="roi-editor-hint">每個持倉的預期年化報酬率（%）可獨立調整。未列出的現金部分預設 <b>${DWZ_ROI_DEFAULT.cash}%</b>（可修改）。</div>
-    <div class="roi-editor-table">
-      <div class="roi-editor-row roi-editor-head">
-        <span>標的</span><span>類別</span><span>市值</span><span>ROI %</span>
-      </div>
-      ${items.length ? items.map(x => `
-        <div class="roi-editor-row">
-          <span class="roi-sym">${esc(x.symbol)}</span>
-          <span class="roi-type roi-type-${x.type}">${typeBadge(x.type)}</span>
-          <span class="roi-mv">${fmt(x.marketValue)}</span>
-          <input type="number" class="roi-input" min="-20" max="80" step="0.5" value="${x.roi}" data-key="${esc(x.key)}">
-        </div>`).join('') : '<div class="roi-editor-empty">尚無持倉</div>'}
-      <div class="roi-editor-row roi-editor-cash">
-        <span class="roi-sym">💵 現金</span>
-        <span class="roi-type roi-type-cash">現金</span>
-        <span class="roi-mv">${fmt(cashT)}</span>
-        <input type="number" class="roi-input" min="-5" max="30" step="0.1" value="${cashRoi}" data-key="cash">
-      </div>
-    </div>
-    <div class="roi-editor-summary">
-      <div class="roi-summary-row">
-        <span class="roi-summary-label">總可用資產</span>
-        <span class="roi-summary-val" id="roi-total-asset">—</span>
-      </div>
-      <div class="roi-summary-row roi-summary-hl">
-        <span class="roi-summary-label">⭐ 加權總平均年化</span>
-        <span class="roi-summary-val" id="roi-weighted">—</span>
-      </div>
-    </div>
-    <div class="modal-actions">
-      <button class="btn-cancel" onclick="closeModal()">取消</button>
-      <button class="btn-ok" id="roi-apply">套用到 DWZ</button>
+  // 分組
+  const byType = { tw: [], us: [], crypto: [] };
+  items.forEach(x => byType[x.type]?.push(x));
+
+  const fillBtn = (type, val) =>
+    `<button type="button" class="roi-group-fill" onclick="applyGroupFill('${type}',${val})" title="批次套用 ${val}%">全部填入 ${val}%</button>`;
+
+  const renderRow = (x) => `
+    <div class="roi-drawer-row">
+      <span class="roi-sym">${esc(x.symbol)}</span>
+      <span class="roi-mv" title="市值">${fmt(x.marketValue)}</span>
+      <input type="number" class="roi-input" min="-20" max="80" step="0.5"
+             value="${x.roi}" data-key="${esc(x.key)}" data-type="${x.type}"
+             data-sym="${esc(x.symbol)}" data-mv="${x.marketValue}">
     </div>`;
-  $('modal').classList.add('open');
 
-  const body = $('modal-body');
-  const getCurrent = () => {
-    const snap = items.map(x => {
-      const inp = body.querySelector(`.roi-input[data-key="${CSS.escape(x.key)}"]`);
-      return { ...x, roi: parseFloat(inp?.value) || 0 };
-    });
-    const cashInp = body.querySelector('.roi-input[data-key="cash"]');
-    const cashV = parseFloat(cashInp?.value) || 0;
-    return { snap, cashV };
+  const renderGroup = (type, arr, presets) => {
+    if (!arr.length) return '';
+    const mv = arr.reduce((s, x) => s + x.marketValue, 0);
+    const meta = DWZ_ROI_GROUP_META[type];
+    return `
+      <section class="roi-drawer-group roi-group-${type}">
+        <header class="roi-drawer-group-head">
+          <div class="roi-group-titleline">
+            <span class="roi-group-icon">${meta.icon}</span>
+            <span class="roi-group-name">${meta.label}</span>
+            <span class="roi-group-count">${arr.length}</span>
+          </div>
+          <div class="roi-group-stats">
+            <span class="roi-group-stat"><span class="roi-group-stat-lbl">小計</span><span class="roi-group-stat-val">${fmt(mv)}</span></span>
+            <span class="roi-group-stat"><span class="roi-group-stat-lbl">平均 ROI</span><span class="roi-group-stat-val" id="roi-group-avg-${type}">—</span></span>
+          </div>
+          <div class="roi-group-fills">${presets.map(p => fillBtn(type, p)).join('')}</div>
+        </header>
+        <div class="roi-drawer-group-body">${arr.map(renderRow).join('')}</div>
+      </section>`;
   };
-  const recalc = () => {
-    const { snap, cashV } = getCurrent();
-    const totalAsset = snap.reduce((s, x) => s + x.marketValue, 0) + cashT;
-    const weighted = computeWeightedROI(snap, cashT, cashV);
-    $('roi-total-asset').textContent = fmt(totalAsset);
-    $('roi-weighted').textContent = weighted.toFixed(2) + ' %';
-  };
-  body.querySelectorAll('.roi-input').forEach(inp => inp.addEventListener('input', recalc));
-  recalc();
 
-  $('roi-apply').onclick = () => {
-    const { snap, cashV } = getCurrent();
+  const groupsHTML =
+    renderGroup('crypto', byType.crypto, [30, 40, 20]) +
+    renderGroup('us',     byType.us,     [8, 10, 12])  +
+    renderGroup('tw',     byType.tw,     [6, 8, 10])   +
+    `<section class="roi-drawer-group roi-group-cash">
+       <header class="roi-drawer-group-head">
+         <div class="roi-group-titleline">
+           <span class="roi-group-icon">💵</span>
+           <span class="roi-group-name">現金</span>
+           <span class="roi-group-count">1</span>
+         </div>
+         <div class="roi-group-stats">
+           <span class="roi-group-stat"><span class="roi-group-stat-lbl">小計</span><span class="roi-group-stat-val">${fmt(cashT)}</span></span>
+         </div>
+       </header>
+       <div class="roi-drawer-group-body">
+         <div class="roi-drawer-row">
+           <span class="roi-sym">💵 現金總額</span>
+           <span class="roi-mv">${fmt(cashT)}</span>
+           <input type="number" class="roi-input" min="-5" max="30" step="0.1"
+                  value="${cashRoi}" data-key="cash" data-type="cash"
+                  data-sym="CASH" data-mv="${cashT}">
+         </div>
+       </div>
+     </section>`;
+
+  const body = $('roi-drawer-body');
+  body.innerHTML = items.length
+    ? `<p class="roi-drawer-hint">每個持倉可獨立調整。分組旁的「全部填入」可批次套用到該分組所有標的。</p>${groupsHTML}`
+    : `<p class="roi-drawer-hint">尚無持倉。</p>${groupsHTML}`;
+
+  // bind
+  body.querySelectorAll('.roi-input').forEach(inp => {
+    inp.addEventListener('input', _roiDrawerRecalc);
+    inp.addEventListener('focus', (e) => e.target.select());
+  });
+
+  $('roi-drawer-apply').onclick = () => {
+    const st = _roiDrawerGetState();
+    if (!st) return;
     const saved = {};
-    snap.forEach(x => { saved[x.key] = x.roi; });
-    saved['cash'] = cashV;
+    st.items.forEach(x => { saved[x.key] = x.roi; });
+    saved['cash'] = st.cashRoi;
     _writeAssetROIStore(saved);
-    const weighted = computeWeightedROI(snap, cashT, cashV);
+    const weighted = computeWeightedROI(st.items, st.cashT, st.cashRoi);
     const retInp = $('dwz-return');
     if (retInp) {
       retInp.value = weighted.toFixed(2);
       dwzAutoCalc();
     }
     showToast(`已套用加權 ROI ${weighted.toFixed(2)}%`, 'ok');
-    closeModal();
+    closeROIDrawer();
   };
+
+  _roiDrawerRecalc();
+  $('roi-drawer').classList.add('open');
+  $('roi-drawer-backdrop').classList.add('open');
+  document.body.classList.add('roi-drawer-open');
 }
 
 function initDWZ() {
