@@ -2,7 +2,7 @@
 // CONFIG
 // ══════════════════════════════════════════════════════════════
 // Build 時間：每次修改 code 後手動更新此時間（UTC+8 台北時間）
-const BUILD_DATE = '2026/04/19 21:38';
+const BUILD_DATE = '2026/04/19 21:44';
 
 const SPREADSHEET_ID = '1lpRpxVzWaYUqL-jVPOAJCtjsJUIedPYYyOx4gg4PPFU';
 const CLIENT_ID = '149884248440-85f8dhc6ub9up10sv0f89e3e0itrnooj.apps.googleusercontent.com';
@@ -3352,12 +3352,12 @@ const DWZ_ROI_PRESETS = {
   'VTI':8,'VOO':8,'SPY':8,'VT':8,'0050':8,'006208':8,'00878':8,'00929':8,'00713':8,'00919':8,'00940':8,
   // 成長型科技
   'QQQ':12,'NVDA':12,'TSLA':12,'AAPL':10,'MSFT':10,'GOOGL':10,'GOOG':10,'META':10,'AMZN':10,'AVGO':10,
-  // 主流加密貨幣
-  'BTC':30,'ETH':30,
-  // 穩定幣（當作生息現金看）
-  'USDT':4,'USDC':4,'DAI':4,
+  // 加密貨幣：除 USDT 穩定幣外統一 20%
+  'BTC':20,'ETH':20,
+  // 穩定幣（USDT 維持低生息預期；USDC/DAI 套用類別預設 20%，使用者可自行改）
+  'USDT':4,
 };
-const DWZ_ROI_DEFAULT = { tw: 8, us: 10, crypto: 40, cash: 2 };
+const DWZ_ROI_DEFAULT = { tw: 8, us: 10, crypto: 20, cash: 2 };
 
 function _readAssetROIStore() { return JSON.parse(localStorage.getItem('dwz_asset_roi') || '{}'); }
 function _writeAssetROIStore(obj) { localStorage.setItem('dwz_asset_roi', JSON.stringify(obj)); }
@@ -3529,7 +3529,7 @@ function openROIEditor() {
   };
 
   const groupsHTML =
-    renderGroup('crypto', byType.crypto, [30, 40, 20]) +
+    renderGroup('crypto', byType.crypto, [20, 30, 10]) +
     renderGroup('us',     byType.us,     [8, 10, 12])  +
     renderGroup('tw',     byType.tw,     [6, 8, 10])   +
     `<section class="roi-drawer-group roi-group-cash">
