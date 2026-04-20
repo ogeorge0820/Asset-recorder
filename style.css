@@ -1518,27 +1518,31 @@ h3.section-header {
 [data-theme="light"] .income-cat-badge { background: rgba(99,102,241,.1); color: #4f46e5; }
 [data-theme="light"] .income-recurring-badge { background: rgba(16,185,129,.1); color: #059669; }
 
-/* ═══ Die With Zero — 單屏雙欄佈局（高密度） ═══ */
+/* ═══ Die With Zero — Apple-style 參數區 ═══ */
 .dwz-layout {
   display: grid;
-  grid-template-columns: minmax(320px, 380px) 1fr;
+  grid-template-columns: minmax(340px, 400px) 1fr;
   gap: 16px;
   align-items: start;
-  /* 建立明確的 stacking context，避免曲線漂浮覆蓋參數 */
   position: relative;
   isolation: isolate;
 }
-@media (max-width: 900px) {
-  .dwz-layout { grid-template-columns: 1fr; }
+@media (max-width: 900px) { .dwz-layout { grid-template-columns: 1fr; } }
+
+/* Ultra-wide：左欄放寬 + 4 個 block 採 2×2 排列，縱向高度再砍半 */
+@media (min-width: 1400px) {
+  .dwz-layout { grid-template-columns: minmax(560px, 640px) 1fr; }
+  .dwz-left-blocks { grid-template-columns: 1fr 1fr; }
 }
 
-/* ── 左欄：緊湊參數區 ── */
+/* ── 左欄：透明 grid 容器，子元素各自成卡 ── */
 .dwz-left {
-  background: var(--card); border: 1px solid var(--border);
-  border-radius: var(--r); padding: 12px 14px;
-  display: flex; flex-direction: column; gap: 8px;
+  background: transparent;
+  border: none;
+  padding: 0;
+  display: flex; flex-direction: column; gap: 10px;
   position: sticky; top: 12px;
-  z-index: 2;  /* 高於圖表 card */
+  z-index: 2;
   max-height: calc(100vh - 24px); overflow-y: auto;
   scrollbar-width: thin;
   scrollbar-color: rgba(148,163,184,.35) transparent;
@@ -1549,71 +1553,119 @@ h3.section-header {
   .dwz-left { position: static; max-height: none; overflow: visible; z-index: auto; }
 }
 
-/* Header：title + KPI tags 同一行；tags 往右靠 */
+/* Header 單獨一張卡 */
 .dwz-left-head {
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: 14px; padding: 10px 14px;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.04), 0 0 0 1px rgba(255,255,255,0.02) inset;
   display: flex; align-items: center; justify-content: space-between;
   flex-wrap: wrap; gap: 6px 10px;
-  padding-bottom: 8px; border-bottom: 1px solid var(--border);
 }
 .dwz-section-title {
   font-size: 1rem; font-weight: 700; color: var(--text); margin-bottom: 14px;
+  letter-spacing: -0.01em;
 }
-.dwz-section-title.compact { font-size: 0.88rem; margin-bottom: 0; }
+.dwz-section-title.compact {
+  font-size: 0.9rem; margin-bottom: 0; letter-spacing: -0.005em;
+}
 
-/* KPI 小標籤 — header 右側細長 */
+/* KPI 小標籤 — Header 右側，玻璃感 */
 .dwz-left-kpis { display: flex; flex-wrap: wrap; gap: 4px; }
 .dwz-kpi-tag {
-  display: inline-flex; align-items: center; gap: 3px;
+  display: inline-flex; align-items: center; gap: 4px;
   font-size: 0.7rem; font-weight: 500; color: var(--muted);
-  background: rgba(99,102,241,.07); border: 1px solid var(--border);
-  padding: 2px 7px; border-radius: 999px;
+  background: rgba(99,102,241,.09);
+  border: 1px solid rgba(99,102,241,.18);
+  padding: 3px 9px; border-radius: 999px;
   white-space: nowrap; line-height: 1.3;
+  backdrop-filter: blur(10px) saturate(160%);
+  -webkit-backdrop-filter: blur(10px) saturate(160%);
 }
-.dwz-kpi-tag b { color: var(--accent-light); font-weight: 700; font-size: 0.76rem; font-variant-numeric: tabular-nums; }
+.dwz-kpi-tag b {
+  color: var(--accent-light); font-weight: 700; font-size: 0.78rem;
+  font-variant-numeric: tabular-nums;
+  font-family: 'SF Mono', 'JetBrains Mono', 'Menlo', 'Consolas', ui-monospace, monospace;
+  letter-spacing: -0.01em;
+}
 
-/* 分組 block */
-.dwz-param-block { display: flex; flex-direction: column; gap: 2px; }
+/* Block container（2×2 就在這個 grid 上） */
+.dwz-left-blocks {
+  display: grid; grid-template-columns: 1fr; gap: 10px;
+}
+
+/* ── 分組卡 ── */
+.dwz-param-block {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 10px 14px 12px;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.04), 0 0 0 1px rgba(255,255,255,0.02) inset;
+  display: flex; flex-direction: column; gap: 1px;
+}
 .dwz-block-title {
-  font-size: 0.7rem; font-weight: 700; color: var(--muted);
-  text-transform: uppercase; letter-spacing: 0.05em;
-  margin: 0 0 2px; padding-left: 2px;
+  font-size: 0.82rem; font-weight: 700; color: var(--text);
+  text-transform: none; letter-spacing: -0.01em;
+  margin: 0 0 6px; padding-left: 2px;
 }
 
-/* 水平 row：label 左 + input 右（+ 可選 inline button） */
+/* ── Row：label + 引導點 + input ── */
 .dwz-row {
   display: grid;
-  grid-template-columns: 1fr 110px;
+  grid-template-columns: auto 1fr 100px;
   align-items: center;
-  gap: 8px;
-  padding: 2px 0;
-  min-height: 28px;
+  gap: 0;
+  padding: 4px 0;
+  min-height: 30px;
+}
+/* 中間 column：dot leaders */
+.dwz-row::before {
+  content: '';
+  grid-column: 2;
+  height: 1px;
+  margin: 0 10px;
+  background-image: radial-gradient(circle, currentColor 0.8px, transparent 0.8px);
+  background-size: 6px 100%;
+  background-repeat: repeat-x;
+  opacity: 0.22;
+  color: var(--muted);
+  align-self: center;
 }
 .dwz-row label {
-  font-size: 0.76rem; color: var(--muted); font-weight: 600;
-  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-  line-height: 1.2;
+  font-size: 0.78rem; color: var(--text); font-weight: 500;
+  white-space: nowrap; line-height: 1.2;
+  letter-spacing: -0.005em;
 }
 .dwz-row .dwz-param-unit {
-  font-size: 0.66rem; font-weight: 400; color: var(--muted);
-  margin-left: 2px;
+  font-size: 0.68rem; font-weight: 400; color: var(--muted);
+  margin-left: 3px;
 }
-.dwz-param-input {
-  background: var(--bg); border: 1px solid var(--border);
-  border-radius: 6px; padding: 4px 9px; color: var(--text);
-  font-size: 0.85rem; font-weight: 600; outline: none;
-  width: 100%; max-width: 110px; justify-self: end;
-  transition: border-color .15s;
-  font-variant-numeric: tabular-nums;
-}
-.dwz-param-input:focus { border-color: var(--accent); }
 
-/* Row 變體：年化報酬率（label + input + 📊 按鈕 inline） */
-.dwz-row-return {
-  grid-template-columns: 1fr 110px auto;
+/* 現代輸入框：軟灰底、無邊框、focus 時出現細藍環 */
+.dwz-param-input {
+  background: rgba(120,120,128,0.12);
+  border: 1px solid transparent;
+  border-radius: 8px;
+  padding: 5px 10px;
+  color: var(--text);
+  font-size: 0.88rem; font-weight: 600;
+  font-family: 'SF Mono', 'JetBrains Mono', 'Menlo', 'Consolas', ui-monospace, monospace;
+  font-variant-numeric: tabular-nums;
+  outline: none;
+  width: 100%; max-width: 100px; justify-self: end;
+  text-align: right;
+  transition: background .15s ease, border-color .15s ease, box-shadow .15s ease;
+  letter-spacing: -0.01em;
 }
-.dwz-row-return .dwz-roi-precise {
-  padding: 3px 8px; margin-left: 0;
+.dwz-param-input:hover { background: rgba(120,120,128,0.18); }
+.dwz-param-input:focus {
+  background: var(--card);
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(99,102,241,0.18);
 }
+
+/* Row 變體：年化報酬率（label｜dots｜input｜📊 button） */
+.dwz-row-return { grid-template-columns: auto 1fr 100px auto; }
+.dwz-row-return .dwz-roi-precise { padding: 3px 9px; margin-left: 6px; }
 
 /* ── 右欄：曲線 + 分析 ── */
 .dwz-right {
@@ -1622,25 +1674,33 @@ h3.section-header {
   position: relative; z-index: 1;
 }
 
-/* 緊湊警示膠囊 */
+/* 玻璃感警示膠囊 */
 .dwz-alerts-row { display: flex; flex-wrap: wrap; gap: 6px; }
 .dwz-pill {
-  display: inline-flex; align-items: center; gap: 5px;
-  font-size: 0.76rem; line-height: 1;
-  padding: 5px 10px; border-radius: 999px;
-  border: 1px solid var(--border);
-  background: var(--card); color: var(--text);
-  white-space: nowrap;
+  display: inline-flex; align-items: center; gap: 6px;
+  font-size: 0.78rem; line-height: 1;
+  padding: 6px 12px; border-radius: 999px;
+  border: 1px solid rgba(255,255,255,0.06);
+  background: rgba(255,255,255,0.03);
+  backdrop-filter: blur(18px) saturate(180%);
+  -webkit-backdrop-filter: blur(18px) saturate(180%);
+  color: var(--text); white-space: nowrap;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.06), 0 0 0 1px rgba(255,255,255,0.03) inset;
+  letter-spacing: -0.005em;
 }
 .dwz-pill em { font-style: normal; color: var(--muted); font-size: 0.7rem; font-weight: 500; }
-.dwz-pill b { font-weight: 700; }
-.dwz-pill-peak   { background: rgba(99,102,241,.12); border-color: rgba(99,102,241,.3); }
+.dwz-pill b {
+  font-weight: 700;
+  font-family: 'SF Mono', 'JetBrains Mono', 'Menlo', 'Consolas', ui-monospace, monospace;
+  font-variant-numeric: tabular-nums;
+}
+.dwz-pill-peak   { background: rgba(99,102,241,.14); border-color: rgba(99,102,241,.26); }
 .dwz-pill-peak b { color: var(--accent-light); }
-.dwz-pill-danger { background: rgba(239,68,68,.12); border-color: rgba(239,68,68,.4); }
+.dwz-pill-danger { background: rgba(239,68,68,.13); border-color: rgba(239,68,68,.3); }
 .dwz-pill-danger b { color: #ef4444; }
-.dwz-pill-warn   { background: rgba(245,158,11,.12); border-color: rgba(245,158,11,.4); }
+.dwz-pill-warn   { background: rgba(245,158,11,.13); border-color: rgba(245,158,11,.3); }
 .dwz-pill-warn b { color: #f59e0b; }
-.dwz-pill-waste  { background: rgba(239,68,68,.08); border-color: rgba(239,68,68,.25); }
+.dwz-pill-waste  { background: rgba(239,68,68,.08); border-color: rgba(239,68,68,.2); }
 .dwz-pill-waste b { color: #ef4444; }
 
 /* 圖表卡 — 明確不透明背景，避免 sticky 元件穿透 */
@@ -1753,8 +1813,11 @@ h3.section-header {
   .dwz-chart-canvas-wrap { height: 260px; }
 }
 
-[data-theme="light"] .dwz-param-input,
+[data-theme="light"] .dwz-param-input { background: rgba(0,0,0,0.045); }
+[data-theme="light"] .dwz-param-input:hover { background: rgba(0,0,0,0.065); }
+[data-theme="light"] .dwz-param-input:focus { background: #fff; }
 [data-theme="light"] .dwz-modal-input { background: #f8f7f4; }
+[data-theme="light"] .dwz-row::before { color: #8b6f47; opacity: 0.3; }
 
 /* ── DWZ 標的級別精算按鈕（inline in label） ── */
 .dwz-roi-precise {
