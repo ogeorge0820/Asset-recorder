@@ -1518,20 +1518,20 @@ h3.section-header {
 [data-theme="light"] .income-cat-badge { background: rgba(99,102,241,.1); color: #4f46e5; }
 [data-theme="light"] .income-recurring-badge { background: rgba(16,185,129,.1); color: #059669; }
 
-/* ═══ Die With Zero — Apple-style 參數區 ═══ */
+/* ═══ Die With Zero — Apple-style 參數區（緊湊版） ═══ */
 .dwz-layout {
   display: grid;
-  grid-template-columns: minmax(340px, 400px) 1fr;
-  gap: 16px;
+  grid-template-columns: minmax(270px, 310px) 1fr;
+  gap: 14px;
   align-items: start;
   position: relative;
   isolation: isolate;
 }
 @media (max-width: 900px) { .dwz-layout { grid-template-columns: 1fr; } }
 
-/* Ultra-wide：左欄放寬 + 4 個 block 採 2×2 排列，縱向高度再砍半 */
-@media (min-width: 1400px) {
-  .dwz-layout { grid-template-columns: minmax(560px, 640px) 1fr; }
+/* Ultra-wide：左欄稍放寬 + 4 個 block 2×2，縱向再砍半 */
+@media (min-width: 1500px) {
+  .dwz-layout { grid-template-columns: minmax(440px, 520px) 1fr; }
   .dwz-left-blocks { grid-template-columns: 1fr 1fr; }
 }
 
@@ -1540,7 +1540,7 @@ h3.section-header {
   background: transparent;
   border: none;
   padding: 0;
-  display: flex; flex-direction: column; gap: 10px;
+  display: flex; flex-direction: column; gap: 8px;
   position: sticky; top: 12px;
   z-index: 2;
   max-height: calc(100vh - 24px); overflow-y: auto;
@@ -1556,10 +1556,10 @@ h3.section-header {
 /* Header 單獨一張卡 */
 .dwz-left-head {
   background: var(--card); border: 1px solid var(--border);
-  border-radius: 14px; padding: 10px 14px;
+  border-radius: 12px; padding: 8px 12px;
   box-shadow: 0 1px 2px rgba(0,0,0,0.04), 0 0 0 1px rgba(255,255,255,0.02) inset;
   display: flex; align-items: center; justify-content: space-between;
-  flex-wrap: wrap; gap: 6px 10px;
+  flex-wrap: wrap; gap: 4px 8px;
 }
 .dwz-section-title {
   font-size: 1rem; font-weight: 700; color: var(--text); margin-bottom: 14px;
@@ -1590,37 +1590,37 @@ h3.section-header {
 
 /* Block container（2×2 就在這個 grid 上） */
 .dwz-left-blocks {
-  display: grid; grid-template-columns: 1fr; gap: 10px;
+  display: grid; grid-template-columns: 1fr; gap: 8px;
 }
 
 /* ── 分組卡 ── */
 .dwz-param-block {
   background: var(--card);
   border: 1px solid var(--border);
-  border-radius: 14px;
-  padding: 10px 14px 12px;
+  border-radius: 12px;
+  padding: 8px 12px 10px;
   box-shadow: 0 1px 2px rgba(0,0,0,0.04), 0 0 0 1px rgba(255,255,255,0.02) inset;
-  display: flex; flex-direction: column; gap: 1px;
+  display: flex; flex-direction: column; gap: 0;
 }
 .dwz-block-title {
-  font-size: 0.82rem; font-weight: 700; color: var(--text);
+  font-size: 0.78rem; font-weight: 700; color: var(--text);
   text-transform: none; letter-spacing: -0.01em;
-  margin: 0 0 6px; padding-left: 2px;
+  margin: 0 0 4px; padding-left: 1px;
 }
 
 /* ── Row：label 左（含引導點延伸）+ input 右 ── */
 .dwz-row {
   display: grid;
-  grid-template-columns: 1fr 100px;
+  grid-template-columns: 1fr 80px;
   align-items: center;
-  gap: 8px;
-  padding: 3px 0;
-  min-height: 30px;
+  gap: 6px;
+  padding: 2px 0;
+  min-height: 26px;
 }
 /* label 本身是 flex container，text + 延伸點 */
 .dwz-row > label {
   display: flex; align-items: baseline; gap: 0;
-  font-size: 0.78rem; color: var(--text); font-weight: 500;
+  font-size: 0.76rem; color: var(--text); font-weight: 500;
   letter-spacing: -0.005em;
   line-height: 1.2;
   overflow: hidden;
@@ -1629,8 +1629,8 @@ h3.section-header {
 .dwz-row > label::after {
   content: '';
   flex: 1 1 auto;
-  min-width: 16px;
-  margin-left: 8px;
+  min-width: 12px;
+  margin-left: 6px;
   align-self: center;
   height: 1px;
   background-image: radial-gradient(circle, currentColor 0.8px, transparent 0.8px);
@@ -1640,22 +1640,22 @@ h3.section-header {
   color: var(--muted);
 }
 .dwz-row .dwz-param-unit {
-  font-size: 0.68rem; font-weight: 400; color: var(--muted);
-  margin-left: 3px; flex-shrink: 0;
+  font-size: 0.66rem; font-weight: 400; color: var(--muted);
+  margin-left: 2px; flex-shrink: 0;
 }
 
 /* 現代輸入框：軟灰底、無邊框、focus 時出現細藍環 */
 .dwz-param-input {
   background: rgba(120,120,128,0.12);
   border: 1px solid transparent;
-  border-radius: 8px;
-  padding: 5px 10px;
+  border-radius: 7px;
+  padding: 4px 8px;
   color: var(--text);
-  font-size: 0.88rem; font-weight: 600;
+  font-size: 0.84rem; font-weight: 600;
   font-family: 'SF Mono', 'JetBrains Mono', 'Menlo', 'Consolas', ui-monospace, monospace;
   font-variant-numeric: tabular-nums;
   outline: none;
-  width: 100px; max-width: 100px;
+  width: 80px; max-width: 80px;
   text-align: right;
   transition: background .15s ease, border-color .15s ease, box-shadow .15s ease;
   letter-spacing: -0.01em;
@@ -1668,8 +1668,8 @@ h3.section-header {
 }
 
 /* Row 變體：年化報酬率（label｜input｜📊 button） */
-.dwz-row-return { grid-template-columns: 1fr 100px auto; }
-.dwz-row-return .dwz-roi-precise { padding: 3px 9px; margin-left: 4px; }
+.dwz-row-return { grid-template-columns: 1fr 80px auto; }
+.dwz-row-return .dwz-roi-precise { padding: 2px 7px; margin-left: 3px; }
 
 /* ── 右欄：曲線 + 分析 ── */
 .dwz-right {
