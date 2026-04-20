@@ -298,86 +298,46 @@
     <!-- ══ Die With Zero Tab ══ -->
     <div id="tab-dwz" class="dwz-layout" style="display:none">
 
-      <!-- ═══ 左欄：模擬參數 ═══ -->
+      <!-- ═══ 左欄：模擬參數（水平 row 版） ═══ -->
       <aside class="dwz-left">
-        <div class="dwz-left-head">
-          <h3 class="dwz-section-title compact">⚙️ 模擬參數 <span class="dwz-autocalc-badge">即時計算</span></h3>
+        <header class="dwz-left-head">
+          <h3 class="dwz-section-title compact">⚙️ 模擬參數 <span class="dwz-autocalc-badge">即時</span></h3>
           <div class="dwz-left-kpis">
-            <span class="dwz-kpi-tag" title="與首頁可用資產同步">🏦 <em>起始</em> <b id="dwz-start-nw">—</b></span>
-            <span class="dwz-kpi-tag" title="基於當前月支出 ×12">💸 <em>年支出</em> <b id="dwz-start-budget">—</b></span>
+            <span class="dwz-kpi-tag" title="與首頁可用資產同步">🏦<b id="dwz-start-nw">—</b></span>
+            <span class="dwz-kpi-tag" title="基於當前月支出 ×12">💸<b id="dwz-start-budget">—</b></span>
           </div>
-        </div>
+        </header>
 
         <section class="dwz-param-block">
           <h4 class="dwz-block-title">⏳ 時間軸</h4>
-          <div class="dwz-param-grid-compact">
-            <div class="dwz-param-group">
-              <label class="dwz-param-label">目前年齡</label>
-              <input id="dwz-age" class="dwz-param-input" type="number" min="20" max="80" value="35" oninput="dwzAutoCalc()">
-            </div>
-            <div class="dwz-param-group">
-              <label class="dwz-param-label">退休年齡</label>
-              <input id="dwz-retire" class="dwz-param-input" type="number" min="30" max="80" value="55" oninput="dwzAutoCalc()">
-            </div>
-            <div class="dwz-param-group">
-              <label class="dwz-param-label">預計壽命</label>
-              <input id="dwz-life" class="dwz-param-input" type="number" min="60" max="120" value="90" oninput="dwzAutoCalc()">
-            </div>
-          </div>
+          <div class="dwz-row"><label>目前年齡</label><input id="dwz-age" class="dwz-param-input" type="number" min="20" max="80" value="35" oninput="dwzAutoCalc()"></div>
+          <div class="dwz-row"><label>退休年齡</label><input id="dwz-retire" class="dwz-param-input" type="number" min="30" max="80" value="55" oninput="dwzAutoCalc()"></div>
+          <div class="dwz-row"><label>預計壽命</label><input id="dwz-life" class="dwz-param-input" type="number" min="60" max="120" value="90" oninput="dwzAutoCalc()"></div>
         </section>
 
         <section class="dwz-param-block">
           <h4 class="dwz-block-title">📈 報酬 & 通膨</h4>
-          <div class="dwz-param-grid-compact">
-            <div class="dwz-param-group dwz-param-group-wide">
-              <label class="dwz-param-label">年化報酬率 % <button type="button" class="dwz-roi-precise" onclick="openROIEditor()" title="以個別持倉 ROI 推算加權平均">📊 精算</button></label>
-              <input id="dwz-return" class="dwz-param-input" type="number" min="0" max="30" step="0.1" value="7" oninput="dwzAutoCalc()">
-            </div>
-            <div class="dwz-param-group">
-              <label class="dwz-param-label">年通膨率 %</label>
-              <input id="dwz-inflation" class="dwz-param-input" type="number" min="0" max="20" step="0.1" value="3" oninput="dwzAutoCalc()">
-            </div>
-            <div class="dwz-param-group dwz-param-group-wide">
-              <label class="dwz-param-label">非流動資產排除 <span class="dwz-param-unit">萬</span></label>
-              <input id="dwz-illiquid" class="dwz-param-input" type="number" min="0" step="10" value="0" oninput="dwzAutoCalc()" placeholder="如房產">
-            </div>
+          <div class="dwz-row dwz-row-return">
+            <label>年化報酬率 %</label>
+            <input id="dwz-return" class="dwz-param-input" type="number" min="0" max="30" step="0.1" value="7" oninput="dwzAutoCalc()">
+            <button type="button" class="dwz-roi-precise" onclick="openROIEditor()" title="以個別持倉 ROI 推算加權平均">📊</button>
           </div>
+          <div class="dwz-row"><label>年通膨率 %</label><input id="dwz-inflation" class="dwz-param-input" type="number" min="0" max="20" step="0.1" value="3" oninput="dwzAutoCalc()"></div>
+          <div class="dwz-row"><label>非流動排除 <span class="dwz-param-unit">萬</span></label><input id="dwz-illiquid" class="dwz-param-input" type="number" min="0" step="10" value="0" oninput="dwzAutoCalc()" placeholder="如房產"></div>
         </section>
 
         <section class="dwz-param-block">
           <h4 class="dwz-block-title">🏠 生活支出</h4>
-          <div class="dwz-param-grid-compact">
-            <div class="dwz-param-group">
-              <label class="dwz-param-label">退休初期倍率 <span class="dwz-param-unit">%</span></label>
-              <input id="dwz-mult-early" class="dwz-param-input" type="number" min="50" max="300" step="5" value="120" oninput="dwzAutoCalc()">
-            </div>
-            <div class="dwz-param-group">
-              <label class="dwz-param-label">晚年倍率 <span class="dwz-param-unit">%</span></label>
-              <input id="dwz-mult-late" class="dwz-param-input" type="number" min="20" max="200" step="5" value="80" oninput="dwzAutoCalc()">
-            </div>
-            <div class="dwz-param-group">
-              <label class="dwz-param-label">保底金 <span class="dwz-param-unit">萬</span></label>
-              <input id="dwz-safe-floor" class="dwz-param-input" type="number" min="0" step="50" value="500" oninput="dwzAutoCalc()">
-            </div>
-          </div>
+          <div class="dwz-row"><label>退休初期倍率 <span class="dwz-param-unit">%</span></label><input id="dwz-mult-early" class="dwz-param-input" type="number" min="50" max="300" step="5" value="120" oninput="dwzAutoCalc()"></div>
+          <div class="dwz-row"><label>晚年倍率 <span class="dwz-param-unit">%</span></label><input id="dwz-mult-late" class="dwz-param-input" type="number" min="20" max="200" step="5" value="80" oninput="dwzAutoCalc()"></div>
+          <div class="dwz-row"><label>保底金 <span class="dwz-param-unit">萬</span></label><input id="dwz-safe-floor" class="dwz-param-input" type="number" min="0" step="50" value="500" oninput="dwzAutoCalc()"></div>
         </section>
 
         <section class="dwz-param-block">
           <h4 class="dwz-block-title">🎁 遺贈 & 體驗</h4>
-          <div class="dwz-param-grid-compact">
-            <div class="dwz-param-group">
-              <label class="dwz-param-label">留給下一代 <span class="dwz-param-unit">萬</span></label>
-              <input id="dwz-legacy" class="dwz-param-input" type="number" min="0" step="1" value="0" oninput="dwzAutoCalc()">
-            </div>
-            <div class="dwz-param-group">
-              <label class="dwz-param-label">贈與年齡 <span class="dwz-param-unit">歲</span></label>
-              <input id="dwz-gift-age" class="dwz-param-input" type="number" min="40" max="90" value="60" oninput="dwzAutoCalc()">
-            </div>
-            <div class="dwz-param-group">
-              <label class="dwz-param-label">40–65 體驗 <span class="dwz-param-unit">萬/年</span></label>
-              <input id="dwz-exp-budget" class="dwz-param-input" type="number" min="0" step="5" value="0" oninput="dwzAutoCalc()">
-            </div>
-          </div>
+          <div class="dwz-row"><label>留給下一代 <span class="dwz-param-unit">萬</span></label><input id="dwz-legacy" class="dwz-param-input" type="number" min="0" step="1" value="0" oninput="dwzAutoCalc()"></div>
+          <div class="dwz-row"><label>贈與年齡 <span class="dwz-param-unit">歲</span></label><input id="dwz-gift-age" class="dwz-param-input" type="number" min="40" max="90" value="60" oninput="dwzAutoCalc()"></div>
+          <div class="dwz-row"><label>40–65 體驗 <span class="dwz-param-unit">萬/年</span></label><input id="dwz-exp-budget" class="dwz-param-input" type="number" min="0" step="5" value="0" oninput="dwzAutoCalc()"></div>
         </section>
       </aside>
 
@@ -509,6 +469,6 @@
 <!-- ── Toast ── -->
 <div class="toast" id="toast"></div>
 
-<script src="app.js?v=202604201122"></script>
+<script src="app.js?v=202604201144"></script>
 </body>
 </html>

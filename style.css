@@ -1518,12 +1518,15 @@ h3.section-header {
 [data-theme="light"] .income-cat-badge { background: rgba(99,102,241,.1); color: #4f46e5; }
 [data-theme="light"] .income-recurring-badge { background: rgba(16,185,129,.1); color: #059669; }
 
-/* ═══ Die With Zero — 單屏雙欄佈局 ═══ */
+/* ═══ Die With Zero — 單屏雙欄佈局（高密度） ═══ */
 .dwz-layout {
   display: grid;
-  grid-template-columns: minmax(340px, 400px) 1fr;
+  grid-template-columns: minmax(320px, 380px) 1fr;
   gap: 16px;
   align-items: start;
+  /* 建立明確的 stacking context，避免曲線漂浮覆蓋參數 */
+  position: relative;
+  isolation: isolate;
 }
 @media (max-width: 900px) {
   .dwz-layout { grid-template-columns: 1fr; }
@@ -1532,9 +1535,10 @@ h3.section-header {
 /* ── 左欄：緊湊參數區 ── */
 .dwz-left {
   background: var(--card); border: 1px solid var(--border);
-  border-radius: var(--r); padding: 14px 16px;
-  display: flex; flex-direction: column; gap: 10px;
+  border-radius: var(--r); padding: 12px 14px;
+  display: flex; flex-direction: column; gap: 8px;
   position: sticky; top: 12px;
+  z-index: 2;  /* 高於圖表 card */
   max-height: calc(100vh - 24px); overflow-y: auto;
   scrollbar-width: thin;
   scrollbar-color: rgba(148,163,184,.35) transparent;
@@ -1542,102 +1546,116 @@ h3.section-header {
 .dwz-left::-webkit-scrollbar { width: 5px; }
 .dwz-left::-webkit-scrollbar-thumb { background: rgba(148,163,184,.4); border-radius: 999px; }
 @media (max-width: 900px) {
-  .dwz-left { position: static; max-height: none; overflow: visible; }
+  .dwz-left { position: static; max-height: none; overflow: visible; z-index: auto; }
 }
 
+/* Header：title + KPI tags 同一行；tags 往右靠 */
 .dwz-left-head {
-  display: flex; flex-direction: column; gap: 8px;
+  display: flex; align-items: center; justify-content: space-between;
+  flex-wrap: wrap; gap: 6px 10px;
   padding-bottom: 8px; border-bottom: 1px solid var(--border);
 }
 .dwz-section-title {
   font-size: 1rem; font-weight: 700; color: var(--text); margin-bottom: 14px;
 }
-.dwz-section-title.compact { font-size: 0.9rem; margin-bottom: 0; }
+.dwz-section-title.compact { font-size: 0.88rem; margin-bottom: 0; }
 
-/* KPI 小標籤（Small Tags） */
-.dwz-left-kpis { display: flex; flex-wrap: wrap; gap: 6px; }
+/* KPI 小標籤 — header 右側細長 */
+.dwz-left-kpis { display: flex; flex-wrap: wrap; gap: 4px; }
 .dwz-kpi-tag {
-  display: inline-flex; align-items: center; gap: 4px;
-  font-size: 0.72rem; font-weight: 500; color: var(--muted);
+  display: inline-flex; align-items: center; gap: 3px;
+  font-size: 0.7rem; font-weight: 500; color: var(--muted);
   background: rgba(99,102,241,.07); border: 1px solid var(--border);
-  padding: 3px 8px; border-radius: 999px;
-  white-space: nowrap;
+  padding: 2px 7px; border-radius: 999px;
+  white-space: nowrap; line-height: 1.3;
 }
-.dwz-kpi-tag em { font-style: normal; color: var(--muted); }
-.dwz-kpi-tag b { color: var(--accent-light); font-weight: 700; font-size: 0.8rem; }
+.dwz-kpi-tag b { color: var(--accent-light); font-weight: 700; font-size: 0.76rem; font-variant-numeric: tabular-nums; }
 
 /* 分組 block */
-.dwz-param-block { display: flex; flex-direction: column; gap: 6px; }
+.dwz-param-block { display: flex; flex-direction: column; gap: 2px; }
 .dwz-block-title {
-  font-size: 0.72rem; font-weight: 700; color: var(--muted);
+  font-size: 0.7rem; font-weight: 700; color: var(--muted);
   text-transform: uppercase; letter-spacing: 0.05em;
-  margin: 0; padding-left: 2px;
+  margin: 0 0 2px; padding-left: 2px;
 }
-.dwz-param-grid-compact {
-  display: grid;
-  grid-template-columns: 1fr 1fr 1fr;
-  gap: 8px 10px;
-}
-.dwz-param-group-wide { grid-column: span 2; }
 
-.dwz-param-group { display: flex; flex-direction: column; gap: 3px; }
-.dwz-param-label {
-  font-size: 0.7rem; color: var(--muted); font-weight: 600;
-  display: flex; align-items: center; gap: 4px;
+/* 水平 row：label 左 + input 右（+ 可選 inline button） */
+.dwz-row {
+  display: grid;
+  grid-template-columns: 1fr 110px;
+  align-items: center;
+  gap: 8px;
+  padding: 2px 0;
+  min-height: 28px;
+}
+.dwz-row label {
+  font-size: 0.76rem; color: var(--muted); font-weight: 600;
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  line-height: 1.2;
+}
+.dwz-row .dwz-param-unit {
+  font-size: 0.66rem; font-weight: 400; color: var(--muted);
+  margin-left: 2px;
 }
 .dwz-param-input {
   background: var(--bg); border: 1px solid var(--border);
-  border-radius: 7px; padding: 6px 10px; color: var(--text);
-  font-size: 0.85rem; font-weight: 600; outline: none; width: 100%;
-  transition: border-color .2s;
+  border-radius: 6px; padding: 4px 9px; color: var(--text);
+  font-size: 0.85rem; font-weight: 600; outline: none;
+  width: 100%; max-width: 110px; justify-self: end;
+  transition: border-color .15s;
   font-variant-numeric: tabular-nums;
 }
 .dwz-param-input:focus { border-color: var(--accent); }
 
+/* Row 變體：年化報酬率（label + input + 📊 按鈕 inline） */
+.dwz-row-return {
+  grid-template-columns: 1fr 110px auto;
+}
+.dwz-row-return .dwz-roi-precise {
+  padding: 3px 8px; margin-left: 0;
+}
+
 /* ── 右欄：曲線 + 分析 ── */
-.dwz-right { display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+.dwz-right {
+  display: flex; flex-direction: column; gap: 8px;
+  min-width: 0;
+  position: relative; z-index: 1;
+}
 
 /* 緊湊警示膠囊 */
-.dwz-alerts-row {
-  display: flex; flex-wrap: wrap; gap: 6px;
-  min-height: 0;
-}
+.dwz-alerts-row { display: flex; flex-wrap: wrap; gap: 6px; }
 .dwz-pill {
-  display: inline-flex; align-items: center; gap: 6px;
-  font-size: 0.78rem; line-height: 1;
-  padding: 6px 11px; border-radius: 999px;
+  display: inline-flex; align-items: center; gap: 5px;
+  font-size: 0.76rem; line-height: 1;
+  padding: 5px 10px; border-radius: 999px;
   border: 1px solid var(--border);
   background: var(--card); color: var(--text);
   white-space: nowrap;
 }
-.dwz-pill em { font-style: normal; color: var(--muted); font-size: 0.72rem; font-weight: 500; }
+.dwz-pill em { font-style: normal; color: var(--muted); font-size: 0.7rem; font-weight: 500; }
 .dwz-pill b { font-weight: 700; }
-.dwz-pill-peak {
-  background: rgba(99,102,241,.12); border-color: rgba(99,102,241,.3);
-}
+.dwz-pill-peak   { background: rgba(99,102,241,.12); border-color: rgba(99,102,241,.3); }
 .dwz-pill-peak b { color: var(--accent-light); }
-.dwz-pill-danger {
-  background: rgba(239,68,68,.12); border-color: rgba(239,68,68,.4);
-}
+.dwz-pill-danger { background: rgba(239,68,68,.12); border-color: rgba(239,68,68,.4); }
 .dwz-pill-danger b { color: #ef4444; }
-.dwz-pill-warn {
-  background: rgba(245,158,11,.12); border-color: rgba(245,158,11,.4);
-}
+.dwz-pill-warn   { background: rgba(245,158,11,.12); border-color: rgba(245,158,11,.4); }
 .dwz-pill-warn b { color: #f59e0b; }
-.dwz-pill-waste {
-  background: rgba(239,68,68,.08); border-color: rgba(239,68,68,.25);
-}
+.dwz-pill-waste  { background: rgba(239,68,68,.08); border-color: rgba(239,68,68,.25); }
 .dwz-pill-waste b { color: #ef4444; }
 
-.dwz-chart-card { margin-bottom: 0; padding: 14px 16px; }
-.dwz-chart-canvas-wrap { position: relative; height: 300px; }
-.dwz-click-hint {
-  font-size: 0.72rem; color: var(--muted); font-style: italic;
+/* 圖表卡 — 明確不透明背景，避免 sticky 元件穿透 */
+.dwz-chart-card {
+  margin-bottom: 0; padding: 12px 14px;
+  background: var(--card) !important;
+  position: relative; z-index: 1;
 }
+.dwz-chart-card .chart-title-row { margin-bottom: 8px; }
+.dwz-chart-card .chart-title-row h3 { font-size: 0.92rem; margin-bottom: 0; }
+.dwz-chart-canvas-wrap { position: relative; height: 260px; }
+.dwz-click-hint { font-size: 0.7rem; color: var(--muted); font-style: italic; }
 .dwz-legend-row {
-  display: flex; align-items: center; gap: 8px;
-  margin-top: 10px; font-size: 0.75rem; color: var(--muted);
+  display: flex; align-items: center; flex-wrap: wrap; gap: 4px 8px;
+  margin-top: 6px; font-size: 0.7rem; color: var(--muted);
 }
 .dwz-legend-dot {
   width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0;
@@ -1651,11 +1669,12 @@ h3.section-header {
 
 .dwz-expenses-card {
   background: var(--card); border: 1px solid var(--border);
-  border-radius: var(--r); padding: 20px 24px;
+  border-radius: var(--r); padding: 12px 14px;
+  position: relative; z-index: 1;
 }
 .dwz-expenses-header {
   display: flex; align-items: center; justify-content: space-between;
-  margin-bottom: 14px;
+  margin-bottom: 10px;
 }
 .btn-dwz-add {
   background: none; border: 1px solid var(--accent); color: var(--accent);
