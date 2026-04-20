@@ -2,7 +2,7 @@
 // CONFIG
 // ══════════════════════════════════════════════════════════════
 // Build 時間：每次修改 code 後手動更新此時間（UTC+8 台北時間）
-const BUILD_DATE = '2026/04/19 21:56';
+const BUILD_DATE = '2026/04/20 11:22';
 
 const SPREADSHEET_ID = '1lpRpxVzWaYUqL-jVPOAJCtjsJUIedPYYyOx4gg4PPFU';
 const CLIENT_ID = '149884248440-85f8dhc6ub9up10sv0f89e3e0itrnooj.apps.googleusercontent.com';
@@ -3640,10 +3640,10 @@ function renderDWZ() {
   const year0GiftTotal = (giftAge === currentAge && legacyTWD > 0) ? legacyTWD : 0;
   const annualBase = budget * 12;
 
-  // Show live context (顯示 year-0 模擬後的資產，讓使用者看到墊高效果)
+  // KPI 小標籤：起始可用資產（與首頁同步）+ 年支出基準
   const snwEl = $('dwz-start-nw'), sbuEl = $('dwz-start-budget');
   if (snwEl) snwEl.textContent = fmtWan(startNW);
-  if (sbuEl) sbuEl.textContent = fmtWan(annualBase) + '/年';
+  if (sbuEl) sbuEl.textContent = fmtWan(annualBase);
 
   // ── Build wealth curve ──
   const ages   = [];
@@ -3701,36 +3701,40 @@ function renderDWZ() {
   // ── Waste indicator: unspent surplus above safety floor at end of life ──
   const wastedWealth = Math.max(0, finalWealth - safeFloor);
 
-  // ── Warning ──
+  // ── Warning pill ──
   const warnEl = $('dwz-warning');
   if (warnEl) {
     if (wealthAt80 < 0) {
-      warnEl.style.display = 'block';
-      warnEl.className = 'dwz-warning';
+      warnEl.style.display = 'inline-flex';
+      warnEl.className = 'dwz-pill dwz-pill-danger';
       const retireAge2 = ages.find((_a, i) => wealth[i] < 0);
-      warnEl.innerHTML = `🚨 資金缺口預警：預計 <b>${retireAge2} 歲</b>財富功成身退。<br><span>建議延後退休年齡，或降低生活費倍率。</span>`;
+      warnEl.innerHTML = `🚨 <em>缺口</em> <b>${retireAge2} 歲</b>歸零`;
+      warnEl.title = '資金缺口預警：建議延後退休年齡或降低生活費倍率';
     } else if (wealthAt90 > 20000000) {
-      warnEl.style.display = 'block';
-      warnEl.className = 'dwz-warning overworked';
-      warnEl.innerHTML = `⚠️ <b>Over-worked 警告</b>：你在 90 歲時仍剩 <b>${fmtWan(wealthAt90)}</b>！<br><span>也許你工作得太努力了。建議在 45–65 歲黃金期大幅增加體驗支出。</span>`;
+      warnEl.style.display = 'inline-flex';
+      warnEl.className = 'dwz-pill dwz-pill-warn';
+      warnEl.innerHTML = `⚠️ <em>Over-worked</em> 90 歲剩 <b>${fmtWan(wealthAt90)}</b>`;
+      warnEl.title = '你工作得太努力了，建議 45–65 歲大幅增加體驗支出';
     } else {
       warnEl.style.display = 'none';
     }
   }
 
-  // ── Peak info ──
+  // ── Peak pill ──
   const peakEl = $('dwz-peak-info');
   if (peakEl && peakNW > -Infinity) {
-    peakEl.style.display = 'flex';
-    peakEl.innerHTML = `<span class="dwz-peak-label">📈 資產巔峰</span><span class="dwz-peak-age">${peakAge} 歲</span><span class="dwz-peak-val">${fmtWan(peakNW)}</span>`;
+    peakEl.style.display = 'inline-flex';
+    peakEl.innerHTML = `📈 <em>巔峰</em> <b>${peakAge} 歲</b> ${fmtWan(peakNW)}`;
+    peakEl.title = `資產高點：${peakAge} 歲 ${fmtWan(peakNW)}`;
   }
 
-  // ── Waste indicator ──
+  // ── Waste pill ──
   const wasteEl = $('dwz-waste-info');
   if (wasteEl) {
     if (wastedWealth > 0) {
-      wasteEl.style.display = 'flex';
-      wasteEl.innerHTML = `<span class="dwz-waste-icon">💀</span><span class="dwz-waste-text">按目前規劃，你將在 <b>${lifeAge} 歲</b>時帶走 <b class="dwz-waste-val">${fmtWan(wastedWealth)}</b> 未兌換的生命能量，這些財富將永遠消逝。</span>`;
+      wasteEl.style.display = 'inline-flex';
+      wasteEl.innerHTML = `💀 <em>終局浪費</em> <b>${fmtWan(wastedWealth)}</b>`;
+      wasteEl.title = `按目前規劃，${lifeAge} 歲時帶走 ${fmtWan(wastedWealth)} 未兌換的生命能量`;
     } else {
       wasteEl.style.display = 'none';
     }
