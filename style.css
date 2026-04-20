@@ -1608,36 +1608,40 @@ h3.section-header {
   margin: 0 0 6px; padding-left: 2px;
 }
 
-/* ── Row：label + 引導點 + input ── */
+/* ── Row：label 左（含引導點延伸）+ input 右 ── */
 .dwz-row {
   display: grid;
-  grid-template-columns: auto 1fr 100px;
+  grid-template-columns: 1fr 100px;
   align-items: center;
-  gap: 0;
-  padding: 4px 0;
+  gap: 8px;
+  padding: 3px 0;
   min-height: 30px;
 }
-/* 中間 column：dot leaders */
-.dwz-row::before {
+/* label 本身是 flex container，text + 延伸點 */
+.dwz-row > label {
+  display: flex; align-items: baseline; gap: 0;
+  font-size: 0.78rem; color: var(--text); font-weight: 500;
+  letter-spacing: -0.005em;
+  line-height: 1.2;
+  overflow: hidden;
+  min-width: 0;
+}
+.dwz-row > label::after {
   content: '';
-  grid-column: 2;
+  flex: 1 1 auto;
+  min-width: 16px;
+  margin-left: 8px;
+  align-self: center;
   height: 1px;
-  margin: 0 10px;
   background-image: radial-gradient(circle, currentColor 0.8px, transparent 0.8px);
   background-size: 6px 100%;
   background-repeat: repeat-x;
   opacity: 0.22;
   color: var(--muted);
-  align-self: center;
-}
-.dwz-row label {
-  font-size: 0.78rem; color: var(--text); font-weight: 500;
-  white-space: nowrap; line-height: 1.2;
-  letter-spacing: -0.005em;
 }
 .dwz-row .dwz-param-unit {
   font-size: 0.68rem; font-weight: 400; color: var(--muted);
-  margin-left: 3px;
+  margin-left: 3px; flex-shrink: 0;
 }
 
 /* 現代輸入框：軟灰底、無邊框、focus 時出現細藍環 */
@@ -1651,7 +1655,7 @@ h3.section-header {
   font-family: 'SF Mono', 'JetBrains Mono', 'Menlo', 'Consolas', ui-monospace, monospace;
   font-variant-numeric: tabular-nums;
   outline: none;
-  width: 100%; max-width: 100px; justify-self: end;
+  width: 100px; max-width: 100px;
   text-align: right;
   transition: background .15s ease, border-color .15s ease, box-shadow .15s ease;
   letter-spacing: -0.01em;
@@ -1663,9 +1667,9 @@ h3.section-header {
   box-shadow: 0 0 0 3px rgba(99,102,241,0.18);
 }
 
-/* Row 變體：年化報酬率（label｜dots｜input｜📊 button） */
-.dwz-row-return { grid-template-columns: auto 1fr 100px auto; }
-.dwz-row-return .dwz-roi-precise { padding: 3px 9px; margin-left: 6px; }
+/* Row 變體：年化報酬率（label｜input｜📊 button） */
+.dwz-row-return { grid-template-columns: 1fr 100px auto; }
+.dwz-row-return .dwz-roi-precise { padding: 3px 9px; margin-left: 4px; }
 
 /* ── 右欄：曲線 + 分析 ── */
 .dwz-right {
