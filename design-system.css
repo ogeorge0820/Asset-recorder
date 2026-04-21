@@ -507,3 +507,345 @@ h1, h2, h3, h4, h5, h6,
   .kpi-label { font-size: 11px !important; }
   .kpi-sub { font-size: 11px !important; }
 }
+
+
+/* ═══════════════════════════════════════════════════════════════
+   Phase 3 — 管理頁（Management）Linear / Notion 精修
+   ═══════════════════════════════════════════════════════════════ */
+
+/* 管理頁 grid 間距統一 */
+.mgmt-grid {
+  gap: var(--ds-space-2) !important;          /* 8px */
+  margin-bottom: var(--ds-space-4) !important;
+}
+
+/* ── Section 卡：padding 壓縮、統一 border/shadow ── */
+.section-card {
+  padding: var(--ds-space-3) var(--ds-space-4) !important;  /* 12 / 16 */
+  border: 1px solid var(--border) !important;
+  border-radius: var(--ds-radius) !important;
+  box-shadow: none !important;
+  transition: border-color .15s ease;
+}
+.section-card:hover { border-color: var(--ds-border-hover); }
+[data-theme="light"] .section-card {
+  background: var(--ds-card) !important;
+  border: 1px solid var(--ds-border) !important;
+}
+.section-card.collapsed h3.section-header { margin-bottom: 0 !important; }
+
+/* ── Section header：標題 + 右側 meta ── */
+.section-card h3,
+h3.section-header {
+  font-family: var(--ds-font-heading) !important;
+  font-size: 14px !important;
+  font-weight: 600 !important;
+  color: var(--text) !important;
+  letter-spacing: -0.01em !important;
+  margin-bottom: var(--ds-space-3) !important;  /* 12px */
+  gap: 10px !important;
+}
+[data-theme="light"] .section-card h3,
+[data-theme="light"] h3.section-header {
+  color: var(--ds-text) !important;
+}
+
+/* 總額：用 text 色 + mono；不再紫色 accent */
+.section-total, .total-val {
+  color: var(--text) !important;
+  font-family: var(--ds-font-mono) !important;
+  font-variant-numeric: tabular-nums;
+  font-size: 13px !important;
+  font-weight: 600 !important;
+  letter-spacing: -0.01em !important;
+}
+[data-theme="light"] .section-total,
+[data-theme="light"] .total-val {
+  color: var(--ds-text) !important;
+}
+
+.section-avail {
+  color: var(--ds-muted) !important;
+  font-size: 12px !important;
+  font-family: var(--ds-font-mono) !important;
+}
+
+/* 每日損益小徽章保留紅綠 */
+.section-gain {
+  font-size: 12px !important;
+  font-family: var(--ds-font-mono) !important;
+  font-variant-numeric: tabular-nums;
+}
+.section-gain.pos { color: var(--ds-success) !important; }
+.section-gain.neg { color: var(--ds-danger) !important; }
+.section-gain.neutral { color: var(--ds-muted) !important; }
+
+/* Chevron：簡潔灰 */
+.section-chevron {
+  color: var(--ds-muted-soft) !important;
+  font-size: 11px !important;
+}
+
+/* ── Badge（項目數）：改 Notion 式淺灰 pill ── */
+.badge {
+  background: var(--card2) !important;
+  color: var(--text) !important;
+  border: 1px solid var(--border) !important;
+  border-radius: var(--ds-radius-xs) !important;
+  padding: 1px 6px !important;
+  font-size: 11px !important;
+  font-weight: 600 !important;
+  font-family: var(--ds-font-mono) !important;
+  letter-spacing: 0 !important;
+}
+[data-theme="light"] .badge {
+  background: #F3F4F6 !important;
+  color: var(--ds-text) !important;
+  border-color: transparent !important;
+}
+
+/* ── 資料表 ── */
+.data-table {
+  font-size: 13px !important;
+  font-family: var(--ds-font-body) !important;
+}
+.data-table th {
+  font-weight: 500 !important;
+  color: var(--ds-muted) !important;
+  font-size: 11px !important;
+  text-transform: none !important;
+  letter-spacing: 0 !important;
+  padding: 6px 8px !important;
+  border-bottom: 1px solid var(--border) !important;
+}
+.data-table td {
+  padding: 8px !important;
+  border-bottom: 1px solid var(--border) !important;
+  font-family: var(--ds-font-body);
+  color: var(--text);
+}
+.data-table .amt,
+.data-table td.amt {
+  font-family: var(--ds-font-mono) !important;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.01em;
+  font-weight: 600;
+}
+.data-table .sub-price {
+  color: var(--ds-muted) !important;
+  font-size: 11px !important;
+  font-family: var(--ds-font-mono) !important;
+}
+[data-theme="light"] .data-table th {
+  color: var(--ds-muted) !important;
+  border-bottom-color: var(--ds-border) !important;
+}
+[data-theme="light"] .data-table td {
+  border-bottom-color: var(--ds-border) !important;
+  color: var(--ds-text);
+}
+.data-table tr.clickable-row { transition: background .15s ease; }
+.data-table tr.clickable-row:hover { background: var(--card2); }
+[data-theme="light"] .data-table tr.clickable-row:hover { background: var(--ds-bg) !important; }
+
+.sym-tag {
+  font-family: var(--ds-font-mono) !important;
+  font-weight: 700 !important;
+  letter-spacing: 0 !important;
+}
+.price-err {
+  background: var(--ds-danger-soft) !important;
+  color: var(--ds-danger) !important;
+  border-radius: var(--ds-radius-xs) !important;
+  font-family: var(--ds-font-body) !important;
+}
+
+/* ── Icon 按鈕（編輯/刪除/複製）中性化 ── */
+.btn-icon {
+  color: var(--ds-muted) !important;
+  border-radius: var(--ds-radius-xs) !important;
+  min-width: 32px !important; min-height: 32px !important;
+  padding: 6px 8px !important;
+}
+.btn-icon.edit { color: var(--ds-muted) !important; }
+.btn-icon.edit:hover {
+  background: var(--card2) !important;
+  color: var(--text) !important;
+}
+.btn-icon.copy:hover {
+  background: var(--card2) !important;
+  color: var(--text) !important;
+}
+.btn-icon.del { color: var(--ds-muted) !important; }
+.btn-icon.del:hover {
+  background: var(--ds-danger-soft) !important;
+  color: var(--ds-danger) !important;
+}
+[data-theme="light"] .btn-icon.edit:hover,
+[data-theme="light"] .btn-icon.copy:hover {
+  background: #F3F4F6 !important;
+  color: var(--ds-text) !important;
+}
+[data-theme="light"] .btn-icon.del:hover {
+  background: var(--ds-danger-soft) !important;
+  color: var(--ds-danger) !important;
+}
+
+/* ── btn-add：Notion 式 dashed neutral ── */
+/* 覆寫 Phase 1 的 solid 版本，恢復 dashed 提示「可新增」的意圖 */
+.btn-add {
+  background: transparent !important;
+  background-image: none !important;
+  border: 1px dashed var(--border) !important;
+  color: var(--ds-muted) !important;
+  border-radius: var(--ds-radius-sm) !important;
+  padding: 8px 0 !important;
+  font-size: 13px !important;
+  font-weight: 500 !important;
+  font-family: var(--ds-font-body) !important;
+  width: 100% !important;
+  margin-top: var(--ds-space-2) !important;
+  transition: all .15s ease !important;
+}
+.btn-add:hover {
+  border-color: var(--ds-border-hover) !important;
+  color: var(--text) !important;
+  background: var(--card2) !important;
+}
+[data-theme="light"] .btn-add {
+  background: transparent !important;
+  border-color: var(--ds-border) !important;
+  color: var(--ds-muted) !important;
+}
+[data-theme="light"] .btn-add:hover {
+  background: var(--ds-bg) !important;
+  border-color: var(--ds-border-hover) !important;
+  color: var(--ds-text) !important;
+}
+
+/* ── Price 狀態列 ── */
+.price-bar {
+  font-family: var(--ds-font-body) !important;
+  font-size: 12px !important;
+  color: var(--ds-muted) !important;
+  margin-bottom: var(--ds-space-3) !important;
+}
+.dot { width: 6px !important; height: 6px !important; }
+.dot.ok { background: var(--ds-success) !important; }
+.dot.err { background: var(--ds-danger) !important; }
+.dot.spin { background: var(--ds-accent) !important; }
+
+/* ── Mobile asset card（流動現金 / 台股 / 美股 / 加密）── */
+.asset-card {
+  background: var(--card2) !important;
+  border: 1px solid var(--border) !important;
+  border-radius: var(--ds-radius) !important;
+  padding: 10px 12px !important;
+  transition: border-color .15s ease, background .15s ease;
+}
+.asset-card:hover {
+  background: var(--card2) !important;
+  border-color: var(--ds-border-hover) !important;
+}
+[data-theme="light"] .asset-card {
+  background: #FFFFFF !important;
+  border-color: var(--ds-border) !important;
+}
+[data-theme="light"] .asset-card:hover {
+  background: var(--ds-card-2) !important;
+  border-color: var(--ds-border-hover) !important;
+}
+
+/* 百分比 badge：改方角小 pill，取代大圓圈 */
+.asset-card-pct {
+  width: auto !important; height: auto !important;
+  min-width: 40px !important;
+  border-radius: var(--ds-radius-xs) !important;
+  background: var(--card) !important;
+  border: 1px solid var(--border) !important;
+  color: var(--text) !important;
+  font-size: 11px !important;
+  font-weight: 600 !important;
+  font-family: var(--ds-font-mono) !important;
+  padding: 3px 6px !important;
+  letter-spacing: 0 !important;
+}
+[data-theme="light"] .asset-card-pct {
+  background: #F3F4F6 !important;
+  border-color: transparent !important;
+  color: var(--ds-text) !important;
+}
+.asset-card.err .asset-card-pct {
+  background: var(--ds-danger-soft) !important;
+  color: var(--ds-danger) !important;
+  border-color: transparent !important;
+}
+
+/* 代號 / 金額字級同 Notion 式 */
+.asset-card-sym {
+  font-family: var(--ds-font-mono) !important;
+  font-size: 14px !important;
+  font-weight: 700 !important;
+  letter-spacing: 0 !important;
+}
+.asset-card-twd {
+  font-family: var(--ds-font-heading) !important;
+  font-size: 15px !important;
+  font-weight: 700 !important;
+  letter-spacing: -0.01em !important;
+  font-variant-numeric: tabular-nums;
+  color: var(--text) !important;
+}
+[data-theme="light"] .asset-card-twd { color: var(--ds-text) !important; }
+.asset-card-detail {
+  font-family: var(--ds-font-body) !important;
+  font-size: 11px !important;
+  color: var(--ds-muted) !important;
+}
+
+/* ── Section footer：小計 ── */
+.section-footer {
+  margin-top: var(--ds-space-2) !important;
+  padding-top: var(--ds-space-2) !important;
+  border-top: 1px solid var(--border) !important;
+}
+[data-theme="light"] .section-footer { border-top-color: var(--ds-border) !important; }
+.total-lbl {
+  color: var(--ds-muted) !important;
+  font-size: 12px !important;
+  font-family: var(--ds-font-body) !important;
+}
+
+/* ── Other asset / 負債卡片 ── */
+.other-card {
+  padding: var(--ds-space-3) var(--ds-space-4) !important;
+  border-radius: var(--ds-radius) !important;
+  box-shadow: none !important;
+}
+.other-item-card {
+  background: var(--card2) !important;
+  border: 1px solid var(--border) !important;
+  border-radius: var(--ds-radius) !important;
+  padding: 10px 12px !important;
+  transition: border-color .15s ease !important;
+}
+.other-item-card:hover {
+  background: var(--card2) !important;
+  border-color: var(--ds-border-hover) !important;
+}
+[data-theme="light"] .other-item-card {
+  background: #FFFFFF !important;
+  border-color: var(--ds-border) !important;
+}
+[data-theme="light"] .other-item-card:hover {
+  background: var(--ds-card-2) !important;
+  border-color: var(--ds-border-hover) !important;
+}
+
+/* ── Mobile (≤ 640px) 再細調 ── */
+@media (max-width: 640px) {
+  .section-card { padding: 12px !important; }
+  .section-card h3 { font-size: 13px !important; }
+  .asset-card { padding: 8px 10px !important; }
+  .asset-card-twd { font-size: 14px !important; }
+}
