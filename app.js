@@ -2,7 +2,7 @@
 // CONFIG
 // ══════════════════════════════════════════════════════════════
 // Build 時間：每次修改 code 後手動更新此時間（UTC+8 台北時間）
-const BUILD_DATE = '2026/04/21 12:37';
+const BUILD_DATE = '2026/04/21 23:03';
 
 const SPREADSHEET_ID = '1lpRpxVzWaYUqL-jVPOAJCtjsJUIedPYYyOx4gg4PPFU';
 const CLIENT_ID = '149884248440-85f8dhc6ub9up10sv0f89e3e0itrnooj.apps.googleusercontent.com';
@@ -243,15 +243,23 @@ function setupTokenClient() {
     callback(resp) {
       _authSilentInflight = false;
       if (resp.error) {
+        console.warn('[auth] token request error:', resp.error, 'initialized=', S.initialized);
         if (!S.initialized) {
           // 尚未登入過 → 顯示登入畫面 + 錯誤訊息
           $('login-error').textContent = '登入失敗：' + resp.error;
           $('login-screen').style.display = 'flex';
         } else {
-          // 已登入過、背景刷新失敗（最常見：使用者在其他分頁登出 Google）
-          console.warn('[auth] silent refresh failed:', resp.error);
-          showToast('Google 授權已過期，請重新登入', 'err');
-          signOut();
+          // 已登入過、背景靜默刷新失敗：不強制登出，讓當前 token 自然到期
+          // 排程 2 分鐘後再試一次（給 Google 足夠時間恢復狀態）
+          console.warn('[auth] silent refresh failed, will retry in 2min');
+          if (_authRefreshTimer) clearTimeout(_authRefreshTimer);
+          _authRefreshTimer = setTimeout(() => {
+            if (!_authSilentInflight && S.tokenClient) {
+              _authSilentInflight = true;
+              try { S.tokenClient.requestAccessToken({ prompt: '' }); }
+              catch (e) { _authSilentInflight = false; }
+            }
+          }, 2 * 60 * 1000);
         }
         return;
       }
@@ -259,6 +267,7 @@ function setupTokenClient() {
       S.tokenExpiry = Date.now() + (resp.expires_in - 60) * 1000;
       _persistAuth();
       _scheduleSilentRefresh();
+      console.log('[auth] token acquired, expires at', new Date(S.tokenExpiry).toLocaleString());
       if (!S.initialized) {
         S.initialized = true;
         showApp();
