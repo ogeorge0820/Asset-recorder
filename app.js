@@ -2,7 +2,7 @@
 // CONFIG
 // ══════════════════════════════════════════════════════════════
 // Build 時間：每次修改 code 後手動更新此時間（UTC+8 台北時間）
-const BUILD_DATE = '2026/04/20 13:05';
+const BUILD_DATE = '2026/04/21 12:37';
 
 const SPREADSHEET_ID = '1lpRpxVzWaYUqL-jVPOAJCtjsJUIedPYYyOx4gg4PPFU';
 const CLIENT_ID = '149884248440-85f8dhc6ub9up10sv0f89e3e0itrnooj.apps.googleusercontent.com';
@@ -195,7 +195,45 @@ const S = {
 
 // ══════════════════════════════════════════════════════════════
 // AUTH
+//
+// Google access token 本身硬上限約 1 小時。我們用兩招達到「數週免重登」：
+// 1) Token 存 localStorage（跨 tab、跨開關瀏覽器持續），30 天硬上限做 sanity
+// 2) 在 token 快過期前用 prompt:'' 做 silent refresh（不彈視窗）
+//    只要使用者仍在此瀏覽器登入 Google 帳號，就會無感續期
 // ══════════════════════════════════════════════════════════════
+const AUTH_STORAGE_KEY = 'asset_recorder_auth_v1';
+const AUTH_MAX_AGE_MS = 30 * 24 * 3600 * 1000;  // 30 天硬上限：超過就強制重登
+const AUTH_REFRESH_BEFORE_MS = 5 * 60 * 1000;   // 過期前 5 分鐘預先刷新
+let _authRefreshTimer = null;
+let _authSilentInflight = false;                // 防止重複 silent refresh
+
+function _persistAuth() {
+  try {
+    localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify({
+      t: S.token,
+      e: S.tokenExpiry,
+      savedAt: Date.now(),
+    }));
+  } catch (_) {}
+}
+
+function _clearAuth() {
+  try { localStorage.removeItem(AUTH_STORAGE_KEY); } catch (_) {}
+  if (_authRefreshTimer) { clearTimeout(_authRefreshTimer); _authRefreshTimer = null; }
+}
+
+function _scheduleSilentRefresh() {
+  if (_authRefreshTimer) clearTimeout(_authRefreshTimer);
+  const ms = Math.max(30 * 1000, S.tokenExpiry - Date.now() - AUTH_REFRESH_BEFORE_MS);
+  _authRefreshTimer = setTimeout(() => {
+    if (!S.tokenClient || _authSilentInflight) return;
+    console.log('[auth] silent refresh');
+    _authSilentInflight = true;
+    try { S.tokenClient.requestAccessToken({ prompt: '' }); }
+    catch (e) { _authSilentInflight = false; console.warn('[auth] silent refresh threw', e); }
+  }, ms);
+}
+
 function setupTokenClient() {
   if (!window.google?.accounts?.oauth2) return;
 
@@ -203,13 +241,24 @@ function setupTokenClient() {
     client_id: CLIENT_ID,
     scope: SCOPE,
     callback(resp) {
+      _authSilentInflight = false;
       if (resp.error) {
-        $('login-error').textContent = '登入失敗：' + resp.error;
+        if (!S.initialized) {
+          // 尚未登入過 → 顯示登入畫面 + 錯誤訊息
+          $('login-error').textContent = '登入失敗：' + resp.error;
+          $('login-screen').style.display = 'flex';
+        } else {
+          // 已登入過、背景刷新失敗（最常見：使用者在其他分頁登出 Google）
+          console.warn('[auth] silent refresh failed:', resp.error);
+          showToast('Google 授權已過期，請重新登入', 'err');
+          signOut();
+        }
         return;
       }
       S.token = resp.access_token;
       S.tokenExpiry = Date.now() + (resp.expires_in - 60) * 1000;
-      sessionStorage.setItem('at', JSON.stringify({ t: S.token, e: S.tokenExpiry }));
+      _persistAuth();
+      _scheduleSilentRefresh();
       if (!S.initialized) {
         S.initialized = true;
         showApp();
@@ -218,17 +267,34 @@ function setupTokenClient() {
   });
 
   // Restore session
-  try {
-    const saved = JSON.parse(sessionStorage.getItem('at') || 'null');
-    if (saved && Date.now() < saved.e) {
+  let saved = null;
+  try { saved = JSON.parse(localStorage.getItem(AUTH_STORAGE_KEY) || 'null'); } catch (_) {}
+
+  if (saved && saved.savedAt && (Date.now() - saved.savedAt < AUTH_MAX_AGE_MS)) {
+    if (Date.now() < saved.e) {
+      // Token 仍有效：直接用 + 排程預先刷新
       S.token = saved.t;
       S.tokenExpiry = saved.e;
       S.initialized = true;
       showApp();
+      _scheduleSilentRefresh();
       return;
     }
-  } catch (_) {}
+    // Token 過期但保存時間還在 30 天內 → 嘗試靜默續期
+    console.log('[auth] token expired, trying silent refresh');
+    _authSilentInflight = true;
+    try {
+      S.tokenClient.requestAccessToken({ prompt: '' });
+      // callback 會處理成功/失敗；先什麼都不顯示
+      return;
+    } catch (e) {
+      _authSilentInflight = false;
+      console.warn('[auth] silent refresh threw on startup', e);
+    }
+  }
 
+  // 無有效 session → 顯示登入畫面
+  _clearAuth();
   $('login-screen').style.display = 'flex';
 }
 
@@ -240,7 +306,7 @@ function signIn() {
 function signOut() {
   if (S.token) google.accounts.oauth2.revoke(S.token, () => {});
   S.token = null; S.initialized = false;
-  sessionStorage.removeItem('at');
+  _clearAuth();
   $('app').style.display = 'none';
   $('login-screen').style.display = 'flex';
 }
