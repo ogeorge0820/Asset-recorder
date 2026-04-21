@@ -1,0 +1,287 @@
+/* ═══════════════════════════════════════════════════════════════
+   design-system.css
+   Linear / Notion 風格 token 系統
+   載入順序：style.css 之後（覆寫既有 token 與關鍵元件）
+   ═══════════════════════════════════════════════════════════════ */
+
+/* ─── Design Tokens ─── */
+:root {
+  /* Color */
+  --ds-bg:            #FAFAFA;
+  --ds-card:          #FFFFFF;
+  --ds-card-2:        #F9FAFB;
+  --ds-border:        #E5E7EB;
+  --ds-border-hover:  #D1D5DB;
+  --ds-text:          #18181B;
+  --ds-text-strong:   #09090B;
+  --ds-muted:         #6B7280;
+  --ds-muted-soft:    #9CA3AF;
+  --ds-accent:        #2563EB;
+  --ds-accent-hover:  #1D4ED8;
+  --ds-accent-soft:   #EFF6FF;
+  --ds-success:       #16A34A;
+  --ds-success-soft:  #F0FDF4;
+  --ds-warn:          #D97706;
+  --ds-warn-soft:     #FFFBEB;
+  --ds-danger:        #DC2626;
+  --ds-danger-soft:   #FEF2F2;
+
+  /* Spacing (8px base scale) */
+  --ds-space-1: 4px;
+  --ds-space-2: 8px;
+  --ds-space-3: 12px;
+  --ds-space-4: 16px;
+  --ds-space-5: 20px;
+  --ds-space-6: 24px;
+  --ds-space-8: 32px;
+
+  /* Radius — 上限 8px */
+  --ds-radius-xs: 4px;
+  --ds-radius-sm: 6px;
+  --ds-radius:    8px;
+
+  /* Font */
+  --ds-font-heading: 'DM Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+  --ds-font-body:    -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, 'Noto Sans TC', sans-serif;
+  --ds-font-mono:    'SF Mono', 'JetBrains Mono', 'Menlo', 'Consolas', ui-monospace, monospace;
+}
+
+/* ─── Override existing tokens (dark theme = default) ─── */
+:root {
+  --bg:         #0A0A0B;
+  --card:       #18181B;
+  --card2:      #1F1F23;
+  --accent:     var(--ds-accent);
+  --accent-light: #60A5FA;
+  --text:       #FAFAFA;
+  --muted:      #A1A1AA;
+  --border:     #27272A;
+  --green:      var(--ds-success);
+  --red:        var(--ds-danger);
+  --r:          var(--ds-radius);
+}
+
+/* ─── Light theme — 完全套用使用者指定 palette ─── */
+[data-theme="light"] {
+  --bg:         var(--ds-bg);
+  --card:       var(--ds-card);
+  --card2:      var(--ds-card-2);
+  --accent:     var(--ds-accent);
+  --accent-light: var(--ds-accent);
+  --text:       var(--ds-text);
+  --muted:      var(--ds-muted);
+  --border:     var(--ds-border);
+  --green:      var(--ds-success);
+  --red:        var(--ds-danger);
+  --r:          var(--ds-radius);
+}
+
+/* ─── Typography ─── */
+body {
+  font-family: var(--ds-font-body) !important;
+  font-size: 14px;
+  letter-spacing: -0.005em;
+}
+h1, h2, h3, h4, h5, h6,
+.section-header, .dwz-section-title, .dwz-block-title,
+.modal-title, .roi-drawer-title,
+.kpi-label, .section-total {
+  font-family: var(--ds-font-heading) !important;
+  letter-spacing: -0.015em;
+  font-weight: 600;
+}
+
+/* ─── Universal 無陰影 + 8px 上限圓角 ─── */
+.section-card, .kpi-card, .chart-card, .asset-card,
+.dwz-param-block, .dwz-left-head, .dwz-chart-card,
+.dwz-expenses-card, .login-card, .modal-box,
+.income-item, .budget-cat, .budget-bundle, .roi-editor-table,
+.crypto-panel-sheet, .mobile-menu-sheet {
+  box-shadow: none !important;
+  border-radius: var(--ds-radius) !important;
+}
+
+/* ─── Card hover（border 加深，不 elevate） ─── */
+.kpi-card:hover, .asset-card:hover, .dwz-param-block:hover {
+  border-color: var(--ds-border-hover);
+}
+[data-theme="light"] .kpi-card:hover,
+[data-theme="light"] .asset-card:hover,
+[data-theme="light"] .dwz-param-block:hover {
+  border-color: var(--ds-border-hover);
+}
+
+/* ─── 按鈕系統 ─── */
+/* 主要按鈕：深色背景 */
+.btn-ok, .btn-google {
+  background: var(--ds-text) !important;
+  color: #FFFFFF !important;
+  border: 1px solid var(--ds-text) !important;
+  border-radius: var(--ds-radius-sm) !important;
+  font-weight: 600 !important;
+  font-family: var(--ds-font-body) !important;
+  background-image: none !important;
+  box-shadow: none !important;
+  transition: background .15s ease, border-color .15s ease !important;
+}
+.btn-ok:hover, .btn-google:hover {
+  background: #27272A !important;
+  border-color: #27272A !important;
+}
+[data-theme="light"] .btn-ok,
+[data-theme="light"] .btn-google {
+  background: var(--ds-text) !important;
+  color: #FFFFFF !important;
+  border-color: var(--ds-text) !important;
+}
+[data-theme="light"] .btn-ok:hover,
+[data-theme="light"] .btn-google:hover {
+  background: #27272A !important;
+}
+
+/* 次要按鈕：白底 + border */
+.btn-cancel, .btn-add {
+  background: var(--card) !important;
+  color: var(--text) !important;
+  border: 1px solid var(--border) !important;
+  border-radius: var(--ds-radius-sm) !important;
+  font-weight: 500 !important;
+  background-image: none !important;
+  box-shadow: none !important;
+  transition: background .15s ease, border-color .15s ease !important;
+}
+.btn-cancel:hover, .btn-add:hover {
+  background: var(--card2) !important;
+  border-color: var(--ds-border-hover) !important;
+}
+[data-theme="light"] .btn-add,
+[data-theme="light"] .btn-cancel {
+  background: #FFFFFF !important;
+  color: var(--ds-text) !important;
+  border-color: var(--ds-border) !important;
+}
+[data-theme="light"] .btn-add:hover,
+[data-theme="light"] .btn-cancel:hover {
+  background: var(--ds-bg) !important;
+  border-color: var(--ds-border-hover) !important;
+}
+
+/* ─── 移除紫色漸層（ROI 精算 / 按鈕）─── */
+.dwz-roi-precise {
+  background: var(--card) !important;
+  background-image: none !important;
+  color: var(--text) !important;
+  border: 1px solid var(--border) !important;
+  border-radius: var(--ds-radius-xs) !important;
+}
+.dwz-roi-precise:hover {
+  background: var(--card2) !important;
+  background-image: none !important;
+  border-color: var(--ds-border-hover) !important;
+}
+[data-theme="light"] .dwz-roi-precise {
+  background: #FFFFFF !important;
+  color: var(--ds-text) !important;
+  border-color: var(--ds-border) !important;
+}
+[data-theme="light"] .dwz-roi-precise:hover {
+  background: var(--ds-bg) !important;
+  border-color: var(--ds-border-hover) !important;
+}
+
+/* KPI tag 去玻璃化 */
+.dwz-kpi-tag {
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  background: var(--card2) !important;
+  border: 1px solid var(--border) !important;
+}
+[data-theme="light"] .dwz-kpi-tag {
+  background: var(--ds-card-2) !important;
+  border-color: var(--ds-border) !important;
+}
+.dwz-kpi-tag b { color: var(--text) !important; font-family: var(--ds-font-mono) !important; }
+
+/* Pill 去玻璃化 */
+.dwz-pill {
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  box-shadow: none !important;
+  border-radius: var(--ds-radius-sm) !important;
+}
+
+/* Tab nav 去漸層 + 現代化 */
+.tab-btn.active {
+  background: var(--ds-text) !important;
+  color: #FFFFFF !important;
+}
+[data-theme="light"] .tab-btn.active {
+  background: var(--ds-text) !important;
+  color: #FFFFFF !important;
+}
+
+/* Sidebar active 項目也去漸層（如果存在） */
+.sidebar-nav .nav-item.active,
+.sidebar-item.active {
+  background: var(--ds-text) !important;
+  color: #FFFFFF !important;
+}
+
+/* 輸入框聚焦環改藍色 accent */
+.dwz-param-input:focus {
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15) !important;
+  border-color: var(--ds-accent) !important;
+}
+[data-theme="light"] .dwz-param-input:focus {
+  background: #FFFFFF !important;
+  border-color: var(--ds-accent) !important;
+}
+
+/* ─── 階段標籤（S1–S6 或其他 pipeline 步驟用）─── */
+.stage-pill {
+  display: inline-flex; align-items: center;
+  font-family: var(--ds-font-body);
+  font-size: 11px; font-weight: 600;
+  padding: 2px 8px;
+  border-radius: var(--ds-radius-xs);
+  background: #F3F4F6;
+  color: var(--ds-text);
+  letter-spacing: 0.02em;
+  line-height: 1.4;
+  white-space: nowrap;
+}
+.stage-pill.active {
+  background: var(--ds-text);
+  color: #FFFFFF;
+}
+.stage-pill.success { background: var(--ds-success-soft); color: var(--ds-success); }
+.stage-pill.warn    { background: var(--ds-warn-soft);    color: var(--ds-warn); }
+.stage-pill.danger  { background: var(--ds-danger-soft);  color: var(--ds-danger); }
+
+[data-theme="light"] .stage-pill         { background: #F3F4F6; color: var(--ds-text); }
+[data-theme="light"] .stage-pill.active  { background: var(--ds-text); color: #FFFFFF; }
+
+/* ─── 數值等寬字（維持 DWZ / KPI 用） ─── */
+.kpi-value, .section-total, .total-val,
+.dwz-param-input, .dwz-pill b, .dwz-kpi-tag b,
+.roi-mv, .roi-input, .roi-summary-val,
+.roi-foot-val, .budget-cat-total, .budget-item-amt,
+.budget-bundle-total, .income-item-amt {
+  font-family: var(--ds-font-mono) !important;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.01em;
+}
+
+/* ─── 移除殘留的漸層背景 ─── */
+.section-card, .kpi-card, .chart-card,
+.dwz-param-block, .dwz-left-head, .dwz-chart-card,
+.dwz-expenses-card, .budget-ratio-fixed {
+  background-image: none !important;
+}
+/* 保留 progress bar 的漸層（固定/浮動 比例條）但改為純色 accent */
+.budget-ratio-fixed {
+  background: var(--ds-accent) !important;
+}
+[data-theme="light"] .budget-ratio-fixed {
+  background: var(--ds-accent) !important;
+}
