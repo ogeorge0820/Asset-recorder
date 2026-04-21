@@ -285,3 +285,206 @@ h1, h2, h3, h4, h5, h6,
 [data-theme="light"] .budget-ratio-fixed {
   background: var(--ds-accent) !important;
 }
+
+
+/* ═══════════════════════════════════════════════════════════════
+   Phase 2 — Dashboard（總覽頁）Linear / Notion 精修
+   ═══════════════════════════════════════════════════════════════ */
+
+/* ── Grid 間距：8px scale ── */
+.kpi-grid {
+  gap: var(--ds-space-2) !important;           /* 8px */
+  margin-bottom: var(--ds-space-4) !important; /* 16px */
+}
+.overview-grid {
+  gap: var(--ds-space-2) !important;
+  margin-bottom: var(--ds-space-4) !important;
+}
+.overview-main, .overview-side {
+  gap: var(--ds-space-2) !important;
+}
+
+/* ── KPI 卡：中性白底 + 細 border，顏色只在數值上 ── */
+.kpi-card {
+  background: var(--card) !important;
+  border: 1px solid var(--border) !important;
+  border-left: 1px solid var(--border) !important;   /* 取消彩色 left border */
+  border-radius: var(--ds-radius) !important;
+  padding: var(--ds-space-3) var(--ds-space-4) !important;  /* 12 / 16 */
+  box-shadow: none !important;
+  transition: border-color .15s ease;
+}
+.kpi-card:hover {
+  border-color: var(--ds-border-hover) !important;
+}
+.kpi-primary {
+  background: var(--card) !important;    /* 不再用不同底色區別 */
+  border-left: 1px solid var(--border) !important;
+}
+.kpi-card.kpi-gain,
+.kpi-card.kpi-loss {
+  border-left: 1px solid var(--border) !important;  /* 取消彩色邊；顏色交給數字 */
+}
+[data-theme="light"] .kpi-card,
+[data-theme="light"] .kpi-primary,
+[data-theme="light"] .kpi-card.kpi-gain,
+[data-theme="light"] .kpi-card.kpi-loss {
+  background: var(--ds-card) !important;
+  border: 1px solid var(--ds-border) !important;
+}
+
+/* Label：不大寫、不帶小圓點，Notion 風格 sentence case */
+.kpi-label {
+  color: var(--ds-muted) !important;
+  font-size: 12px !important;
+  text-transform: none !important;
+  letter-spacing: 0 !important;
+  font-weight: 500 !important;
+  font-family: var(--ds-font-body) !important;
+  margin-bottom: var(--ds-space-2) !important;  /* 8px */
+  display: inline-flex; align-items: center;
+}
+.kpi-label-dot { display: none !important; }  /* 去掉 Apple 式小圓點 */
+[data-theme="light"] .kpi-label { color: var(--ds-muted) !important; letter-spacing: 0 !important; }
+
+/* Value：DM Sans + tabular-nums */
+.kpi-value {
+  font-family: var(--ds-font-heading) !important;
+  font-size: 22px !important;
+  font-weight: 700 !important;
+  color: var(--text) !important;
+  line-height: 1.2 !important;
+  letter-spacing: -0.02em !important;
+  font-variant-numeric: tabular-nums;
+}
+.kpi-primary .kpi-value {
+  font-size: 26px !important;
+  font-weight: 700 !important;
+}
+.kpi-value.pos     { color: var(--ds-success) !important; }
+.kpi-value.neg     { color: var(--ds-danger) !important; }
+.kpi-value.neutral { color: var(--ds-muted) !important; }
+[data-theme="light"] .kpi-value         { color: var(--ds-text) !important; }
+[data-theme="light"] .kpi-value.pos     { color: var(--ds-success) !important; }
+[data-theme="light"] .kpi-value.neg     { color: var(--ds-danger) !important; }
+[data-theme="light"] .kpi-card:not(.kpi-primary) .kpi-value {
+  color: var(--ds-text) !important;
+}
+
+/* Sub text */
+.kpi-sub {
+  color: var(--ds-muted) !important;
+  font-size: 12px !important;
+  margin-top: 6px !important;
+  line-height: 1.4;
+  font-family: var(--ds-font-body) !important;
+}
+
+/* ── Chart 卡：同一套 border + padding ── */
+.chart-card {
+  background: var(--card) !important;
+  border: 1px solid var(--border) !important;
+  border-radius: var(--ds-radius) !important;
+  padding: var(--ds-space-4) !important;     /* 16px 統一 */
+  box-shadow: none !important;
+  transition: border-color .15s ease;
+}
+.chart-card:hover { border-color: var(--ds-border-hover) !important; }
+[data-theme="light"] .chart-card {
+  background: var(--ds-card) !important;
+  border-color: var(--ds-border) !important;
+}
+
+.chart-card h3,
+.chart-title-row h3 {
+  font-family: var(--ds-font-heading) !important;
+  font-size: 14px !important;
+  font-weight: 600 !important;
+  color: var(--text) !important;
+  letter-spacing: -0.01em !important;
+  margin-bottom: var(--ds-space-3) !important;  /* 12px */
+}
+[data-theme="light"] .chart-card h3,
+[data-theme="light"] .chart-title-row h3 {
+  color: var(--ds-text) !important;
+  letter-spacing: -0.01em !important;
+}
+.chart-title-row { margin-bottom: var(--ds-space-3) !important; }
+.chart-title-row h3 { margin-bottom: 0 !important; }
+
+/* ── 時間篩選按鈕：Notion 式 pill，active 深色 ── */
+.chart-filter {
+  gap: var(--ds-space-1) !important;   /* 4px */
+  margin-bottom: var(--ds-space-3) !important;
+}
+.filter-btn {
+  background: transparent !important;
+  border: 1px solid var(--border) !important;
+  color: var(--ds-muted) !important;
+  font-family: var(--ds-font-body) !important;
+  font-size: 12px !important;
+  font-weight: 500 !important;
+  padding: 3px 10px !important;
+  border-radius: var(--ds-radius-xs) !important;
+  transition: all .15s ease !important;
+}
+.filter-btn:hover {
+  background: var(--card2) !important;
+  border-color: var(--ds-border-hover) !important;
+  color: var(--text) !important;
+}
+.filter-btn.active {
+  background: var(--ds-text) !important;
+  border-color: var(--ds-text) !important;
+  color: #FFFFFF !important;
+}
+[data-theme="light"] .filter-btn {
+  background: transparent !important;
+  border-color: var(--ds-border) !important;
+  color: var(--ds-muted) !important;
+}
+[data-theme="light"] .filter-btn:hover {
+  background: var(--ds-card-2) !important;
+  border-color: var(--ds-border-hover) !important;
+  color: var(--ds-text) !important;
+}
+[data-theme="light"] .filter-btn.active {
+  background: var(--ds-text) !important;
+  border-color: var(--ds-text) !important;
+  color: #FFFFFF !important;
+}
+
+/* ── 資產組成 / 質押收益 等 side panel 同樣規範 ── */
+.overview-side .chart-card h3 {
+  margin-bottom: var(--ds-space-3) !important;
+}
+
+/* ── Skeleton 讀取動畫調成中性灰 ── */
+.skel {
+  background: linear-gradient(90deg, #f3f4f6 25%, #e5e7eb 50%, #f3f4f6 75%) !important;
+  background-size: 200% 100% !important;
+}
+[data-theme="light"] .skel {
+  background: linear-gradient(90deg, #F3F4F6 25%, #E5E7EB 50%, #F3F4F6 75%) !important;
+  background-size: 200% 100% !important;
+}
+
+/* ── 區域標題的 section-total 統一 mono ── */
+.section-total, .total-val {
+  font-family: var(--ds-font-mono) !important;
+  color: var(--text) !important;
+  letter-spacing: -0.01em !important;
+}
+[data-theme="light"] .section-total,
+[data-theme="light"] .total-val {
+  color: var(--ds-text) !important;
+}
+
+/* ── Mobile：壓縮字級，維持同樣佈局精神 ── */
+@media (max-width: 640px) {
+  .kpi-card { padding: 10px 12px !important; }
+  .kpi-value { font-size: 18px !important; }
+  .kpi-primary .kpi-value { font-size: 20px !important; }
+  .kpi-label { font-size: 11px !important; }
+  .kpi-sub { font-size: 11px !important; }
+}
