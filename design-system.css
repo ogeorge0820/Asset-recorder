@@ -321,16 +321,27 @@ h1, h2, h3, h4, h5, h6,
   background: var(--card) !important;    /* 不再用不同底色區別 */
   border-left: 1px solid var(--border) !important;
 }
-.kpi-card.kpi-gain,
+/* 本日 / 本月 / 本年收益保留紅綠色邊，直觀反映漲跌 */
+.kpi-card.kpi-gain {
+  border-left: 3px solid var(--ds-success) !important;
+}
 .kpi-card.kpi-loss {
-  border-left: 1px solid var(--border) !important;  /* 取消彩色邊；顏色交給數字 */
+  border-left: 3px solid var(--ds-danger) !important;
 }
 [data-theme="light"] .kpi-card,
-[data-theme="light"] .kpi-primary,
-[data-theme="light"] .kpi-card.kpi-gain,
+[data-theme="light"] .kpi-primary {
+  background: var(--ds-card) !important;
+  border: 1px solid var(--ds-border) !important;
+}
+[data-theme="light"] .kpi-card.kpi-gain {
+  background: var(--ds-card) !important;
+  border: 1px solid var(--ds-border) !important;
+  border-left: 3px solid var(--ds-success) !important;
+}
 [data-theme="light"] .kpi-card.kpi-loss {
   background: var(--ds-card) !important;
   border: 1px solid var(--ds-border) !important;
+  border-left: 3px solid var(--ds-danger) !important;
 }
 
 /* Label：不大寫、不帶小圓點，Notion 風格 sentence case */
