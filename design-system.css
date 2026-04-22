@@ -3117,3 +3117,140 @@ body {
   #monthly-wrap { height: 140px !important; }
   #pie-wrap { height: 280px !important; }
 }
+
+/* ═══════════════════════════════════════════════════════════════
+   Phase 11 — 修 dark KPI 未生效 + 全 KPI 不再切字
+   問題：Phase 8 用 `:root[data-theme="dark"] .kpi-*`（特異性 0,2,1）
+         壓過 Phase 9/10 純 class 選擇器（0,1,0），dark 仍顯示 48px。
+   解法：本區塊用同等前綴 + 同時涵蓋 light，source 順序後 → 贏。
+   ═══════════════════════════════════════════════════════════════ */
+
+@media (min-width: 769px) {
+  :root[data-theme="dark"] .kpi-grid,
+  :root[data-theme="light"] .kpi-grid {
+    grid-template-columns: repeat(6, minmax(0, 1fr)) !important;
+    gap: 10px !important;
+    margin-bottom: 10px !important;
+  }
+  :root[data-theme="dark"] .kpi-card,
+  :root[data-theme="light"] .kpi-card {
+    min-width: 0 !important;
+    padding: 10px 14px !important;
+    border-radius: 12px !important;
+  }
+  :root[data-theme="dark"] .kpi-label,
+  :root[data-theme="light"] .kpi-label {
+    font-size: 10px !important;
+    margin-bottom: 4px !important;
+    letter-spacing: 0.05em !important;
+    text-transform: uppercase !important;
+  }
+  /* gain/loss KPI 縮小到 18px，+34.4萬 / −291.0萬 完整顯示 */
+  :root[data-theme="dark"] .kpi-value,
+  :root[data-theme="light"] .kpi-value {
+    font-size: 18px !important;
+    font-weight: 700 !important;
+    line-height: 1.15 !important;
+    letter-spacing: -0.01em !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: clip !important;
+    margin: 0 !important;
+  }
+  /* primary KPI（淨資產/可用/財務存活）稍大 22px */
+  :root[data-theme="dark"] .kpi-card.kpi-primary .kpi-value,
+  :root[data-theme="light"] .kpi-card.kpi-primary .kpi-value {
+    font-size: 22px !important;
+  }
+  :root[data-theme="dark"] .kpi-sub,
+  :root[data-theme="light"] .kpi-sub {
+    font-size: 10px !important;
+    margin-top: 3px !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    line-height: 1.3 !important;
+  }
+  /* dark 模式保留漸層字；但要補 padding/line-height 讓裁切正確 */
+  :root[data-theme="dark"] .kpi-value.pos,
+  :root[data-theme="dark"] .kpi-value.neg {
+    padding-bottom: 2px !important;
+    line-height: 1.2 !important;
+  }
+
+  /* Chart 卡片、overview grid、app-content 也用 theme-prefixed 穩住 */
+  :root[data-theme="dark"] .chart-card,
+  :root[data-theme="light"] .chart-card {
+    padding: 12px 16px !important;
+    border-radius: 14px !important;
+  }
+  :root[data-theme="dark"] .chart-card h3,
+  :root[data-theme="light"] .chart-card h3,
+  :root[data-theme="dark"] .chart-title-row h3,
+  :root[data-theme="light"] .chart-title-row h3 {
+    font-size: 12px !important;
+    margin: 0 !important;
+  }
+  :root[data-theme="dark"] .chart-title-row,
+  :root[data-theme="light"] .chart-title-row {
+    margin-bottom: 6px !important;
+  }
+  :root[data-theme="dark"] .overview-grid,
+  :root[data-theme="light"] .overview-grid {
+    gap: 10px !important;
+    margin-bottom: 10px !important;
+  }
+  :root[data-theme="dark"] .overview-main,
+  :root[data-theme="light"] .overview-main,
+  :root[data-theme="dark"] .overview-side,
+  :root[data-theme="light"] .overview-side {
+    gap: 10px !important;
+  }
+  :root[data-theme="dark"] #app-content,
+  :root[data-theme="light"] #app-content {
+    padding: 14px 24px !important;
+    max-width: none !important;
+    background: transparent !important;
+  }
+  :root[data-theme="dark"] #daily-trend-wrap,
+  :root[data-theme="light"] #daily-trend-wrap {
+    height: 130px !important;
+  }
+  :root[data-theme="dark"] #trend-wrap,
+  :root[data-theme="light"] #trend-wrap {
+    height: 120px !important;
+  }
+  :root[data-theme="dark"] #monthly-wrap,
+  :root[data-theme="light"] #monthly-wrap {
+    height: 120px !important;
+  }
+  :root[data-theme="dark"] #pie-wrap,
+  :root[data-theme="light"] #pie-wrap {
+    height: 240px !important;
+  }
+}
+
+@media (min-width: 1600px) {
+  :root[data-theme="dark"] .kpi-value,
+  :root[data-theme="light"] .kpi-value {
+    font-size: 20px !important;
+  }
+  :root[data-theme="dark"] .kpi-card.kpi-primary .kpi-value,
+  :root[data-theme="light"] .kpi-card.kpi-primary .kpi-value {
+    font-size: 24px !important;
+  }
+  :root[data-theme="dark"] #daily-trend-wrap,
+  :root[data-theme="light"] #daily-trend-wrap {
+    height: 160px !important;
+  }
+  :root[data-theme="dark"] #trend-wrap,
+  :root[data-theme="light"] #trend-wrap,
+  :root[data-theme="dark"] #monthly-wrap,
+  :root[data-theme="light"] #monthly-wrap {
+    height: 140px !important;
+  }
+  :root[data-theme="dark"] #pie-wrap,
+  :root[data-theme="light"] #pie-wrap {
+    height: 280px !important;
+  }
+}
