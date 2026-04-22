@@ -2998,3 +2998,122 @@ body {
   .kpi-value { font-size: 28px !important; }
   .kpi-card.kpi-primary .kpi-value { font-size: 32px !important; }
 }
+
+/* ═══════════════════════════════════════════════════════════════
+   Phase 10 — Single-Screen Dashboard（1440×900 一屏全顯示）
+   策略：激進壓縮字體、padding、chart 高度
+   預期總高度 ≈ 680px（<< 800px 可視高度）
+   ═══════════════════════════════════════════════════════════════ */
+
+@media (min-width: 769px) {
+  /* App content 更貼邊 */
+  #app-content {
+    padding: 14px 24px !important;
+    max-width: none !important;
+  }
+
+  /* Header 縮減 */
+  #app-header {
+    padding: 8px 24px !important;
+    min-height: 32px !important;
+  }
+
+  /* ── KPI 進一步收緊 ── */
+  .kpi-grid {
+    gap: 10px !important;
+    margin-bottom: 10px !important;
+  }
+  .kpi-card {
+    padding: 10px 14px !important;
+    border-radius: 12px !important;
+  }
+  .kpi-label {
+    font-size: 10px !important;
+    margin-bottom: 4px !important;
+    letter-spacing: 0.05em !important;
+  }
+  .kpi-value {
+    font-size: 22px !important;
+    line-height: 1.1 !important;
+  }
+  .kpi-card.kpi-primary .kpi-value {
+    font-size: 26px !important;
+  }
+  .kpi-sub {
+    font-size: 10px !important;
+    margin-top: 3px !important;
+  }
+
+  /* ── Chart 卡片收緊 ── */
+  .chart-card {
+    padding: 12px 16px !important;
+    border-radius: 14px !important;
+  }
+  .chart-card h3,
+  .chart-title-row h3 {
+    font-size: 12px !important;
+    margin: 0 !important;
+    font-weight: 500 !important;
+  }
+  .chart-title-row {
+    margin-bottom: 6px !important;
+  }
+
+  /* ── Chart 高度全部壓縮 ── */
+  #daily-trend-wrap {
+    height: 130px !important;
+  }
+  #trend-wrap {
+    height: 120px !important;
+  }
+  #monthly-wrap {
+    height: 120px !important;
+  }
+  #pie-wrap {
+    height: 240px !important;
+  }
+
+  /* ── Overview grid gap ── */
+  .overview-grid {
+    gap: 10px !important;
+    margin-bottom: 10px !important;
+  }
+  .overview-main,
+  .overview-side {
+    gap: 10px !important;
+  }
+
+  /* ── Filter 按鈕（全部/近1年/近6個月）縮小 ── */
+  .filter-btn,
+  .chart-card .btn {
+    padding: 3px 8px !important;
+    font-size: 11px !important;
+    border-radius: 6px !important;
+  }
+
+  /* ── Staking summary table 緊湊 ── */
+  .staking-summary,
+  #rewards-summary table {
+    font-size: 11px !important;
+  }
+  .staking-summary th,
+  .staking-summary td {
+    padding: 4px 8px !important;
+  }
+
+  /* Info bar 縮小 */
+  .info-bar {
+    margin-bottom: 8px !important;
+    font-size: 11px !important;
+  }
+}
+
+/* 超寬螢幕略放大 */
+@media (min-width: 1600px) {
+  .kpi-value { font-size: 24px !important; }
+  .kpi-card.kpi-primary .kpi-value { font-size: 28px !important; }
+  #daily-trend-wrap { height: 160px !important; }
+  #trend-wrap { height: 140px !important; }
+  #monthly-wrap { height: 140px !important; }
+  #pie-wrap { height: 280px !important; }
+}
