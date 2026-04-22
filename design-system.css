@@ -3254,3 +3254,94 @@ body {
     height: 280px !important;
   }
 }
+
+/* ═══════════════════════════════════════════════════════════════
+   Phase 12 — 暗色 KPI 深色區塊清除 + 雙主題徹底一致
+   問題：
+   - Phase 8 用 background-clip:text + gradient 給 .pos/.neg
+     某些瀏覽器會殘留背景方塊；且 background: none 無 !important
+     讓 .skel 初始 gradient 覆蓋不掉 → 黑塊
+   - kpi-label-dot 在暗色未完全隱藏，dark 看得到小圓點
+   解法：
+   - 徹底清 background（background-image/color 全部 !important 透明）
+   - 改用純色 .pos/.neg（放棄漸層字，換回單色 solid）
+   - 強制 .skel dark 透明 + 輕柔 opacity pulse
+   - 兩主題同步 hide kpi-label-dot
+   - 光球降至 0.06 避免畫面雜訊
+   ═══════════════════════════════════════════════════════════════ */
+
+:root[data-theme="dark"] .kpi-value,
+:root[data-theme="dark"] .kpi-value.pos,
+:root[data-theme="dark"] .kpi-value.gain,
+:root[data-theme="dark"] .kpi-value.neg,
+:root[data-theme="dark"] .kpi-value.loss,
+:root[data-theme="dark"] .kpi-value.neutral,
+:root[data-theme="light"] .kpi-value,
+:root[data-theme="light"] .kpi-value.pos,
+:root[data-theme="light"] .kpi-value.gain,
+:root[data-theme="light"] .kpi-value.neg,
+:root[data-theme="light"] .kpi-value.loss {
+  background: transparent !important;
+  background-image: none !important;
+  background-color: transparent !important;
+  -webkit-background-clip: border-box !important;
+  background-clip: border-box !important;
+  -webkit-text-fill-color: currentColor !important;
+}
+
+/* 暗色 pos/neg 改純色（與淺色邏輯一致） */
+:root[data-theme="dark"] .kpi-value.pos,
+:root[data-theme="dark"] .kpi-value.gain {
+  color: var(--ap-pos) !important;
+}
+:root[data-theme="dark"] .kpi-value.neg,
+:root[data-theme="dark"] .kpi-value.loss {
+  color: var(--ap-neg) !important;
+}
+:root[data-theme="dark"] .kpi-value,
+:root[data-theme="dark"] .kpi-value.neutral {
+  color: var(--ap-text) !important;
+}
+
+/* 雙主題一致：隱藏 kpi-label-dot（label 只留文字） */
+:root[data-theme="dark"] .kpi-label-dot,
+:root[data-theme="light"] .kpi-label-dot {
+  display: none !important;
+}
+
+/* Skeleton 清理 — 暗色改輕柔 opacity pulse，不用 gradient */
+:root[data-theme="dark"] .skel,
+:root[data-theme="dark"] .kpi-value.skel {
+  background: rgba(255,255,255,0.05) !important;
+  background-image: none !important;
+  background-color: rgba(255,255,255,0.05) !important;
+  animation: ap-skel-pulse 1.4s ease-in-out infinite !important;
+  border-radius: 6px !important;
+}
+@keyframes ap-skel-pulse {
+  0%, 100% { opacity: 0.5; }
+  50%      { opacity: 0.85; }
+}
+:root[data-theme="light"] .skel,
+:root[data-theme="light"] .kpi-value.skel {
+  background: #e5e5e5 !important;
+  background-image: none !important;
+  animation: ap-skel-pulse 1.4s ease-in-out infinite !important;
+  border-radius: 6px !important;
+}
+
+/* 暗色光球降至更輕（0.06），避免背景雜訊穿透卡片 */
+:root[data-theme="dark"] .ap-orb-1 {
+  background: radial-gradient(circle, rgba(102,126,234,0.06) 0%, transparent 70%) !important;
+}
+:root[data-theme="dark"] .ap-orb-2 {
+  background: radial-gradient(circle, rgba(118,75,162,0.06) 0%, transparent 70%) !important;
+}
+
+/* KPI card 暗色加強 backdrop 不透明度，避免透出下方漸層 */
+:root[data-theme="dark"] .kpi-card {
+  background: rgba(255,255,255,0.04) !important;
+  backdrop-filter: blur(12px) !important;
+  -webkit-backdrop-filter: blur(12px) !important;
+  border: 1px solid rgba(255,255,255,0.08) !important;
+}
