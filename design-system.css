@@ -1182,3 +1182,337 @@ h3.section-header {
   color: var(--ds-text) !important;
 }
 [data-theme="light"] .roi-foot-hl .roi-foot-val { color: var(--ds-accent) !important; }
+
+
+/* ═══════════════════════════════════════════════════════════════
+   Phase 5 — Sidebar / Modal / Income / Exp Plan / Panels
+   ═══════════════════════════════════════════════════════════════ */
+
+/* ── Sidebar（桌面版左側導覽）── */
+@media (min-width: 769px) {
+  #sidebar {
+    background: var(--card) !important;
+    border-right: 1px solid var(--border) !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+  }
+  [data-theme="light"] #sidebar {
+    background: var(--ds-card) !important;
+    border-right: 1px solid var(--ds-border) !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+  }
+  .sidebar-header {
+    padding: 16px 14px 14px !important;
+    border-bottom: 1px solid var(--border) !important;
+  }
+  [data-theme="light"] .sidebar-header {
+    border-bottom-color: var(--ds-border) !important;
+  }
+  .sidebar-logo {
+    font-family: var(--ds-font-heading) !important;
+    font-size: 14px !important;
+    font-weight: 700 !important;
+    color: var(--text) !important;
+    letter-spacing: -0.01em !important;
+  }
+  [data-theme="light"] .sidebar-logo { color: var(--ds-text) !important; }
+  .sidebar-logo-text { font-size: 14px !important; }
+
+  /* Nav item 基態 */
+  .sidebar-nav { padding: 8px !important; }
+  .sidebar-nav-item {
+    padding: 6px 10px !important;
+    padding-left: 10px !important;
+    border-radius: var(--ds-radius-sm) !important;
+    color: var(--ds-muted) !important;
+    font-family: var(--ds-font-body) !important;
+    font-size: 13px !important;
+    font-weight: 500 !important;
+    margin-bottom: 1px !important;
+  }
+  .sidebar-nav-item:hover {
+    background: var(--card2) !important;
+    color: var(--text) !important;
+  }
+  [data-theme="light"] .sidebar-nav-item { color: var(--ds-muted) !important; }
+  [data-theme="light"] .sidebar-nav-item:hover {
+    background: #F3F4F6 !important;
+    color: var(--ds-text) !important;
+  }
+
+  /* Active state：Notion 式填入 bg（不再藍色漸層 tint 或 3px 直條） */
+  .sidebar-nav-item.active,
+  [data-theme="light"] .sidebar-nav-item.active {
+    background: #F3F4F6 !important;
+    color: var(--ds-text) !important;
+    font-weight: 600 !important;
+  }
+  .sidebar-nav-item.active::before {
+    display: none !important;  /* 去掉左側 3px 色條 */
+  }
+
+  /* Footer info block */
+  .sidebar-footer {
+    padding: 10px 10px 12px !important;
+    border-top: 1px solid var(--border) !important;
+  }
+  [data-theme="light"] .sidebar-footer { border-top-color: var(--ds-border) !important; }
+  .sidebar-info-block {
+    background: transparent !important;
+    border: 1px solid var(--border) !important;
+    border-radius: var(--ds-radius-sm) !important;
+    padding: 8px 10px !important;
+  }
+  [data-theme="light"] .sidebar-info-block {
+    background: transparent !important;
+    border-color: var(--ds-border) !important;
+  }
+  .sidebar-rate, .sidebar-update {
+    font-size: 11px !important;
+    font-family: var(--ds-font-body) !important;
+    color: var(--ds-muted) !important;
+  }
+  .sidebar-rate b {
+    font-family: var(--ds-font-mono) !important;
+    color: var(--text) !important;
+  }
+  [data-theme="light"] .sidebar-rate b { color: var(--ds-text) !important; }
+  .sidebar-build-badge {
+    font-family: var(--ds-font-mono) !important;
+    font-size: 10px !important;
+  }
+}
+
+/* ── Modal ── */
+.modal-overlay {
+  background: rgba(0,0,0,0.5) !important;
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+}
+[data-theme="light"] .modal-overlay {
+  background: rgba(0,0,0,0.35) !important;
+}
+.modal-box {
+  background: var(--card) !important;
+  border: 1px solid var(--border) !important;
+  border-radius: var(--ds-radius) !important;
+  box-shadow: 0 10px 40px rgba(0,0,0,0.15) !important;
+  padding: 20px !important;
+}
+[data-theme="light"] .modal-box {
+  background: var(--ds-card) !important;
+  border-color: var(--ds-border) !important;
+  box-shadow: 0 10px 40px rgba(0,0,0,0.08) !important;
+}
+.modal-title {
+  font-family: var(--ds-font-heading) !important;
+  font-size: 15px !important;
+  font-weight: 600 !important;
+  letter-spacing: -0.01em !important;
+  margin-bottom: 16px !important;
+  color: var(--text) !important;
+}
+[data-theme="light"] .modal-title { color: var(--ds-text) !important; }
+.modal-form { gap: 12px !important; }
+.modal-form .field { gap: 4px !important; }
+.modal-form label {
+  font-family: var(--ds-font-body) !important;
+  font-size: 12px !important;
+  color: var(--ds-muted) !important;
+  font-weight: 500 !important;
+}
+.modal-form input,
+.modal-form select {
+  background: #F3F4F6 !important;
+  border: 1px solid transparent !important;
+  border-radius: var(--ds-radius-sm) !important;
+  color: var(--text) !important;
+  font-family: var(--ds-font-body) !important;
+  font-size: 13px !important;
+  padding: 7px 10px !important;
+  transition: border-color .15s, background .15s;
+}
+.modal-form input:hover,
+.modal-form select:hover { background: #E5E7EB !important; }
+.modal-form input:focus,
+.modal-form select:focus {
+  background: #FFFFFF !important;
+  border-color: var(--ds-accent) !important;
+  box-shadow: 0 0 0 3px rgba(37,99,235,0.12) !important;
+  outline: none;
+}
+[data-theme="light"] .modal-form input,
+[data-theme="light"] .modal-form select {
+  background: #F3F4F6 !important;
+  color: var(--ds-text) !important;
+}
+[data-theme="light"] .modal-form input:hover,
+[data-theme="light"] .modal-form select:hover {
+  background: #E5E7EB !important;
+}
+[data-theme="light"] .modal-form input:focus,
+[data-theme="light"] .modal-form select:focus {
+  background: #FFFFFF !important;
+  border-color: var(--ds-accent) !important;
+}
+.modal-form input.invalid {
+  border-color: var(--ds-danger) !important;
+  background: var(--ds-danger-soft) !important;
+}
+.modal-actions {
+  gap: 8px !important;
+  margin-top: 18px !important;
+}
+
+/* ── Income 列（主動收入管理）── */
+.income-item {
+  padding: 6px 12px !important;
+  border-bottom-color: var(--border) !important;
+  font-family: var(--ds-font-body);
+  transition: background .15s;
+}
+.income-item:hover { background: var(--card2) !important; }
+[data-theme="light"] .income-item {
+  border-bottom-color: var(--ds-border) !important;
+}
+[data-theme="light"] .income-item:hover { background: var(--ds-bg) !important; }
+.income-item.income-current {
+  background: rgba(37,99,235,0.06) !important;
+  border-left: 2px solid var(--ds-accent);
+  padding-left: 10px !important;
+}
+[data-theme="light"] .income-item.income-current {
+  background: rgba(37,99,235,0.05) !important;
+}
+
+.income-item-name {
+  font-family: var(--ds-font-body) !important;
+  font-size: 13px !important;
+  font-weight: 500 !important;
+}
+.income-item-date {
+  font-family: var(--ds-font-mono) !important;
+  font-size: 12px !important;
+  color: var(--ds-muted) !important;
+}
+.income-item-amt {
+  font-family: var(--ds-font-mono) !important;
+  font-size: 13px !important;
+  font-weight: 700 !important;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.01em;
+}
+.income-cat-badge,
+.income-recurring-badge {
+  background: #F3F4F6 !important;
+  color: var(--ds-muted) !important;
+  border-radius: var(--ds-radius-xs) !important;
+  padding: 1px 6px !important;
+  font-size: 10px !important;
+  font-weight: 600 !important;
+  border: none !important;
+}
+[data-theme="light"] .income-cat-badge,
+[data-theme="light"] .income-recurring-badge {
+  background: #F3F4F6 !important;
+  color: var(--ds-muted) !important;
+}
+.income-status-btn {
+  border-radius: var(--ds-radius-xs) !important;
+  width: 22px !important; height: 22px !important;
+  font-size: 12px !important;
+}
+.income-status-btn.settled {
+  border-color: var(--ds-success) !important;
+  color: var(--ds-success) !important;
+  background: var(--ds-success-soft) !important;
+}
+
+/* ── Experience plan 列 ── */
+.exp-plan-item {
+  padding: 8px 12px !important;
+  border-bottom-color: var(--border) !important;
+  font-family: var(--ds-font-body);
+  transition: background .15s;
+}
+.exp-plan-item:hover { background: var(--card2) !important; }
+[data-theme="light"] .exp-plan-item {
+  border-bottom-color: var(--ds-border) !important;
+}
+[data-theme="light"] .exp-plan-item:hover { background: var(--ds-bg) !important; }
+.exp-plan-empty {
+  color: var(--ds-muted) !important;
+  font-size: 13px !important;
+  padding: 16px !important;
+}
+
+/* ── Budget cat / item 內部 ── */
+.budget-cat-total,
+.budget-item-amt,
+.budget-bundle-total {
+  font-family: var(--ds-font-mono) !important;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.01em !important;
+}
+.budget-cat-count,
+.budget-bundle-count {
+  background: #F3F4F6 !important;
+  color: var(--ds-muted) !important;
+  border: none !important;
+  border-radius: var(--ds-radius-xs) !important;
+  font-size: 10px !important;
+}
+[data-theme="light"] .budget-cat-count,
+[data-theme="light"] .budget-bundle-count {
+  background: #F3F4F6 !important;
+  color: var(--ds-muted) !important;
+}
+
+/* ── Crypto panel（點擊資產詳情彈出）── */
+.crypto-panel-sheet {
+  background: var(--card) !important;
+  border: 1px solid var(--border) !important;
+  border-radius: var(--ds-radius) !important;
+  box-shadow: 0 10px 40px rgba(0,0,0,0.12) !important;
+}
+[data-theme="light"] .crypto-panel-sheet {
+  background: var(--ds-card) !important;
+  border-color: var(--ds-border) !important;
+  box-shadow: 0 10px 40px rgba(0,0,0,0.08) !important;
+}
+.crypto-panel-header {
+  border-bottom: 1px solid var(--border) !important;
+}
+[data-theme="light"] .crypto-panel-header {
+  border-bottom-color: var(--ds-border) !important;
+}
+.crypto-panel-close {
+  border-radius: var(--ds-radius-xs) !important;
+}
+
+/* ── Mobile menu（手機漢堡選單）── */
+.mobile-menu-sheet {
+  background: var(--card) !important;
+  border-left: 1px solid var(--border) !important;
+  border-top-left-radius: var(--ds-radius) !important;
+  border-bottom-left-radius: var(--ds-radius) !important;
+}
+[data-theme="light"] .mobile-menu-sheet {
+  background: var(--ds-card) !important;
+  border-left-color: var(--ds-border) !important;
+}
+
+/* ── Toast ── */
+.toast {
+  background: var(--card) !important;
+  border: 1px solid var(--border) !important;
+  border-radius: var(--ds-radius) !important;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.15) !important;
+  font-family: var(--ds-font-body) !important;
+  font-size: 13px !important;
+}
+[data-theme="light"] .toast {
+  background: var(--ds-card) !important;
+  border-color: var(--ds-border) !important;
+}
