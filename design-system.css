@@ -2917,3 +2917,84 @@ body {
   background: var(--ap-glass) !important;
   border-radius: 8px !important;
 }
+
+/* ═══════════════════════════════════════════════════════════════
+   Phase 9 — Compact Dashboard（雙主題一致收緊）
+   修復：48px KPI 導致 6 張卡橫向溢出畫面
+   目標：1440×900 viewport 一屏可見 KPI + 主圖表 + pie
+   ═══════════════════════════════════════════════════════════════ */
+
+@media (min-width: 769px) {
+  /* KPI — 強制 6 等分、nowrap、縮小字體 */
+  .kpi-grid {
+    grid-template-columns: repeat(6, minmax(0, 1fr)) !important;
+    gap: 12px !important;
+    margin-bottom: 14px !important;
+  }
+  .kpi-card {
+    min-width: 0 !important;
+    padding: 14px 16px !important;
+    border-radius: 14px !important;
+  }
+  .kpi-label {
+    font-size: 11px !important;
+    margin-bottom: 6px !important;
+  }
+  .kpi-value {
+    font-size: 26px !important;
+    font-weight: 700 !important;
+    letter-spacing: -0.02em !important;
+    line-height: 1.15 !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: clip !important;
+    margin: 0 !important;
+  }
+  .kpi-card.kpi-primary .kpi-value {
+    font-size: 30px !important;
+  }
+  .kpi-sub {
+    font-size: 11px !important;
+    margin-top: 4px !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+  }
+
+  /* Chart 卡片收緊 padding */
+  .chart-card {
+    padding: 14px 18px !important;
+    border-radius: 16px !important;
+  }
+  .chart-title-row,
+  .chart-card .chart-title-row {
+    margin-bottom: 8px !important;
+  }
+  .chart-card h3 {
+    font-size: 13px !important;
+    margin: 0 !important;
+  }
+
+  /* Overview grid 更小的 gap，app-content 更小 padding */
+  .overview-grid {
+    gap: 12px !important;
+  }
+  .overview-main,
+  .overview-side {
+    gap: 12px !important;
+  }
+  #app-content {
+    padding: 20px 28px !important;
+  }
+
+  /* 每日損益 chart 高度壓縮 → 放得下整頁 */
+  #daily-trend-wrap {
+    height: 200px !important;
+  }
+}
+
+/* 超寬螢幕（>1600）保持同樣節奏，避免 KPI 字體過小 */
+@media (min-width: 1600px) {
+  .kpi-value { font-size: 28px !important; }
+  .kpi-card.kpi-primary .kpi-value { font-size: 32px !important; }
+}
