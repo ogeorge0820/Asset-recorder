@@ -2,7 +2,7 @@
 // CONFIG
 // ══════════════════════════════════════════════════════════════
 // Build 時間：每次修改 code 後手動更新此時間（UTC+8 台北時間）
-const BUILD_DATE = '2026/04/22 09:54';
+const BUILD_DATE = '2026/04/22 11:26';
 
 const SPREADSHEET_ID = '1lpRpxVzWaYUqL-jVPOAJCtjsJUIedPYYyOx4gg4PPFU';
 const CLIENT_ID = '149884248440-85f8dhc6ub9up10sv0f89e3e0itrnooj.apps.googleusercontent.com';
@@ -1716,8 +1716,8 @@ function renderBudget() {
           <div class="budget-ratio-fixed" style="width:${fixedPct.toFixed(1)}%"></div>
         </div>
         <div class="budget-ratio-labels">
-          <span class="budget-ratio-lbl-fixed">🔒 固定 ${fmt(fixedTotal)} · ${fixedPct.toFixed(0)}%</span>
-          <span class="budget-ratio-lbl-var">💨 浮動 ${fmt(varTotal)} · ${varPct.toFixed(0)}%</span>
+          <span class="budget-ratio-lbl-fixed">固定 ${fmt(fixedTotal)} · ${fixedPct.toFixed(0)}%</span>
+          <span class="budget-ratio-lbl-var">浮動 ${fmt(varTotal)} · ${varPct.toFixed(0)}%</span>
         </div>`;
     } else {
       ratioEl.innerHTML = '';
@@ -1760,18 +1760,17 @@ function renderBudget() {
     const digitalBlock = digitalList.length >= 2 ? `
       <div class="budget-bundle collapsed" id="${bundleId}">
         <div class="budget-bundle-header" onclick="toggleBudgetBundle('${bundleId}')">
-          <span class="budget-bundle-name">🌐 數位服務與通訊 <span class="budget-bundle-count">${digitalList.length}</span></span>
+          <span class="budget-bundle-name">數位服務與通訊 <span class="budget-bundle-count">${digitalList.length}</span></span>
           <span class="budget-bundle-total">${fmt(digitalTotal)}</span>
           <span class="budget-bundle-chevron">▾</span>
         </div>
         <div class="budget-bundle-items">${digitalList.map(renderItem).join('')}</div>
       </div>` : digitalList.map(renderItem).join('');
 
-    const icon = cat === '固定' ? '🔒' : (cat === '浮動' ? '💨' : '📦');
     return `
       <div class="budget-cat collapsed" id="budget-cat-${cat}">
         <div class="budget-cat-header" onclick="toggleBudgetCat('${cat}')">
-          <span class="budget-cat-name">${icon} ${esc(cat)}支出 <span class="budget-cat-count">${list.length}</span></span>
+          <span class="budget-cat-name">${esc(cat)}支出 <span class="budget-cat-count">${list.length}</span></span>
           <span class="budget-cat-total">${fmt(catTotal)}</span>
           <span class="budget-cat-chevron">▾</span>
         </div>
@@ -2192,16 +2191,16 @@ Chart.defaults.color = '#94a3b8';
 function chartColors() {
   const light = document.documentElement.dataset.theme === 'light';
   return {
-    grid:        light ? 'rgba(0,0,0,.0)'     : 'rgba(255,255,255,.04)',
-    gridFaint:   light ? 'rgba(0,0,0,.05)'    : 'rgba(255,255,255,.04)',
-    tick:        light ? '#86868b'             : '#64748b',
-    legend:      light ? '#86868b'             : '#94a3b8',
-    center_text: light ? '#1d1d1f'             : '#e2e8f0',
-    center_sub:  light ? '#86868b'             : '#94a3b8',
-    nodata:      light ? '#86868b'             : '#475569',
-    border:      light ? '#ffffff'             : '#1a1d2e',
-    // 趨勢圖線條顏色
-    line1:       light ? '#007AFF'             : '#6366f1',
+    grid:        light ? 'rgba(0,0,0,.0)'     : '#1a1a1a',
+    gridFaint:   light ? 'rgba(0,0,0,.05)'    : '#1a1a1a',
+    tick:        light ? '#86868b'             : '#666666',
+    legend:      light ? '#86868b'             : '#999999',
+    center_text: light ? '#1d1d1f'             : '#ffffff',
+    center_sub:  light ? '#86868b'             : '#666666',
+    nodata:      light ? '#86868b'             : '#555555',
+    border:      light ? '#ffffff'             : '#0a0a0a',
+    // 趨勢圖線條顏色 — Vercel dark 改用純白
+    line1:       light ? '#007AFF'             : '#ffffff',
     line2:       light ? '#34C759'             : '#22c55e',
     barPos:      light ? 'rgba(52,199,89,.7)'  : 'rgba(34,197,94,.65)',
     barNeg:      light ? 'rgba(255,59,48,.65)' : 'rgba(239,68,68,.65)',
@@ -2496,13 +2495,18 @@ function renderPie() {
   // USDT 視覺歸類至「流動現金」，不改變整體加總
   const usdtEntry = S.data.crypto.find(r => r[0]?.toUpperCase() === 'USDT');
   const usdtTWD   = usdtEntry ? (parseFloat(usdtEntry[1]) || 0) * S.prices.usdtwd : 0;
+  // Vercel 單色系：白 → 灰階 4 階
+  const light = document.documentElement.dataset.theme === 'light';
+  const palette = light
+    ? ['#18181B', '#52525B', '#71717A', '#A1A1AA', '#D4D4D8', '#E4E4E7']
+    : ['#ffffff', '#999999', '#666666', '#444444', '#2a2a2a', '#1a1a1a'];
   const entries = [
-    { label:'流動現金', value:cashT + usdtTWD,   color:'#22c55e' },
-    { label:'台股',     value:twT,               color:'#6366f1' },
-    { label:'美股',     value:usT,               color:'#3b82f6' },
-    { label:'加密貨幣', value:cryT - usdtTWD,    color:'#f59e0b' },
-    { label:'儲蓄險',   value:ins,               color:'#ec4899' },
-    { label:'房地產',   value:re,                color:'#14b8a6' },
+    { label:'流動現金', value:cashT + usdtTWD,   color: palette[0] },
+    { label:'加密貨幣', value:cryT - usdtTWD,    color: palette[1] },
+    { label:'美股',     value:usT,               color: palette[2] },
+    { label:'台股',     value:twT,               color: palette[3] },
+    { label:'儲蓄險',   value:ins,               color: palette[4] },
+    { label:'房地產',   value:re,                color: palette[5] },
   ].filter(e => e.value > 0);
 
   const ctx = $('pie-chart').getContext('2d');
@@ -3485,11 +3489,11 @@ function computeWeightedROI(items) {
 
 // ── Side Drawer 版精算介面 ──
 const DWZ_ROI_GROUP_META = {
-  crypto: { icon: '₿', label: '加密貨幣', order: 1 },
-  us:     { icon: '🇺🇸', label: '美股',   order: 2 },
-  tw:     { icon: '🇹🇼', label: '台股',   order: 3 },
-  ins:    { icon: '🛡️', label: '儲蓄險', order: 4 },
-  cash:   { icon: '💵', label: '現金',   order: 5 },
+  crypto: { icon: '', label: '加密貨幣', order: 1 },
+  us:     { icon: '', label: '美股',     order: 2 },
+  tw:     { icon: '', label: '台股',     order: 3 },
+  ins:    { icon: '', label: '儲蓄險',   order: 4 },
+  cash:   { icon: '', label: '現金',     order: 5 },
 };
 
 // 讀取抽屜當前所有 row（type 含 tw/us/crypto/ins/cash），一律視為 items 參與加權
@@ -3609,7 +3613,6 @@ function openROIEditor() {
     <section class="roi-drawer-group roi-group-ins">
        <header class="roi-drawer-group-head">
          <div class="roi-group-titleline">
-           <span class="roi-group-icon">🛡️</span>
            <span class="roi-group-name">儲蓄險</span>
            <span class="roi-group-count">1</span>
          </div>
@@ -3620,7 +3623,7 @@ function openROIEditor() {
        </header>
        <div class="roi-drawer-group-body">
          <div class="roi-drawer-row">
-           <span class="roi-sym">🛡️ 儲蓄險總額</span>
+           <span class="roi-sym">儲蓄險總額</span>
            <span class="roi-mv">${fmt(ins)}</span>
            <input type="number" class="roi-input" min="-5" max="15" step="0.1"
                   value="${insRoi}" data-key="ins" data-type="ins"
@@ -3631,7 +3634,6 @@ function openROIEditor() {
     `<section class="roi-drawer-group roi-group-cash">
        <header class="roi-drawer-group-head">
          <div class="roi-group-titleline">
-           <span class="roi-group-icon">💵</span>
            <span class="roi-group-name">現金</span>
            <span class="roi-group-count">1</span>
          </div>
@@ -3642,7 +3644,7 @@ function openROIEditor() {
        </header>
        <div class="roi-drawer-group-body">
          <div class="roi-drawer-row">
-           <span class="roi-sym">💵 現金總額</span>
+           <span class="roi-sym">現金總額</span>
            <span class="roi-mv">${fmt(cashT)}</span>
            <input type="number" class="roi-input" min="-5" max="30" step="0.1"
                   value="${cashRoi}" data-key="cash" data-type="cash"
@@ -3783,12 +3785,12 @@ function renderDWZ() {
       warnEl.style.display = 'inline-flex';
       warnEl.className = 'dwz-pill dwz-pill-danger';
       const retireAge2 = ages.find((_a, i) => wealth[i] < 0);
-      warnEl.innerHTML = `🚨 <em>缺口</em> <b>${retireAge2} 歲</b>歸零`;
+      warnEl.innerHTML = `<em>缺口</em> <b>${retireAge2} 歲</b>歸零`;
       warnEl.title = '資金缺口預警：建議延後退休年齡或降低生活費倍率';
     } else if (wealthAt90 > 20000000) {
       warnEl.style.display = 'inline-flex';
       warnEl.className = 'dwz-pill dwz-pill-warn';
-      warnEl.innerHTML = `⚠️ <em>Over-worked</em> 90 歲剩 <b>${fmtWan(wealthAt90)}</b>`;
+      warnEl.innerHTML = `<em>Over-worked</em> 90 歲剩 <b>${fmtWan(wealthAt90)}</b>`;
       warnEl.title = '你工作得太努力了，建議 45–65 歲大幅增加體驗支出';
     } else {
       warnEl.style.display = 'none';
@@ -3799,7 +3801,7 @@ function renderDWZ() {
   const peakEl = $('dwz-peak-info');
   if (peakEl && peakNW > -Infinity) {
     peakEl.style.display = 'inline-flex';
-    peakEl.innerHTML = `📈 <em>巔峰</em> <b>${peakAge} 歲</b> ${fmtWan(peakNW)}`;
+    peakEl.innerHTML = `<em>巔峰</em> <b>${peakAge} 歲</b> ${fmtWan(peakNW)}`;
     peakEl.title = `資產高點：${peakAge} 歲 ${fmtWan(peakNW)}`;
   }
 
@@ -3808,7 +3810,7 @@ function renderDWZ() {
   if (wasteEl) {
     if (wastedWealth > 0) {
       wasteEl.style.display = 'inline-flex';
-      wasteEl.innerHTML = `💀 <em>終局浪費</em> <b>${fmtWan(wastedWealth)}</b>`;
+      wasteEl.innerHTML = `<em>終局浪費</em> <b>${fmtWan(wastedWealth)}</b>`;
       wasteEl.title = `按目前規劃，${lifeAge} 歲時帶走 ${fmtWan(wastedWealth)} 未兌換的生命能量`;
     } else {
       wasteEl.style.display = 'none';
@@ -3816,20 +3818,26 @@ function renderDWZ() {
   }
 
   // ── Chart ──
+  const isDark    = document.documentElement.dataset.theme !== 'light';
+  const primaryLine = isDark ? '#ffffff' : '#18181B';
   const floorVal    = safeFloor;
   const allExps     = _allDWZExpenses();
   const expAgeSet   = new Set(allExps.map(e => e.age));
-  const pointColors = wealth.map(w => w >= floorVal ? '#6366f1' : '#ef4444');
+  const pointColors = wealth.map(w => w >= floorVal ? primaryLine : '#ef4444');
 
   if (_dwzChart) { _dwzChart.destroy(); _dwzChart = null; }
   const ctx = document.getElementById('dwz-chart');
   if (!ctx) return;
-  const isDark    = document.documentElement.dataset.theme !== 'light';
-  const gridColor = isDark ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.07)';
+  const gridColor = isDark ? '#1a1a1a' : 'rgba(0,0,0,0.07)';
 
   const grad = ctx.getContext('2d').createLinearGradient(0, 0, 0, 300);
-  grad.addColorStop(0, 'rgba(99,102,241,0.28)');
-  grad.addColorStop(1, 'rgba(99,102,241,0)');
+  if (isDark) {
+    grad.addColorStop(0, 'rgba(255,255,255,0.08)');
+    grad.addColorStop(1, 'rgba(255,255,255,0)');
+  } else {
+    grad.addColorStop(0, 'rgba(24,24,27,0.12)');
+    grad.addColorStop(1, 'rgba(24,24,27,0)');
+  }
 
   _dwzChart = new Chart(ctx, {
     type: 'line',
@@ -3840,16 +3848,16 @@ function renderDWZ() {
         {
           label: '可用資產',
           data: wealth,
-          borderColor: '#6366f1',
+          borderColor: primaryLine,
           backgroundColor: grad,
-          borderWidth: 2.5,
-          pointRadius: ages.map(a => expAgeSet.has(a) ? 7 : 3),
+          borderWidth: 2,
+          pointRadius: ages.map(a => expAgeSet.has(a) ? 6 : 2.5),
           pointBackgroundColor: ages.map((a, i) => expAgeSet.has(a) ? '#f59e0b' : pointColors[i]),
           pointBorderColor:     ages.map((a, i) => expAgeSet.has(a) ? '#f59e0b' : pointColors[i]),
           fill: true,
           tension: 0.35,
           segment: {
-            borderColor: c => wealth[c.p1DataIndex] >= floorVal ? '#6366f1' : '#ef4444',
+            borderColor: c => wealth[c.p1DataIndex] >= floorVal ? primaryLine : '#ef4444',
           },
           yAxisID: 'y',
           order: 1,
@@ -3910,9 +3918,9 @@ function renderDWZ() {
                 const delta = wealth[item.dataIndex] - wealth[item.dataIndex - 1];
                 lines.push(`年變化：${delta >= 0 ? '+' : ''}${fmtWan(delta)}`);
               }
-              exps.forEach(e => lines.push(`💸 ${e.name}：${e.amount} 萬`));
+              exps.forEach(e => lines.push(`${e.name}：${e.amount} 萬`));
               if (ages[item.dataIndex] === giftAge && legacyTWD > 0)
-                lines.push(`🎁 生前贈與：${fmtWan(legacyTWD)}`);
+                lines.push(`生前贈與：${fmtWan(legacyTWD)}`);
               return lines;
             }
           }

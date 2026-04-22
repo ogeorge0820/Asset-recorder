@@ -1516,3 +1516,481 @@ h3.section-header {
   background: var(--ds-card) !important;
   border-color: var(--ds-border) !important;
 }
+
+
+/* ═══════════════════════════════════════════════════════════════
+   Phase 6 — Vercel / Linear 全站深色 Redesign
+   （只作用於預設 dark；light theme 保留原 Phase 1-5 樣式）
+   ═══════════════════════════════════════════════════════════════ */
+
+:root {
+  /* Vercel / Linear dark palette */
+  --vc-bg:            #0a0a0a;
+  --vc-card:          #111111;
+  --vc-card-hover:    #141414;
+  --vc-border:        #1f1f1f;
+  --vc-border-hover:  #333333;
+  --vc-text:          #ffffff;
+  --vc-text-soft:     #cccccc;
+  --vc-muted:         #999999;
+  --vc-muted-soft:    #666666;
+  --vc-muted-weak:    #555555;
+  --vc-faint:         #1a1a1a;
+  --vc-pos:           #22c55e;
+  --vc-neg:           #ef4444;
+
+  /* 覆寫現有 token（只影響 dark default） */
+  --bg:     var(--vc-bg);
+  --card:   var(--vc-card);
+  --card2:  var(--vc-faint);
+  --border: var(--vc-border);
+  --text:   var(--vc-text);
+  --muted:  var(--vc-muted-soft);
+  --green:  var(--vc-pos);
+  --red:    var(--vc-neg);
+  --r:      12px;
+  --accent:       #ffffff;
+  --accent-light: #ffffff;
+}
+
+/* 基礎字型 / 背景 */
+body {
+  background: var(--vc-bg) !important;
+  color: var(--vc-text-soft) !important;
+  font-family: var(--ds-font-body) !important;
+}
+@media (min-width: 769px) {
+  body { background: var(--vc-bg) !important; }
+}
+
+/* ── 一律 12px radius（取消 Phase 1 的 8px 上限，在 Vercel Redesign 下生效） ── */
+:root:not([data-theme="light"]) .section-card,
+:root:not([data-theme="light"]) .kpi-card,
+:root:not([data-theme="light"]) .chart-card,
+:root:not([data-theme="light"]) .dwz-param-block,
+:root:not([data-theme="light"]) .dwz-left-head,
+:root:not([data-theme="light"]) .dwz-chart-card,
+:root:not([data-theme="light"]) .dwz-expenses-card,
+:root:not([data-theme="light"]) .login-card,
+:root:not([data-theme="light"]) .modal-box,
+:root:not([data-theme="light"]) .roi-drawer,
+:root:not([data-theme="light"]) .crypto-panel-sheet {
+  border-radius: 12px !important;
+}
+
+/* ── 卡片一律透明/極淡底 + 細邊 ── */
+:root:not([data-theme="light"]) .section-card,
+:root:not([data-theme="light"]) .kpi-card,
+:root:not([data-theme="light"]) .chart-card,
+:root:not([data-theme="light"]) .dwz-left-head,
+:root:not([data-theme="light"]) .dwz-param-block,
+:root:not([data-theme="light"]) .dwz-chart-card,
+:root:not([data-theme="light"]) .dwz-expenses-card {
+  background: var(--vc-card) !important;
+  border: 1px solid var(--vc-border) !important;
+  box-shadow: none !important;
+  transition: border-color .2s ease, background .2s ease;
+}
+:root:not([data-theme="light"]) .section-card:hover,
+:root:not([data-theme="light"]) .kpi-card:hover,
+:root:not([data-theme="light"]) .chart-card:hover,
+:root:not([data-theme="light"]) .dwz-param-block:hover {
+  border-color: var(--vc-border-hover) !important;
+}
+
+/* ── KPI ── */
+:root:not([data-theme="light"]) .kpi-grid {
+  gap: 16px !important;                   /* 更多呼吸感 */
+  margin-bottom: 24px !important;
+}
+:root:not([data-theme="light"]) .kpi-card {
+  padding: 20px 24px !important;
+  border-left: 1px solid var(--vc-border) !important;
+}
+:root:not([data-theme="light"]) .kpi-primary {
+  background: var(--vc-card) !important;
+}
+/* 移除 gain/loss 左邊彩色條（顏色交給數字） */
+:root:not([data-theme="light"]) .kpi-card.kpi-gain,
+:root:not([data-theme="light"]) .kpi-card.kpi-loss {
+  border-left: 1px solid var(--vc-border) !important;
+}
+
+:root:not([data-theme="light"]) .kpi-label {
+  color: var(--vc-muted-soft) !important;
+  font-size: 11px !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.1em !important;
+  font-weight: 500 !important;
+  margin-bottom: 12px !important;
+}
+:root:not([data-theme="light"]) .kpi-label-dot { display: none !important; }
+
+:root:not([data-theme="light"]) .kpi-value {
+  font-family: var(--ds-font-heading) !important;
+  font-size: 36px !important;
+  font-weight: 600 !important;
+  color: var(--vc-text) !important;
+  line-height: 1.1 !important;
+  letter-spacing: -0.02em !important;
+  font-variant-numeric: tabular-nums;
+}
+:root:not([data-theme="light"]) .kpi-primary .kpi-value {
+  font-size: 44px !important;
+}
+:root:not([data-theme="light"]) .kpi-value.pos     { color: var(--vc-pos) !important; }
+:root:not([data-theme="light"]) .kpi-value.neg     { color: var(--vc-neg) !important; }
+:root:not([data-theme="light"]) .kpi-value.neutral { color: var(--vc-muted-soft) !important; }
+
+:root:not([data-theme="light"]) .kpi-sub {
+  color: var(--vc-muted-soft) !important;
+  font-size: 12px !important;
+  margin-top: 10px !important;
+}
+
+@media (max-width: 640px) {
+  :root:not([data-theme="light"]) .kpi-value { font-size: 22px !important; }
+  :root:not([data-theme="light"]) .kpi-primary .kpi-value { font-size: 26px !important; }
+  :root:not([data-theme="light"]) .kpi-card { padding: 14px 16px !important; }
+}
+
+/* ── Section header ── */
+:root:not([data-theme="light"]) .section-card h3,
+:root:not([data-theme="light"]) h3.section-header {
+  font-family: var(--ds-font-heading) !important;
+  font-size: 14px !important;
+  font-weight: 600 !important;
+  color: var(--vc-muted) !important;
+  letter-spacing: -0.005em !important;
+}
+
+:root:not([data-theme="light"]) .section-total,
+:root:not([data-theme="light"]) .total-val {
+  color: var(--vc-text) !important;
+  font-family: var(--ds-font-mono) !important;
+}
+:root:not([data-theme="light"]) .section-gain.pos { color: var(--vc-pos) !important; }
+:root:not([data-theme="light"]) .section-gain.neg { color: var(--vc-neg) !important; }
+:root:not([data-theme="light"]) .section-gain.neutral { color: var(--vc-muted-soft) !important; }
+
+:root:not([data-theme="light"]) .badge {
+  background: var(--vc-faint) !important;
+  color: var(--vc-muted) !important;
+  border: 1px solid var(--vc-border) !important;
+}
+
+/* ── Chart cards ── */
+:root:not([data-theme="light"]) .chart-card h3,
+:root:not([data-theme="light"]) .chart-title-row h3 {
+  color: var(--vc-muted) !important;
+  font-size: 14px !important;
+}
+
+:root:not([data-theme="light"]) .filter-btn {
+  background: transparent !important;
+  border: 1px solid var(--vc-border) !important;
+  color: var(--vc-muted-soft) !important;
+}
+:root:not([data-theme="light"]) .filter-btn:hover {
+  background: var(--vc-faint) !important;
+  border-color: var(--vc-border-hover) !important;
+  color: var(--vc-text-soft) !important;
+}
+:root:not([data-theme="light"]) .filter-btn.active {
+  background: var(--vc-text) !important;
+  border-color: var(--vc-text) !important;
+  color: var(--vc-bg) !important;
+}
+
+/* ── Data tables ── */
+:root:not([data-theme="light"]) .data-table th {
+  color: var(--vc-muted-soft) !important;
+  border-bottom-color: var(--vc-border) !important;
+}
+:root:not([data-theme="light"]) .data-table td {
+  border-bottom-color: var(--vc-border) !important;
+  color: var(--vc-text-soft);
+}
+:root:not([data-theme="light"]) .data-table tr.clickable-row:hover {
+  background: var(--vc-faint) !important;
+}
+
+/* ── Ghost buttons ── */
+:root:not([data-theme="light"]) .btn-ok,
+:root:not([data-theme="light"]) .btn-google {
+  background: transparent !important;
+  background-image: none !important;
+  color: var(--vc-text) !important;
+  border: 1px solid var(--vc-border-hover) !important;
+  border-radius: 8px !important;
+  font-weight: 500 !important;
+}
+:root:not([data-theme="light"]) .btn-ok:hover,
+:root:not([data-theme="light"]) .btn-google:hover {
+  background: var(--vc-faint) !important;
+  border-color: var(--vc-text) !important;
+}
+:root:not([data-theme="light"]) .btn-cancel {
+  background: transparent !important;
+  color: var(--vc-muted-soft) !important;
+  border: 1px solid var(--vc-border) !important;
+  border-radius: 8px !important;
+}
+:root:not([data-theme="light"]) .btn-cancel:hover {
+  background: var(--vc-faint) !important;
+  color: var(--vc-text-soft) !important;
+}
+:root:not([data-theme="light"]) .btn-add {
+  background: transparent !important;
+  border: 1px dashed var(--vc-border) !important;
+  color: var(--vc-muted-soft) !important;
+}
+:root:not([data-theme="light"]) .btn-add:hover {
+  background: var(--vc-faint) !important;
+  border-color: var(--vc-border-hover) !important;
+  color: var(--vc-text-soft) !important;
+}
+
+:root:not([data-theme="light"]) .btn-icon { color: var(--vc-muted-soft) !important; }
+:root:not([data-theme="light"]) .btn-icon.edit:hover,
+:root:not([data-theme="light"]) .btn-icon.copy:hover {
+  background: var(--vc-faint) !important;
+  color: var(--vc-text) !important;
+}
+:root:not([data-theme="light"]) .btn-icon.del:hover {
+  background: rgba(239, 68, 68, 0.1) !important;
+  color: var(--vc-neg) !important;
+}
+
+/* ── Sidebar ── */
+@media (min-width: 769px) {
+  :root:not([data-theme="light"]) body { background: var(--vc-bg) !important; }
+
+  :root:not([data-theme="light"]) #sidebar {
+    background: var(--vc-bg) !important;
+    border-right: 1px solid var(--vc-border) !important;
+    backdrop-filter: none !important;
+  }
+  :root:not([data-theme="light"]) .sidebar-header {
+    border-bottom-color: var(--vc-border) !important;
+  }
+  :root:not([data-theme="light"]) .sidebar-logo {
+    color: var(--vc-text) !important;
+  }
+  :root:not([data-theme="light"]) .sidebar-nav-item {
+    color: var(--vc-muted-weak) !important;
+    background: transparent !important;
+    padding-left: 14px !important;
+    position: relative;
+  }
+  :root:not([data-theme="light"]) .sidebar-nav-item:hover {
+    background: var(--vc-faint) !important;
+    color: var(--vc-text-soft) !important;
+  }
+  :root:not([data-theme="light"]) .sidebar-nav-item.active {
+    background: transparent !important;
+    color: var(--vc-text) !important;
+    font-weight: 600 !important;
+  }
+  /* 左側 2px 白線 active indicator */
+  :root:not([data-theme="light"]) .sidebar-nav-item.active::before {
+    content: '' !important;
+    display: block !important;
+    position: absolute;
+    left: 0; top: 50%; transform: translateY(-50%);
+    width: 2px; height: 60%;
+    background: var(--vc-text) !important;
+    border-radius: 0 !important;
+  }
+  :root:not([data-theme="light"]) .sidebar-footer {
+    border-top-color: var(--vc-border) !important;
+  }
+  :root:not([data-theme="light"]) .sidebar-info-block {
+    background: transparent !important;
+    border-color: var(--vc-border) !important;
+  }
+  :root:not([data-theme="light"]) .sidebar-rate b {
+    color: var(--vc-text) !important;
+  }
+}
+
+/* ── Tab nav (mobile header) ── */
+:root:not([data-theme="light"]) .tab-btn.active {
+  background: var(--vc-text) !important;
+  color: var(--vc-bg) !important;
+}
+
+/* ── Modal ── */
+:root:not([data-theme="light"]) .modal-overlay {
+  background: rgba(0,0,0,0.7) !important;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+:root:not([data-theme="light"]) .modal-box {
+  background: var(--vc-card) !important;
+  border: 1px solid var(--vc-border) !important;
+}
+:root:not([data-theme="light"]) .modal-title {
+  color: var(--vc-text) !important;
+}
+:root:not([data-theme="light"]) .modal-form input,
+:root:not([data-theme="light"]) .modal-form select {
+  background: var(--vc-bg) !important;
+  border: 1px solid var(--vc-border) !important;
+  color: var(--vc-text) !important;
+}
+:root:not([data-theme="light"]) .modal-form input:hover,
+:root:not([data-theme="light"]) .modal-form select:hover {
+  background: var(--vc-faint) !important;
+  border-color: var(--vc-border-hover) !important;
+}
+:root:not([data-theme="light"]) .modal-form input:focus,
+:root:not([data-theme="light"]) .modal-form select:focus {
+  background: var(--vc-bg) !important;
+  border-color: var(--vc-text) !important;
+  box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.08) !important;
+}
+
+/* ── DWZ 模擬器 ── */
+:root:not([data-theme="light"]) .dwz-kpi-tag {
+  background: var(--vc-faint) !important;
+  border: 1px solid var(--vc-border) !important;
+  color: var(--vc-muted) !important;
+}
+:root:not([data-theme="light"]) .dwz-kpi-tag b {
+  color: var(--vc-text) !important;
+}
+:root:not([data-theme="light"]) .dwz-block-title {
+  color: var(--vc-muted-soft) !important;
+}
+:root:not([data-theme="light"]) .dwz-row > label {
+  color: var(--vc-text-soft) !important;
+}
+:root:not([data-theme="light"]) .dwz-param-input {
+  background: var(--vc-bg) !important;
+  border: 1px solid var(--vc-border) !important;
+  color: var(--vc-text) !important;
+}
+:root:not([data-theme="light"]) .dwz-param-input:hover {
+  background: var(--vc-faint) !important;
+  border-color: var(--vc-border-hover) !important;
+}
+:root:not([data-theme="light"]) .dwz-param-input:focus {
+  background: var(--vc-bg) !important;
+  border-color: var(--vc-text) !important;
+  box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.08) !important;
+}
+:root:not([data-theme="light"]) .dwz-pill {
+  background: var(--vc-faint) !important;
+  border: 1px solid var(--vc-border) !important;
+  color: var(--vc-text-soft) !important;
+}
+:root:not([data-theme="light"]) .dwz-pill-peak { color: var(--vc-text) !important; }
+:root:not([data-theme="light"]) .dwz-pill-peak b { color: var(--vc-text) !important; }
+:root:not([data-theme="light"]) .dwz-pill-danger b { color: var(--vc-neg) !important; }
+:root:not([data-theme="light"]) .dwz-pill-warn b   { color: #eab308 !important; }
+:root:not([data-theme="light"]) .dwz-pill-waste b  { color: var(--vc-neg) !important; }
+
+/* ── ROI Drawer ── */
+:root:not([data-theme="light"]) .roi-drawer {
+  background: var(--vc-card) !important;
+}
+:root:not([data-theme="light"]) .roi-drawer-head,
+:root:not([data-theme="light"]) .roi-drawer-foot {
+  background: var(--vc-card) !important;
+  border-color: var(--vc-border) !important;
+}
+:root:not([data-theme="light"]) .roi-drawer-title { color: var(--vc-text) !important; }
+:root:not([data-theme="light"]) .roi-drawer-subtitle { color: var(--vc-muted-soft) !important; }
+:root:not([data-theme="light"]) .roi-drawer-hint {
+  background: var(--vc-faint) !important;
+  color: var(--vc-muted) !important;
+  border-left-color: var(--vc-text) !important;
+}
+:root:not([data-theme="light"]) .roi-drawer-group {
+  background: var(--vc-card) !important;
+  border-color: var(--vc-border) !important;
+}
+:root:not([data-theme="light"]) .roi-drawer-row:hover {
+  background: var(--vc-faint) !important;
+}
+:root:not([data-theme="light"]) .roi-input {
+  background: var(--vc-bg) !important;
+  border: 1px solid var(--vc-border) !important;
+  color: var(--vc-text) !important;
+}
+:root:not([data-theme="light"]) .roi-input:focus {
+  background: var(--vc-bg) !important;
+  border-color: var(--vc-text) !important;
+  box-shadow: 0 0 0 3px rgba(255,255,255,0.08) !important;
+}
+:root:not([data-theme="light"]) .roi-group-fill {
+  background: transparent !important;
+  border: 1px solid var(--vc-border) !important;
+  color: var(--vc-muted) !important;
+}
+:root:not([data-theme="light"]) .roi-group-fill:hover {
+  background: var(--vc-faint) !important;
+  border-color: var(--vc-border-hover) !important;
+  color: var(--vc-text-soft) !important;
+}
+:root:not([data-theme="light"]) .roi-foot-hl .roi-foot-val { color: var(--vc-text) !important; }
+
+/* ── Income / Exp plan / Budget 列 ── */
+:root:not([data-theme="light"]) .income-item:hover,
+:root:not([data-theme="light"]) .exp-plan-item:hover {
+  background: var(--vc-faint) !important;
+}
+:root:not([data-theme="light"]) .income-item.income-current {
+  background: transparent !important;
+  border-left: 2px solid var(--vc-text) !important;
+}
+:root:not([data-theme="light"]) .income-cat-badge,
+:root:not([data-theme="light"]) .income-recurring-badge,
+:root:not([data-theme="light"]) .budget-cat-count,
+:root:not([data-theme="light"]) .budget-bundle-count {
+  background: var(--vc-faint) !important;
+  color: var(--vc-muted) !important;
+  border: 1px solid var(--vc-border) !important;
+}
+
+/* ── Progress bar (固定/浮動) ── */
+:root:not([data-theme="light"]) .budget-ratio-fixed {
+  background: var(--vc-text) !important;  /* 白色 */
+}
+
+/* ── Crypto panel / Mobile menu / Toast ── */
+:root:not([data-theme="light"]) .crypto-panel-sheet,
+:root:not([data-theme="light"]) .mobile-menu-sheet,
+:root:not([data-theme="light"]) .toast {
+  background: var(--vc-card) !important;
+  border-color: var(--vc-border) !important;
+}
+
+/* ── Login card ── */
+:root:not([data-theme="light"]) .login-card {
+  background: var(--vc-card) !important;
+  border: 1px solid var(--vc-border) !important;
+}
+
+/* ── Skeleton — 簡單 opacity pulse ── */
+:root:not([data-theme="light"]) .skel {
+  background: var(--vc-faint) !important;
+  animation: vc-pulse 1.4s ease-in-out infinite !important;
+}
+@keyframes vc-pulse {
+  0%, 100% { opacity: 0.45; }
+  50%      { opacity: 1; }
+}
+
+/* ── 主內容區域 padding（更多呼吸感） ── */
+@media (min-width: 769px) {
+  :root:not([data-theme="light"]) #app-content {
+    padding: 32px 40px !important;
+  }
+}
+
+/* ── Price bar dots ── */
+:root:not([data-theme="light"]) .dot.ok   { background: var(--vc-pos) !important; }
+:root:not([data-theme="light"]) .dot.err  { background: var(--vc-neg) !important; }
+:root:not([data-theme="light"]) .dot.spin { background: var(--vc-text) !important; }

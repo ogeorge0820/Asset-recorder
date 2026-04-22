@@ -9,25 +9,25 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@500;600;700&display=swap">
-<link rel="stylesheet" href="style.css?v=202604220954">
-<link rel="stylesheet" href="design-system.css?v=202604220954">
+<link rel="stylesheet" href="style.css?v=202604221126">
+<link rel="stylesheet" href="design-system.css?v=202604221126">
 </head>
 <body>
 
 <!-- ── Sidebar (desktop only) ── -->
 <aside id="sidebar">
   <div class="sidebar-header">
-    <div class="sidebar-logo"><span>💰</span><span class="sidebar-logo-text">資產追蹤</span></div>
+    <div class="sidebar-logo"><span class="sidebar-logo-text">Asset Tracker</span></div>
   </div>
   <nav class="sidebar-nav">
     <button class="sidebar-nav-item active" id="snav-overview" onclick="switchTab('overview')">
-      <span class="snav-icon">📊</span><span>總覽</span>
+      <span>總覽</span>
     </button>
     <button class="sidebar-nav-item" id="snav-management" onclick="switchTab('management')">
-      <span class="snav-icon">💼</span><span>管理</span>
+      <span>管理</span>
     </button>
     <button class="sidebar-nav-item" id="snav-dwz" onclick="switchTab('dwz')">
-      <span class="snav-icon">⏳</span><span>Die With Zero</span>
+      <span>Die With Zero</span>
     </button>
   </nav>
   <div class="sidebar-spacer"></div>
@@ -52,7 +52,6 @@
 <!-- ── Login Screen ── -->
 <div id="login-screen">
   <div class="login-card">
-    <div class="login-logo">💰</div>
     <h1>個人資產追蹤</h1>
     <p>使用 Google 帳號登入<br>以存取您的資產資料</p>
     <button class="btn-google" id="btn-signin">使用 Google 登入</button>
@@ -63,7 +62,7 @@
 <!-- ── Main App ── -->
 <div id="app" style="display:none">
   <header id="app-header">
-    <h1>💰 資產追蹤</h1>
+    <h1>Asset Tracker</h1>
     <nav class="tab-nav">
       <button class="tab-btn active" onclick="switchTab('overview')">總覽</button>
       <button class="tab-btn" onclick="switchTab('management')">管理</button>
@@ -200,7 +199,7 @@
 
         <!-- Row 1: 流動現金 | 台股 -->
         <div class="section-card collapsed" id="section-cash">
-          <h3 class="section-header" onclick="toggleSection('cash')"><span>🏦 流動現金 <span class="badge" id="cnt-cash">0</span></span><span class="section-header-right"><span class="section-total" id="tot-cash">—</span><span class="section-avail" id="avail-cash" style="display:none"></span><span class="section-chevron">▾</span></span></h3>
+          <h3 class="section-header" onclick="toggleSection('cash')"><span>流動現金 <span class="badge" id="cnt-cash">0</span></span><span class="section-header-right"><span class="section-total" id="tot-cash">—</span><span class="section-avail" id="avail-cash" style="display:none"></span><span class="section-chevron">▾</span></span></h3>
           <div class="section-body">
           <div class="table-wrap" id="cash-table-wrap"><table class="data-table">
             <thead><tr><th>帳戶</th><th>幣別</th><th style="text-align:right">金額</th><th style="text-align:right">台幣現值</th></tr></thead>
@@ -212,7 +211,7 @@
         </div>
 
         <div class="section-card collapsed" id="section-tw">
-          <h3 class="section-header" onclick="toggleSection('tw')"><span>🇹🇼 台股 <span class="badge" id="cnt-tw">0</span></span><span class="section-header-right"><span class="section-total" id="tot-tw">—</span><span class="section-gain" id="gain-tw"></span><span class="section-chevron">▾</span></span></h3>
+          <h3 class="section-header" onclick="toggleSection('tw')"><span>台股 <span class="badge" id="cnt-tw">0</span></span><span class="section-header-right"><span class="section-total" id="tot-tw">—</span><span class="section-gain" id="gain-tw"></span><span class="section-chevron">▾</span></span></h3>
           <div class="section-body">
           <div class="table-wrap" id="tw-table-wrap"><table class="data-table">
             <thead><tr><th>代號</th><th>股數</th><th style="text-align:right">股價 (TWD)</th><th style="text-align:right">現值 (TWD)</th></tr></thead>
@@ -225,7 +224,7 @@
 
         <!-- Row 2: 美股 全寬 -->
         <div class="section-card collapsed" id="section-us" style="grid-column: 1 / -1">
-          <h3 class="section-header" onclick="toggleSection('us')"><span>🇺🇸 美股 <span class="badge" id="cnt-us">0</span></span><span class="section-header-right"><span class="section-total" id="tot-us">—</span><span class="section-gain" id="gain-us"></span><span class="section-chevron">▾</span></span></h3>
+          <h3 class="section-header" onclick="toggleSection('us')"><span>美股 <span class="badge" id="cnt-us">0</span></span><span class="section-header-right"><span class="section-total" id="tot-us">—</span><span class="section-gain" id="gain-us"></span><span class="section-chevron">▾</span></span></h3>
           <div class="section-body">
           <div class="table-wrap" id="us-table-wrap"><table class="data-table">
             <thead><tr><th>代號</th><th>股數</th><th style="text-align:right">股價 (USD)</th><th style="text-align:right">現值 (TWD)</th></tr></thead>
@@ -238,7 +237,7 @@
 
         <!-- Row 3: 加密貨幣 全寬 -->
         <div class="section-card collapsed" id="section-crypto" style="grid-column: 1 / -1">
-          <h3 class="section-header" onclick="toggleSection('crypto')"><span>₿ 加密貨幣 <span class="badge" id="cnt-crypto">0</span></span><span class="section-header-right"><span class="section-total" id="tot-crypto">—</span><span class="section-gain" id="gain-crypto"></span><span class="section-chevron">▾</span></span></h3>
+          <h3 class="section-header" onclick="toggleSection('crypto')"><span>加密貨幣 <span class="badge" id="cnt-crypto">0</span></span><span class="section-header-right"><span class="section-total" id="tot-crypto">—</span><span class="section-gain" id="gain-crypto"></span><span class="section-chevron">▾</span></span></h3>
           <div class="section-body">
           <div class="table-wrap" id="crypto-table-wrap"><table class="data-table">
             <thead><tr><th>代號</th><th>數量</th><th style="text-align:right">幣價 (USD)</th><th style="text-align:right">現值 (TWD)</th></tr></thead>
@@ -251,7 +250,7 @@
 
         <!-- Row 4: 其他資產＆負債 全寬 -->
         <div class="section-card collapsed" id="section-other" style="grid-column: 1 / -1">
-          <h3 class="section-header" onclick="toggleSection('other')"><span>📋 其他資產 &amp; 負債</span><span class="section-header-right"><span class="section-total" id="tot-other">—</span><span class="section-chevron">▾</span></span></h3>
+          <h3 class="section-header" onclick="toggleSection('other')"><span>其他資產 &amp; 負債</span><span class="section-header-right"><span class="section-total" id="tot-other">—</span><span class="section-chevron">▾</span></span></h3>
           <div class="section-body">
           <div id="other-items" style="display:flex;flex-direction:column;gap:10px;margin-top:4px"></div>
           </div>
@@ -259,7 +258,7 @@
 
         <!-- Row 5: 質押/活存收益記錄 全寬 -->
         <div class="section-card collapsed" id="section-rewards" style="grid-column: 1 / -1">
-          <h3 class="section-header" onclick="toggleSection('rewards')"><span>🎁 質押 / 活存收益記錄</span><span class="section-header-right"><span class="section-total" id="tot-rewards-month">—</span><span class="section-chevron">▾</span></span></h3>
+          <h3 class="section-header" onclick="toggleSection('rewards')"><span>質押 / 活存收益記錄</span><span class="section-header-right"><span class="section-total" id="tot-rewards-month">—</span><span class="section-chevron">▾</span></span></h3>
           <div class="section-body">
             <div id="rewards-accordion"></div>
             <button class="btn-add" onclick="addReward()">+ 新增收益記錄</button>
@@ -268,7 +267,7 @@
 
         <!-- Row 6: 生活支出預算 全寬 -->
         <div class="section-card collapsed" id="section-budget" style="grid-column: 1 / -1">
-          <h3 class="section-header" onclick="toggleSection('budget')"><span>💳 生活支出預算 <span class="badge" id="cnt-budget">0</span></span><span class="section-header-right"><span class="budget-total-label">月支出：</span><span class="section-total" id="tot-budget">—</span><span class="section-chevron">▾</span></span></h3>
+          <h3 class="section-header" onclick="toggleSection('budget')"><span>生活支出預算 <span class="badge" id="cnt-budget">0</span></span><span class="section-header-right"><span class="budget-total-label">月支出：</span><span class="section-total" id="tot-budget">—</span><span class="section-chevron">▾</span></span></h3>
           <div class="budget-ratio-bar" id="budget-ratio-bar"></div>
           <div class="section-body">
             <div class="budget-cats" id="budget-cats"></div>
@@ -278,7 +277,7 @@
 
         <!-- Row 7: 重大體驗支出規劃 全寬 -->
         <div class="section-card collapsed" id="section-exp-plan" style="grid-column: 1 / -1">
-          <h3 class="section-header" onclick="toggleSection('exp-plan')"><span>🌍 重大體驗支出規劃 <span class="badge" id="cnt-exp-plan">0</span></span><span class="section-header-right"><span class="section-total" id="tot-exp-plan">—</span><span class="section-chevron">▾</span></span></h3>
+          <h3 class="section-header" onclick="toggleSection('exp-plan')"><span>重大體驗支出規劃 <span class="badge" id="cnt-exp-plan">0</span></span><span class="section-header-right"><span class="section-total" id="tot-exp-plan">—</span><span class="section-chevron">▾</span></span></h3>
           <div class="section-body">
             <div class="exp-plan-list" id="exp-plan-list"></div>
             <button class="btn-add" onclick="addExpPlanItem()">+ 新增體驗支出</button>
@@ -287,7 +286,7 @@
 
         <!-- Row 8: 主動收入管理 全寬 -->
         <div class="section-card collapsed" id="section-income" style="grid-column: 1 / -1">
-          <h3 class="section-header" onclick="toggleSection('income')"><span>💰 主動收入管理 (Active Income) <span class="badge" id="cnt-income">0</span></span><span class="section-header-right"><span class="income-header-label">本月已入帳：</span><span class="section-total" id="tot-income">—</span><span class="section-chevron">▾</span></span></h3>
+          <h3 class="section-header" onclick="toggleSection('income')"><span>主動收入管理 <span class="badge" id="cnt-income">0</span></span><span class="section-header-right"><span class="income-header-label">本月已入帳：</span><span class="section-total" id="tot-income">—</span><span class="section-chevron">▾</span></span></h3>
           <div class="section-body">
             <div id="income-accordion"></div>
             <div class="income-forecast" id="income-month-forecast" style="display:none"></div>
@@ -306,41 +305,41 @@
       <!-- ═══ 左欄：模擬參數（水平 row 版） ═══ -->
       <aside class="dwz-left">
         <header class="dwz-left-head">
-          <h3 class="dwz-section-title compact">⚙️ 模擬參數 <span class="dwz-autocalc-badge">即時</span></h3>
+          <h3 class="dwz-section-title compact">模擬參數 <span class="dwz-autocalc-badge">即時</span></h3>
           <div class="dwz-left-kpis">
-            <span class="dwz-kpi-tag" title="與首頁可用資產同步">🏦<b id="dwz-start-nw">—</b></span>
-            <span class="dwz-kpi-tag" title="基於當前月支出 ×12">💸<b id="dwz-start-budget">—</b></span>
+            <span class="dwz-kpi-tag" title="與首頁可用資產同步"><em>起始</em><b id="dwz-start-nw">—</b></span>
+            <span class="dwz-kpi-tag" title="基於當前月支出 ×12"><em>年支出</em><b id="dwz-start-budget">—</b></span>
           </div>
         </header>
 
         <div class="dwz-left-blocks">
           <section class="dwz-param-block">
-            <h4 class="dwz-block-title">⏳ 時間軸</h4>
+            <h4 class="dwz-block-title">時間軸</h4>
             <div class="dwz-row"><label>目前年齡</label><input id="dwz-age" class="dwz-param-input" type="number" min="20" max="80" value="35" oninput="dwzAutoCalc()"></div>
             <div class="dwz-row"><label>退休年齡</label><input id="dwz-retire" class="dwz-param-input" type="number" min="30" max="80" value="55" oninput="dwzAutoCalc()"></div>
             <div class="dwz-row"><label>預計壽命</label><input id="dwz-life" class="dwz-param-input" type="number" min="60" max="120" value="90" oninput="dwzAutoCalc()"></div>
           </section>
 
           <section class="dwz-param-block">
-            <h4 class="dwz-block-title">📈 報酬 & 通膨</h4>
+            <h4 class="dwz-block-title">報酬 &amp; 通膨</h4>
             <div class="dwz-row dwz-row-return">
               <label>年化報酬率 %</label>
               <input id="dwz-return" class="dwz-param-input" type="number" min="0" max="30" step="0.1" value="7" oninput="dwzAutoCalc()">
-              <button type="button" class="dwz-roi-precise" onclick="openROIEditor()" title="以個別持倉 ROI 推算加權平均">📊</button>
+              <button type="button" class="dwz-roi-precise" onclick="openROIEditor()" title="以個別持倉 ROI 推算加權平均">精算</button>
             </div>
             <div class="dwz-row"><label>年通膨率 %</label><input id="dwz-inflation" class="dwz-param-input" type="number" min="0" max="20" step="0.1" value="3" oninput="dwzAutoCalc()"></div>
             <div class="dwz-row"><label>非流動排除 <span class="dwz-param-unit">萬</span></label><input id="dwz-illiquid" class="dwz-param-input" type="number" min="0" step="10" value="0" oninput="dwzAutoCalc()" placeholder="如房產"></div>
           </section>
 
           <section class="dwz-param-block">
-            <h4 class="dwz-block-title">🏠 生活支出</h4>
+            <h4 class="dwz-block-title">生活支出</h4>
             <div class="dwz-row"><label>退休初期倍率 <span class="dwz-param-unit">%</span></label><input id="dwz-mult-early" class="dwz-param-input" type="number" min="50" max="300" step="5" value="120" oninput="dwzAutoCalc()"></div>
             <div class="dwz-row"><label>晚年倍率 <span class="dwz-param-unit">%</span></label><input id="dwz-mult-late" class="dwz-param-input" type="number" min="20" max="200" step="5" value="80" oninput="dwzAutoCalc()"></div>
             <div class="dwz-row"><label>保底金 <span class="dwz-param-unit">萬</span></label><input id="dwz-safe-floor" class="dwz-param-input" type="number" min="0" step="50" value="500" oninput="dwzAutoCalc()"></div>
           </section>
 
           <section class="dwz-param-block">
-            <h4 class="dwz-block-title">🎁 遺贈 & 體驗</h4>
+            <h4 class="dwz-block-title">遺贈 &amp; 體驗</h4>
             <div class="dwz-row"><label>留給下一代 <span class="dwz-param-unit">萬</span></label><input id="dwz-legacy" class="dwz-param-input" type="number" min="0" step="1" value="0" oninput="dwzAutoCalc()"></div>
             <div class="dwz-row"><label>贈與年齡 <span class="dwz-param-unit">歲</span></label><input id="dwz-gift-age" class="dwz-param-input" type="number" min="40" max="90" value="60" oninput="dwzAutoCalc()"></div>
             <div class="dwz-row"><label>40–65 體驗 <span class="dwz-param-unit">萬/年</span></label><input id="dwz-exp-budget" class="dwz-param-input" type="number" min="0" step="5" value="0" oninput="dwzAutoCalc()"></div>
@@ -375,7 +374,7 @@
 
         <div class="dwz-expenses-card">
           <div class="dwz-expenses-header">
-            <h3 class="dwz-section-title compact">🪣 Bucket List 體驗清單</h3>
+            <h3 class="dwz-section-title compact">Bucket List 體驗清單</h3>
             <button class="btn-dwz-add" onclick="addDWZExpense()">＋ 手動新增</button>
           </div>
           <div id="dwz-expenses-list"></div>
@@ -409,7 +408,7 @@
 <aside class="roi-drawer" id="roi-drawer" aria-hidden="true">
   <header class="roi-drawer-head">
     <div>
-      <div class="roi-drawer-title">📊 標的級別精算</div>
+      <div class="roi-drawer-title">標的級別精算</div>
       <div class="roi-drawer-subtitle">逐一調整，或用分組批次套用</div>
     </div>
     <button class="roi-drawer-close" onclick="closeROIDrawer()" aria-label="關閉">✕</button>
@@ -477,6 +476,6 @@
 <!-- ── Toast ── -->
 <div class="toast" id="toast"></div>
 
-<script src="app.js?v=202604220954"></script>
+<script src="app.js?v=202604221126"></script>
 </body>
 </html>
