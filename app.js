@@ -2,7 +2,7 @@
 // CONFIG
 // ══════════════════════════════════════════════════════════════
 // Build 時間：每次修改 code 後手動更新此時間（UTC+8 台北時間）
-const BUILD_DATE = '2026/04/22 17:40';
+const BUILD_DATE = '2026/04/22 18:00';
 
 const SPREADSHEET_ID = '1lpRpxVzWaYUqL-jVPOAJCtjsJUIedPYYyOx4gg4PPFU';
 const CLIENT_ID = '149884248440-85f8dhc6ub9up10sv0f89e3e0itrnooj.apps.googleusercontent.com';
@@ -2450,7 +2450,7 @@ function renderDailyTrend() {
     },
     options: {
       responsive: true, maintainAspectRatio: false,
-      layout: { padding: { top: 50, right: 6, bottom: 0, left: 4 } },
+      layout: { padding: { top: 0, right: 6, bottom: 0, left: 4 } },
       plugins: {
         legend: { display: false },
         tooltip: {
@@ -2476,6 +2476,7 @@ function renderDailyTrend() {
           border: { display: false },
         },
         y: {
+          beginAtZero: true,
           min: -yPad, max: yPad,
           grid: {
             color(ctx2) { return ctx2.tick.value === 0 ? zeroLine : 'transparent'; },
