@@ -2406,3 +2406,514 @@ body {
   font-family: var(--ds-font-mono) !important;
   font-variant-numeric: tabular-nums !important;
 }
+
+/* ═══════════════════════════════════════════════════════════════
+   Phase 8 — Apple 毛玻璃深色主題（全站新預設）
+   - 純黑 #000 背景 + 動態光球漸層
+   - 毛玻璃卡片 rgba(255,255,255,0.05) + blur(20px) + 20px radius
+   - KPI 48px 白字；pos/neg 漸層字
+   - Sidebar 黑毛玻璃、active 填 rgba(255,255,255,.1)
+   - 主按鈕紫色漸層 + hover 陰影；次按鈕 glass
+   - 圖表折線紫 #667eea、圓餅霓虹色系
+   - 卡片進場 fade-in + translateY 動畫
+   ═══════════════════════════════════════════════════════════════ */
+
+:root[data-theme="dark"] {
+  --ap-bg:           #000000;
+  --ap-glass:        rgba(255,255,255,0.05);
+  --ap-glass-hover:  rgba(255,255,255,0.08);
+  --ap-glass-strong: rgba(255,255,255,0.1);
+  --ap-border:       rgba(255,255,255,0.1);
+  --ap-border-hover: rgba(255,255,255,0.2);
+  --ap-border-soft:  rgba(255,255,255,0.05);
+  --ap-text:         #ffffff;
+  --ap-muted:        rgba(255,255,255,0.5);
+  --ap-muted-soft:   rgba(255,255,255,0.4);
+  --ap-muted-faint:  rgba(255,255,255,0.3);
+  --ap-pos:          #4ade80;
+  --ap-neg:          #f87171;
+  --ap-accent:       #667eea;
+  --ap-accent-2:     #764ba2;
+  --ap-grad:         linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  --ap-grad-pos:     linear-gradient(135deg, #4ade80, #22c55e);
+  --ap-grad-neg:     linear-gradient(135deg, #f87171, #ef4444);
+
+  /* 覆蓋舊 tokens */
+  --bg:              var(--ap-bg);
+  --card:            var(--ap-glass);
+  --card2:           var(--ap-glass);
+  --text:            var(--ap-text);
+  --muted:           var(--ap-muted);
+  --border:          var(--ap-border);
+  --accent:          var(--ap-accent);
+  --accent-light:    #a78bfa;
+  --green:           var(--ap-pos);
+  --red:             var(--ap-neg);
+  --ds-bg:           var(--ap-bg);
+  --ds-card:         var(--ap-glass);
+  --ds-text:         var(--ap-text);
+  --ds-muted:        var(--ap-muted);
+  --ds-border:       var(--ap-border);
+  --ds-accent:       var(--ap-accent);
+  --vc-bg:           var(--ap-bg);
+  --vc-card:         transparent;
+  --vc-border:       var(--ap-border);
+  --vc-text:         var(--ap-text);
+}
+
+:root[data-theme="dark"] body {
+  background: var(--ap-bg) !important;
+  color: var(--ap-text) !important;
+  overflow-x: hidden;
+  position: relative;
+}
+
+/* ── 背景光球（fixed，z-index 0，不吃事件）── */
+.ap-orb {
+  display: none;
+  position: fixed;
+  pointer-events: none;
+  z-index: 0;
+  filter: blur(40px);
+  border-radius: 50%;
+}
+:root[data-theme="dark"] .ap-orb { display: block; }
+:root[data-theme="dark"] .ap-orb-1 {
+  top: -150px;
+  left: -150px;
+  width: 600px; height: 600px;
+  background: radial-gradient(circle, rgba(102,126,234,0.15) 0%, transparent 70%);
+  animation: ap-orb1 22s ease-in-out infinite;
+}
+:root[data-theme="dark"] .ap-orb-2 {
+  bottom: -150px;
+  right: -150px;
+  width: 500px; height: 500px;
+  background: radial-gradient(circle, rgba(118,75,162,0.15) 0%, transparent 70%);
+  animation: ap-orb2 28s ease-in-out infinite;
+}
+@keyframes ap-orb1 {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  50%      { transform: translate(60px, 80px) scale(1.05); }
+}
+@keyframes ap-orb2 {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  50%      { transform: translate(-80px, -60px) scale(1.08); }
+}
+
+/* 讓所有內容在光球之上 */
+:root[data-theme="dark"] #sidebar,
+:root[data-theme="dark"] #app,
+:root[data-theme="dark"] main,
+:root[data-theme="dark"] #app-content,
+:root[data-theme="dark"] .modal-overlay {
+  position: relative;
+  z-index: 1;
+}
+
+/* ── 毛玻璃卡片通用 ── */
+:root[data-theme="dark"] .card,
+:root[data-theme="dark"] .kpi-card,
+:root[data-theme="dark"] .chart-card,
+:root[data-theme="dark"] .chart-container,
+:root[data-theme="dark"] .overview-card,
+:root[data-theme="dark"] .overview-section,
+:root[data-theme="dark"] .mgmt-section,
+:root[data-theme="dark"] .mgmt-card,
+:root[data-theme="dark"] .panel,
+:root[data-theme="dark"] .dwz-card,
+:root[data-theme="dark"] .budget-card,
+:root[data-theme="dark"] .income-card,
+:root[data-theme="dark"] .exp-plan-card,
+:root[data-theme="dark"] .asset-card,
+:root[data-theme="dark"] .roi-card,
+:root[data-theme="dark"] .other-item-card {
+  background: var(--ap-glass) !important;
+  -webkit-backdrop-filter: blur(20px) !important;
+  backdrop-filter: blur(20px) !important;
+  border: 1px solid var(--ap-border) !important;
+  border-radius: 20px !important;
+  box-shadow: none !important;
+  transition: background .25s ease, border-color .25s ease, transform .2s ease !important;
+}
+:root[data-theme="dark"] .card:hover,
+:root[data-theme="dark"] .kpi-card:hover,
+:root[data-theme="dark"] .chart-card:hover,
+:root[data-theme="dark"] .overview-card:hover,
+:root[data-theme="dark"] .mgmt-section:hover,
+:root[data-theme="dark"] .mgmt-card:hover,
+:root[data-theme="dark"] .dwz-card:hover,
+:root[data-theme="dark"] .budget-card:hover,
+:root[data-theme="dark"] .income-card:hover,
+:root[data-theme="dark"] .exp-plan-card:hover,
+:root[data-theme="dark"] .asset-card:hover {
+  background: var(--ap-glass-hover) !important;
+  border-color: var(--ap-border-hover) !important;
+}
+
+/* ── KPI 大數字 48px ── */
+:root[data-theme="dark"] .kpi-value {
+  font-family: var(--ds-font-heading) !important;
+  font-size: 48px !important;
+  font-weight: 700 !important;
+  color: var(--ap-text) !important;
+  letter-spacing: -0.02em !important;
+  line-height: 1.1 !important;
+  background: none;
+  -webkit-background-clip: initial;
+  -webkit-text-fill-color: initial;
+}
+/* 漸層文字（pos / neg） */
+:root[data-theme="dark"] .kpi-value.pos,
+:root[data-theme="dark"] .kpi-value.gain {
+  background: var(--ap-grad-pos) !important;
+  -webkit-background-clip: text !important;
+  background-clip: text !important;
+  -webkit-text-fill-color: transparent !important;
+  color: transparent !important;
+}
+:root[data-theme="dark"] .kpi-value.neg,
+:root[data-theme="dark"] .kpi-value.loss {
+  background: var(--ap-grad-neg) !important;
+  -webkit-background-clip: text !important;
+  background-clip: text !important;
+  -webkit-text-fill-color: transparent !important;
+  color: transparent !important;
+}
+/* 一般 pos/neg 內嵌文字保留單色（非 kpi-value） */
+:root[data-theme="dark"] :not(.kpi-value).pos { color: var(--ap-pos) !important; }
+:root[data-theme="dark"] :not(.kpi-value).neg { color: var(--ap-neg) !important; }
+
+/* ── KPI 標籤 ── */
+:root[data-theme="dark"] .kpi-label {
+  font-size: 12px !important;
+  color: var(--ap-muted-soft) !important;
+  letter-spacing: 0.1em !important;
+  text-transform: uppercase !important;
+  font-weight: 500 !important;
+}
+:root[data-theme="dark"] .kpi-sub {
+  font-size: 12px !important;
+  color: var(--ap-muted) !important;
+  font-weight: 400 !important;
+  letter-spacing: 0 !important;
+  text-transform: none !important;
+}
+/* 取消 Phase 6 左邊彩色條，改由漸層字體表達 */
+:root[data-theme="dark"] .kpi-card.kpi-gain,
+:root[data-theme="dark"] .kpi-card.kpi-loss {
+  border-left: 1px solid var(--ap-border) !important;
+}
+:root[data-theme="dark"] .kpi-card { padding: 24px 28px !important; }
+:root[data-theme="dark"] .kpi-grid,
+:root[data-theme="dark"] .kpi-row { gap: 16px !important; }
+
+/* ── 卡片標題 ── */
+:root[data-theme="dark"] .card-title,
+:root[data-theme="dark"] .chart-title,
+:root[data-theme="dark"] .section-title,
+:root[data-theme="dark"] .section-header,
+:root[data-theme="dark"] .panel-title,
+:root[data-theme="dark"] .overview-title,
+:root[data-theme="dark"] .mgmt-title,
+:root[data-theme="dark"] .chart-title-row h3 {
+  font-size: 13px !important;
+  font-weight: 500 !important;
+  color: var(--ap-muted) !important;
+  letter-spacing: 0 !important;
+  text-transform: none !important;
+}
+
+/* ── Sidebar ── */
+:root[data-theme="dark"] #sidebar,
+:root[data-theme="dark"] .sidebar {
+  background: rgba(0,0,0,0.8) !important;
+  -webkit-backdrop-filter: blur(20px) !important;
+  backdrop-filter: blur(20px) !important;
+  border-right: 1px solid rgba(255,255,255,0.08) !important;
+  box-shadow: none !important;
+}
+:root[data-theme="dark"] .sidebar-logo,
+:root[data-theme="dark"] .sidebar-logo-text {
+  color: var(--ap-text) !important;
+  font-family: var(--ds-font-heading) !important;
+  font-weight: 700 !important;
+}
+:root[data-theme="dark"] .sidebar-nav-item,
+:root[data-theme="dark"] .snav-item,
+:root[data-theme="dark"] .nav-item,
+:root[data-theme="dark"] .sidebar-nav a {
+  color: var(--ap-muted-soft) !important;
+  background: transparent !important;
+  border: none !important;
+  border-left: none !important;
+  border-radius: 10px !important;
+  font-weight: 500 !important;
+  padding: 8px 12px !important;
+  transition: background .15s ease, color .15s ease !important;
+}
+:root[data-theme="dark"] .sidebar-nav-item:hover,
+:root[data-theme="dark"] .snav-item:hover,
+:root[data-theme="dark"] .nav-item:hover,
+:root[data-theme="dark"] .sidebar-nav a:hover {
+  background: rgba(255,255,255,0.05) !important;
+  color: var(--ap-text) !important;
+}
+:root[data-theme="dark"] .sidebar-nav-item.active,
+:root[data-theme="dark"] .snav-item.active,
+:root[data-theme="dark"] .nav-item.active,
+:root[data-theme="dark"] .sidebar-nav a.active {
+  background: var(--ap-glass-strong) !important;
+  color: var(--ap-text) !important;
+  font-weight: 600 !important;
+}
+:root[data-theme="dark"] .sidebar-nav-item.active::before,
+:root[data-theme="dark"] .sidebar-nav-item.active::after,
+:root[data-theme="dark"] .snav-item.active::before,
+:root[data-theme="dark"] .snav-item.active::after,
+:root[data-theme="dark"] .nav-item.active::before,
+:root[data-theme="dark"] .nav-item.active::after {
+  display: none !important;
+  content: none !important;
+}
+
+/* Sidebar footer */
+:root[data-theme="dark"] .sidebar-footer,
+:root[data-theme="dark"] .sidebar-info-block,
+:root[data-theme="dark"] .sb-rates,
+:root[data-theme="dark"] .sb-build {
+  color: var(--ap-muted-faint) !important;
+  background: transparent !important;
+  border: none !important;
+  font-size: 11px !important;
+}
+
+/* ── 主按鈕（紫色漸層）── */
+:root[data-theme="dark"] button.btn-primary,
+:root[data-theme="dark"] .btn.primary,
+:root[data-theme="dark"] button.primary,
+:root[data-theme="dark"] .btn-save,
+:root[data-theme="dark"] button[data-variant="primary"] {
+  background: var(--ap-grad) !important;
+  color: #ffffff !important;
+  border: none !important;
+  border-radius: 12px !important;
+  font-weight: 500 !important;
+  box-shadow: none !important;
+  transition: all .2s ease !important;
+}
+:root[data-theme="dark"] button.btn-primary:hover,
+:root[data-theme="dark"] .btn.primary:hover,
+:root[data-theme="dark"] button.primary:hover,
+:root[data-theme="dark"] .btn-save:hover {
+  filter: brightness(1.12);
+  box-shadow: 0 8px 25px rgba(102,126,234,0.4) !important;
+  transform: translateY(-1px);
+}
+
+/* ── 次按鈕（glass）── */
+:root[data-theme="dark"] button:not(.btn-primary):not(.primary):not(.btn-save):not(.btn-danger):not(.sidebar-nav-item):not(.snav-item):not(.nav-item),
+:root[data-theme="dark"] .btn:not(.primary):not(.btn-save):not(.btn-danger) {
+  background: var(--ap-glass) !important;
+  color: var(--ap-text) !important;
+  border: 1px solid var(--ap-border-hover) !important;
+  border-radius: 12px !important;
+  -webkit-backdrop-filter: blur(10px) !important;
+  backdrop-filter: blur(10px) !important;
+  font-weight: 500 !important;
+  box-shadow: none !important;
+  transition: all .15s ease !important;
+}
+:root[data-theme="dark"] button:not(.btn-primary):not(.primary):not(.btn-save):not(.btn-danger):not(.sidebar-nav-item):not(.snav-item):not(.nav-item):hover,
+:root[data-theme="dark"] .btn:not(.primary):not(.btn-save):not(.btn-danger):hover {
+  background: var(--ap-glass-hover) !important;
+  border-color: rgba(255,255,255,0.3) !important;
+}
+
+/* 危險按鈕 */
+:root[data-theme="dark"] button.btn-danger,
+:root[data-theme="dark"] .btn-danger {
+  background: rgba(248,113,113,0.08) !important;
+  color: var(--ap-neg) !important;
+  border: 1px solid rgba(248,113,113,0.25) !important;
+  border-radius: 12px !important;
+}
+:root[data-theme="dark"] button.btn-danger:hover {
+  background: rgba(248,113,113,0.15) !important;
+}
+
+/* ── 輸入框 ── */
+:root[data-theme="dark"] input,
+:root[data-theme="dark"] select,
+:root[data-theme="dark"] textarea {
+  background: var(--ap-glass) !important;
+  border: 1px solid var(--ap-border) !important;
+  color: var(--ap-text) !important;
+  border-radius: 12px !important;
+  padding: 10px 14px !important;
+  font-size: 14px !important;
+  transition: border-color .15s ease, background .15s ease !important;
+}
+:root[data-theme="dark"] input:hover,
+:root[data-theme="dark"] select:hover,
+:root[data-theme="dark"] textarea:hover {
+  border-color: rgba(255,255,255,0.18) !important;
+}
+:root[data-theme="dark"] input:focus,
+:root[data-theme="dark"] select:focus,
+:root[data-theme="dark"] textarea:focus {
+  border-color: rgba(255,255,255,0.3) !important;
+  background: var(--ap-glass-hover) !important;
+  box-shadow: none !important;
+  outline: none !important;
+}
+:root[data-theme="dark"] ::placeholder {
+  color: var(--ap-muted-faint) !important;
+}
+
+/* ── 表格 ── */
+:root[data-theme="dark"] table {
+  background: transparent !important;
+  border-collapse: separate !important;
+  border-spacing: 0 !important;
+}
+:root[data-theme="dark"] table th {
+  color: var(--ap-muted) !important;
+  font-weight: 500 !important;
+  font-size: 12px !important;
+  letter-spacing: 0 !important;
+  text-transform: none !important;
+  border-bottom: 1px solid var(--ap-border) !important;
+  background: transparent !important;
+}
+:root[data-theme="dark"] table td {
+  color: var(--ap-text) !important;
+  border-bottom: 1px solid var(--ap-border-soft) !important;
+}
+:root[data-theme="dark"] table tr:hover,
+:root[data-theme="dark"] .list-row:hover,
+:root[data-theme="dark"] .income-row:hover,
+:root[data-theme="dark"] .exp-row:hover,
+:root[data-theme="dark"] .asset-row:hover {
+  background: rgba(255,255,255,0.03) !important;
+}
+
+/* ── pill / badge ── */
+:root[data-theme="dark"] .pill,
+:root[data-theme="dark"] .badge,
+:root[data-theme="dark"] .chip {
+  background: var(--ap-glass) !important;
+  color: var(--ap-text) !important;
+  border: 1px solid var(--ap-border) !important;
+  border-radius: 6px !important;
+  font-size: 11px !important;
+  font-weight: 500 !important;
+}
+
+/* ── budget 進度條 ── */
+:root[data-theme="dark"] .budget-progress,
+:root[data-theme="dark"] .progress-bar {
+  background: var(--ap-border) !important;
+  border-radius: 999px !important;
+}
+:root[data-theme="dark"] .budget-progress-fill,
+:root[data-theme="dark"] .progress-fill {
+  background: var(--ap-grad) !important;
+  border-radius: 999px !important;
+}
+
+/* ── Modal / Drawer ── */
+:root[data-theme="dark"] .modal-overlay,
+:root[data-theme="dark"] .overlay {
+  background: rgba(0,0,0,0.6) !important;
+  -webkit-backdrop-filter: blur(8px) !important;
+  backdrop-filter: blur(8px) !important;
+}
+:root[data-theme="dark"] .modal-box,
+:root[data-theme="dark"] .modal,
+:root[data-theme="dark"] .drawer {
+  background: rgba(20,20,22,0.85) !important;
+  -webkit-backdrop-filter: blur(30px) !important;
+  backdrop-filter: blur(30px) !important;
+  border: 1px solid var(--ap-border-hover) !important;
+  border-radius: 20px !important;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.5) !important;
+}
+
+/* ── Scrollbar ── */
+:root[data-theme="dark"] ::-webkit-scrollbar { width: 8px; height: 8px; }
+:root[data-theme="dark"] ::-webkit-scrollbar-track { background: transparent; }
+:root[data-theme="dark"] ::-webkit-scrollbar-thumb {
+  background: rgba(255,255,255,0.1);
+  border-radius: 4px;
+}
+:root[data-theme="dark"] ::-webkit-scrollbar-thumb:hover {
+  background: rgba(255,255,255,0.2);
+}
+
+/* ── canvas 透明 ── */
+:root[data-theme="dark"] canvas { background: transparent !important; }
+
+/* ── 價格列 dots ── */
+:root[data-theme="dark"] .dot.ok   { background: var(--ap-pos) !important; }
+:root[data-theme="dark"] .dot.err  { background: var(--ap-neg) !important; }
+:root[data-theme="dark"] .dot.spin { background: var(--ap-accent) !important; }
+
+/* ── 連結 ── */
+:root[data-theme="dark"] a { color: var(--ap-accent); text-decoration: none; }
+:root[data-theme="dark"] a:hover { color: var(--accent-light); }
+
+/* ── 主內容區 padding ── */
+@media (min-width: 769px) {
+  :root[data-theme="dark"] #app-content,
+  :root[data-theme="dark"] .app-main {
+    padding: 32px 40px !important;
+    background: transparent !important;
+  }
+}
+
+/* ── mono 數字 ── */
+:root[data-theme="dark"] .mono,
+:root[data-theme="dark"] .num,
+:root[data-theme="dark"] [data-num] {
+  font-family: var(--ds-font-mono) !important;
+  font-variant-numeric: tabular-nums !important;
+}
+
+/* ── 卡片進場動畫（fade-up + stagger）── */
+@keyframes ap-fadeup {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+:root[data-theme="dark"] .kpi-card,
+:root[data-theme="dark"] .chart-card,
+:root[data-theme="dark"] .overview-card,
+:root[data-theme="dark"] .mgmt-section {
+  animation: ap-fadeup 0.4s ease-out backwards;
+}
+:root[data-theme="dark"] .kpi-card:nth-child(1) { animation-delay: 0.00s; }
+:root[data-theme="dark"] .kpi-card:nth-child(2) { animation-delay: 0.05s; }
+:root[data-theme="dark"] .kpi-card:nth-child(3) { animation-delay: 0.10s; }
+:root[data-theme="dark"] .kpi-card:nth-child(4) { animation-delay: 0.15s; }
+:root[data-theme="dark"] .kpi-card:nth-child(5) { animation-delay: 0.20s; }
+:root[data-theme="dark"] .kpi-card:nth-child(6) { animation-delay: 0.25s; }
+:root[data-theme="dark"] .chart-card:nth-child(odd)  { animation-delay: 0.10s; }
+:root[data-theme="dark"] .chart-card:nth-child(even) { animation-delay: 0.15s; }
+:root[data-theme="dark"] .mgmt-section:nth-of-type(1) { animation-delay: 0.05s; }
+:root[data-theme="dark"] .mgmt-section:nth-of-type(2) { animation-delay: 0.10s; }
+:root[data-theme="dark"] .mgmt-section:nth-of-type(3) { animation-delay: 0.15s; }
+:root[data-theme="dark"] .mgmt-section:nth-of-type(4) { animation-delay: 0.20s; }
+
+/* ── 頁面切換 transition ── */
+:root[data-theme="dark"] .tab-panel,
+:root[data-theme="dark"] #tab-overview,
+:root[data-theme="dark"] #tab-management,
+:root[data-theme="dark"] #tab-dwz {
+  transition: opacity 0.25s ease;
+}
+
+/* ── 覆蓋 Phase 6 skeleton 為 glass ── */
+:root[data-theme="dark"] .skel {
+  background: var(--ap-glass) !important;
+  border-radius: 8px !important;
+}
