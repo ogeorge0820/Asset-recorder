@@ -2,7 +2,7 @@
 // CONFIG
 // ══════════════════════════════════════════════════════════════
 // Build 時間：每次修改 code 後手動更新此時間（UTC+8 台北時間）
-const BUILD_DATE = '2026/04/22 16:10';
+const BUILD_DATE = '2026/04/22 17:00';
 
 const SPREADSHEET_ID = '1lpRpxVzWaYUqL-jVPOAJCtjsJUIedPYYyOx4gg4PPFU';
 const CLIENT_ID = '149884248440-85f8dhc6ub9up10sv0f89e3e0itrnooj.apps.googleusercontent.com';
@@ -2191,19 +2191,18 @@ Chart.defaults.color = '#94a3b8';
 function chartColors() {
   const light = document.documentElement.dataset.theme === 'light';
   return {
-    grid:        light ? '#f0f0f0'             : 'rgba(255,255,255,0.06)',
-    gridFaint:   light ? '#f5f5f5'             : 'rgba(255,255,255,0.04)',
-    tick:        light ? '#999999'             : 'rgba(255,255,255,0.4)',
-    legend:      light ? '#666666'             : 'rgba(255,255,255,0.6)',
+    grid:        light ? '#e5e5e5'             : '#1f1f1f',
+    gridFaint:   light ? '#f0f0f0'             : '#141414',
+    tick:        light ? '#999999'             : '#666666',
+    legend:      light ? '#666666'             : '#666666',
     center_text: light ? '#111111'             : '#ffffff',
-    center_sub:  light ? '#999999'             : 'rgba(255,255,255,0.5)',
-    nodata:      light ? '#999999'             : 'rgba(255,255,255,0.3)',
-    border:      light ? '#ffffff'             : 'transparent',
-    // 趨勢圖主線 — Apple 漸層紫（單色 fallback） / light Stripe 深藍
-    line1:       light ? '#0f172a'             : '#667eea',
-    line2:       light ? '#16a34a'             : '#4ade80',
-    barPos:      light ? 'rgba(22,163,74,.65)' : 'rgba(74,222,128,.7)',
-    barNeg:      light ? 'rgba(220,38,38,.65)' : 'rgba(248,113,113,.7)',
+    center_sub:  light ? '#999999'             : '#666666',
+    nodata:      light ? '#999999'             : '#444444',
+    border:      light ? '#ffffff'             : '#111111',
+    line1:       light ? '#111111'             : '#ffffff',
+    line2:       light ? '#16a34a'             : '#22c55e',
+    barPos:      light ? 'rgba(22,163,74,.65)' : 'rgba(34,197,94,.65)',
+    barNeg:      light ? 'rgba(220,38,38,.65)' : 'rgba(239,68,68,.65)',
   };
 }
 
@@ -3824,7 +3823,7 @@ function renderDWZ() {
 
   // ── Chart ──
   const isDark    = document.documentElement.dataset.theme !== 'light';
-  const primaryLine = isDark ? '#667eea' : '#0f172a';
+  const primaryLine = isDark ? '#ffffff' : '#111111';
   const floorVal    = safeFloor;
   const allExps     = _allDWZExpenses();
   const expAgeSet   = new Set(allExps.map(e => e.age));
@@ -4242,15 +4241,17 @@ async function initApp() {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
-  // Phase 8 一次性遷移：全站切換到 Apple 毛玻璃深色主題
-  if (!localStorage.getItem('theme_v8')) {
-    localStorage.setItem('theme', 'dark');
-    localStorage.setItem('theme_v8', '1');
+  // 一次性遷移到乾淨主題系統（清除舊 Phase 遷移 flag）
+  if (!localStorage.getItem('theme_clean_v1')) {
+    // 沿用使用者既有偏好（如果有），否則預設 dark
+    const prev = localStorage.getItem('theme');
+    localStorage.setItem('theme', prev === 'light' ? 'light' : 'dark');
+    localStorage.setItem('theme_clean_v1', '1');
   }
-  // Restore saved theme（預設深色 Apple）
+  // Restore saved theme（預設深色）
   const savedTheme = localStorage.getItem('theme') || 'dark';
   document.documentElement.dataset.theme = savedTheme;
-  Chart.defaults.color = savedTheme === 'light' ? '#666666' : 'rgba(255,255,255,0.5)';
+  Chart.defaults.color = savedTheme === 'light' ? '#666666' : '#666666';
   updateThemeBtn();
   updateMobileBuildBar();
 
