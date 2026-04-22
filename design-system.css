@@ -849,3 +849,336 @@ h3.section-header {
   .asset-card { padding: 8px 10px !important; }
   .asset-card-twd { font-size: 14px !important; }
 }
+
+
+/* ═══════════════════════════════════════════════════════════════
+   Phase 4 — DWZ 模擬器 Linear / Notion 精修
+   ═══════════════════════════════════════════════════════════════ */
+
+/* 左欄 Header 卡 & Block 卡：移除陰影與高光、統一 8px */
+.dwz-left-head {
+  border-radius: var(--ds-radius) !important;
+  box-shadow: none !important;
+  padding: var(--ds-space-2) var(--ds-space-3) !important;  /* 8 / 12 */
+}
+.dwz-param-block {
+  border-radius: var(--ds-radius) !important;
+  box-shadow: none !important;
+  padding: var(--ds-space-2) var(--ds-space-3) var(--ds-space-3) !important;
+  transition: border-color .15s ease;
+}
+.dwz-param-block:hover { border-color: var(--ds-border-hover); }
+[data-theme="light"] .dwz-left-head,
+[data-theme="light"] .dwz-param-block {
+  background: var(--ds-card) !important;
+  border: 1px solid var(--ds-border) !important;
+}
+
+/* Block 標題：比較輕的 hierarchy（Notion 內嵌式 H4）*/
+.dwz-block-title {
+  font-family: var(--ds-font-body) !important;
+  font-size: 11px !important;
+  font-weight: 600 !important;
+  color: var(--ds-muted) !important;
+  text-transform: none !important;
+  letter-spacing: 0 !important;
+  margin-bottom: var(--ds-space-1) !important;
+}
+[data-theme="light"] .dwz-block-title { color: var(--ds-muted) !important; }
+
+/* KPI Tag：玻璃 off，Notion 風小 pill */
+.dwz-kpi-tag {
+  border-radius: var(--ds-radius-xs) !important;
+  padding: 2px 7px !important;
+  gap: 4px !important;
+  font-family: var(--ds-font-body) !important;
+  font-size: 11px !important;
+}
+[data-theme="light"] .dwz-kpi-tag {
+  background: #F3F4F6 !important;
+  border-color: transparent !important;
+  color: var(--ds-text) !important;
+}
+.dwz-kpi-tag b {
+  font-size: 12px !important;
+  color: var(--text) !important;
+}
+[data-theme="light"] .dwz-kpi-tag b { color: var(--ds-text) !important; }
+
+/* Label + 引導虛線：更淡，Notion 內 sans body */
+.dwz-row > label {
+  font-family: var(--ds-font-body) !important;
+  font-size: 13px !important;
+  font-weight: 500 !important;
+  color: var(--text) !important;
+  letter-spacing: 0 !important;
+}
+[data-theme="light"] .dwz-row > label { color: var(--ds-text) !important; }
+.dwz-row > label::after {
+  opacity: 0.18 !important;
+}
+.dwz-row .dwz-param-unit {
+  font-size: 11px !important;
+  font-family: var(--ds-font-body) !important;
+}
+
+/* Input：Notion 式軟灰底、8px radius、focus 藍環 */
+.dwz-param-input {
+  border-radius: var(--ds-radius-sm) !important;
+  background: #F3F4F6 !important;
+  border: 1px solid transparent !important;
+  padding: 5px 9px !important;
+  font-size: 13px !important;
+  font-weight: 600 !important;
+  width: 84px !important; max-width: 84px !important;
+}
+.dwz-param-input:hover { background: #E5E7EB !important; }
+.dwz-param-input:focus {
+  background: #FFFFFF !important;
+  border-color: var(--ds-accent) !important;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12) !important;
+}
+[data-theme="light"] .dwz-param-input {
+  background: #F3F4F6 !important;
+  color: var(--ds-text) !important;
+}
+[data-theme="light"] .dwz-param-input:hover {
+  background: #E5E7EB !important;
+}
+[data-theme="light"] .dwz-param-input:focus {
+  background: #FFFFFF !important;
+  border-color: var(--ds-accent) !important;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12) !important;
+}
+
+.dwz-row-return { grid-template-columns: 1fr 84px auto !important; }
+.dwz-row-return .dwz-roi-precise {
+  padding: 3px 8px !important;
+  font-size: 11px !important;
+  border-radius: var(--ds-radius-xs) !important;
+}
+
+/* ── Pills：統一方角輕量化（去玻璃、去圓邊） ── */
+.dwz-pill {
+  border-radius: var(--ds-radius-xs) !important;
+  padding: 4px 10px !important;
+  font-size: 12px !important;
+  font-family: var(--ds-font-body) !important;
+}
+.dwz-pill em {
+  font-size: 11px !important;
+  color: var(--ds-muted) !important;
+}
+.dwz-pill b {
+  font-family: var(--ds-font-mono) !important;
+  font-size: 12px !important;
+}
+.dwz-pill-peak {
+  background: #F3F4F6 !important;     /* 改用中性淺灰，不再紫 */
+  border: 1px solid var(--border) !important;
+}
+.dwz-pill-peak b { color: var(--text) !important; }
+.dwz-pill-danger { background: var(--ds-danger-soft) !important; border-color: #FECACA !important; }
+.dwz-pill-warn   { background: var(--ds-warn-soft)   !important; border-color: #FDE68A !important; }
+.dwz-pill-waste  { background: var(--ds-danger-soft) !important; border-color: #FECACA !important; }
+
+[data-theme="light"] .dwz-pill-peak {
+  background: #F3F4F6 !important;
+  border-color: var(--ds-border) !important;
+}
+[data-theme="light"] .dwz-pill-peak b { color: var(--ds-text) !important; }
+
+/* Chart card 內部 legend */
+.dwz-legend-row { font-family: var(--ds-font-body) !important; font-size: 11px !important; }
+.dwz-click-hint { font-family: var(--ds-font-body) !important; }
+
+/* ── ROI 抽屜（標的級別精算）── */
+.roi-drawer {
+  background: var(--card) !important;
+  box-shadow: -1px 0 0 var(--border), -20px 0 40px rgba(0,0,0,0.12) !important;
+}
+[data-theme="light"] .roi-drawer {
+  background: var(--ds-card) !important;
+  box-shadow: -1px 0 0 var(--ds-border), -20px 0 40px rgba(0,0,0,0.06) !important;
+}
+
+.roi-drawer-head {
+  background: var(--card) !important;
+  background-image: none !important;  /* 去漸層 */
+  padding: 14px 18px !important;
+}
+.roi-drawer-title {
+  font-family: var(--ds-font-heading) !important;
+  font-size: 15px !important;
+  font-weight: 700 !important;
+  letter-spacing: -0.01em;
+}
+.roi-drawer-subtitle {
+  font-size: 11px !important;
+  color: var(--ds-muted) !important;
+}
+.roi-drawer-close {
+  border-radius: var(--ds-radius-xs) !important;
+  width: 28px !important; height: 28px !important;
+}
+
+.roi-drawer-hint {
+  font-size: 12px !important;
+  background: #F3F4F6 !important;
+  border-left: 2px solid var(--ds-accent) !important;
+  border-radius: var(--ds-radius-xs) !important;
+  padding: 8px 12px !important;
+  color: var(--ds-muted) !important;
+}
+[data-theme="light"] .roi-drawer-hint {
+  background: #F3F4F6 !important;
+  color: var(--ds-muted) !important;
+}
+
+/* 分組卡：去左邊色條漸層，改小色點 icon */
+.roi-drawer-group {
+  border-radius: var(--ds-radius) !important;
+  background: var(--card) !important;
+}
+[data-theme="light"] .roi-drawer-group {
+  background: var(--ds-card) !important;
+  border-color: var(--ds-border) !important;
+}
+.roi-drawer-group-head {
+  background-image: none !important;
+  border-left: none !important;
+  padding: 10px 14px !important;
+  gap: 4px !important;
+}
+/* 小色點取代左邊色條 */
+.roi-drawer-group-head::before {
+  content: '';
+  display: inline-block;
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  margin-right: 8px;
+  background: var(--ds-muted-soft);
+  vertical-align: middle;
+}
+.roi-group-crypto .roi-drawer-group-head::before { background: #F59E0B; }
+.roi-group-us     .roi-drawer-group-head::before { background: var(--ds-accent); }
+.roi-group-tw     .roi-drawer-group-head::before { background: var(--ds-danger); }
+.roi-group-ins    .roi-drawer-group-head::before { background: #A855F7; }
+.roi-group-cash   .roi-drawer-group-head::before { background: var(--ds-success); }
+
+.roi-group-name {
+  font-family: var(--ds-font-heading) !important;
+  font-size: 13px !important;
+  font-weight: 600 !important;
+  letter-spacing: -0.005em !important;
+}
+.roi-group-count {
+  background: #F3F4F6 !important;
+  color: var(--ds-muted) !important;
+  border-radius: var(--ds-radius-xs) !important;
+  font-size: 10px !important;
+  padding: 1px 6px !important;
+}
+.roi-group-stat-lbl {
+  font-size: 11px !important;
+  color: var(--ds-muted) !important;
+}
+.roi-group-stat-val {
+  font-family: var(--ds-font-mono) !important;
+  font-size: 11px !important;
+  color: var(--text) !important;
+}
+[data-theme="light"] .roi-group-stat-val { color: var(--ds-text) !important; }
+
+.roi-group-fill {
+  background: #FFFFFF !important;
+  background-image: none !important;
+  border: 1px solid var(--border) !important;
+  color: var(--ds-muted) !important;
+  border-radius: var(--ds-radius-xs) !important;
+  font-size: 11px !important;
+  padding: 3px 8px !important;
+  font-family: var(--ds-font-body) !important;
+}
+.roi-group-fill:hover {
+  background: #F3F4F6 !important;
+  border-color: var(--ds-border-hover) !important;
+  color: var(--ds-text) !important;
+}
+[data-theme="light"] .roi-group-fill {
+  background: #FFFFFF !important;
+  border-color: var(--ds-border) !important;
+  color: var(--ds-muted) !important;
+}
+
+/* Row */
+.roi-drawer-row {
+  padding: 6px 14px !important;
+  font-size: 12px !important;
+  gap: 8px !important;
+}
+.roi-drawer-row:hover { background: #F9FAFB !important; }
+[data-theme="light"] .roi-drawer-row:hover { background: var(--ds-bg) !important; }
+
+.roi-sym {
+  font-family: var(--ds-font-mono) !important;
+  font-size: 13px !important;
+  font-weight: 600 !important;
+}
+.roi-mv {
+  font-family: var(--ds-font-mono) !important;
+  font-size: 12px !important;
+}
+.roi-input {
+  background: #F3F4F6 !important;
+  border: 1px solid transparent !important;
+  border-radius: var(--ds-radius-xs) !important;
+  font-size: 12px !important;
+  padding: 4px 8px !important;
+  font-family: var(--ds-font-mono) !important;
+  letter-spacing: -0.01em;
+}
+.roi-input:focus {
+  background: #FFFFFF !important;
+  border-color: var(--ds-accent) !important;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+}
+
+/* Footer */
+.roi-drawer-foot {
+  background: var(--card) !important;
+  background-image: none !important;
+  padding: 12px 18px 16px !important;
+  border-top: 1px solid var(--border) !important;
+}
+[data-theme="light"] .roi-drawer-foot {
+  background: var(--ds-card) !important;
+  border-top-color: var(--ds-border) !important;
+}
+.roi-foot-label {
+  font-family: var(--ds-font-body) !important;
+  font-size: 12px !important;
+  color: var(--ds-muted) !important;
+}
+.roi-foot-val {
+  font-family: var(--ds-font-mono) !important;
+  font-size: 13px !important;
+  color: var(--text) !important;
+}
+[data-theme="light"] .roi-foot-val { color: var(--ds-text) !important; }
+.roi-foot-hl .roi-foot-label {
+  color: var(--ds-text) !important;
+  font-weight: 600 !important;
+}
+.roi-foot-hl .roi-foot-val {
+  font-size: 18px !important;
+  font-family: var(--ds-font-heading) !important;
+  font-weight: 700 !important;
+  color: var(--ds-accent) !important;
+  letter-spacing: -0.02em !important;
+}
+[data-theme="light"] .roi-foot-hl .roi-foot-label,
+[data-theme="light"] .roi-foot-hl .roi-foot-val {
+  color: var(--ds-text) !important;
+}
+[data-theme="light"] .roi-foot-hl .roi-foot-val { color: var(--ds-accent) !important; }
