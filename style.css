@@ -433,7 +433,7 @@ h3.section-header {
   #sidebar {
     display: flex; flex-direction: column;
     position: fixed; left: 0; top: 0; bottom: 0;
-    width: 180px;
+    width: 160px;
     background: var(--bg-card);
     border-right: 1px solid var(--border);
     z-index: 200; overflow: hidden;
@@ -468,7 +468,7 @@ h3.section-header {
   .sidebar-actions { display: flex; gap: 6px; }
 
   #app-header { display: none; }
-  #app { margin-left: 180px; }
+  #app { margin-left: 160px; }
 
   /* ── Overview two-column ── */
   .overview-grid {

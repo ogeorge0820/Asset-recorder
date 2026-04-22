@@ -73,6 +73,14 @@ body {
   font-size: 14px;
 }
 
+/* ── 桌面：100vh 固定、外層不滾動，主內容區內部可滾 ── */
+@media (min-width: 769px) {
+  html, body {
+    height: 100vh !important;
+    overflow: hidden !important;
+  }
+}
+
 /* 移除舊設計任何毛玻璃背景光球殘留 */
 .ap-orb { display: none !important; }
 
@@ -93,7 +101,7 @@ body {
 .other-item-card {
   background: var(--bg-card);
   border: 1px solid var(--border);
-  border-radius: 12px;
+  border-radius: 10px;
   box-shadow: var(--card-shadow);
   transition: border-color .15s ease, box-shadow .2s ease;
 }
@@ -106,93 +114,137 @@ body {
   box-shadow: var(--card-shadow-hover);
 }
 
-/* ── KPI 緊湊排版（雙主題同尺寸） ── */
+/* ═══════════════════════════════════════════════════════════════
+   Desktop Layout V2 — 1440×900 單屏全覽（B2C app 質感）
+   ═══════════════════════════════════════════════════════════════ */
 @media (min-width: 769px) {
+  /* App 外層 — sidebar 160px + 主內容 calc(100vw - 160px) */
+  #app {
+    margin-left: 160px !important;
+    height: 100vh !important;
+    overflow: hidden !important;
+  }
+  #app-content {
+    padding: 12px !important;
+    height: 100vh !important;
+    overflow-y: auto !important;
+    max-width: none !important;
+  }
+
+  /* ── KPI row：6 張 × 80px，8px gap ── */
   .kpi-grid {
-    display: grid;
-    grid-template-columns: repeat(6, minmax(0, 1fr));
-    gap: 10px;
-    margin-bottom: 12px;
+    display: grid !important;
+    grid-template-columns: repeat(6, minmax(0, 1fr)) !important;
+    gap: 8px !important;
+    margin-bottom: 8px !important;
   }
   .kpi-card {
-    padding: 12px 14px;
-    min-width: 0;
+    min-width: 0 !important;
+    height: 80px !important;
+    padding: 12px 16px !important;
+    border-radius: 10px !important;
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: center !important;
   }
   .kpi-label {
-    font-size: 11px;
-    color: var(--text-secondary);
-    letter-spacing: 0.05em;
-    text-transform: uppercase;
-    font-weight: 500;
-    margin-bottom: 6px;
-    display: flex;
-    align-items: center;
-    gap: 6px;
+    font-size: 11px !important;
+    color: var(--text-secondary) !important;
+    letter-spacing: 0.05em !important;
+    text-transform: uppercase !important;
+    font-weight: 500 !important;
+    margin-bottom: 2px !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 6px !important;
   }
-  .kpi-label-dot { display: none; }
+  .kpi-label-dot { display: none !important; }
   .kpi-value {
-    font-size: 20px;
-    font-weight: 700;
-    line-height: 1.2;
-    letter-spacing: -0.01em;
-    color: var(--text-primary);
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: clip;
-    /* 強制清空可能殘留的 background-clip:text 漸層 */
-    background: transparent;
-    background-image: none;
-    -webkit-background-clip: border-box;
-    -webkit-text-fill-color: currentColor;
+    font-size: 28px !important;
+    font-weight: 700 !important;
+    line-height: 1.1 !important;
+    letter-spacing: -0.02em !important;
+    color: var(--text-primary) !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: clip !important;
+    margin: 0 !important;
+    background: transparent !important;
+    background-image: none !important;
+    -webkit-background-clip: border-box !important;
+    -webkit-text-fill-color: currentColor !important;
   }
-  .kpi-card.kpi-primary .kpi-value { font-size: 24px; }
-  .kpi-value.pos     { color: var(--success); }
-  .kpi-value.neg     { color: var(--danger); }
-  .kpi-value.neutral { color: var(--text-secondary); }
+  .kpi-card.kpi-primary .kpi-value { font-size: 28px !important; }
+  .kpi-value.pos     { color: var(--success) !important; }
+  .kpi-value.neg     { color: var(--danger) !important; }
+  .kpi-value.neutral { color: var(--text-secondary) !important; }
   .kpi-sub {
-    font-size: 11px;
-    color: var(--text-muted);
-    margin-top: 4px;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+    font-size: 10px !important;
+    color: var(--text-muted) !important;
+    margin-top: 2px !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    line-height: 1.2 !important;
   }
-  .kpi-card.kpi-gain { border-left: 3px solid var(--success); }
-  .kpi-card.kpi-loss { border-left: 3px solid var(--danger); }
-}
+  .kpi-card.kpi-gain { border-left: 3px solid var(--success) !important; }
+  .kpi-card.kpi-loss { border-left: 3px solid var(--danger) !important; }
 
-/* ── Chart 卡片緊湊 ── */
-@media (min-width: 769px) {
-  .chart-card { padding: 12px 16px; }
+  /* ── Overview 2-column 55/45 ── */
+  .overview-grid {
+    display: grid !important;
+    grid-template-columns: 55% 45% !important;
+    gap: 8px !important;
+    margin-bottom: 0 !important;
+    align-items: start !important;
+  }
+  .overview-main,
+  .overview-side {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 8px !important;
+  }
+
+  /* ── Chart 卡片 ── */
+  .chart-card {
+    padding: 10px 14px !important;
+    border-radius: 10px !important;
+  }
   .chart-card h3,
   .chart-title-row h3 {
-    font-size: 12px;
-    font-weight: 500;
-    color: var(--text-secondary);
-    margin: 0 0 6px 0;
+    font-size: 12px !important;
+    font-weight: 600 !important;
+    color: var(--text-primary) !important;
+    margin: 0 0 6px 0 !important;
+    letter-spacing: 0 !important;
+    text-transform: none !important;
   }
-  #daily-trend-wrap { height: 150px !important; }
-  #trend-wrap       { height: 130px !important; }
-  #monthly-wrap     { height: 130px !important; }
-  #pie-wrap         { height: 260px !important; }
+  .chart-title-row { margin-bottom: 6px !important; }
 
-  .overview-grid   { gap: 10px; }
-  .overview-main,
-  .overview-side   { gap: 10px; }
-
-  #app-content {
-    padding: 16px 24px;
-    max-width: none;
-  }
-}
-
-@media (min-width: 1600px) {
-  .kpi-value                        { font-size: 22px; }
-  .kpi-card.kpi-primary .kpi-value  { font-size: 26px; }
+  /* 固定 chart 高度 */
   #daily-trend-wrap { height: 180px !important; }
-  #trend-wrap,
+  #trend-wrap       { height: 180px !important; }
   #monthly-wrap     { height: 150px !important; }
-  #pie-wrap         { height: 300px !important; }
+  #pie-wrap         { height: 240px !important; }
+
+  /* 右欄質押區塊高度 120px（第二個 chart-card） */
+  .overview-side .chart-card:nth-of-type(2) {
+    max-height: 120px !important;
+    overflow: hidden !important;
+  }
+  .overview-side #rewards-summary {
+    font-size: 11px !important;
+  }
+
+  /* 所有圓角統一 10px */
+  .kpi-card,
+  .chart-card,
+  .section-card,
+  .panel,
+  .mgmt-section,
+  .mgmt-card {
+    border-radius: 10px !important;
+  }
 }
 
 /* ── Sidebar ── */
@@ -214,7 +266,11 @@ body {
   border: none;
   border-left: none;
   border-radius: 8px;
-  padding: 8px 12px;
+  padding: 0 12px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  font-size: 13px;
   font-weight: 500;
   transition: background .12s ease, color .12s ease;
 }
@@ -243,7 +299,18 @@ body {
   color: var(--text-muted);
   background: transparent;
   border: none;
-  font-size: 11px;
+  font-size: 10px;
+}
+.sidebar-footer .sidebar-rate,
+.sidebar-footer .sidebar-update,
+.sidebar-footer .sidebar-build-badge,
+.sidebar-footer #sidebar-rate-val,
+.sidebar-footer #sidebar-build-label {
+  font-size: 10px !important;
+}
+.sidebar-info-block {
+  padding: 6px 8px !important;
+  gap: 2px !important;
 }
 
 /* ── 按鈕 ── */

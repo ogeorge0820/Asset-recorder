@@ -2,7 +2,7 @@
 // CONFIG
 // ══════════════════════════════════════════════════════════════
 // Build 時間：每次修改 code 後手動更新此時間（UTC+8 台北時間）
-const BUILD_DATE = '2026/04/22 17:00';
+const BUILD_DATE = '2026/04/22 17:40';
 
 const SPREADSHEET_ID = '1lpRpxVzWaYUqL-jVPOAJCtjsJUIedPYYyOx4gg4PPFU';
 const CLIENT_ID = '149884248440-85f8dhc6ub9up10sv0f89e3e0itrnooj.apps.googleusercontent.com';
@@ -2187,6 +2187,7 @@ function skelSpan() {
 // RENDER — CHARTS
 // ══════════════════════════════════════════════════════════════
 Chart.defaults.color = '#94a3b8';
+Chart.defaults.font.size = 10;
 
 function chartColors() {
   const light = document.documentElement.dataset.theme === 'light';
@@ -2532,8 +2533,8 @@ function renderPie() {
       datasets: [{ data: entries.map(e => e.value), backgroundColor: entries.map(e => e.color), borderColor: cc.border, borderWidth: 2 }],
     },
     options: {
-      responsive: true, maintainAspectRatio: false, cutout: '65%',
-      layout: { padding: { top: 8, bottom: 8, left: 8, right: 8 } },
+      responsive: true, maintainAspectRatio: false, cutout: '55%', radius: 80,
+      layout: { padding: { top: 4, bottom: 4, left: 4, right: 4 } },
       plugins: {
         legend: window.innerWidth <= 640
           // 手機：底部橫排，字體縮小
@@ -2563,9 +2564,9 @@ function renderPie() {
               align: 'center',
               labels: {
                 color: cc.legend,
-                padding: 16,
-                font: { size: 12 },
-                boxWidth: 10,
+                padding: 10,
+                font: { size: 11 },
+                boxWidth: 8,
                 usePointStyle: true,
                 generateLabels(chart) {
                   const ds = chart.data.datasets[0];
