@@ -2,7 +2,7 @@
 // CONFIG
 // ══════════════════════════════════════════════════════════════
 // Build 時間：每次修改 code 後手動更新此時間（UTC+8 台北時間）
-const BUILD_DATE = '2026/04/22 16:41';
+const BUILD_DATE = '2026/04/22 18:38';
 
 const SPREADSHEET_ID = '1lpRpxVzWaYUqL-jVPOAJCtjsJUIedPYYyOx4gg4PPFU';
 const CLIENT_ID = '149884248440-85f8dhc6ub9up10sv0f89e3e0itrnooj.apps.googleusercontent.com';
@@ -1471,7 +1471,7 @@ function renderRewards() {
             </div>
             <span class="rwd-detail">+${qty.toFixed(3)}${priceStr} <span class="rwd-twd">≈ ${fmt(twd)}</span></span>
             <div class="rwd-actions">
-              ${isAuto ? '' : `<button class="btn-icon edit" onclick="editReward(${i})" title="編輯">✏</button>`}
+              <button class="btn-icon edit" onclick="editReward(${i})" title="編輯">✏</button>
               <button class="btn-icon del" onclick="deleteReward(${i})" title="刪除">✕</button>
             </div>
           </div>`;
@@ -1537,6 +1537,7 @@ function openRewardModal(title, defaults, onSave) {
         <select id="mf-type">
           <option value="手動" ${typeVal==='手動'?'selected':''}>手動輸入</option>
           <option value="外部存入" ${typeVal==='外部存入'?'selected':''}>外部存入</option>
+          <option value="系統換算" ${typeVal==='系統換算'?'selected':''}>系統換算</option>
         </select>
       </div>
       <div class="field"><label>增加數量</label>
