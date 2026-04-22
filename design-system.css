@@ -1994,3 +1994,415 @@ body {
 :root:not([data-theme="light"]) .dot.ok   { background: var(--vc-pos) !important; }
 :root:not([data-theme="light"]) .dot.err  { background: var(--vc-neg) !important; }
 :root:not([data-theme="light"]) .dot.spin { background: var(--vc-text) !important; }
+
+/* ═══════════════════════════════════════════════════════════════
+   Phase 7 — Notion / Stripe 淺色主題（全站新預設）
+   - 主背景 #f6f6f6 / 卡片 #fff / 陰影 / 文字 #111
+   - KPI 42px/700、卡片 16px radius、hover 加深陰影
+   - Sidebar 白底 + 分隔線，active 填灰圓角
+   - 按鈕主 #111 白字；次 白底 #e5e5e5 border
+   - 圖表 #0f172a 主線、grid #f0f0f0、pie 柔和彩色
+   ═══════════════════════════════════════════════════════════════ */
+
+:root[data-theme="light"] {
+  /* Notion/Stripe tokens */
+  --ns-bg:          #f6f6f6;
+  --ns-card:        #ffffff;
+  --ns-card-alt:    #f9f9f9;
+  --ns-text:        #111111;
+  --ns-text-soft:   #333333;
+  --ns-muted:       #666666;
+  --ns-muted-soft:  #999999;
+  --ns-border:      #e5e5e5;
+  --ns-border-soft: #f0f0f0;
+  --ns-accent:      #0f172a;
+  --ns-pos:         #16a34a;
+  --ns-neg:         #dc2626;
+  --ns-nav-active:  #f0f0f0;
+  --ns-shadow-sm:   0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.04);
+  --ns-shadow-lg:   0 4px 12px rgba(0,0,0,0.1);
+
+  /* 覆蓋 ds-* */
+  --ds-bg:          var(--ns-bg);
+  --ds-card:        var(--ns-card);
+  --ds-card-2:      var(--ns-card-alt);
+  --ds-text:        var(--ns-text);
+  --ds-text-strong: var(--ns-text);
+  --ds-muted:       var(--ns-muted);
+  --ds-muted-soft:  var(--ns-muted-soft);
+  --ds-border:      var(--ns-border);
+  --ds-border-hover:#d4d4d4;
+  --ds-accent:      var(--ns-accent);
+  --ds-accent-hover:#000000;
+  --ds-success:     var(--ns-pos);
+  --ds-danger:      var(--ns-neg);
+
+  /* 覆蓋 style.css tokens */
+  --bg:             var(--ns-bg);
+  --card:           var(--ns-card);
+  --card2:          var(--ns-card-alt);
+  --text:           var(--ns-text);
+  --muted:          var(--ns-muted);
+  --border:         var(--ns-border);
+  --accent:         var(--ns-accent);
+  --accent-light:   #1e293b;
+  --green:          var(--ns-pos);
+  --red:            var(--ns-neg);
+}
+
+/* ── Body / root ── */
+:root[data-theme="light"] body {
+  background: var(--ns-bg) !important;
+  color: var(--ns-text) !important;
+  font-family: var(--ds-font-body) !important;
+  font-size: 14px !important;
+}
+
+/* ── 卡片通用（16px radius + 陰影 + hover 加深）── */
+:root[data-theme="light"] .card,
+:root[data-theme="light"] .kpi-card,
+:root[data-theme="light"] .chart-card,
+:root[data-theme="light"] .chart-container,
+:root[data-theme="light"] .overview-card,
+:root[data-theme="light"] .overview-section,
+:root[data-theme="light"] .mgmt-section,
+:root[data-theme="light"] .mgmt-card,
+:root[data-theme="light"] .panel,
+:root[data-theme="light"] .dwz-card,
+:root[data-theme="light"] .budget-card,
+:root[data-theme="light"] .income-card,
+:root[data-theme="light"] .exp-plan-card,
+:root[data-theme="light"] .asset-card,
+:root[data-theme="light"] .roi-card {
+  background: var(--ns-card) !important;
+  border: 1px solid transparent !important;
+  border-radius: 16px !important;
+  box-shadow: var(--ns-shadow-sm) !important;
+  transition: box-shadow .2s ease, transform .15s ease !important;
+}
+:root[data-theme="light"] .card:hover,
+:root[data-theme="light"] .kpi-card:hover,
+:root[data-theme="light"] .chart-card:hover,
+:root[data-theme="light"] .overview-card:hover,
+:root[data-theme="light"] .mgmt-section:hover,
+:root[data-theme="light"] .mgmt-card:hover,
+:root[data-theme="light"] .dwz-card:hover,
+:root[data-theme="light"] .budget-card:hover,
+:root[data-theme="light"] .income-card:hover,
+:root[data-theme="light"] .exp-plan-card:hover,
+:root[data-theme="light"] .asset-card:hover {
+  box-shadow: var(--ns-shadow-lg) !important;
+}
+
+/* ── KPI 大數字 ── */
+:root[data-theme="light"] .kpi-value {
+  font-family: var(--ds-font-heading) !important;
+  font-size: 42px !important;
+  font-weight: 700 !important;
+  color: var(--ns-text) !important;
+  letter-spacing: -0.02em !important;
+  line-height: 1.1 !important;
+}
+:root[data-theme="light"] .kpi-label {
+  font-size: 12px !important;
+  color: var(--ns-muted-soft) !important;
+  letter-spacing: 0.05em !important;
+  text-transform: uppercase !important;
+  font-weight: 500 !important;
+}
+:root[data-theme="light"] .kpi-sub {
+  font-size: 12px !important;
+  color: var(--ns-muted) !important;
+  font-weight: 400 !important;
+  letter-spacing: 0 !important;
+  text-transform: none !important;
+}
+/* 盈餘/虧損色（維持左邊條紅綠語義） */
+:root[data-theme="light"] .kpi-value.pos,
+:root[data-theme="light"] .kpi-value.gain { color: var(--ns-pos) !important; }
+:root[data-theme="light"] .kpi-value.neg,
+:root[data-theme="light"] .kpi-value.loss { color: var(--ns-neg) !important; }
+:root[data-theme="light"] .pos { color: var(--ns-pos) !important; }
+:root[data-theme="light"] .neg { color: var(--ns-neg) !important; }
+:root[data-theme="light"] .kpi-card.kpi-gain { border-left: 3px solid var(--ns-pos) !important; }
+:root[data-theme="light"] .kpi-card.kpi-loss { border-left: 3px solid var(--ns-neg) !important; }
+
+/* ── 卡片標題 ── */
+:root[data-theme="light"] .card-title,
+:root[data-theme="light"] .chart-title,
+:root[data-theme="light"] .section-title,
+:root[data-theme="light"] .section-header,
+:root[data-theme="light"] .panel-title,
+:root[data-theme="light"] .overview-title,
+:root[data-theme="light"] .mgmt-title {
+  font-size: 13px !important;
+  font-weight: 500 !important;
+  color: var(--ns-muted) !important;
+  letter-spacing: 0 !important;
+  text-transform: none !important;
+}
+
+/* ── 內文 ── */
+:root[data-theme="light"] p,
+:root[data-theme="light"] .body-text,
+:root[data-theme="light"] .item-name,
+:root[data-theme="light"] .list-text,
+:root[data-theme="light"] label {
+  color: var(--ns-text-soft) !important;
+  font-size: 14px !important;
+}
+
+/* ── Sidebar ── */
+:root[data-theme="light"] #sidebar,
+:root[data-theme="light"] aside#sidebar,
+:root[data-theme="light"] .sidebar {
+  background: var(--ns-card) !important;
+  border-right: 1px solid var(--ns-border) !important;
+  box-shadow: none !important;
+  backdrop-filter: none !important;
+}
+:root[data-theme="light"] .sidebar-logo,
+:root[data-theme="light"] .sidebar-logo-text {
+  color: var(--ns-text) !important;
+  font-family: var(--ds-font-heading) !important;
+  font-weight: 700 !important;
+}
+
+/* Sidebar nav 未選中 */
+:root[data-theme="light"] .snav-item,
+:root[data-theme="light"] .nav-item,
+:root[data-theme="light"] .sidebar-nav a {
+  color: var(--ns-muted) !important;
+  font-weight: 500 !important;
+  border-radius: 8px !important;
+  background: transparent !important;
+  border-left: none !important;
+  padding: 8px 12px !important;
+  transition: background .12s ease, color .12s ease !important;
+}
+:root[data-theme="light"] .snav-item:hover,
+:root[data-theme="light"] .nav-item:hover,
+:root[data-theme="light"] .sidebar-nav a:hover {
+  background: #f5f5f5 !important;
+  color: var(--ns-text) !important;
+}
+/* Sidebar nav active — 填灰圓角 */
+:root[data-theme="light"] .snav-item.active,
+:root[data-theme="light"] .nav-item.active,
+:root[data-theme="light"] .sidebar-nav a.active {
+  background: var(--ns-nav-active) !important;
+  color: var(--ns-text) !important;
+  font-weight: 600 !important;
+}
+:root[data-theme="light"] .snav-item.active::before,
+:root[data-theme="light"] .snav-item.active::after,
+:root[data-theme="light"] .nav-item.active::before,
+:root[data-theme="light"] .nav-item.active::after {
+  display: none !important;
+  content: none !important;
+}
+
+/* Sidebar footer — 匯率 + 版本 */
+:root[data-theme="light"] .sidebar-footer,
+:root[data-theme="light"] .sb-rates,
+:root[data-theme="light"] .sb-build,
+:root[data-theme="light"] #sidebar-rates,
+:root[data-theme="light"] #sidebar-build,
+:root[data-theme="light"] .rate-list,
+:root[data-theme="light"] .build-info {
+  font-size: 11px !important;
+  color: var(--ns-muted-soft) !important;
+  background: transparent !important;
+  border: none !important;
+}
+
+/* ── 按鈕主要（#111 背景 白字）── */
+:root[data-theme="light"] button.btn-primary,
+:root[data-theme="light"] .btn.primary,
+:root[data-theme="light"] button.primary,
+:root[data-theme="light"] .btn-save,
+:root[data-theme="light"] button[data-variant="primary"] {
+  background: var(--ns-text) !important;
+  color: #ffffff !important;
+  border: 1px solid var(--ns-text) !important;
+  border-radius: 8px !important;
+  font-weight: 500 !important;
+  box-shadow: none !important;
+  transition: all .15s ease !important;
+}
+:root[data-theme="light"] button.btn-primary:hover,
+:root[data-theme="light"] .btn.primary:hover,
+:root[data-theme="light"] button.primary:hover,
+:root[data-theme="light"] .btn-save:hover {
+  background: #000000 !important;
+  box-shadow: var(--ns-shadow-lg) !important;
+}
+
+/* ── 按鈕次要（白底 #e5e5e5 border）── */
+:root[data-theme="light"] button:not(.btn-primary):not(.primary):not(.btn-save):not(.btn-danger):not(.snav-item):not(.nav-item),
+:root[data-theme="light"] .btn:not(.primary):not(.btn-save):not(.btn-danger) {
+  background: var(--ns-card) !important;
+  color: var(--ns-text-soft) !important;
+  border: 1px solid var(--ns-border) !important;
+  border-radius: 8px !important;
+  font-weight: 500 !important;
+  box-shadow: none !important;
+  transition: all .15s ease !important;
+}
+:root[data-theme="light"] button:not(.btn-primary):not(.primary):not(.btn-save):not(.btn-danger):not(.snav-item):not(.nav-item):hover,
+:root[data-theme="light"] .btn:not(.primary):not(.btn-save):not(.btn-danger):hover {
+  background: #fafafa !important;
+  border-color: #d4d4d4 !important;
+  box-shadow: var(--ns-shadow-sm) !important;
+}
+
+/* ── 危險按鈕 ── */
+:root[data-theme="light"] button.btn-danger,
+:root[data-theme="light"] .btn-danger {
+  background: var(--ns-card) !important;
+  color: var(--ns-neg) !important;
+  border: 1px solid var(--ns-border) !important;
+  border-radius: 8px !important;
+}
+:root[data-theme="light"] button.btn-danger:hover {
+  background: #fef2f2 !important;
+  border-color: var(--ns-neg) !important;
+}
+
+/* ── 輸入框 ── */
+:root[data-theme="light"] input,
+:root[data-theme="light"] select,
+:root[data-theme="light"] textarea {
+  background: var(--ns-card) !important;
+  border: 1px solid var(--ns-border) !important;
+  color: var(--ns-text) !important;
+  border-radius: 8px !important;
+  padding: 8px 12px !important;
+  font-size: 14px !important;
+  transition: border-color .15s ease, box-shadow .15s ease !important;
+}
+:root[data-theme="light"] input:hover,
+:root[data-theme="light"] select:hover,
+:root[data-theme="light"] textarea:hover {
+  border-color: #d4d4d4 !important;
+}
+:root[data-theme="light"] input:focus,
+:root[data-theme="light"] select:focus,
+:root[data-theme="light"] textarea:focus {
+  border-color: var(--ns-text) !important;
+  box-shadow: 0 0 0 3px rgba(17,17,17,0.06) !important;
+  outline: none !important;
+}
+
+/* ── 表格 ── */
+:root[data-theme="light"] table {
+  background: var(--ns-card) !important;
+  border-collapse: separate !important;
+  border-spacing: 0 !important;
+}
+:root[data-theme="light"] table th {
+  color: var(--ns-muted) !important;
+  font-weight: 500 !important;
+  font-size: 12px !important;
+  text-transform: none !important;
+  letter-spacing: 0 !important;
+  border-bottom: 1px solid var(--ns-border) !important;
+  background: transparent !important;
+}
+:root[data-theme="light"] table td {
+  color: var(--ns-text-soft) !important;
+  border-bottom: 1px solid var(--ns-border-soft) !important;
+}
+:root[data-theme="light"] table tr:hover,
+:root[data-theme="light"] .list-row:hover,
+:root[data-theme="light"] .income-row:hover,
+:root[data-theme="light"] .exp-row:hover,
+:root[data-theme="light"] .asset-row:hover {
+  background: var(--ns-card-alt) !important;
+}
+
+/* ── pill / badge ── */
+:root[data-theme="light"] .pill,
+:root[data-theme="light"] .badge,
+:root[data-theme="light"] .chip {
+  background: var(--ns-border-soft) !important;
+  color: var(--ns-text-soft) !important;
+  border: 1px solid transparent !important;
+  border-radius: 6px !important;
+  font-size: 11px !important;
+  font-weight: 500 !important;
+}
+
+/* ── budget 進度條 ── */
+:root[data-theme="light"] .budget-progress,
+:root[data-theme="light"] .progress-bar {
+  background: var(--ns-border-soft) !important;
+  border-radius: 999px !important;
+}
+:root[data-theme="light"] .budget-progress-fill,
+:root[data-theme="light"] .progress-fill {
+  background: var(--ns-text) !important;
+  border-radius: 999px !important;
+}
+
+/* ── Modal ── */
+:root[data-theme="light"] .modal-overlay,
+:root[data-theme="light"] .overlay {
+  background: rgba(0,0,0,0.35) !important;
+  backdrop-filter: blur(2px) !important;
+}
+:root[data-theme="light"] .modal-box,
+:root[data-theme="light"] .modal,
+:root[data-theme="light"] .drawer {
+  background: var(--ns-card) !important;
+  border: 1px solid var(--ns-border) !important;
+  border-radius: 16px !important;
+  box-shadow: 0 20px 48px rgba(0,0,0,0.12), 0 8px 16px rgba(0,0,0,0.06) !important;
+}
+
+/* ── Scrollbar ── */
+:root[data-theme="light"] ::-webkit-scrollbar { width: 8px; height: 8px; }
+:root[data-theme="light"] ::-webkit-scrollbar-track { background: transparent; }
+:root[data-theme="light"] ::-webkit-scrollbar-thumb {
+  background: #d4d4d4;
+  border-radius: 4px;
+}
+:root[data-theme="light"] ::-webkit-scrollbar-thumb:hover { background: #a3a3a3; }
+
+/* ── App content 留白 ── */
+@media (min-width: 769px) {
+  :root[data-theme="light"] #app-content,
+  :root[data-theme="light"] .app-main {
+    padding: 32px 40px !important;
+    background: var(--ns-bg) !important;
+  }
+}
+
+/* ── Chart card 內圖表底色 ── */
+:root[data-theme="light"] canvas { background: transparent !important; }
+
+/* ── 價格列 dots ── */
+:root[data-theme="light"] .dot.ok   { background: var(--ns-pos) !important; }
+:root[data-theme="light"] .dot.err  { background: var(--ns-neg) !important; }
+:root[data-theme="light"] .dot.spin { background: var(--ns-muted) !important; }
+
+/* ── 連結 ── */
+:root[data-theme="light"] a { color: var(--ns-accent); text-decoration: none; }
+:root[data-theme="light"] a:hover { text-decoration: underline; }
+
+/* ── KPI cards 間距加大（呼吸感）── */
+:root[data-theme="light"] .kpi-grid,
+:root[data-theme="light"] .kpi-row {
+  gap: 16px !important;
+}
+:root[data-theme="light"] .kpi-card {
+  padding: 20px 24px !important;
+}
+
+/* ── mono 字體（數字）── */
+:root[data-theme="light"] .mono,
+:root[data-theme="light"] .num,
+:root[data-theme="light"] [data-num] {
+  font-family: var(--ds-font-mono) !important;
+  font-variant-numeric: tabular-nums !important;
+}

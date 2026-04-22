@@ -2,7 +2,7 @@
 // CONFIG
 // ══════════════════════════════════════════════════════════════
 // Build 時間：每次修改 code 後手動更新此時間（UTC+8 台北時間）
-const BUILD_DATE = '2026/04/22 11:26';
+const BUILD_DATE = '2026/04/22 14:05';
 
 const SPREADSHEET_ID = '1lpRpxVzWaYUqL-jVPOAJCtjsJUIedPYYyOx4gg4PPFU';
 const CLIENT_ID = '149884248440-85f8dhc6ub9up10sv0f89e3e0itrnooj.apps.googleusercontent.com';
@@ -2191,19 +2191,19 @@ Chart.defaults.color = '#94a3b8';
 function chartColors() {
   const light = document.documentElement.dataset.theme === 'light';
   return {
-    grid:        light ? 'rgba(0,0,0,.0)'     : '#1a1a1a',
-    gridFaint:   light ? 'rgba(0,0,0,.05)'    : '#1a1a1a',
-    tick:        light ? '#86868b'             : '#666666',
-    legend:      light ? '#86868b'             : '#999999',
-    center_text: light ? '#1d1d1f'             : '#ffffff',
-    center_sub:  light ? '#86868b'             : '#666666',
-    nodata:      light ? '#86868b'             : '#555555',
+    grid:        light ? '#f0f0f0'             : '#1a1a1a',
+    gridFaint:   light ? '#f5f5f5'             : '#1a1a1a',
+    tick:        light ? '#999999'             : '#666666',
+    legend:      light ? '#666666'             : '#999999',
+    center_text: light ? '#111111'             : '#ffffff',
+    center_sub:  light ? '#999999'             : '#666666',
+    nodata:      light ? '#999999'             : '#555555',
     border:      light ? '#ffffff'             : '#0a0a0a',
-    // 趨勢圖線條顏色 — Vercel dark 改用純白
-    line1:       light ? '#007AFF'             : '#ffffff',
-    line2:       light ? '#34C759'             : '#22c55e',
-    barPos:      light ? 'rgba(52,199,89,.7)'  : 'rgba(34,197,94,.65)',
-    barNeg:      light ? 'rgba(255,59,48,.65)' : 'rgba(239,68,68,.65)',
+    // 趨勢圖主線 — Stripe 深藍近黑 / dark 純白
+    line1:       light ? '#0f172a'             : '#ffffff',
+    line2:       light ? '#16a34a'             : '#22c55e',
+    barPos:      light ? 'rgba(22,163,74,.65)' : 'rgba(34,197,94,.65)',
+    barNeg:      light ? 'rgba(220,38,38,.65)' : 'rgba(239,68,68,.65)',
   };
 }
 
@@ -2495,18 +2495,22 @@ function renderPie() {
   // USDT 視覺歸類至「流動現金」，不改變整體加總
   const usdtEntry = S.data.crypto.find(r => r[0]?.toUpperCase() === 'USDT');
   const usdtTWD   = usdtEntry ? (parseFloat(usdtEntry[1]) || 0) * S.prices.usdtwd : 0;
-  // Vercel 單色系：白 → 灰階 4 階
+  // Stripe/Notion 柔和色：流動現金 slate / 台股 藍 / 美股 靛 / 加密 琥珀 / 儲蓄險 粉 / 房地產 綠
   const light = document.documentElement.dataset.theme === 'light';
-  const palette = light
-    ? ['#18181B', '#52525B', '#71717A', '#A1A1AA', '#D4D4D8', '#E4E4E7']
-    : ['#ffffff', '#999999', '#666666', '#444444', '#2a2a2a', '#1a1a1a'];
-  const entries = [
-    { label:'流動現金', value:cashT + usdtTWD,   color: palette[0] },
-    { label:'加密貨幣', value:cryT - usdtTWD,    color: palette[1] },
-    { label:'美股',     value:usT,               color: palette[2] },
-    { label:'台股',     value:twT,               color: palette[3] },
-    { label:'儲蓄險',   value:ins,               color: palette[4] },
-    { label:'房地產',   value:re,                color: palette[5] },
+  const entries = light ? [
+    { label:'流動現金', value:cashT + usdtTWD,   color: '#64748b' },
+    { label:'加密貨幣', value:cryT - usdtTWD,    color: '#f59e0b' },
+    { label:'美股',     value:usT,               color: '#6366f1' },
+    { label:'台股',     value:twT,               color: '#3b82f6' },
+    { label:'儲蓄險',   value:ins,               color: '#ec4899' },
+    { label:'房地產',   value:re,                color: '#10b981' },
+  ].filter(e => e.value > 0) : [
+    { label:'流動現金', value:cashT + usdtTWD,   color: '#ffffff' },
+    { label:'加密貨幣', value:cryT - usdtTWD,    color: '#999999' },
+    { label:'美股',     value:usT,               color: '#666666' },
+    { label:'台股',     value:twT,               color: '#444444' },
+    { label:'儲蓄險',   value:ins,               color: '#2a2a2a' },
+    { label:'房地產',   value:re,                color: '#1a1a1a' },
   ].filter(e => e.value > 0);
 
   const ctx = $('pie-chart').getContext('2d');
@@ -3819,7 +3823,7 @@ function renderDWZ() {
 
   // ── Chart ──
   const isDark    = document.documentElement.dataset.theme !== 'light';
-  const primaryLine = isDark ? '#ffffff' : '#18181B';
+  const primaryLine = isDark ? '#ffffff' : '#0f172a';
   const floorVal    = safeFloor;
   const allExps     = _allDWZExpenses();
   const expAgeSet   = new Set(allExps.map(e => e.age));
@@ -4237,10 +4241,15 @@ async function initApp() {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
-  // Restore saved theme
-  const savedTheme = localStorage.getItem('theme') || 'dark';
+  // Phase 7 一次性遷移：全站切換到 Notion/Stripe 淺色主題
+  if (!localStorage.getItem('theme_v7')) {
+    localStorage.setItem('theme', 'light');
+    localStorage.setItem('theme_v7', '1');
+  }
+  // Restore saved theme（預設淺色）
+  const savedTheme = localStorage.getItem('theme') || 'light';
   document.documentElement.dataset.theme = savedTheme;
-  Chart.defaults.color = savedTheme === 'light' ? '#8c7055' : '#94a3b8';
+  Chart.defaults.color = savedTheme === 'light' ? '#666666' : '#94a3b8';
   updateThemeBtn();
   updateMobileBuildBar();
 
