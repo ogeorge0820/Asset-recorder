@@ -611,14 +611,14 @@ h3.section-header {
   .tab-btn {
     flex: 1; padding: 6px 2px; border-radius: 8px;
     font-size: 0.8rem; font-weight: 500;
-    color: rgba(255,255,255,0.55);
+    color: var(--text-secondary);
     transition: background .2s, color .2s;
     white-space: nowrap;
   }
   .tab-btn.active {
-    background: rgba(255,255,255,0.18);
-    color: #fff;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+    background: var(--accent-soft);
+    color: var(--text-primary);
+    box-shadow: 0 1px 3px rgba(0,0,0,0.15);
   }
 
   /* ── Mobile Menu Button (漢堡) ── */
