@@ -19,7 +19,7 @@
 .login-card h1 { font-size: 1.6rem; color: var(--accent-light); margin-bottom: 8px; }
 .login-card p { color: var(--muted); margin-bottom: 32px; line-height: 1.6; }
 .btn-google {
-  background: var(--accent); color: #fff; border: none;
+  background: var(--accent); color: var(--accent-fg); border: none;
   padding: 13px 24px; border-radius: 8px; font-size: 0.95rem;
   cursor: pointer; width: 100%; transition: background .2s; font-weight: 600;
 }
@@ -40,7 +40,7 @@
   padding: 5px 16px; border-radius: 6px; cursor: pointer;
   font-size: 0.875rem; transition: all .2s;
 }
-.tab-btn.active { background: var(--accent); color: #fff; }
+.tab-btn.active { background: var(--accent); color: var(--accent-fg); }
 .tab-short { display: none; }
 .header-right { margin-left: auto; display: flex; align-items: center; gap: 10px; }
 .rate-badge {
@@ -161,7 +161,7 @@
   background: none; border: 1px solid var(--border); color: var(--muted);
   padding: 3px 10px; border-radius: 4px; cursor: pointer; font-size: 0.78rem; transition: all .2s;
 }
-.filter-btn.active { background: var(--accent); border-color: var(--accent); color: #fff; }
+.filter-btn.active { background: var(--accent); border-color: var(--accent); color: var(--accent-fg); }
 .no-data-msg {
   display: flex; align-items: center; justify-content: center;
   height: 100%; color: var(--muted); font-size: 0.85rem;
@@ -172,7 +172,7 @@
   gap: 16px; text-align: center;
 }
 .btn-goto {
-  background: var(--accent); color: #fff; border: none;
+  background: var(--accent); color: var(--accent-fg); border: none;
   padding: 9px 22px; border-radius: 6px; cursor: pointer;
   font-size: 0.88rem; transition: background .2s;
 }
@@ -218,7 +218,7 @@ h3.section-header {
 .section-gain.neg { color: var(--red); }
 .section-gain.neutral { color: var(--text-secondary); }
 .badge {
-  background: var(--accent); color: #fff;
+  background: var(--accent); color: var(--accent-fg);
   border-radius: 10px; padding: 1px 7px; font-size: 0.72rem;
 }
 
@@ -298,7 +298,7 @@ h3.section-header {
   font-size: 0.78rem; color: var(--muted);
 }
 .btn-snapshot {
-  background: var(--accent); color: #fff; border: none;
+  background: var(--accent); color: var(--accent-fg); border: none;
   padding: 13px 40px; border-radius: 8px; font-size: 0.95rem;
   cursor: pointer; font-weight: 600; transition: background .2s;
 }
@@ -353,7 +353,7 @@ h3.section-header {
   padding: 8px 18px; border-radius: 6px; cursor: pointer; font-size: 0.88rem;
 }
 .btn-ok {
-  background: var(--accent); border: none; color: #fff;
+  background: var(--accent); border: none; color: var(--accent-fg);
   padding: 8px 20px; border-radius: 6px; cursor: pointer;
   font-size: 0.88rem; font-weight: 600; transition: background .2s;
 }
@@ -523,7 +523,7 @@ h3.section-header {
 /* 圓圈：左側固定錨點 */
 .asset-card-pct {
   width: 46px; height: 46px; border-radius: 50%;
-  background: var(--accent); color: #fff;
+  background: var(--accent); color: var(--accent-fg);
   font-size: 0.72rem; font-weight: 700;
   display: flex; align-items: center; justify-content: center;
   letter-spacing: -0.3px; flex-shrink: 0;
@@ -821,7 +821,7 @@ h3.section-header {
   margin-bottom: 28px;
 }
 .btn-cp-primary {
-  background: var(--accent); color: #fff; border: none;
+  background: var(--accent); color: var(--accent-fg); border: none;
   padding: 13px 10px; border-radius: 10px;
   font-size: 0.9rem; font-weight: 600; cursor: pointer;
   transition: background .2s;
@@ -1568,7 +1568,7 @@ h3.section-header {
   padding: 6px 14px; border-radius: 8px; font-size: 0.82rem;
   font-weight: 600; cursor: pointer; transition: all .2s;
 }
-.btn-dwz-add:hover { background: var(--accent); color: #fff; }
+.btn-dwz-add:hover { background: var(--accent); color: var(--accent-fg); }
 .dwz-exp-empty {
   color: var(--muted); font-size: 0.875rem; text-align: center; padding: 20px 0;
 }
