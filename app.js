@@ -2,7 +2,7 @@
 // CONFIG
 // ══════════════════════════════════════════════════════════════
 // Build 時間：每次修改 code 後手動更新此時間（UTC+8 台北時間）
-const BUILD_DATE = '2026/04/23 23:57';
+const BUILD_DATE = '2026/04/24 00:02';
 
 const SPREADSHEET_ID = '1lpRpxVzWaYUqL-jVPOAJCtjsJUIedPYYyOx4gg4PPFU';
 const CLIENT_ID = '149884248440-85f8dhc6ub9up10sv0f89e3e0itrnooj.apps.googleusercontent.com';
@@ -2816,6 +2816,7 @@ function renderPie() {
                     text: `${label} ${(ds.data[i]/tot*100).toFixed(1)}%`,
                     fillStyle: ds.backgroundColor[i],
                     strokeStyle: ds.backgroundColor[i],
+                    fontColor: cc.legend,
                     hidden: false, index: i,
                   }));
                 },
@@ -2838,6 +2839,7 @@ function renderPie() {
                     text: `${label}  ${(ds.data[i]/tot*100).toFixed(1)}%`,
                     fillStyle: ds.backgroundColor[i],
                     strokeStyle: ds.backgroundColor[i],
+                    fontColor: cc.legend,
                     hidden: false, index: i,
                   }));
                 },
