@@ -61,6 +61,12 @@
   --accent-light:  var(--accent);
 }
 
+/* ── Typography tokens ── */
+:root {
+  --font-body: 'DM Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans TC', sans-serif;
+  --font-num:  'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+}
+
 /* ── 全域基礎 ── */
 html, body {
   background: var(--bg);
@@ -68,9 +74,56 @@ html, body {
 }
 
 body {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans TC', sans-serif;
+  font-family: var(--font-body);
   min-height: 100vh;
   font-size: 14px;
+  font-weight: 400;
+}
+
+/* ── 數字字型：KPI / 金額 / 百分比統一 Inter + tabular-nums ── */
+.kpi-value,
+.kpi-sub,
+.section-total,
+.total-val,
+.amt,
+.sidebar-rate b,
+.rate-badge b,
+.asset-card-pct,
+.rwd-total-twd,
+.rwd-detail,
+.rwd-twd,
+.rwd-price,
+.rwd-month-label,
+.budget-cat-total,
+.mono,
+.num,
+[data-num] {
+  font-family: var(--font-num);
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: 'tnum' 1, 'cv11' 1;
+}
+
+/* KPI 大數字權重 + 字距 */
+.kpi-value {
+  font-weight: 600 !important;
+  letter-spacing: -0.02em !important;
+}
+
+/* 標籤、說明文字 */
+.kpi-label,
+.kpi-sub {
+  font-weight: 400;
+}
+
+/* 卡片標題 */
+.chart-card h3,
+.section-card h3,
+.section-header,
+.chart-title-row h3,
+.card-title,
+.panel-title,
+h3 {
+  font-weight: 500;
 }
 
 /* ── 桌面：100vh 固定、外層不滾動，主內容區內部可滾 ── */
