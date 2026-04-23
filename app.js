@@ -2,7 +2,7 @@
 // CONFIG
 // ══════════════════════════════════════════════════════════════
 // Build 時間：每次修改 code 後手動更新此時間（UTC+8 台北時間）
-const BUILD_DATE = '2026/04/23 23:32';
+const BUILD_DATE = '2026/04/23 23:43';
 
 const SPREADSHEET_ID = '1lpRpxVzWaYUqL-jVPOAJCtjsJUIedPYYyOx4gg4PPFU';
 const CLIENT_ID = '149884248440-85f8dhc6ub9up10sv0f89e3e0itrnooj.apps.googleusercontent.com';
@@ -2448,19 +2448,19 @@ function skelSpan() {
 // ══════════════════════════════════════════════════════════════
 // RENDER — CHARTS
 // ══════════════════════════════════════════════════════════════
-Chart.defaults.color = 'rgba(255,255,255,0.5)';
+Chart.defaults.color = 'rgba(255,255,255,0.75)';
 Chart.defaults.font.size = 10;
 
 function chartColors() {
   const light = document.documentElement.dataset.theme === 'light';
   return {
-    grid:        light ? '#e5e5e5'             : 'rgba(255,255,255,0.08)',
-    gridFaint:   light ? '#f0f0f0'             : 'rgba(255,255,255,0.04)',
-    tick:        light ? '#999999'             : 'rgba(255,255,255,0.5)',
-    legend:      light ? '#666666'             : 'rgba(255,255,255,0.5)',
+    grid:        light ? '#e5e5e5'             : 'rgba(255,255,255,0.1)',
+    gridFaint:   light ? '#f0f0f0'             : 'rgba(255,255,255,0.05)',
+    tick:        light ? '#666666'             : 'rgba(255,255,255,0.75)',
+    legend:      light ? '#333333'             : 'rgba(255,255,255,0.85)',
     center_text: light ? '#111111'             : '#ffffff',
-    center_sub:  light ? '#999999'             : 'rgba(255,255,255,0.5)',
-    nodata:      light ? '#999999'             : 'rgba(255,255,255,0.4)',
+    center_sub:  light ? '#666666'             : 'rgba(255,255,255,0.7)',
+    nodata:      light ? '#999999'             : 'rgba(255,255,255,0.5)',
     border:      light ? '#ffffff'             : '#1a1a1a',
     line1:       light ? '#111111'             : '#ffffff',
     line2:       light ? '#16a34a'             : '#22c55e',
@@ -3594,7 +3594,7 @@ function toggleTheme() {
   const next = html.dataset.theme === 'dark' ? 'light' : 'dark';
   html.dataset.theme = next;
   localStorage.setItem('theme', next);
-  Chart.defaults.color = next === 'light' ? '#666666' : 'rgba(255,255,255,0.5)';
+  Chart.defaults.color = next === 'light' ? '#666666' : 'rgba(255,255,255,0.75)';
   renderCharts();
   updateThemeBtn();
 }
@@ -4520,7 +4520,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // Restore saved theme（預設深色）
   const savedTheme = localStorage.getItem('theme') || 'dark';
   document.documentElement.dataset.theme = savedTheme;
-  Chart.defaults.color = savedTheme === 'light' ? '#666666' : 'rgba(255,255,255,0.5)';
+  Chart.defaults.color = savedTheme === 'light' ? '#666666' : 'rgba(255,255,255,0.75)';
   updateThemeBtn();
   updateMobileBuildBar();
 
