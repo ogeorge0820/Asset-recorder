@@ -2,7 +2,7 @@
 // CONFIG
 // ══════════════════════════════════════════════════════════════
 // Build 時間：每次修改 code 後手動更新此時間（UTC+8 台北時間）
-const BUILD_DATE = '2026/04/23 12:55';
+const BUILD_DATE = '2026/04/23 13:18';
 
 const SPREADSHEET_ID = '1lpRpxVzWaYUqL-jVPOAJCtjsJUIedPYYyOx4gg4PPFU';
 const CLIENT_ID = '149884248440-85f8dhc6ub9up10sv0f89e3e0itrnooj.apps.googleusercontent.com';
@@ -1832,7 +1832,7 @@ function openCMCImport() {
           <span>持倉增加時自動寫入「系統換算」質押收益</span>
         </label>
       </div>
-      <div id="cmc-preview" style="max-height:320px;overflow:auto"></div>
+      <div id="cmc-preview" style="max-height:60vh;overflow:auto"></div>
     </div>
     <div class="modal-actions">
       <button class="btn-cancel" onclick="closeModal()">取消</button>
@@ -1840,6 +1840,9 @@ function openCMCImport() {
       <button class="btn-ok" id="cmc-apply-btn" style="display:none">套用變更</button>
     </div>`;
   $('modal').classList.add('open');
+  // 把 modal 放寬讓預覽表格一次看完
+  const box = $('modal').querySelector('.modal-box');
+  if (box) { box.style.maxWidth = 'min(820px, 96vw)'; box.style.width = '96%'; }
 
   $('cmc-file').onchange = e => {
     const f = e.target.files?.[0]; if (!f) return;
@@ -1877,24 +1880,37 @@ function _renderCmcPreview(rows) {
     const S_ = (r[0]||'').toUpperCase();
     if (!ins.has(S_)) diff.push({ symbol:S_, name:'', action:'NOT_IN_CSV', prev:parseFloat(r[1])||0, next:null, mapped:true });
   }
-  const actMap = { NEW:'+ 新增', UPDATE:'~ 更新', SAME:'= 相同', NOT_IN_CSV:'? CSV 無' };
+  const actMap = {
+    NEW:        '<span style="color:var(--success)">+ 新增</span>',
+    UPDATE:     '<span style="color:var(--accent)">~ 更新</span>',
+    SAME:       '<span style="color:var(--text-muted)">= 相同</span>',
+    NOT_IN_CSV: '<span style="color:var(--text-muted)">? CSV 無</span>',
+  };
   const tr = d => `
     <tr${d.mapped === false ? ' style="background:rgba(239,68,68,0.08)"' : ''}>
-      <td><b>${esc(d.symbol)}</b>${d.mapped === false ? ' <span style="color:var(--danger)">?</span>' : ''}</td>
-      <td style="color:var(--text-secondary)">${esc(d.name)}</td>
-      <td>${actMap[d.action]}</td>
-      <td style="text-align:right">${d.prev === null ? '—' : d.prev.toLocaleString()}</td>
-      <td style="text-align:right">${d.next === null ? '—' : d.next.toLocaleString()}</td>
+      <td style="white-space:nowrap"><b>${esc(d.symbol)}</b>${d.mapped === false ? ' <span style="color:var(--danger)">?</span>' : ''}</td>
+      <td style="color:var(--text-secondary);white-space:nowrap;max-width:180px;overflow:hidden;text-overflow:ellipsis">${esc(d.name)}</td>
+      <td style="white-space:nowrap">${actMap[d.action]}</td>
+      <td style="text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums">${d.prev === null ? '—' : d.prev.toLocaleString(undefined,{maximumFractionDigits:4})}</td>
+      <td style="text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums">${d.next === null ? '—' : d.next.toLocaleString(undefined,{maximumFractionDigits:4})}</td>
     </tr>`;
   const unmapped = diff.filter(d => d.mapped === false);
   const changed = diff.filter(d => d.action === 'NEW' || d.action === 'UPDATE').length;
   $('cmc-preview').innerHTML = `
     <div style="margin:10px 0 6px;font-weight:600">變更預覽：${changed} 筆實質變更 / 共 ${diff.length} 項</div>
     ${unmapped.length ? `<div style="color:var(--danger);font-size:11px;margin-bottom:6px">⚠ ${unmapped.length} 個未知幣種（紅底）symbol 直接使用 CSV name 大寫，如有誤請關閉重選</div>` : ''}
-    <table class="data-table" style="font-size:12px">
-      <thead><tr><th>Symbol</th><th>Name</th><th>動作</th><th style="text-align:right">舊數量</th><th style="text-align:right">新數量</th></tr></thead>
-      <tbody>${diff.map(tr).join('')}</tbody>
-    </table>`;
+    <div style="overflow-x:auto">
+      <table class="data-table" style="font-size:12px;width:100%;min-width:560px">
+        <thead><tr>
+          <th style="width:70px">Symbol</th>
+          <th>Name</th>
+          <th style="width:80px">動作</th>
+          <th style="width:120px;text-align:right">舊數量</th>
+          <th style="width:120px;text-align:right">新數量</th>
+        </tr></thead>
+        <tbody>${diff.map(tr).join('')}</tbody>
+      </table>
+    </div>`;
   $('cmc-parse-btn').style.display = 'none';
   $('cmc-apply-btn').style.display = '';
   $('cmc-apply-btn').onclick = () => _applyCmcDiff(diff, $('cmc-auto-reward').checked);
@@ -3187,7 +3203,12 @@ function openConfirm(title, msg, onOK) {
   };
 }
 
-function closeModal() { $('modal').classList.remove('open'); }
+function closeModal() {
+  $('modal').classList.remove('open');
+  // 清掉可能被特定 modal（如 CMC 匯入）臨時放大的尺寸，避免影響下一個 modal
+  const box = $('modal').querySelector('.modal-box');
+  if (box) { box.style.maxWidth = ''; box.style.width = ''; }
+}
 function modalBgClick(e) { if(e.target === $('modal')) closeModal(); }
 
 // 流動現金卡片點擊詳情
