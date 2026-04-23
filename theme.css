@@ -80,6 +80,12 @@ body {
   font-weight: 400;
 }
 
+/* ── 確保管理頁表格內一般文字走 DM Sans（body 預設）── */
+.data-table td,
+.data-table th {
+  font-family: var(--font-body);
+}
+
 /* ── 數字字型：KPI / 金額 / 百分比統一 Inter + tabular-nums ── */
 .kpi-value,
 .kpi-sub,

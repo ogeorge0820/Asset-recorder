@@ -233,7 +233,11 @@ h3.section-header {
 .data-table .amt { text-align: right; font-weight: 600; }
 .data-table .sub-price { color: var(--muted); font-size: 0.75rem; margin-top: 1px; }
 .price-err { font-size: 0.68rem; color: var(--red); background: rgba(239,68,68,.1); border-radius: 3px; padding: 1px 4px; margin-left: 4px; }
-.sym-tag { font-weight: 700; font-family: monospace; letter-spacing: .3px; }
+.sym-tag {
+  font-family: 'Inter', sans-serif !important;
+  font-weight: 600 !important;
+  letter-spacing: 0.02em;
+}
 
 .btn-icon {
   background: none; border: none; cursor: pointer;
@@ -528,7 +532,9 @@ h3.section-header {
 /* 名稱：中間彈性區，完整顯示後才截斷 */
 .asset-card-sym {
   flex: 1; min-width: 0;
-  font-size: 1rem; font-weight: 700;
+  font-family: 'Inter', sans-serif !important;
+  font-size: 1rem; font-weight: 600 !important;
+  letter-spacing: 0.02em;
   color: var(--text);
   overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
 }
@@ -968,7 +974,9 @@ h3.section-header {
 .rwd-item:last-child { border-bottom: none; }
 .rwd-item-left { display: flex; flex-direction: column; gap: 2px; align-items: flex-start; }
 .rwd-sym {
-  font-weight: 700; font-size: 0.82rem;
+  font-family: 'Inter', sans-serif !important;
+  font-weight: 600 !important; font-size: 0.82rem;
+  letter-spacing: 0.02em;
   background: rgba(99,102,241,.14); color: #818cf8;
   padding: 2px 7px; border-radius: 20px;
   white-space: nowrap; min-width: 52px; text-align: center;
