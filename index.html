@@ -9,8 +9,8 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@500;600;700&display=swap">
-<link rel="stylesheet" href="theme.css?v=202604231154">
-<link rel="stylesheet" href="style.css?v=202604231154">
+<link rel="stylesheet" href="theme.css?v=202604231255">
+<link rel="stylesheet" href="style.css?v=202604231255">
 </head>
 <body>
 
@@ -244,7 +244,10 @@
             <tbody id="tb-crypto"></tbody>
           </table></div>
           <div class="crypto-cards" id="crypto-cards"></div>
-          <button class="btn-add" onclick="addItem('crypto')">+ 新增加密貨幣</button>
+          <div style="display:flex;gap:8px;flex-wrap:wrap">
+            <button class="btn-add" onclick="addItem('crypto')">+ 新增加密貨幣</button>
+            <button class="btn-add" onclick="openCMCImport()">匯入 CoinMarketCap CSV</button>
+          </div>
           </div>
         </div>
 
@@ -476,6 +479,6 @@
 <!-- ── Toast ── -->
 <div class="toast" id="toast"></div>
 
-<script src="app.js?v=202604231154"></script>
+<script src="app.js?v=202604231255"></script>
 </body>
 </html>

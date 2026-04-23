@@ -2,7 +2,7 @@
 // CONFIG
 // ══════════════════════════════════════════════════════════════
 // Build 時間：每次修改 code 後手動更新此時間（UTC+8 台北時間）
-const BUILD_DATE = '2026/04/23 11:54';
+const BUILD_DATE = '2026/04/23 12:55';
 
 const SPREADSHEET_ID = '1lpRpxVzWaYUqL-jVPOAJCtjsJUIedPYYyOx4gg4PPFU';
 const CLIENT_ID = '149884248440-85f8dhc6ub9up10sv0f89e3e0itrnooj.apps.googleusercontent.com';
@@ -1726,23 +1726,208 @@ function renderRewardsSummary() {
   </table>`;
 }
 
-// 自動新增系統換算利息收益記錄（含防重複）
+// 自動新增／累加系統換算利息收益記錄
+// 累加模式：同月同幣已有「系統換算」→ 把新 delta 疊加到 qty 上
+// 避免多次 sync（UI 編輯、CSV 匯入）互相覆蓋彼此紀錄
 async function autoAddReward(sym, interestQty) {
   const now = new Date(Date.now() + 8 * 3600 * 1000);
   const month = `${now.getUTCFullYear()}/${String(now.getUTCMonth()+1).padStart(2,'0')}`;
-
-  // 同月同幣種已有系統換算記錄 → 先刪除再寫入（覆蓋模式）
-  const dupIdx = S.data.rewards.findIndex(r => r[0] === month && r[1] === sym && r[5] === '系統換算');
-  if (dupIdx !== -1) S.data.rewards.splice(dupIdx, 1);
-
   const price = S.prices.crypto[sym] || 0;
-  const valueTWD = Math.round(interestQty * price * S.prices.usdtwd);
-  S.data.rewards.push([month, sym, interestQty, price, valueTWD, '系統換算']);
+
+  const dupIdx = S.data.rewards.findIndex(r => r[0] === month && r[1] === sym && r[5] === '系統換算');
+  let finalQty;
+  if (dupIdx !== -1) {
+    const r = S.data.rewards[dupIdx];
+    finalQty = (parseFloat(r[2]) || 0) + interestQty;
+    const valueTWD = Math.round(finalQty * price * S.prices.usdtwd);
+    S.data.rewards[dupIdx] = [r[0], r[1], finalQty, price, valueTWD, '系統換算', r[6] || ''];
+  } else {
+    finalQty = interestQty;
+    const valueTWD = Math.round(interestQty * price * S.prices.usdtwd);
+    S.data.rewards.push([month, sym, interestQty, price, valueTWD, '系統換算']);
+  }
   S.data.rewards.sort((a, b) => b[0].localeCompare(a[0]));
   await saveSheet('crypto_rewards', S.data.rewards);
   renderRewards();
   renderRewardsSummary();
-  showToast(`已自動新增 ${sym} 利息收益記錄 (${fmt(valueTWD)} TWD)`, 'ok');
+  const sign = interestQty >= 0 ? '+' : '';
+  showToast(`${sym} 系統換算 ${sign}${interestQty.toFixed(4)}（本月累計 ${finalQty.toFixed(4)}）`, 'ok');
+}
+
+// ══════════════════════════════════════════════════════════════
+// CoinMarketCap Portfolio CSV 匯入
+// ══════════════════════════════════════════════════════════════
+// CMC 全名 → 交易所 symbol 對照（常見幣），未收錄者 symbol 回退為 name
+const CMC_NAME_MAP = {
+  'Bitcoin':'BTC', 'Ethereum':'ETH', 'Tether USDt':'USDT', 'Tether':'USDT',
+  'USD Coin':'USDC', 'BNB':'BNB', 'Cronos':'CRO', 'Solana':'SOL',
+  'Cardano':'ADA', 'Sui':'SUI', 'Bitget Token':'BGB', 'Avalanche':'AVAX',
+  'Chainlink':'LINK', 'Bittensor':'TAO', 'NEAR Protocol':'NEAR',
+  'Immutable':'IMX', 'Aptos':'APT',
+  'Artificial Superintelligence Alliance':'FET',
+  'XRP':'XRP', 'Dogecoin':'DOGE', 'Polkadot':'DOT', 'Polygon':'MATIC',
+  'Litecoin':'LTC', 'Cosmos':'ATOM', 'Uniswap':'UNI', 'Shiba Inu':'SHIB',
+  'Pepe':'PEPE', 'TRON':'TRX', 'Tron':'TRX', 'Stellar':'XLM',
+  'Internet Computer':'ICP', 'Hedera':'HBAR', 'Arbitrum':'ARB',
+  'Optimism':'OP', 'Ondo':'ONDO', 'Render':'RNDR', 'Jupiter':'JUP',
+  'Ethena':'ENA', 'PancakeSwap':'CAKE', 'Maker':'MKR', 'Filecoin':'FIL',
+  'Worldcoin':'WLD', 'The Graph':'GRT', 'Fantom':'FTM', 'Injective':'INJ',
+  'Sei':'SEI', 'Celestia':'TIA', 'Pyth Network':'PYTH', 'Kaspa':'KAS',
+  'Algorand':'ALGO', 'Bitcoin Cash':'BCH', 'Mantle':'MNT', 'Lido DAO':'LDO',
+  'Wrapped Bitcoin':'WBTC', 'Jito':'JTO', 'Raydium':'RAY',
+  'VeChain':'VET', 'Stacks':'STX',
+};
+
+// 簡易 CSV 行解析（雙引號包裹 + "" 轉義）
+function _parseCsvLine(line) {
+  const out = []; let cur = ''; let inQ = false;
+  for (let i = 0; i < line.length; i++) {
+    const c = line[i];
+    if (c === '"') {
+      if (inQ && line[i+1] === '"') { cur += '"'; i++; }
+      else inQ = !inQ;
+    } else if (c === ',' && !inQ) { out.push(cur); cur = ''; }
+    else cur += c;
+  }
+  out.push(cur); return out;
+}
+
+// 解析 CMC portfolio CSV → [{name, symbol, amount, mapped}]
+function _parseCmcCsv(text) {
+  const lines = text.split(/\r?\n/).filter(l => l.trim() !== '');
+  const headerIdx = lines.findIndex(l => /"Name"/.test(l) && /"Amount"/.test(l));
+  if (headerIdx === -1) throw new Error('找不到 Name / Amount 欄位');
+  const headers = _parseCsvLine(lines[headerIdx]);
+  const nameCol = headers.indexOf('Name');
+  const amountCol = headers.indexOf('Amount');
+  if (nameCol < 0 || amountCol < 0) throw new Error('欄位位置異常');
+  const rows = [];
+  for (let i = headerIdx + 1; i < lines.length; i++) {
+    const cells = _parseCsvLine(lines[i]);
+    const name = (cells[nameCol] || '').trim();
+    const amt = parseFloat((cells[amountCol] || '').replace(/,/g, '').trim());
+    if (name && !isNaN(amt) && amt > 0) {
+      const mapped = !!CMC_NAME_MAP[name];
+      rows.push({ name, symbol: CMC_NAME_MAP[name] || name.toUpperCase(), amount: amt, mapped });
+    }
+  }
+  return rows;
+}
+
+function openCMCImport() {
+  $('modal-title').textContent = '匯入 CoinMarketCap Portfolio';
+  $('modal-body').innerHTML = `
+    <div class="modal-form">
+      <div class="field">
+        <label>CSV 檔案（CMC portfolio → Export to CSV）</label>
+        <input id="cmc-file" type="file" accept=".csv,text/csv">
+      </div>
+      <div class="field">
+        <label>或直接貼上 CSV 內容</label>
+        <textarea id="cmc-text" rows="3" style="resize:vertical;font-family:var(--ds-font-mono,monospace);font-size:11px" placeholder='"Name","Price (USD)",...'></textarea>
+      </div>
+      <div class="field">
+        <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-weight:normal">
+          <input type="checkbox" id="cmc-auto-reward" checked>
+          <span>持倉增加時自動寫入「系統換算」質押收益</span>
+        </label>
+      </div>
+      <div id="cmc-preview" style="max-height:320px;overflow:auto"></div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeModal()">取消</button>
+      <button class="btn-ok" id="cmc-parse-btn">解析 CSV</button>
+      <button class="btn-ok" id="cmc-apply-btn" style="display:none">套用變更</button>
+    </div>`;
+  $('modal').classList.add('open');
+
+  $('cmc-file').onchange = e => {
+    const f = e.target.files?.[0]; if (!f) return;
+    const r = new FileReader();
+    r.onload = () => { $('cmc-text').value = r.result; };
+    r.readAsText(f);
+  };
+
+  $('cmc-parse-btn').onclick = () => {
+    const txt = $('cmc-text').value;
+    if (!txt.trim()) { showToast('請選檔或貼上 CSV', 'err'); return; }
+    let rows;
+    try { rows = _parseCmcCsv(txt); }
+    catch (e) { showToast('解析失敗：' + e.message, 'err'); return; }
+    if (!rows.length) { showToast('CSV 沒有可匯入的持倉', 'err'); return; }
+    _renderCmcPreview(rows);
+  };
+}
+
+function _renderCmcPreview(rows) {
+  const current = [...S.data.crypto];
+  const cm = new Map(current.map(r => [(r[0]||'').toUpperCase(), parseFloat(r[1]) || 0]));
+  const ins = new Set(rows.map(r => r.symbol.toUpperCase()));
+  const diff = [];
+  for (const row of rows) {
+    const S_ = row.symbol.toUpperCase();
+    if (!cm.has(S_)) diff.push({ symbol:S_, name:row.name, action:'NEW', prev:null, next:row.amount, mapped:row.mapped });
+    else {
+      const prev = cm.get(S_);
+      const rel = Math.abs(prev - row.amount) / Math.max(prev, row.amount, 1);
+      diff.push({ symbol:S_, name:row.name, action: rel > 0.0001 ? 'UPDATE' : 'SAME', prev, next:row.amount, mapped:row.mapped });
+    }
+  }
+  for (const r of current) {
+    const S_ = (r[0]||'').toUpperCase();
+    if (!ins.has(S_)) diff.push({ symbol:S_, name:'', action:'NOT_IN_CSV', prev:parseFloat(r[1])||0, next:null, mapped:true });
+  }
+  const actMap = { NEW:'+ 新增', UPDATE:'~ 更新', SAME:'= 相同', NOT_IN_CSV:'? CSV 無' };
+  const tr = d => `
+    <tr${d.mapped === false ? ' style="background:rgba(239,68,68,0.08)"' : ''}>
+      <td><b>${esc(d.symbol)}</b>${d.mapped === false ? ' <span style="color:var(--danger)">?</span>' : ''}</td>
+      <td style="color:var(--text-secondary)">${esc(d.name)}</td>
+      <td>${actMap[d.action]}</td>
+      <td style="text-align:right">${d.prev === null ? '—' : d.prev.toLocaleString()}</td>
+      <td style="text-align:right">${d.next === null ? '—' : d.next.toLocaleString()}</td>
+    </tr>`;
+  const unmapped = diff.filter(d => d.mapped === false);
+  const changed = diff.filter(d => d.action === 'NEW' || d.action === 'UPDATE').length;
+  $('cmc-preview').innerHTML = `
+    <div style="margin:10px 0 6px;font-weight:600">變更預覽：${changed} 筆實質變更 / 共 ${diff.length} 項</div>
+    ${unmapped.length ? `<div style="color:var(--danger);font-size:11px;margin-bottom:6px">⚠ ${unmapped.length} 個未知幣種（紅底）symbol 直接使用 CSV name 大寫，如有誤請關閉重選</div>` : ''}
+    <table class="data-table" style="font-size:12px">
+      <thead><tr><th>Symbol</th><th>Name</th><th>動作</th><th style="text-align:right">舊數量</th><th style="text-align:right">新數量</th></tr></thead>
+      <tbody>${diff.map(tr).join('')}</tbody>
+    </table>`;
+  $('cmc-parse-btn').style.display = 'none';
+  $('cmc-apply-btn').style.display = '';
+  $('cmc-apply-btn').onclick = () => _applyCmcDiff(diff, $('cmc-auto-reward').checked);
+}
+
+async function _applyCmcDiff(diff, autoReward) {
+  const btn = $('cmc-apply-btn'); btnLoading(btn);
+  try {
+    const map = new Map(S.data.crypto.map(r => [(r[0]||'').toUpperCase(), [(r[0]||'').toUpperCase(), r[1]]]));
+    for (const d of diff) {
+      if (d.action === 'NEW' || d.action === 'UPDATE' || d.action === 'SAME') {
+        map.set(d.symbol, [d.symbol, d.next]);
+      }
+    }
+    S.data.crypto = [...map.values()];
+    await saveSheet('holdings_crypto', S.data.crypto);
+    for (const d of diff) {
+      if (d.action !== 'NEW' && d.action !== 'UPDATE') continue;
+      const prev = d.prev ?? 0;
+      await appendHistory('crypto', d.symbol, prev, d.next);
+      const delta = d.next - prev;
+      if (autoReward && delta > 0) await autoAddReward(d.symbol, delta);
+    }
+    renderKPIs(); renderCharts(); renderManagement();
+    btn.classList.remove('btn-loading');
+    btn.textContent = '✓ 完成';
+    const changed = diff.filter(d => d.action === 'NEW' || d.action === 'UPDATE').length;
+    showToast(`已匯入 ${changed} 筆變更`, 'ok');
+    setTimeout(closeModal, 700);
+  } catch (e) {
+    btnReset(btn);
+    showToast('匯入失敗：' + e.message, 'err');
+  }
 }
 
 // ══════════════════════════════════════════════════════════════
