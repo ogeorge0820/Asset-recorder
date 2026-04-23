@@ -2,7 +2,7 @@
 // CONFIG
 // ══════════════════════════════════════════════════════════════
 // Build 時間：每次修改 code 後手動更新此時間（UTC+8 台北時間）
-const BUILD_DATE = '2026/04/22 18:38';
+const BUILD_DATE = '2026/04/23 11:54';
 
 const SPREADSHEET_ID = '1lpRpxVzWaYUqL-jVPOAJCtjsJUIedPYYyOx4gg4PPFU';
 const CLIENT_ID = '149884248440-85f8dhc6ub9up10sv0f89e3e0itrnooj.apps.googleusercontent.com';
@@ -204,8 +204,48 @@ const S = {
 const AUTH_STORAGE_KEY = 'asset_recorder_auth_v1';
 const AUTH_MAX_AGE_MS = 30 * 24 * 3600 * 1000;  // 30 天硬上限：超過就強制重登
 const AUTH_REFRESH_BEFORE_MS = 5 * 60 * 1000;   // 過期前 5 分鐘預先刷新
+const AUTH_REFRESH_TIMEOUT_MS = 10 * 1000;      // silent refresh 等候上限（保險）
 let _authRefreshTimer = null;
 let _authSilentInflight = false;                // 防止重複 silent refresh
+// on-demand silent refresh（被 401 觸發）共用 promise，避免重複請求
+let _authRefreshPromise = null;
+let _authRefreshResolve = null;
+let _authRefreshReject  = null;
+
+// 發起 silent refresh 並回傳 Promise<newToken>
+// - 若已有 in-flight 的 refresh，直接回傳同一個 promise
+// - 內建 10 秒 timeout；Google 不回應就 reject，由呼叫方決定是否登出
+function _requestSilentRefresh() {
+  if (_authRefreshPromise) return _authRefreshPromise;
+  if (!S.tokenClient) return Promise.reject(new Error('no-token-client'));
+
+  _authRefreshPromise = new Promise((resolve, reject) => {
+    _authRefreshResolve = resolve;
+    _authRefreshReject  = reject;
+    _authSilentInflight = true;
+    try {
+      S.tokenClient.requestAccessToken({ prompt: '' });
+    } catch (e) {
+      _settleRefresh(null, e);
+      return;
+    }
+    setTimeout(() => {
+      if (_authRefreshPromise) _settleRefresh(null, new Error('silent-refresh-timeout'));
+    }, AUTH_REFRESH_TIMEOUT_MS);
+  });
+  return _authRefreshPromise;
+}
+
+// 從 tokenClient callback 或 timeout 呼叫：兌現或拒絕 pending promise
+function _settleRefresh(token, err) {
+  const r = _authRefreshResolve, j = _authRefreshReject;
+  _authRefreshResolve = null;
+  _authRefreshReject  = null;
+  _authRefreshPromise = null;
+  _authSilentInflight = false;
+  if (err) { if (j) j(err); }
+  else     { if (r) r(token); }
+}
 
 function _persistAuth() {
   try {
@@ -241,9 +281,10 @@ function setupTokenClient() {
     client_id: CLIENT_ID,
     scope: SCOPE,
     callback(resp) {
-      _authSilentInflight = false;
       if (resp.error) {
         console.warn('[auth] token request error:', resp.error, 'initialized=', S.initialized);
+        // 先把 pending on-demand refresh reject 掉
+        _settleRefresh(null, new Error(resp.error));
         if (!S.initialized) {
           // 尚未登入過 → 顯示登入畫面 + 錯誤訊息
           $('login-error').textContent = '登入失敗：' + resp.error;
@@ -267,6 +308,7 @@ function setupTokenClient() {
       S.tokenExpiry = Date.now() + (resp.expires_in - 60) * 1000;
       _persistAuth();
       _scheduleSilentRefresh();
+      _settleRefresh(S.token, null);
       console.log('[auth] token acquired, expires at', new Date(S.tokenExpiry).toLocaleString());
       if (!S.initialized) {
         S.initialized = true;
@@ -329,14 +371,32 @@ function showApp() {
 // ══════════════════════════════════════════════════════════════
 // SHEETS API
 // ══════════════════════════════════════════════════════════════
-async function api(method, path, body) {
+async function api(method, path, body, _retried) {
   const headers = { Authorization: `Bearer ${S.token}` };
   if (body) headers['Content-Type'] = 'application/json';
   const resp = await fetch(
     `https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}${path}`,
     { method, headers, body: body ? JSON.stringify(body) : undefined }
   );
-  if (resp.status === 401) { showToast('登入已過期，請重新登入', 'err'); signOut(); throw new Error('auth'); }
+  // 401：先試 silent refresh，成功就重試一次；失敗才登出
+  if (resp.status === 401) {
+    if (_retried) {
+      console.warn('[auth] 401 after silent refresh — giving up');
+      showToast('登入已過期，請重新登入', 'err');
+      signOut();
+      throw new Error('auth');
+    }
+    try {
+      console.log('[auth] 401 received, attempting silent refresh');
+      await _requestSilentRefresh();
+    } catch (e) {
+      console.warn('[auth] silent refresh failed on 401:', e.message || e);
+      showToast('登入已過期，請重新登入', 'err');
+      signOut();
+      throw new Error('auth');
+    }
+    return api(method, path, body, true);  // 用新 token 重試一次
+  }
   if (!resp.ok) {
     const e = await resp.json().catch(() => ({}));
     throw new Error(e.error?.message || `API ${resp.status}`);
