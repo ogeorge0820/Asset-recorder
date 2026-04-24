@@ -9,8 +9,8 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=DM+Sans:wght@300;400;500;600;700&display=swap">
-<link rel="stylesheet" href="theme.css?v=202604240002">
-<link rel="stylesheet" href="style.css?v=202604240002">
+<link rel="stylesheet" href="theme.css?v=202604242104">
+<link rel="stylesheet" href="style.css?v=202604242104">
 </head>
 <body>
 
@@ -214,7 +214,7 @@
           <h3 class="section-header" onclick="toggleSection('tw')"><span>台股 <span class="badge" id="cnt-tw">0</span></span><span class="section-header-right"><span class="section-total" id="tot-tw">—</span><span class="section-gain" id="gain-tw"></span><span class="section-chevron">▾</span></span></h3>
           <div class="section-body">
           <div class="table-wrap" id="tw-table-wrap"><table class="data-table">
-            <thead><tr><th>代號</th><th>股數</th><th style="text-align:right">股價 (TWD)</th><th style="text-align:right">現值 (TWD)</th></tr></thead>
+            <thead><tr><th>代號</th><th>股數</th><th style="text-align:right">股價 (TWD)</th><th style="text-align:right">日漲跌</th><th style="text-align:right">現值 (TWD)</th></tr></thead>
             <tbody id="tb-tw"></tbody>
           </table></div>
           <div class="stock-cards" id="tw-cards"></div>
@@ -227,7 +227,7 @@
           <h3 class="section-header" onclick="toggleSection('us')"><span>美股 <span class="badge" id="cnt-us">0</span></span><span class="section-header-right"><span class="section-total" id="tot-us">—</span><span class="section-gain" id="gain-us"></span><span class="section-chevron">▾</span></span></h3>
           <div class="section-body">
           <div class="table-wrap" id="us-table-wrap"><table class="data-table">
-            <thead><tr><th>代號</th><th>股數</th><th style="text-align:right">股價 (USD)</th><th style="text-align:right">現值 (TWD)</th></tr></thead>
+            <thead><tr><th>代號</th><th>股數</th><th style="text-align:right">股價 (USD)</th><th style="text-align:right">日漲跌</th><th style="text-align:right">現值 (TWD)</th></tr></thead>
             <tbody id="tb-us"></tbody>
           </table></div>
           <div class="stock-cards" id="us-cards"></div>
@@ -240,7 +240,7 @@
           <h3 class="section-header" onclick="toggleSection('crypto')"><span>加密貨幣 <span class="badge" id="cnt-crypto">0</span></span><span class="section-header-right"><span class="section-total" id="tot-crypto">—</span><span class="section-gain" id="gain-crypto"></span><span class="section-chevron">▾</span></span></h3>
           <div class="section-body">
           <div class="table-wrap" id="crypto-table-wrap"><table class="data-table">
-            <thead><tr><th>代號</th><th>數量</th><th style="text-align:right">幣價 (USD)</th><th style="text-align:right">現值 (TWD)</th></tr></thead>
+            <thead><tr><th>代號</th><th>數量</th><th style="text-align:right">幣價 (USD)</th><th style="text-align:right">24h漲跌</th><th style="text-align:right">現值 (TWD)</th></tr></thead>
             <tbody id="tb-crypto"></tbody>
           </table></div>
           <div class="crypto-cards" id="crypto-cards"></div>
@@ -479,6 +479,6 @@
 <!-- ── Toast ── -->
 <div class="toast" id="toast"></div>
 
-<script src="app.js?v=202604240002"></script>
+<script src="app.js?v=202604242104"></script>
 </body>
 </html>

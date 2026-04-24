@@ -555,3 +555,15 @@ canvas { background: transparent !important; }
 .dot.ok   { background: var(--success); }
 .dot.err  { background: var(--danger); }
 .dot.spin { background: var(--text-primary); }
+
+/* ── 個股/幣日漲跌標示 ── */
+.sym-change {
+  font-size: 12px;
+  font-family: var(--font-num);
+  font-variant-numeric: tabular-nums;
+  font-weight: 500;
+}
+.sym-change.pos  { color: var(--success); }
+.sym-change.neg  { color: var(--danger); }
+.sym-change.zero { color: var(--text-muted); }
+.sym-change.none { color: var(--text-muted); }

@@ -2,7 +2,7 @@
 // CONFIG
 // ══════════════════════════════════════════════════════════════
 // Build 時間：每次修改 code 後手動更新此時間（UTC+8 台北時間）
-const BUILD_DATE = '2026/04/24 00:02';
+const BUILD_DATE = '2026/04/24 21:04';
 
 const SPREADSHEET_ID = '1lpRpxVzWaYUqL-jVPOAJCtjsJUIedPYYyOx4gg4PPFU';
 const CLIENT_ID = '149884248440-85f8dhc6ub9up10sv0f89e3e0itrnooj.apps.googleusercontent.com';
@@ -136,7 +136,7 @@ const STABLECOINS = new Set(['USDT','USDC','DAI','BUSD','TUSD','FRAX','FDUSD']);
 
 const HEADERS = {
   snapshots: ['date','cash_total','stock_tw_total','stock_us_total','crypto_total','insurance_total','realestate_total','debt','net_assets'],
-  daily_snapshots: ['date','cash_total','stock_tw_total','stock_us_total','crypto_total','insurance_total','realestate_total','debt','net_assets'],
+  daily_snapshots: ['date','cash_total','stock_tw_total','stock_us_total','crypto_total','insurance_total','realestate_total','debt','net_assets','prices_json'],
   holdings_tw: ['symbol','shares'],
   holdings_us: ['symbol','shares'],
   holdings_crypto: ['symbol','quantity'],
@@ -455,7 +455,7 @@ async function loadAll() {
     sheetGet('holdings_us!A:B'),
     sheetGet('holdings_crypto!A:B'),
     sheetGet('snapshots!A:I'),
-    sheetGet('daily_snapshots!A:I'),
+    sheetGet('daily_snapshots!A:J'),
     sheetGet('settings!A:B'),
     sheetGet('crypto_rewards!A:F'),
     sheetGet('crypto_history!A:G'),
@@ -1257,6 +1257,42 @@ function getDailySnapYesterday(colIdx) {
   return isNaN(v) ? null : v;
 }
 
+// 讀取最近一筆「今日之前」的 per-symbol 價格快照（原幣別）
+// 回傳 {tw:{}, us:{}, crypto:{}} 或 null
+let _cachedYestPrices = null, _cachedYestPricesAt = 0;
+function getYesterdayPriceSnap() {
+  // 同一次 render pass 內多次呼叫不重複 parse（便宜的 cache，資料變動時 invalidate）
+  if (_cachedYestPrices && Date.now() - _cachedYestPricesAt < 1000) return _cachedYestPrices;
+  const n = new Date();
+  const todayStr = `${n.getFullYear()}/${String(n.getMonth()+1).padStart(2,'0')}/${String(n.getDate()).padStart(2,'0')}`;
+  const prev = [...S.data.daily_snapshots].reverse().find(s => s[0] < todayStr && s[9]);
+  if (!prev) { _cachedYestPrices = null; _cachedYestPricesAt = Date.now(); return null; }
+  try { _cachedYestPrices = JSON.parse(prev[9]); }
+  catch { _cachedYestPrices = null; }
+  _cachedYestPricesAt = Date.now();
+  return _cachedYestPrices;
+}
+
+// 計算單一 symbol 相對昨日快照的漲跌 %（curPrice 為當下即時價，原幣別）
+function symDailyChangePct(type, sym, curPrice) {
+  if (curPrice == null || !sym) return null;
+  const snap = getYesterdayPriceSnap();
+  if (!snap) return null;
+  const key = type === 'crypto' ? sym.toUpperCase() : sym;
+  const prev = snap[type]?.[key];
+  if (!prev || prev <= 0) return null;
+  return (curPrice - prev) / prev * 100;
+}
+
+// 渲染漲跌幅 cell HTML
+function renderChangePctCell(pct) {
+  if (pct === null || pct === undefined) return '<span class="sym-change none">-</span>';
+  if (Math.abs(pct) < 0.005) return '<span class="sym-change zero">0.00%</span>';
+  const cls = pct > 0 ? 'pos' : 'neg';
+  const sign = pct > 0 ? '+' : '';
+  return `<span class="sym-change ${cls}">${sign}${pct.toFixed(2)}%</span>`;
+}
+
 // 更新分類今日收益 badge
 function updateSectionGain(elId, curTotal, colIdx) {
   const el = $(elId);
@@ -1284,7 +1320,7 @@ function renderTW() {
   const totalTWTWD = rows.reduce((s, r) => s + (parseFloat(r[1]) || 0) * (S.prices.tw[r[0]] || 0), 0);
 
   if (!sorted.length) {
-    $('tb-tw').innerHTML = '<tr><td colspan="4" style="text-align:center;padding:16px;color:var(--muted)">尚無持股</td></tr>';
+    $('tb-tw').innerHTML = '<tr><td colspan="5" style="text-align:center;padding:16px;color:var(--muted)">尚無持股</td></tr>';
     $('tw-cards').innerHTML = '<div style="text-align:center;padding:20px;color:var(--muted);font-size:0.88rem">尚無持股</div>';
   } else {
     $('tb-tw').innerHTML = sorted.map(({r, i}) => {
@@ -1293,10 +1329,12 @@ function renderTW() {
       const priceCell = err
         ? '<span style="color:var(--red);font-size:0.8rem">-</span>'
         : (p !== undefined ? p.toLocaleString('zh-TW', {minimumFractionDigits:2, maximumFractionDigits:2}) : skelSpan());
+      const chgCell = err ? '<span class="sym-change none">-</span>' : renderChangePctCell(symDailyChangePct('tw', r[0], p));
       return `<tr class="clickable-row" onclick="openAssetDetail('tw',${i})">
         <td data-label="代號"><span class="sym-tag">${esc(r[0])}</span></td>
         <td data-label="股數">${(parseFloat(r[1]) || 0).toLocaleString()}</td>
         <td data-label="股價 (TWD)" class="amt">${priceCell}</td>
+        <td data-label="日漲跌" class="amt">${chgCell}</td>
         <td data-label="現值 (TWD)" class="amt">${v !== null ? fmt(v) : skelSpan()}${err ? '<span class="price-err">更新失敗</span>' : ''}</td>
       </tr>`;
     }).join('');
@@ -1309,9 +1347,10 @@ function renderTW() {
       const pct = (totalTWTWD > 0 && v !== null) ? Math.round(v / totalTWTWD * 100) : null;
       const pctStr = pct !== null ? pct + '%' : '—';
       const twdStr = err ? '更新失敗' : (v !== null ? fmt(v) : skelSpan());
+      const chgStr = err ? '' : renderChangePctCell(symDailyChangePct('tw', r[0], p));
       const detailStr = err
         ? `持有 ${qty.toLocaleString()} 股`
-        : `持有 ${qty.toLocaleString()} 股 · ${p !== undefined ? p.toLocaleString('zh-TW', {minimumFractionDigits:2,maximumFractionDigits:2}) + ' TWD' : '—'}`;
+        : `持有 ${qty.toLocaleString()} 股 · ${p !== undefined ? p.toLocaleString('zh-TW', {minimumFractionDigits:2,maximumFractionDigits:2}) + ' TWD' : '—'} · ${chgStr}`;
       return `<div class="asset-card${err ? ' err' : ''}" onclick="openAssetDetail('tw',${i})" role="button" tabindex="0">
         <div class="asset-card-pct">${pctStr}</div>
         <div class="asset-card-sym">${esc(sym)}</div>
@@ -1338,7 +1377,7 @@ function renderUS() {
   const totalUSTWD = rows.reduce((s, r) => s + (parseFloat(r[1]) || 0) * (S.prices.us[r[0]] || 0) * rate, 0);
 
   if (!sorted.length) {
-    $('tb-us').innerHTML = '<tr><td colspan="4" style="text-align:center;padding:16px;color:var(--muted)">尚無持股</td></tr>';
+    $('tb-us').innerHTML = '<tr><td colspan="5" style="text-align:center;padding:16px;color:var(--muted)">尚無持股</td></tr>';
     $('us-cards').innerHTML = '<div style="text-align:center;padding:20px;color:var(--muted);font-size:0.88rem">尚無持股</div>';
   } else {
     $('tb-us').innerHTML = sorted.map(({r, i}) => {
@@ -1347,10 +1386,12 @@ function renderUS() {
       const priceCell = err
         ? '<span style="color:var(--red);font-size:0.8rem">-</span>'
         : (p !== undefined ? fmtUSD(p) : skelSpan());
+      const chgCell = err ? '<span class="sym-change none">-</span>' : renderChangePctCell(symDailyChangePct('us', r[0], p));
       return `<tr class="clickable-row" onclick="openAssetDetail('us',${i})">
         <td data-label="代號"><span class="sym-tag">${esc(r[0])}</span></td>
         <td data-label="股數">${(parseFloat(r[1]) || 0).toLocaleString(undefined, {maximumFractionDigits:4})}</td>
         <td data-label="股價 (USD)" class="amt">${priceCell}</td>
+        <td data-label="日漲跌" class="amt">${chgCell}</td>
         <td data-label="現值 (TWD)" class="amt">${v !== null ? fmt(v) : skelSpan()}${err ? '<span class="price-err">更新失敗</span>' : ''}</td>
       </tr>`;
     }).join('');
@@ -1363,9 +1404,10 @@ function renderUS() {
       const pct = (totalUSTWD > 0 && v !== null) ? Math.round(v / totalUSTWD * 100) : null;
       const pctStr = pct !== null ? pct + '%' : '—';
       const twdStr = err ? '更新失敗' : (v !== null ? fmt(v) : skelSpan());
+      const chgStr = err ? '' : renderChangePctCell(symDailyChangePct('us', r[0], p));
       const detailStr = err
         ? `持有 ${qty.toLocaleString(undefined,{maximumFractionDigits:4})} 股`
-        : `持有 ${qty.toLocaleString(undefined,{maximumFractionDigits:4})} 股 · ${p !== undefined ? fmtUSD(p) + ' USD' : '—'}`;
+        : `持有 ${qty.toLocaleString(undefined,{maximumFractionDigits:4})} 股 · ${p !== undefined ? fmtUSD(p) + ' USD' : '—'} · ${chgStr}`;
       return `<div class="asset-card${err ? ' err' : ''}" onclick="openAssetDetail('us',${i})" role="button" tabindex="0">
         <div class="asset-card-pct">${pctStr}</div>
         <div class="asset-card-sym">${esc(sym)}</div>
@@ -1406,7 +1448,7 @@ function renderCrypto() {
   }, 0);
 
   if (!sorted.length) {
-    const empty = '<tr><td colspan="4" style="text-align:center;padding:16px;color:var(--muted)">尚無持幣</td></tr>';
+    const empty = '<tr><td colspan="5" style="text-align:center;padding:16px;color:var(--muted)">尚無持幣</td></tr>';
     $('tb-crypto').innerHTML = empty;
     $('crypto-cards').innerHTML = '<div style="text-align:center;padding:20px;color:var(--muted);font-size:0.88rem">尚無持幣</div>';
   } else {
@@ -1419,10 +1461,12 @@ function renderCrypto() {
       const priceCell = err
         ? '<span style="color:var(--red);font-size:0.8rem">-</span>'
         : (p !== undefined ? fmtUSD(p, 4) : skelSpan());
+      const chgCell = err ? '<span class="sym-change none">-</span>' : renderChangePctCell(symDailyChangePct('crypto', sym, p));
       return `<tr class="clickable-row" onclick="openAssetDetail('crypto',${i})">
         <td data-label="代號"><span class="sym-tag">${esc(sym)}</span></td>
         <td data-label="數量">${qty.toFixed(3)}</td>
         <td data-label="幣價 (USD)" class="amt">${priceCell}</td>
+        <td data-label="24h漲跌" class="amt">${chgCell}</td>
         <td data-label="現值 (TWD)" class="amt">${v !== null ? fmt(v) : skelSpan()}${err ? '<span class="price-err">更新失敗</span>' : ''}</td>
       </tr>`;
     }).join('');
@@ -1436,9 +1480,10 @@ function renderCrypto() {
       const pct = (totalCryptoTWD > 0 && v !== null) ? Math.round(v / totalCryptoTWD * 100) : null;
       const pctStr = pct !== null ? pct + '%' : '—';
       const twdStr = err ? '更新失敗' : (v !== null ? fmt(v) : skelSpan());
+      const chgStr = err ? '' : renderChangePctCell(symDailyChangePct('crypto', sym, p));
       const detailStr = err
         ? `持有 ${qty.toFixed(3)}`
-        : `持有 ${qty.toFixed(3)} · ${p !== undefined ? fmtFloor3(p) : '—'}`;
+        : `持有 ${qty.toFixed(3)} · ${p !== undefined ? fmtFloor3(p) : '—'} · ${chgStr}`;
       return `<div class="asset-card${err ? ' err' : ''}" onclick="openAssetDetail('crypto',${i})" role="button" tabindex="0">
         <div class="asset-card-pct">${pctStr}</div>
         <div class="asset-card-sym">${esc(sym)}</div>
@@ -3099,7 +3144,16 @@ async function doSaveDailySnapshot(silent = false) {
   }
   const now = new Date();
   const ds = `${now.getFullYear()}/${String(now.getMonth()+1).padStart(2,'0')}/${String(now.getDate()).padStart(2,'0')}`;
-  const row = [ds, cashT.toFixed(0), twT.toFixed(0), usT.toFixed(0), cryT.toFixed(0), ins.toFixed(0), re.toFixed(0), debt.toFixed(0), net.toFixed(0)];
+  // 同步儲存當下 per-symbol 即時價格（原幣別）→ 讓次日可算漲跌幅，與類別總值自我一致
+  const priceSnap = {
+    tw: Object.fromEntries(S.data.tw.map(r => [r[0], S.prices.tw[r[0]]]).filter(([,p]) => p != null)),
+    us: Object.fromEntries(S.data.us.map(r => [r[0], S.prices.us[r[0]]]).filter(([,p]) => p != null)),
+    crypto: Object.fromEntries(S.data.crypto.map(r => {
+      const sym = r[0]?.toUpperCase();
+      return [sym, S.prices.crypto[sym]];
+    }).filter(([,p]) => p != null)),
+  };
+  const row = [ds, cashT.toFixed(0), twT.toFixed(0), usT.toFixed(0), cryT.toFixed(0), ins.toFixed(0), re.toFixed(0), debt.toFixed(0), net.toFixed(0), JSON.stringify(priceSnap)];
   const idx = S.data.daily_snapshots.findIndex(s => s[0] === ds);
   if (idx >= 0) S.data.daily_snapshots[idx] = row;
   else { S.data.daily_snapshots.push(row); S.data.daily_snapshots.sort((a,b) => a[0].localeCompare(b[0])); }
