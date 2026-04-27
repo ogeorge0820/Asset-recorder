@@ -2,7 +2,7 @@
 // CONFIG
 // ══════════════════════════════════════════════════════════════
 // Build 時間：每次修改 code 後手動更新此時間（UTC+8 台北時間）
-const BUILD_DATE = '2026/04/27 15:33';
+const BUILD_DATE = '2026/04/27 23:20';
 
 const SPREADSHEET_ID = '1lpRpxVzWaYUqL-jVPOAJCtjsJUIedPYYyOx4gg4PPFU';
 const CLIENT_ID = '149884248440-85f8dhc6ub9up10sv0f89e3e0itrnooj.apps.googleusercontent.com';
@@ -276,6 +276,7 @@ function _scheduleSilentRefresh() {
 
 function setupTokenClient() {
   if (!window.google?.accounts?.oauth2) return;
+  _ensureVisibilityHandler();
 
   S.tokenClient = google.accounts.oauth2.initTokenClient({
     client_id: CLIENT_ID,
@@ -349,13 +350,43 @@ function setupTokenClient() {
   $('login-screen').style.display = 'flex';
 }
 
-function signIn() {
-  if (!S.tokenClient) { $('login-error').textContent = 'Google API 尚未載入，請重新整理'; return; }
-  S.tokenClient.requestAccessToken({ prompt: 'consent' });
+// 進入前景時主動檢查 token，必要時觸發續期
+// 解決 iOS 把背景 JS 殺掉後 _scheduleSilentRefresh 的 setTimeout 永遠不 fire 的情境
+function _onVisibilityRefresh() {
+  if (document.visibilityState !== 'visible') return;
+  if (!S.initialized || !S.tokenClient) return;
+  // 還超過 1 分鐘以上才到期 → 不打擾，等原排程 timer
+  if (S.tokenExpiry && Date.now() < S.tokenExpiry - 60 * 1000) return;
+  if (_authSilentInflight) return;
+  console.log('[auth] visibility resume → silent refresh');
+  _authSilentInflight = true;
+  try { S.tokenClient.requestAccessToken({ prompt: '' }); }
+  catch (e) { _authSilentInflight = false; console.warn('[auth] visibility refresh threw', e); }
 }
 
+// 一次性註冊（_authVisListenerAdded 防止 setupTokenClient 重複呼叫時加多份）
+let _authVisListenerAdded = false;
+function _ensureVisibilityHandler() {
+  if (_authVisListenerAdded) return;
+  document.addEventListener('visibilitychange', _onVisibilityRefresh);
+  _authVisListenerAdded = true;
+}
+
+function signIn() {
+  if (!S.tokenClient) { $('login-error').textContent = 'Google API 尚未載入，請重新整理'; return; }
+  // 不強制 consent：首次會自動跳，後續若已授權只需快速確認帳號即可
+  S.tokenClient.requestAccessToken({});
+}
+
+// 使用者主動登出：撤銷 token + 清本地
 function signOut() {
   if (S.token) google.accounts.oauth2.revoke(S.token, () => {});
+  _localSignOut();
+}
+
+// 內部清理（不 revoke）：用於 401 / silent refresh 失敗等非使用者主動的情境
+// 撤銷 token 會讓使用者下次必須重新授權整套權限，iOS storage 短暫失效時不應觸發
+function _localSignOut() {
   S.token = null; S.initialized = false;
   _clearAuth();
   $('app').style.display = 'none';
@@ -383,7 +414,7 @@ async function api(method, path, body, _retried) {
     if (_retried) {
       console.warn('[auth] 401 after silent refresh — giving up');
       showToast('登入已過期，請重新登入', 'err');
-      signOut();
+      _localSignOut();
       throw new Error('auth');
     }
     try {
@@ -392,7 +423,7 @@ async function api(method, path, body, _retried) {
     } catch (e) {
       console.warn('[auth] silent refresh failed on 401:', e.message || e);
       showToast('登入已過期，請重新登入', 'err');
-      signOut();
+      _localSignOut();
       throw new Error('auth');
     }
     return api(method, path, body, true);  // 用新 token 重試一次
