@@ -113,6 +113,53 @@ asset-recorder/
 
 ## 📋 版本歷史
 
+### v0.6 (2026/04/27)
+
+#### ✨ 新功能
+
+- **CoinMarketCap CSV 匯入加密貨幣組合**：
+  - 加密貨幣區塊新增「匯入 CoinMarketCap CSV」按鈕，貼上 CMC 匯出的 portfolio CSV → 自動解析、diff 預覽 → 一鍵套用
+  - 支援 50+ 常見幣種名稱對照（CMC name → exchange symbol）
+  - delta 為正自動觸發 `autoAddReward` 累加模式記為「系統換算」利息（同月同幣多次匯入不會覆蓋彼此）
+- **個股／幣每日漲跌幅欄位**：
+  - 台股、美股、加密貨幣列表新增「日漲跌／24h 漲跌」欄位（綠 +X.XX%、紅 -X.XX%、12px tabular-nums）
+  - 擴充 `daily_snapshots` 新增 `prices_json` 欄位，每晚 23:59 與類別總值同一次寫入 → per-symbol 漲跌幅與分類盈虧同源不脫鉤
+  - 找不到對應快照價格時顯示「-」
+- **其他資產 & 負債 三合一 Detail Panel**：
+  - 儲蓄險、房地產、負債點擊卡片 → 開啟與股票／加密貨幣完全一致的 slide-out panel
+  - 「+ 增減餘額」「✎ 設定餘額」兩種操作，皆寫入 `other_history`
+  - 完整變動紀錄表：日期／增減／餘額／備註
+- **iOS PWA 支援**：
+  - 新增 `manifest.json` + 6 個 iOS 專用 meta tags（`apple-mobile-web-app-capable` 等）
+  - 主畫面快捷以 standalone WebView 啟動（iOS 16.4+ 與 Safari 共用 localStorage）
+  - 內建簡約 SVG 圖示
+- **質押收益所有項目皆可編輯**：移除 `isAuto` 限制，「系統換算」類型也能修改／刪除
+
+#### 🎨 設計重構（Phase 10-12 → 主題系統全面重建）
+
+- **單屏 Dashboard（1440×900 一屏全覽）**：
+  - 6 張 KPI 卡橫排 100px 高度、26px value、tabular-nums，桌機 sidebar 縮為 160px
+  - 主內容 55/45 雙欄；圖表固定高（每日趨勢 180、月收益 150、圓餅 240）
+- **主題系統乾淨重建**（`theme.css` 為單一來源）：
+  - 廢除原 `style.css` 內全部 `[data-theme="*"]` 疊層、刪除 `design-system.css`
+  - 統一使用 `:root[data-theme]` CSS variables：`--bg`、`--text-*`、`--accent`、`--accent-fg`
+  - 解決多個 phase 累積的 specificity 衝突
+- **深色模式可讀性大修**：
+  - 修復 `.badge`、`.tab-btn.active`、`.filter-btn.active`、`.btn-add`、`.asset-card-pct` 等 10+ 元素白底白字（`color: #fff` → `color: var(--accent-fg)`）
+  - Pie 圖例 `fontColor` 明確指定，避免 generateLabels 自訂回傳被 Chart.js 忽略 `labels.color` 而黑底黑字
+  - 文字透明度全面提高（`text-secondary` 0.72 / `text-muted` 0.55）
+- **Typography 升級**：
+  - 數字統一 Inter 600 + `tabular-nums` + `cv11`
+  - body 改 DM Sans
+  - 股票／幣種 symbol（`.sym-tag`）改 Inter 600 + 0.02em letter-spacing（去除 monospace 殘留）
+
+#### 🔧 系統優化
+
+- **OAuth 401 自動續期**：401 先 silent refresh 重試一次，失敗才登出（從硬登出退化到輕度重試）
+- **BUILD_DATE 規範化**：改用實際當下台北時間 + 對應的 cache-buster `v=YYYYMMDDHHMM`
+
+---
+
 ### v0.5 (2026/04/13 22:30)
 
 #### ✨ 新功能
