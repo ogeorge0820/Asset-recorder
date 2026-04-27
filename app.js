@@ -2,7 +2,7 @@
 // CONFIG
 // ══════════════════════════════════════════════════════════════
 // Build 時間：每次修改 code 後手動更新此時間（UTC+8 台北時間）
-const BUILD_DATE = '2026/04/24 21:04';
+const BUILD_DATE = '2026/04/27 14:31';
 
 const SPREADSHEET_ID = '1lpRpxVzWaYUqL-jVPOAJCtjsJUIedPYYyOx4gg4PPFU';
 const CLIENT_ID = '149884248440-85f8dhc6ub9up10sv0f89e3e0itrnooj.apps.googleusercontent.com';
@@ -1074,32 +1074,16 @@ function renderOther() {
   updateOtherTotal();
 }
 
-// 開啟「其他資產」修改 Modal
+// 「其他資產 & 負債」三個固定項目的元資料
+const OTHER_META = {
+  insurance_total:  { label: '儲蓄險', currency: 'USD', icon: '🛡️', sub: '保單現值',         isDebt: false },
+  realestate_total: { label: '房地產', currency: 'TWD', icon: '🏠', sub: '不動產市值',       isDebt: false },
+  debt:             { label: '負債',   currency: 'TWD', icon: '📉', sub: '貸款等負債總額',  isDebt: true  },
+};
+
+// 入口：點擊「其他資產」卡片 → 開啟通用 panel（支援增減/設定/變動紀錄）
 function openOtherItemDetail(key) {
-  const META = {
-    insurance_total:  { label: '儲蓄險',  currency: 'USD', icon: '🛡️' },
-    realestate_total: { label: '房地產',  currency: 'TWD', icon: '🏠' },
-    debt:             { label: '負債',    currency: 'TWD', icon: '📉' },
-  };
-  const m = META[key];
-  if (!m) return;
-  const current = S.data.settings[key] || 0;
-  const fields = [
-    { id: 'new_value', label: `新餘額 (${m.currency})`, type: 'number', val: current, min: 0, step: 'any' },
-    { id: 'note', label: '備註（選填）', type: 'text', ph: '例如：市值更新、保費繳納' },
-  ];
-  openModal(`${m.icon} 更新 · ${m.label}`, fields, async vals => {
-    const newValue = parseFloat(vals.new_value);
-    if (isNaN(newValue) || newValue < 0) { showToast('請輸入有效數值', 'err'); return false; }
-    const valueBefore = S.data.settings[key] || 0;
-    S.data.settings[key] = newValue;
-    const settRows = Object.entries(S.data.settings).map(([k, v]) => [k, v]);
-    await saveSheet('settings', settRows);
-    await appendOtherHistory(key, valueBefore, newValue, vals.note || '');
-    renderKPIs(); renderCharts(); renderManagement();
-    showToast('已更新', 'ok');
-    return true;
-  });
+  openAssetDetail('other', key);
 }
 
 // 寫入「其他資產」歷史記錄
@@ -3360,6 +3344,25 @@ function _refreshPanelDisplay(sym) {
 
   let valueTwd = null, subText = '';
 
+  if (type === 'other') {
+    const m = OTHER_META[idx];
+    if (!m) return;
+    const v = S.data.settings[idx] || 0;
+    valueTwd = m.currency === 'USD' ? v * S.prices.usdtwd : v;
+    subText = m.currency === 'USD'
+      ? `USD ${v.toLocaleString('zh-TW',{minimumFractionDigits:2,maximumFractionDigits:2})}`
+      : m.sub;
+    const valEl = $('cp-value');
+    valEl.textContent = valueTwd > 0 ? (m.isDebt ? '−' : '') + fmt(valueTwd) + ' TWD' : '—';
+    valEl.style.color = m.isDebt && valueTwd > 0 ? 'var(--danger)' : '';
+    $('cp-value-sub').textContent = subText;
+    renderHistoryInPanel('other', idx);
+    return;
+  }
+
+  // 重置非 other 情境的特殊樣式
+  $('cp-value').style.color = '';
+
   if (type === 'cash') {
     const r = S.data.cash[idx];
     if (!r) return;
@@ -3392,19 +3395,31 @@ function _refreshPanelDisplay(sym) {
   renderHistoryInPanel(type, sym);
 }
 
-// 通用：開啟 panel（支援 cash / tw / us / crypto）
+// 通用：開啟 panel（支援 cash / tw / us / crypto / other）
 function openAssetDetail(type, idx) {
   _panelAssetType = type;
   _panelIdx = idx;
   let sym;
   if (type === 'cash') {
     sym = S.data.cash[idx]?.[0] || '帳戶';
+  } else if (type === 'other') {
+    const m = OTHER_META[idx];
+    if (!m) return;
+    sym = `${m.icon} ${m.label}`;
   } else {
     const dataMap = { crypto: S.data.crypto, tw: S.data.tw, us: S.data.us };
     sym = dataMap[type][idx]?.[0]?.toUpperCase() || '';
   }
   $('cp-sym').textContent = sym;
-  _refreshPanelDisplay(sym);
+
+  // 其他資產為固定槽位、不可刪除；改用「增減餘額」措辭
+  const isOther = type === 'other';
+  const delBtn = document.querySelector('#crypto-panel .btn-cp-delete');
+  if (delBtn) delBtn.style.display = isOther ? 'none' : '';
+  const adjBtn = document.querySelector('#crypto-panel .btn-cp-primary');
+  if (adjBtn) adjBtn.textContent = (isOther || type === 'cash') ? '＋ 增減餘額' : '＋ 增減數量';
+
+  _refreshPanelDisplay(isOther ? idx : sym);
   $('crypto-panel').classList.add('open');
   document.body.style.overflow = 'hidden';
 }
@@ -3426,7 +3441,7 @@ function cryptoPanelBgClick(e) {
   if (e.target === $('crypto-panel')) closeAssetDetail();
 }
 
-// 通用歷史記錄渲染（table 格式，支援 cash / tw / us / crypto）
+// 通用歷史記錄渲染（table 格式，支援 cash / tw / us / crypto / other）
 function renderHistoryInPanel(type, sym) {
   const histKey = `${type}_history`;
   const hist = (S.data[histKey] || []).filter(r => r[1] === sym);
@@ -3435,6 +3450,30 @@ function renderHistoryInPanel(type, sym) {
   const el = $('cp-history');
   if (!hist.length) {
     el.innerHTML = '<div class="cp-history-empty">尚無變動記錄</div>';
+    return;
+  }
+
+  // ── other：[date, key, before, after, delta, note] ──
+  if (type === 'other') {
+    const m = OTHER_META[sym];
+    const ccy = m?.currency || 'TWD';
+    const fmtV = v => v.toLocaleString('zh-TW', {minimumFractionDigits:0,maximumFractionDigits:2});
+    const rows = hist.map(r => {
+      const after = parseFloat(r[3]) || 0;
+      const delta = parseFloat(r[4]) || 0;
+      const isPos = delta >= 0;
+      const note = r[5] || '';
+      return `<tr>
+        <td class="ch-date">${esc(r[0])}</td>
+        <td class="ch-delta ${isPos ? 'pos' : 'neg'}">${(isPos?'+':'')+fmtV(delta)}</td>
+        <td class="ch-qty">${fmtV(after)}</td>
+        <td class="ch-price">${esc(note)}</td>
+      </tr>`;
+    }).join('');
+    el.innerHTML = `<table class="cp-history-table">
+      <thead><tr><th>日期</th><th>增減 (${ccy})</th><th>餘額 (${ccy})</th><th>備註</th></tr></thead>
+      <tbody>${rows}</tbody>
+    </table>`;
     return;
   }
 
@@ -3491,10 +3530,35 @@ function renderHistoryInPanel(type, sym) {
 // 向下相容
 function renderCryptoHistory(sym) { renderHistoryInPanel('crypto', sym); }
 
-// 通用：增減數量（支援 cash / tw / us / crypto）
+// 通用：增減數量（支援 cash / tw / us / crypto / other）
 async function adjustAssetQty() {
   if (_panelIdx === null) return;
   const type = _panelAssetType;
+
+  if (type === 'other') {
+    const key = _panelIdx;
+    const m = OTHER_META[key];
+    if (!m) return;
+    const before = S.data.settings[key] || 0;
+    openModal(`增減餘額 · ${m.label}`, [
+      { id: 'delta', label: `變動金額 ${m.currency}（正為增加，負為減少）`, type: 'number', step: 'any', ph: '例如 5000 或 -2000' },
+      { id: 'note', label: '備註（選填）', type: 'text', ph: '例如：保費繳納、房貸還款' },
+    ], async vals => {
+      const delta = parseFloat(vals.delta);
+      if (isNaN(delta) || delta === 0) { showToast('請輸入有效的變動金額', 'err'); return false; }
+      const after = before + delta;
+      if (after < 0) { showToast('餘額不能小於 0', 'err'); return false; }
+      S.data.settings[key] = after;
+      const settRows = Object.entries(S.data.settings).map(([k, v]) => [k, v]);
+      await saveSheet('settings', settRows);
+      await appendOtherHistory(key, before, after, vals.note || '');
+      renderKPIs(); renderCharts(); renderManagement();
+      _refreshPanelDisplay(key);
+      showToast('已儲存並記錄變動', 'ok');
+      return true;
+    });
+    return;
+  }
 
   if (type === 'cash') {
     const r = S.data.cash[_panelIdx];
@@ -3554,10 +3618,33 @@ async function adjustAssetQty() {
 // 向下相容
 async function adjustCryptoQty() { return adjustAssetQty(); }
 
-// 通用：設定餘額（支援 cash / tw / us / crypto）
+// 通用：設定餘額（支援 cash / tw / us / crypto / other）
 async function setAssetQty() {
   if (_panelIdx === null) return;
   const type = _panelAssetType;
+
+  if (type === 'other') {
+    const key = _panelIdx;
+    const m = OTHER_META[key];
+    if (!m) return;
+    const before = S.data.settings[key] || 0;
+    openModal(`設定餘額 · ${m.label}`, [
+      { id: 'amount', label: `新餘額 (${m.currency})`, type: 'number', val: before, min: 0, step: 'any' },
+      { id: 'note', label: '備註（選填）', type: 'text', ph: '例如：市值更新、年度結算' },
+    ], async vals => {
+      const after = parseFloat(vals.amount);
+      if (isNaN(after) || after < 0) { showToast('請輸入有效金額', 'err'); return false; }
+      S.data.settings[key] = after;
+      const settRows = Object.entries(S.data.settings).map(([k, v]) => [k, v]);
+      await saveSheet('settings', settRows);
+      await appendOtherHistory(key, before, after, vals.note || '');
+      renderKPIs(); renderCharts(); renderManagement();
+      _refreshPanelDisplay(key);
+      showToast('已儲存並記錄變動', 'ok');
+      return true;
+    });
+    return;
+  }
 
   if (type === 'cash') {
     const r = S.data.cash[_panelIdx];
@@ -3614,10 +3701,11 @@ async function setAssetQty() {
 // 向下相容
 async function setCryptoQty() { return setAssetQty(); }
 
-// 通用：從 panel 刪除（支援 cash / tw / us / crypto）
+// 通用：從 panel 刪除（支援 cash / tw / us / crypto；其他資產為固定槽位不可刪）
 function deleteAssetFromPanel() {
   if (_panelIdx === null) return;
   const type = _panelAssetType;
+  if (type === 'other') return;
   let label, sheetName, dataArr;
   if (type === 'cash') {
     dataArr = S.data.cash;
