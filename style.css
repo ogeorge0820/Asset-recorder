@@ -579,61 +579,91 @@ h3.section-header {
   .kpi-label { font-size: 0.68rem; }
   .kpi-sub { font-size: 0.7rem; }
 
-  /* ── Header: 毛玻璃 + 置中 Segmented Control ── */
+  /* ── Header: 純色背景 + 底邊線 ── */
   #app-header {
-    height: 52px; padding: 0 12px; gap: 0;
-    background: rgba(15,17,23,0.82);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
-    border-bottom: 1px solid rgba(255,255,255,0.07);
-    box-shadow: 0 2px 16px rgba(0,0,0,0.45);
-    justify-content: center;
+    height: 52px; padding: 0 12px; gap: 8px;
+    background: var(--bg-card);
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    border-bottom: 1px solid var(--border);
+    box-shadow: none;
+    justify-content: flex-start;
   }
-  /* 左側對稱佔位，讓 tab-nav 視覺居中 */
-  #app-header::before { content: ''; width: 44px; flex-shrink: 0; }
-  /* 隱藏不需要的 Header 元素 */
+  /* 隱藏不需要的 Header 元素（保留 .btn-theme 在 mobile 顯示） */
   #app-header h1,
   .build-badge,
   .update-badge,
   #header-rate,
-  .btn-theme,
   .btn-signout { display: none; }
-  /* header-right 只剩 mobile-menu-btn */
-  .header-right { margin-left: 0; gap: 0; }
+  /* 移除舊的對稱佔位 */
+  #app-header::before { display: none; content: none; }
+  /* header-right：theme btn + hamburger */
+  .header-right { margin-left: auto; gap: 6px; align-items: center; }
 
-  /* ── iOS Segmented Control ── */
+  /* ── Tabs：底線指示器 ── */
   .tab-nav {
-    flex: 1; display: flex; justify-content: center;
-    background: rgba(255,255,255,0.10);
-    border-radius: 10px; padding: 3px;
-    max-width: 300px;
+    flex: 1; display: flex; justify-content: flex-start; align-items: stretch;
+    background: transparent;
+    border-radius: 0;
+    padding: 0;
+    max-width: none;
+    height: 100%;
+    gap: 4px;
   }
   .tab-btn {
-    flex: 1; padding: 6px 2px; border-radius: 8px;
-    font-size: 0.8rem; font-weight: 500;
-    color: var(--text-secondary);
-    transition: background .2s, color .2s;
+    flex: 0 0 auto;
+    padding: 0 10px;
+    height: 100%;
+    border-radius: 0;
+    background: transparent;
+    box-shadow: none;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: #999999;
+    border-bottom: 2px solid transparent;
+    transition: color .15s ease, border-color .15s ease;
     white-space: nowrap;
   }
   .tab-btn.active {
-    background: var(--accent-soft);
+    background: transparent;
+    box-shadow: none;
     color: var(--text-primary);
-    box-shadow: 0 1px 3px rgba(0,0,0,0.15);
+    font-weight: 600;
+    border-bottom: 2px solid var(--text-primary);
   }
 
-  /* ── Mobile Menu Button (漢堡) ── */
+  /* ── 主題切換按鈕（圓形 36px，mobile 顯示） ── */
+  .btn-theme {
+    display: flex !important;
+    align-items: center; justify-content: center;
+    width: 36px; height: 36px; padding: 0;
+    border-radius: 50%;
+    background: var(--bg-hover);
+    border: 1px solid var(--border);
+    color: var(--text-primary);
+    font-size: 16px; line-height: 1;
+    flex-shrink: 0;
+    transition: background .15s ease, border-color .15s ease;
+  }
+  .btn-theme:active { background: var(--accent-soft); }
+  /* 淺色模式微調：稍微深一點的灰底好看見 */
+  :root[data-theme="light"] .btn-theme { background: #f0f0f0; border-color: #e5e5e5; }
+  :root[data-theme="dark"]  .btn-theme { background: #2a2a2a; border-color: #2a2a2a; }
+
+  /* ── Hamburger：theme-aware，避免淺色看不見 ── */
   .mobile-menu-btn {
     display: flex; flex-direction: column; justify-content: center;
     align-items: center; gap: 4px;
-    width: 44px; height: 44px;
+    width: 36px; height: 36px;
     background: none; border: none; cursor: pointer;
-    flex-shrink: 0; border-radius: 8px;
+    flex-shrink: 0; border-radius: 50%;
     transition: background .15s;
   }
-  .mobile-menu-btn:active { background: rgba(255,255,255,0.1); }
+  .mobile-menu-btn:active { background: var(--accent-soft); }
   .mobile-menu-icon {
     display: block; width: 18px; height: 2px;
-    background: rgba(255,255,255,0.75); border-radius: 1px;
+    background: var(--text-primary); border-radius: 1px;
+    opacity: 0.75;
   }
 
   /* Management grid — full width single column */
