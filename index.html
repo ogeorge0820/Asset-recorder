@@ -16,8 +16,8 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=DM+Sans:wght@300;400;500;600;700&display=swap">
-<link rel="stylesheet" href="theme.css?v=202604272320">
-<link rel="stylesheet" href="style.css?v=202604272320">
+<link rel="stylesheet" href="theme.css?v=202604272339">
+<link rel="stylesheet" href="style.css?v=202604272339">
 </head>
 <body>
 
@@ -354,6 +354,37 @@
             <div class="dwz-row"><label>贈與年齡 <span class="dwz-param-unit">歲</span></label><input id="dwz-gift-age" class="dwz-param-input" type="number" min="40" max="90" value="60" oninput="dwzAutoCalc()"></div>
             <div class="dwz-row"><label>40–65 體驗 <span class="dwz-param-unit">萬/年</span></label><input id="dwz-exp-budget" class="dwz-param-input" type="number" min="0" step="5" value="0" oninput="dwzAutoCalc()"></div>
           </section>
+
+          <section class="dwz-param-block dwz-strat-lab">
+            <button class="dwz-strat-lab-head" type="button" onclick="toggleStratLab()" aria-expanded="false">
+              <h4 class="dwz-block-title">策略實驗室 <span class="dwz-strat-lab-en">Strategy Lab</span></h4>
+              <span class="dwz-strat-lab-arrow">▾</span>
+            </button>
+            <div class="dwz-strat-lab-body" id="strat-lab-body" hidden>
+              <div class="dwz-strat-row" id="strat-row-4pct">
+                <div class="dwz-strat-text">
+                  <span class="dwz-strat-label">4% 年化提領</span>
+                  <span class="dwz-strat-sub">每月從加密貨幣提領至 USDT</span>
+                  <span class="dwz-strat-estimate" id="strat-4pct-est"></span>
+                </div>
+                <label class="dwz-toggle" title="開啟後將 4% 年化提領加入每月現金流">
+                  <input type="checkbox" id="strat-4pct" onchange="dwzAutoCalc()">
+                  <span class="dwz-toggle-track"></span>
+                </label>
+              </div>
+              <div class="dwz-strat-row" id="strat-row-rewards">
+                <div class="dwz-strat-text">
+                  <span class="dwz-strat-label">質押收益計入現金流</span>
+                  <span class="dwz-strat-sub">將每月質押收益加入可用現金</span>
+                  <span class="dwz-strat-estimate" id="strat-rewards-est"></span>
+                </div>
+                <label class="dwz-toggle" title="開啟後將本月質押收益加入每月現金流">
+                  <input type="checkbox" id="strat-rewards" onchange="dwzAutoCalc()">
+                  <span class="dwz-toggle-track"></span>
+                </label>
+              </div>
+            </div>
+          </section>
         </div>
       </aside>
 
@@ -486,6 +517,6 @@
 <!-- ── Toast ── -->
 <div class="toast" id="toast"></div>
 
-<script src="app.js?v=202604272320"></script>
+<script src="app.js?v=202604272339"></script>
 </body>
 </html>

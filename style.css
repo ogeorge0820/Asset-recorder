@@ -1455,6 +1455,86 @@ h3.section-header {
   box-shadow: 0 1px 2px rgba(0,0,0,0.04), 0 0 0 1px rgba(255,255,255,0.02) inset;
   display: flex; flex-direction: column; gap: 0;
 }
+
+/* ── 策略實驗室（DWZ 左欄底部摺疊區塊）── */
+.dwz-strat-lab { padding: 6px 12px 10px; }
+.dwz-strat-lab-head {
+  width: 100%;
+  display: flex; justify-content: space-between; align-items: center;
+  background: transparent; border: none; padding: 4px 0;
+  cursor: pointer; color: var(--text);
+}
+.dwz-strat-lab-head:hover { color: var(--accent-light); }
+.dwz-strat-lab-head .dwz-block-title { margin: 0; }
+.dwz-strat-lab-en {
+  font-size: 0.65rem; color: var(--muted); font-weight: 400;
+  margin-left: 4px; letter-spacing: 0;
+}
+.dwz-strat-lab-arrow {
+  font-size: 11px; color: var(--muted);
+  transition: transform .2s ease;
+}
+.dwz-strat-lab-head.open .dwz-strat-lab-arrow { transform: rotate(180deg); }
+.dwz-strat-lab-body {
+  display: flex; flex-direction: column;
+  padding-top: 4px;
+  animation: stratLabFade .2s ease;
+}
+.dwz-strat-lab-body[hidden] { display: none; }
+@keyframes stratLabFade {
+  from { opacity: 0; transform: translateY(-2px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.dwz-strat-row {
+  display: flex; align-items: center; gap: 10px;
+  padding: 8px 0;
+  border-top: 1px solid var(--border);
+}
+.dwz-strat-row:first-child { border-top: none; }
+.dwz-strat-text { flex: 1; display: flex; flex-direction: column; gap: 1px; min-width: 0; }
+.dwz-strat-label { font-size: 0.82rem; font-weight: 500; color: var(--text); }
+.dwz-strat-sub   { font-size: 0.7rem; color: var(--muted); line-height: 1.3; }
+.dwz-strat-estimate {
+  font-size: 0.74rem; color: var(--green);
+  font-family: var(--font-num); font-variant-numeric: tabular-nums;
+  font-weight: 500;
+  margin-top: 3px;
+  display: none;
+}
+.dwz-strat-row.on .dwz-strat-estimate { display: inline-block; }
+
+/* ── Toggle switch ── */
+.dwz-toggle {
+  position: relative; display: inline-block;
+  width: 36px; height: 20px;
+  flex-shrink: 0; cursor: pointer;
+}
+.dwz-toggle input {
+  position: absolute; opacity: 0;
+  width: 100%; height: 100%; margin: 0;
+  cursor: pointer; z-index: 1;
+}
+.dwz-toggle-track {
+  position: absolute; inset: 0;
+  background: var(--border);
+  border-radius: 999px;
+  transition: background .15s ease;
+}
+.dwz-toggle-track::before {
+  content: ''; position: absolute;
+  top: 2px; left: 2px;
+  width: 16px; height: 16px;
+  background: var(--text-primary);
+  border-radius: 50%;
+  transition: transform .15s ease, background .15s ease;
+}
+.dwz-toggle input:checked ~ .dwz-toggle-track {
+  background: var(--accent);
+}
+.dwz-toggle input:checked ~ .dwz-toggle-track::before {
+  transform: translateX(16px);
+  background: var(--accent-fg);
+}
 .dwz-block-title {
   font-size: 0.78rem; font-weight: 700; color: var(--text);
   text-transform: none; letter-spacing: -0.01em;

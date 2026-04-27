@@ -2,7 +2,7 @@
 // CONFIG
 // ══════════════════════════════════════════════════════════════
 // Build 時間：每次修改 code 後手動更新此時間（UTC+8 台北時間）
-const BUILD_DATE = '2026/04/27 23:20';
+const BUILD_DATE = '2026/04/27 23:39';
 
 const SPREADSHEET_ID = '1lpRpxVzWaYUqL-jVPOAJCtjsJUIedPYYyOx4gg4PPFU';
 const CLIENT_ID = '149884248440-85f8dhc6ub9up10sv0f89e3e0itrnooj.apps.googleusercontent.com';
@@ -4135,8 +4135,75 @@ function openROIEditor() {
 }
 
 function initDWZ() {
-  if (!_dwzInited) { _loadDWZParams(); _dwzInited = true; }
+  if (!_dwzInited) { _loadDWZParams(); _initStratLab(); _dwzInited = true; }
   renderDWZ();
+}
+
+// ── 策略實驗室 ─────────────────────────────────────────────────
+function toggleStratLab() {
+  const head = document.querySelector('.dwz-strat-lab-head');
+  const body = $('strat-lab-body');
+  if (!head || !body) return;
+  const open = head.classList.toggle('open');
+  body.hidden = !open;
+  head.setAttribute('aria-expanded', open ? 'true' : 'false');
+  localStorage.setItem('dwz_strat_lab_open', open ? '1' : '0');
+}
+
+function _initStratLab() {
+  const head = document.querySelector('.dwz-strat-lab-head');
+  const body = $('strat-lab-body');
+  if (!head || !body) return;
+  if (localStorage.getItem('dwz_strat_lab_open') === '1') {
+    head.classList.add('open');
+    body.hidden = false;
+    head.setAttribute('aria-expanded', 'true');
+  }
+  const c1 = $('strat-4pct'), c2 = $('strat-rewards');
+  if (c1) {
+    c1.checked = localStorage.getItem('dwz_strat_4pct') === '1';
+    c1.addEventListener('change', () => localStorage.setItem('dwz_strat_4pct', c1.checked ? '1' : '0'));
+  }
+  if (c2) {
+    c2.checked = localStorage.getItem('dwz_strat_rewards') === '1';
+    c2.addEventListener('change', () => localStorage.setItem('dwz_strat_rewards', c2.checked ? '1' : '0'));
+  }
+}
+
+// 計算策略實驗室的每月外部現金流入（TWD），同步更新 UI 估算文字
+function _calcStratLabInflow() {
+  let monthly = 0;
+  const c1 = $('strat-4pct'), c2 = $('strat-rewards');
+  const on1 = !!c1?.checked, on2 = !!c2?.checked;
+
+  // 4% 年化提領
+  let m1 = 0;
+  if (on1) {
+    const cryptoTotal = S.data.crypto.reduce((s, r) => {
+      const sym = r[0]?.toUpperCase();
+      const p = S.prices.crypto[sym];
+      return s + (p ? (parseFloat(r[1]) || 0) * p * S.prices.usdtwd : 0);
+    }, 0);
+    m1 = cryptoTotal * 0.04 / 12;
+  }
+  // 質押收益（本月台幣總和）
+  let m2 = 0;
+  if (on2) {
+    const now = new Date();
+    const cur = `${now.getFullYear()}/${String(now.getMonth()+1).padStart(2,'0')}`;
+    m2 = S.data.rewards.filter(r => r[0] === cur).reduce((s, r) => s + rewardTWD(r), 0);
+  }
+  monthly = m1 + m2;
+
+  // 更新 UI（row.on / 估算數字）
+  const row1 = $('strat-row-4pct'), row2 = $('strat-row-rewards');
+  if (row1) row1.classList.toggle('on', on1);
+  if (row2) row2.classList.toggle('on', on2);
+  const est1 = $('strat-4pct-est'), est2 = $('strat-rewards-est');
+  if (est1) est1.textContent = on1 ? `每月約 +${fmtWan(m1)}` : '';
+  if (est2) est2.textContent = on2 ? `每月約 +${m2.toLocaleString('zh-TW',{maximumFractionDigits:0})}` : '';
+
+  return monthly;
 }
 
 function renderDWZ() {
@@ -4164,6 +4231,10 @@ function renderDWZ() {
   const year0ManualTotal = year0ManualItems.reduce((s, e) => s + e.amount * 10000, 0);
   const year0GiftTotal = (giftAge === currentAge && legacyTWD > 0) ? legacyTWD : 0;
   const annualBase = budget * 12;
+
+  // 策略實驗室：每月外部現金流入 → 年度化後每年加回 NW
+  const stratMonthlyInflow = _calcStratLabInflow();
+  const stratAnnualInflow = stratMonthlyInflow * 12;
 
   // KPI 小標籤：起始可用資產（與首頁同步）+ 年支出基準
   const snwEl = $('dwz-start-nw'), sbuEl = $('dwz-start-budget');
@@ -4193,8 +4264,8 @@ function renderDWZ() {
     // 第一年（n=1）不套通膨（首年支出即為當前年度預算）
     const annualExpense = annualBase * (n === 1 ? 1 : Math.pow(1 + inf, n - 1)) * mult;
 
-    // End-of-year model: compound then spend
-    nw = nw * (1 + r) - annualExpense;
+    // End-of-year model: compound then spend；策略實驗室現金流為定額名目年金（不通膨）
+    nw = nw * (1 + r) - annualExpense + stratAnnualInflow;
 
     // 40–65 歲年度體驗預算
     if (expBudgetTWD > 0 && age >= 40 && age <= 65) nw -= expBudgetTWD;
