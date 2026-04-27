@@ -2,7 +2,7 @@
 // CONFIG
 // ══════════════════════════════════════════════════════════════
 // Build 時間：每次修改 code 後手動更新此時間（UTC+8 台北時間）
-const BUILD_DATE = '2026/04/27 23:39';
+const BUILD_DATE = '2026/04/28 07:48';
 
 const SPREADSHEET_ID = '1lpRpxVzWaYUqL-jVPOAJCtjsJUIedPYYyOx4gg4PPFU';
 const CLIENT_ID = '149884248440-85f8dhc6ub9up10sv0f89e3e0itrnooj.apps.googleusercontent.com';
@@ -4247,6 +4247,10 @@ function renderDWZ() {
   const totalYears = lifeAge - currentAge || 1;
   let nw = startNW;
   let peakNW = startNW, peakAge = currentAge;
+  // 影子曲線：策略實驗室「未啟用」基準（僅當 stratAnnualInflow > 0 時才有意義）
+  const trackBaseline = stratAnnualInflow > 0;
+  let nwBaseline = startNW;
+  const wealthBaseline = [Math.round(startNW)];
 
   // 先 push year-0 起點（由月度模擬產生），年度迴圈再從 currentAge + 1 推進
   ages.push(currentAge);
@@ -4266,23 +4270,35 @@ function renderDWZ() {
 
     // End-of-year model: compound then spend；策略實驗室現金流為定額名目年金（不通膨）
     nw = nw * (1 + r) - annualExpense + stratAnnualInflow;
+    if (trackBaseline) nwBaseline = nwBaseline * (1 + r) - annualExpense;
 
     // 40–65 歲年度體驗預算
-    if (expBudgetTWD > 0 && age >= 40 && age <= 65) nw -= expBudgetTWD;
+    if (expBudgetTWD > 0 && age >= 40 && age <= 65) {
+      nw -= expBudgetTWD;
+      if (trackBaseline) nwBaseline -= expBudgetTWD;
+    }
 
     // One-time experience expenses (Bucket List + 規劃清單)
-    _allDWZExpenses().filter(e => e.age === age).forEach(e => { nw -= e.amount * 10000; });
+    _allDWZExpenses().filter(e => e.age === age).forEach(e => {
+      nw -= e.amount * 10000;
+      if (trackBaseline) nwBaseline -= e.amount * 10000;
+    });
 
     // Life-time legacy gift deducted at giftAge
-    if (age === giftAge && legacyTWD > 0) nw -= legacyTWD;
+    if (age === giftAge && legacyTWD > 0) {
+      nw -= legacyTWD;
+      if (trackBaseline) nwBaseline -= legacyTWD;
+    }
 
     // 第一年額外扣：手動 bucket list 排在 currentAge 的項目 + 生前贈與排在 currentAge 者
     if (age === currentAge + 1) {
       nw -= year0ManualTotal + year0GiftTotal;
+      if (trackBaseline) nwBaseline -= year0ManualTotal + year0GiftTotal;
     }
 
     ages.push(age);
     wealth.push(Math.round(nw));
+    if (trackBaseline) wealthBaseline.push(Math.round(nwBaseline));
 
     if (nw > peakNW) { peakNW = nw; peakAge = age; }
   }
@@ -4473,7 +4489,68 @@ function renderDWZ() {
     }
   });
 
+  // ── 智慧建議浮層 ──
+  _renderDWZSmartTips({
+    currentAge, lifeAge, wealthAt90, ages, wealth,
+    wealthBaseline: trackBaseline ? wealthBaseline : null,
+    strat4pctOn: !!$('strat-4pct')?.checked,
+  });
+
   _renderDWZExpensesList();
+}
+
+// 依模擬結果產生智慧建議卡片（多條同時顯示，無建議時隱藏）
+function _renderDWZSmartTips({ currentAge, lifeAge, wealthAt90, ages, wealth, wealthBaseline, strat4pctOn }) {
+  const el = $('dwz-smart-tips');
+  if (!el) return;
+  const tips = [];
+
+  // 條件 2 優先檢查：第一個 NW < 0 的年齡（只看死亡前）
+  let bankruptAge = null;
+  for (let i = 0; i < ages.length; i++) {
+    if (ages[i] < lifeAge && wealth[i] < 0) { bankruptAge = ages[i]; break; }
+  }
+
+  // 條件 1：90 歲餘額 > 500 萬 → 體驗過剩
+  if (wealthAt90 > 5000000) {
+    const targetAge = currentAge + 5;
+    tips.push({
+      cls: 'dwz-tip-warn',
+      html: `💰 90歲預估剩餘 <b>${fmtWan(wealthAt90)}</b>，建議在 <b>${targetAge} 歲</b>前增加體驗預算`,
+    });
+  }
+
+  // 條件 2：破產風險
+  if (bankruptAge !== null) {
+    tips.push({
+      cls: 'dwz-tip-bad',
+      html: `⚠️ 模擬顯示 <b>${bankruptAge} 歲</b>資產歸零，建議降低支出或調高報酬率假設`,
+    });
+  }
+
+  // 條件 3：4% 提領效益（需要 baseline）
+  if (strat4pctOn && wealthBaseline) {
+    const i90 = ages.indexOf(90);
+    if (i90 >= 0) {
+      const before = wealthBaseline[i90];
+      const after = wealth[i90];
+      const diffCls = after >= before ? 'dwz-tip-good' : 'dwz-tip-neg';
+      tips.push({
+        cls: diffCls,
+        html: `📈 啟用提領後，90歲餘額從 <b>${fmtWan(before)}</b> 變為 <b>${fmtWan(after)}</b>`,
+      });
+    }
+  }
+
+  // 條件 4：健康狀態良好（年輕且無破產風險）
+  if (currentAge < 55 && bankruptAge === null) {
+    tips.push({
+      cls: 'dwz-tip-good',
+      html: `✅ 財務健康，現在是高體驗能力期，建議善用`,
+    });
+  }
+
+  el.innerHTML = tips.map(t => `<div class="dwz-tip ${t.cls}">${t.html}</div>`).join('');
 }
 
 function _renderDWZExpensesList() {
