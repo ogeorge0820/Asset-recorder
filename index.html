@@ -16,8 +16,8 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=DM+Sans:wght@300;400;500;600;700&display=swap">
-<link rel="stylesheet" href="theme.css?v=202604281435">
-<link rel="stylesheet" href="style.css?v=202604281435">
+<link rel="stylesheet" href="theme.css?v=202604281446">
+<link rel="stylesheet" href="style.css?v=202604281446">
 </head>
 <body>
 
@@ -417,7 +417,14 @@
         <div class="dwz-expenses-card">
           <div class="dwz-expenses-header">
             <h3 class="dwz-section-title compact">Bucket List 體驗清單</h3>
-            <button class="btn-dwz-add" onclick="addDWZExpense()">＋ 手動新增</button>
+            <div class="bucket-stats" id="bucket-stats"></div>
+            <button class="btn-dwz-add" onclick="addDWZExpense()">＋ 新增體驗</button>
+          </div>
+          <div class="bucket-filter-tabs">
+            <button class="bucket-tab active" data-filter="all"       onclick="setBucketFilter('all')">全部</button>
+            <button class="bucket-tab"        data-filter="planning"  onclick="setBucketFilter('planning')">規劃中</button>
+            <button class="bucket-tab"        data-filter="done"      onclick="setBucketFilter('done')">已完成</button>
+            <button class="bucket-tab"        data-filter="abandoned" onclick="setBucketFilter('abandoned')">放棄</button>
           </div>
           <div id="dwz-expenses-list"></div>
         </div>
@@ -518,6 +525,6 @@
 <!-- ── Toast ── -->
 <div class="toast" id="toast"></div>
 
-<script src="app.js?v=202604281435"></script>
+<script src="app.js?v=202604281446"></script>
 </body>
 </html>

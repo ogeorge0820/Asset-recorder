@@ -1704,7 +1704,129 @@ h3.section-header {
 }
 .dwz-expenses-header {
   display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 10px; gap: 12px; flex-wrap: wrap;
+}
+
+/* ── Bucket List 統計列 ── */
+.bucket-stats {
+  display: flex; align-items: center; gap: 6px;
+  flex: 1; min-width: 0;
+  font-size: 0.78rem; color: var(--muted);
+  font-family: var(--font-num);
+}
+.bucket-stats:empty { display: none; }
+.bucket-stat b {
+  color: var(--text);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+.bucket-stat-sep { color: var(--border-hover); }
+
+/* ── Bucket List 篩選 tabs ── */
+.bucket-filter-tabs {
+  display: flex; gap: 4px;
   margin-bottom: 10px;
+  border-bottom: 1px solid var(--border);
+}
+.bucket-tab {
+  background: none; border: none;
+  padding: 6px 12px;
+  font-size: 0.82rem;
+  color: var(--muted);
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  transition: color .15s, border-color .15s;
+  margin-bottom: -1px;
+}
+.bucket-tab:hover { color: var(--text); }
+.bucket-tab.active {
+  color: var(--text);
+  font-weight: 600;
+  border-bottom-color: var(--text);
+}
+
+/* ── Bucket List 年齡分組 ── */
+.bucket-group { margin-bottom: 12px; }
+.bucket-group-title {
+  font-size: 0.72rem;
+  color: var(--muted);
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  margin: 6px 0 4px;
+  padding: 0 2px;
+}
+
+/* ── Bucket List 單一項目 ── */
+.bucket-item {
+  display: flex; align-items: center; gap: 8px;
+  padding: 8px 6px;
+  border-bottom: 1px solid var(--border);
+  font-size: 0.85rem;
+}
+.bucket-item:last-child { border-bottom: none; }
+.bucket-item.bucket-done .bucket-name,
+.bucket-item.bucket-done .bucket-amt { text-decoration: line-through; opacity: 0.6; }
+.bucket-item.bucket-abandoned { opacity: 0.55; }
+
+/* 年齡 badge */
+.bucket-age {
+  display: inline-flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+  min-width: 42px; padding: 3px 8px;
+  border-radius: 6px;
+  font-size: 0.74rem; font-weight: 600;
+  font-family: var(--font-num); font-variant-numeric: tabular-nums;
+}
+.bucket-age-planning  { background: rgba(217,119,6,0.15);  color: #d97706; }
+.bucket-age-done      { background: rgba(22,163,74,0.15);  color: #16a34a; }
+.bucket-age-abandoned { background: rgba(120,120,120,0.15); color: var(--muted); }
+:root[data-theme="dark"] .bucket-age-planning  { background: rgba(251,191,36,0.18); color: #fbbf24; }
+:root[data-theme="dark"] .bucket-age-done      { background: rgba(74,222,128,0.18); color: #4ade80; }
+:root[data-theme="dark"] .bucket-age-abandoned { background: rgba(255,255,255,0.08); color: rgba(255,255,255,0.5); }
+
+/* 分類 tag */
+.bucket-cat {
+  display: inline-block; flex-shrink: 0;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 0.7rem; font-weight: 500;
+  background: var(--accent-soft); color: var(--text);
+}
+.bucket-cat-旅遊 { background: rgba(59,130,246,0.15);  color: #3b82f6; }
+.bucket-cat-體驗 { background: rgba(168,85,247,0.15);  color: #a855f7; }
+.bucket-cat-學習 { background: rgba(14,165,233,0.15);  color: #0ea5e9; }
+.bucket-cat-家人 { background: rgba(236,72,153,0.15);  color: #ec4899; }
+.bucket-cat-其他 { background: rgba(120,120,120,0.15); color: var(--muted); }
+
+.bucket-main { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 1px; }
+.bucket-name {
+  font-weight: 600; color: var(--text);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.bucket-note {
+  font-size: 0.72rem; color: var(--muted);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.bucket-amt {
+  flex-shrink: 0;
+  font-family: var(--font-num); font-variant-numeric: tabular-nums;
+  font-weight: 600; color: var(--text);
+}
+.bucket-status-select {
+  flex-shrink: 0;
+  font-size: 0.72rem;
+  padding: 3px 6px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  background: var(--bg);
+  color: var(--text);
+  cursor: pointer;
+}
+
+@media (max-width: 640px) {
+  .bucket-item { flex-wrap: wrap; gap: 6px; }
+  .bucket-main { flex-basis: 100%; order: 5; }
+  .bucket-status-select { font-size: 0.7rem; }
 }
 .btn-dwz-add {
   background: none; border: 1px solid var(--accent); color: var(--accent);
