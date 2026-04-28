@@ -2,7 +2,7 @@
 // CONFIG
 // ══════════════════════════════════════════════════════════════
 // Build 時間：每次修改 code 後手動更新此時間（UTC+8 台北時間）
-const BUILD_DATE = '2026/04/28 07:48';
+const BUILD_DATE = '2026/04/28 09:00';
 
 const SPREADSHEET_ID = '1lpRpxVzWaYUqL-jVPOAJCtjsJUIedPYYyOx4gg4PPFU';
 const CLIENT_ID = '149884248440-85f8dhc6ub9up10sv0f89e3e0itrnooj.apps.googleusercontent.com';
@@ -4703,23 +4703,21 @@ function showToast(msg, type='') {
   toastTmr = setTimeout(() => t.classList.remove('show'), 3000);
 }
 
-// TWD 萬元格式（所有台幣現值、合計）
+// TWD 格式（所有台幣現值、合計）— 億 / 萬 / 千分位三段
 function fmt(n) {
   if (n === null || n === undefined || isNaN(n)) return '—';
   const abs = Math.abs(n), sign = n < 0 ? '-' : '';
+  if (abs >= 100000000) {
+    return sign + (abs/100000000).toLocaleString('zh-TW', {minimumFractionDigits:2,maximumFractionDigits:2}) + '億';
+  }
   if (abs >= 10000) {
     return sign + (abs/10000).toLocaleString('zh-TW', {minimumFractionDigits:1,maximumFractionDigits:1}) + '萬';
   }
   return sign + Math.round(abs).toLocaleString('zh-TW');
 }
 
-// 萬元簡略格式（不加單位符號，用於副標題）
-function fmtWan(n) {
-  if (n === null || n === undefined || isNaN(n)) return '—';
-  const abs = Math.abs(n), sign = n < 0 ? '-' : '';
-  if (abs >= 10000) return sign + (abs/10000).toLocaleString('zh-TW', {minimumFractionDigits:1,maximumFractionDigits:1}) + '萬';
-  return sign + Math.round(abs).toLocaleString('zh-TW');
-}
+// 萬元簡略格式（沿用 fmt 同一份規則；保留別名讓既有呼叫不動）
+function fmtWan(n) { return fmt(n); }
 
 // 加密貨幣幣價（卡片顯示）：無條件捨去到小數第三位
 function fmtFloor3(n) {
