@@ -2,7 +2,7 @@
 // CONFIG
 // ══════════════════════════════════════════════════════════════
 // Build 時間：每次修改 code 後手動更新此時間（UTC+8 台北時間）
-const BUILD_DATE = '2026/04/28 09:00';
+const BUILD_DATE = '2026/04/28 14:35';
 
 const SPREADSHEET_ID = '1lpRpxVzWaYUqL-jVPOAJCtjsJUIedPYYyOx4gg4PPFU';
 const CLIENT_ID = '149884248440-85f8dhc6ub9up10sv0f89e3e0itrnooj.apps.googleusercontent.com';
@@ -403,6 +403,14 @@ function showApp() {
 // SHEETS API
 // ══════════════════════════════════════════════════════════════
 async function api(method, path, body, _retried) {
+  // 主動續期：token 剩 < 2 分鐘就先刷新，避免實際呼叫時剛好過期被 401 中斷
+  // _retried 為 true 代表這次本來就是續期後的重試，不要再續期一次
+  if (!_retried && S.tokenExpiry && S.tokenClient
+      && Date.now() > S.tokenExpiry - 120 * 1000
+      && !_authSilentInflight) {
+    try { await _requestSilentRefresh(); }
+    catch (_) { /* 失敗就讓既有 401 流程處理 */ }
+  }
   const headers = { Authorization: `Bearer ${S.token}` };
   if (body) headers['Content-Type'] = 'application/json';
   const resp = await fetch(
