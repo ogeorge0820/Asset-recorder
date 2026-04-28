@@ -2,7 +2,7 @@
 // CONFIG
 // ══════════════════════════════════════════════════════════════
 // Build 時間：每次修改 code 後手動更新此時間（UTC+8 台北時間）
-const BUILD_DATE = '2026/04/28 14:46';
+const BUILD_DATE = '2026/04/28 15:25';
 
 const SPREADSHEET_ID = '1lpRpxVzWaYUqL-jVPOAJCtjsJUIedPYYyOx4gg4PPFU';
 const CLIENT_ID = '149884248440-85f8dhc6ub9up10sv0f89e3e0itrnooj.apps.googleusercontent.com';
@@ -151,7 +151,7 @@ const HEADERS = {
   expense_budget: ['category','item_name','amount','payment_source'],
   experience_plan: ['name','year','month','amount_twd','paid'],
   income_records: ['id','name','category','amount_twd','expected_date','status','linked_account','settled_date','payer'],
-  bucket_list: ['age','name','budget_wan','status','category','note'],
+  bucket_list: ['id','name','category','age','budget_wan','status','date','paid','notes'],
 };
 
 // Bucket List 列舉
@@ -511,7 +511,7 @@ async function loadAll() {
     sheetGet('expense_budget!A:D'),
     sheetGet('experience_plan!A:E'),
     sheetGet('income_records!A:I'),
-    sheetGet('bucket_list!A:F'),
+    sheetGet('bucket_list!A:I'),
   ]);
 
   S.data.cash            = rows(cash);
@@ -814,17 +814,19 @@ function calcBudgetTotal() {
   return S.data.expense_budget.reduce((s, r) => s + (parseFloat(r[2]) || 0), 0);
 }
 
-// 計算未來 12 個月內尚未支付的重大體驗支出總額
+// 計算未來 12 個月內尚未支付的重大體驗支出總額（取 bucket_list 規劃中、未付、有 date）
 function calcUpcomingExpenses() {
   const now = new Date();
   const nowYear = now.getFullYear();
   const nowMonth = now.getMonth() + 1;
-  return (S.data.experience_plan || []).reduce((sum, r) => {
-    if (r[4] === '1') return sum; // 已支付跳過
-    const year = parseInt(r[1]) || 0;
-    const month = parseInt(r[2]) || 1;
+  return (S.data.bucket_list || []).reduce((sum, r) => {
+    const b = _bucketRow(r);
+    if (b.status !== '規劃中' || b.paid || !b.date) return sum;
+    const [yStr, mStr] = b.date.split('/');
+    const year = parseInt(yStr) || 0;
+    const month = parseInt(mStr) || 1;
     const monthsDiff = (year - nowYear) * 12 + (month - nowMonth);
-    if (monthsDiff >= 0 && monthsDiff <= 12) sum += parseFloat(r[3]) || 0;
+    if (monthsDiff >= 0 && monthsDiff <= 12) sum += b.amount * 10000;
     return sum;
   }, 0);
 }
@@ -856,13 +858,15 @@ function simulateMonthly({
 
   const expByYM = new Map();
   if (includeExperience) {
-    (S.data.experience_plan || []).forEach(r => {
-      if (r[4] === '1') return; // 已付跳過
-      const y = parseInt(r[1]) || 0;
-      const m = parseInt(r[2]) || 0;
+    (S.data.bucket_list || []).forEach(r => {
+      const b = _bucketRow(r);
+      if (b.status !== '規劃中' || b.paid || !b.date) return;
+      const [yStr, mStr] = b.date.split('/');
+      const y = parseInt(yStr) || 0;
+      const m = parseInt(mStr) || 0;
       if (!y || !m) return;
       const ym = `${y}-${String(m).padStart(2, '0')}`;
-      expByYM.set(ym, (expByYM.get(ym) || 0) + (parseFloat(r[3]) || 0));
+      expByYM.set(ym, (expByYM.get(ym) || 0) + b.amount * 10000);
     });
   }
 
@@ -2170,53 +2174,61 @@ function deleteBudgetItem(idx) {
 }
 
 // ══════════════════════════════════════════════════════════════
-// RENDER — 重大體驗支出規劃
+// RENDER — 重大體驗支出規劃（從 bucket_list 讀取、僅顯示 status=規劃中）
 // ══════════════════════════════════════════════════════════════
 function renderExperiencePlan() {
-  const items = S.data.experience_plan || [];
   const cntEl = $('cnt-exp-plan');
   const totEl = $('tot-exp-plan');
   const listEl = $('exp-plan-list');
   if (!listEl) return;
 
-  const unpaidTotal = items.reduce((s, r) => r[4] !== '1' ? s + (parseFloat(r[3]) || 0) : s, 0);
+  const items = (S.data.bucket_list || [])
+    .map(r => _bucketRow(r))
+    .filter(b => b.status === '規劃中');
+
+  const unpaidTotal = items.filter(b => !b.paid).reduce((s, b) => s + b.amount * 10000, 0);
   if (cntEl) cntEl.textContent = items.length;
   if (totEl) totEl.textContent = items.length ? fmt(unpaidTotal) + ' 未付' : '—';
 
   if (!items.length) {
-    listEl.innerHTML = '<div class="exp-plan-empty">尚無規劃。新增後將自動同步至 Die With Zero 模擬器。</div>';
+    listEl.innerHTML = '<div class="exp-plan-empty">尚無規劃。新增後將同步至 DWZ 模擬器與 Bucket List。</div>';
     return;
   }
 
-  // 依年份排序
-  const sorted = items.map((r, i) => ({ r, i })).sort((a, b) => {
-    const yA = parseInt(a.r[1]) || 9999, yB = parseInt(b.r[1]) || 9999;
-    const mA = parseInt(a.r[2]) || 12, mB = parseInt(b.r[2]) || 12;
-    return yA !== yB ? yA - yB : mA - mB;
+  // 排序：有 date 的優先按 date，否則按 age
+  const sorted = items.sort((a, b) => {
+    if (a.date && b.date) return a.date.localeCompare(b.date);
+    if (a.date) return -1;
+    if (b.date) return 1;
+    return a.age - b.age;
   });
 
   const MONTHS = ['1月','2月','3月','4月','5月','6月','7月','8月','9月','10月','11月','12月'];
-  listEl.innerHTML = sorted.map(({ r, i }) => {
-    const paid = r[4] === '1';
-    const amount = parseFloat(r[3]) || 0;
-    const dateStr = r[1] ? `${r[1]}年 ${MONTHS[(parseInt(r[2]) || 1) - 1]}` : '—';
-    return `
-      <div class="exp-plan-item${paid ? ' paid' : ''}">
-        <label class="exp-plan-checkbox" title="${paid ? '標記為未支付' : '標記為已支付'}">
-          <input type="checkbox" ${paid ? 'checked' : ''} onchange="toggleExpPlanPaid(${i})">
-          <span class="exp-plan-check-icon"></span>
-        </label>
-        <div class="exp-plan-main">
-          <div class="exp-plan-name">${esc(r[0] || '—')}</div>
-          <div class="exp-plan-date">${dateStr}</div>
-        </div>
-        <div class="exp-plan-amt${paid ? ' muted' : ''}">${paid ? '<s>' : ''}${fmt(amount)}${paid ? '</s>' : ''}</div>
-        <div class="exp-plan-actions">
-          <button class="btn-icon edit" onclick="editExpPlanItem(${i})">✏</button>
-          <button class="btn-icon del" onclick="deleteExpPlanItem(${i})">✕</button>
-        </div>
-      </div>`;
-  }).join('');
+  const fmtDate = (b) => {
+    if (b.date) {
+      const [y, m] = b.date.split('/');
+      const mi = parseInt(m) || 1;
+      return `${y}年 ${MONTHS[mi - 1] || ''}`;
+    }
+    return b.age ? `${b.age} 歲` : '—';
+  };
+
+  listEl.innerHTML = sorted.map(b => `
+    <div class="exp-plan-item${b.paid ? ' paid' : ''}">
+      <label class="exp-plan-checkbox" title="${b.paid ? '標記為未支付' : '標記為已支付'}">
+        <input type="checkbox" ${b.paid ? 'checked' : ''} onchange="toggleExpPlanPaid('${b.id}')">
+        <span class="exp-plan-check-icon"></span>
+      </label>
+      <div class="exp-plan-main">
+        <div class="exp-plan-name">${esc(b.name || '—')}</div>
+        <div class="exp-plan-date">${fmtDate(b)}</div>
+      </div>
+      <div class="exp-plan-amt${b.paid ? ' muted' : ''}">${b.paid ? '<s>' : ''}${fmt(b.amount * 10000)}${b.paid ? '</s>' : ''}</div>
+      <div class="exp-plan-actions">
+        <button class="btn-icon edit" onclick="editExpPlanItem('${b.id}')">✏</button>
+        <button class="btn-icon del" onclick="deleteExpPlanItem('${b.id}')">✕</button>
+      </div>
+    </div>`).join('');
 }
 
 // ══════════════════════════════════════════════════════════════
@@ -2460,61 +2472,35 @@ async function deleteIncomeItem(idx) {
   }
 }
 
+// 管理頁的 add/edit/toggle/delete 全部走 bucket_list（使用統一 modal）
 function addExpPlanItem() {
-  const curYear = new Date().getFullYear();
-  openModal('新增體驗支出規劃', [
-    { id: 'name',   label: '支出名稱',        type: 'text',   ph: '例：日本深度旅遊' },
-    { id: 'year',   label: '預計年份',         type: 'number', step: '1', min: curYear, max: curYear + 50, ph: String(curYear + 1) },
-    { id: 'month',  label: '預計月份',         type: 'select', options: ['1','2','3','4','5','6','7','8','9','10','11','12'] },
-    { id: 'amount', label: '金額 (TWD)',       type: 'number', step: '1', min: 0, ph: '0' },
-  ], async (vals) => {
-    const amount = parseFloat(vals.amount) || 0;
-    S.data.experience_plan.push([vals.name, String(vals.year || ''), vals.month, String(amount), '0']);
-    S.data.experience_plan.sort((a, b) => {
-      const yA = parseInt(a[1]) || 9999, yB = parseInt(b[1]) || 9999;
-      return yA !== yB ? yA - yB : (parseInt(a[2]) || 12) - (parseInt(b[2]) || 12);
-    });
-    await saveSheet('experience_plan', S.data.experience_plan);
-    renderExperiencePlan(); renderKPIs();
-    showToast('已新增體驗支出規劃', 'ok');
-  });
+  _openBucketModal({ id: '', age: '', name: '', amount: '', status: '規劃中', category: '其他', date: '', paid: false, notes: '' });
 }
 
-function editExpPlanItem(idx) {
-  const r = S.data.experience_plan[idx];
-  if (!r) return;
-  openModal('編輯體驗支出規劃', [
-    { id: 'name',   label: '支出名稱',  type: 'text',   val: r[0] || '' },
-    { id: 'year',   label: '預計年份',  type: 'number', step: '1', min: new Date().getFullYear(), val: r[1] || '' },
-    { id: 'month',  label: '預計月份',  type: 'select', options: ['1','2','3','4','5','6','7','8','9','10','11','12'], val: r[2] || '1' },
-    { id: 'amount', label: '金額 (TWD)', type: 'number', step: '1', min: 0, val: r[3] || '0' },
-  ], async (vals) => {
-    const amount = parseFloat(vals.amount) || 0;
-    S.data.experience_plan[idx] = [vals.name, String(vals.year || ''), vals.month, String(amount), r[4] || '0'];
-    S.data.experience_plan.sort((a, b) => {
-      const yA = parseInt(a[1]) || 9999, yB = parseInt(b[1]) || 9999;
-      return yA !== yB ? yA - yB : (parseInt(a[2]) || 12) - (parseInt(b[2]) || 12);
-    });
-    await saveSheet('experience_plan', S.data.experience_plan);
-    renderExperiencePlan(); renderKPIs();
-    showToast('已更新體驗支出規劃', 'ok');
-  });
+function editExpPlanItem(id) {
+  const idx = _findBucketIdx(id);
+  if (idx < 0) return;
+  _openBucketModal(_bucketRow(S.data.bucket_list[idx]));
 }
 
-async function toggleExpPlanPaid(idx) {
-  const r = S.data.experience_plan[idx];
-  if (!r) return;
-  r[4] = r[4] === '1' ? '0' : '1';
-  await saveSheet('experience_plan', S.data.experience_plan);
-  renderExperiencePlan(); renderKPIs();
+async function toggleExpPlanPaid(id) {
+  const idx = _findBucketIdx(id);
+  if (idx < 0) return;
+  const r = S.data.bucket_list[idx];
+  r[7] = r[7] === 'true' ? 'false' : 'true';
+  await saveSheet('bucket_list', S.data.bucket_list);
+  _refreshBucketViews();
 }
 
-function deleteExpPlanItem(idx) {
-  openConfirm('確認刪除', '刪除此體驗支出規劃？', async () => {
-    S.data.experience_plan.splice(idx, 1);
-    await saveSheet('experience_plan', S.data.experience_plan);
-    renderExperiencePlan(); renderKPIs();
-    showToast('已刪除體驗支出規劃', 'ok');
+function deleteExpPlanItem(id) {
+  const idx = _findBucketIdx(id);
+  if (idx < 0) return;
+  const name = S.data.bucket_list[idx]?.[1] || '';
+  openConfirm('確認刪除', `刪除「${name}」？`, async () => {
+    S.data.bucket_list.splice(idx, 1);
+    await saveSheet('bucket_list', S.data.bucket_list);
+    _refreshBucketViews();
+    showToast('已刪除', 'ok');
   });
 }
 
@@ -3823,76 +3809,127 @@ let _dwzChart = null;
 // Bucket List 篩選狀態（'all' | 'planning' | 'done' | 'abandoned'）
 let _bucketFilter = 'all';
 
-// row [age, name, budget_wan, status, category, note] → 物件
+// 9-col schema: [id, name, category, age, budget_wan, status, date, paid, notes]
 function _bucketRow(r) {
   return {
-    age: parseInt(r?.[0]) || 0,
+    id: r?.[0] || '',
     name: r?.[1] || '',
-    amount: parseFloat(r?.[2]) || 0,
-    status: r?.[3] || '規劃中',
-    category: r?.[4] || '其他',
-    note: r?.[5] || '',
+    category: r?.[2] || '其他',
+    age: parseInt(r?.[3]) || 0,
+    amount: parseFloat(r?.[4]) || 0,    // 萬元
+    status: r?.[5] || '規劃中',
+    date: r?.[6] || '',                   // YYYY/MM 選填
+    paid: r?.[7] === 'true' || r?.[7] === true,
+    notes: r?.[8] || '',
   };
+}
+
+function _newBucketId() {
+  return Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+}
+
+function _findBucketIdx(id) {
+  return S.data.bucket_list.findIndex(r => r?.[0] === id);
 }
 
 // 「規劃中」的 bucket list 項目（給曲線扣除用）
 function _activeBucketItems() {
   return S.data.bucket_list
-    .map((r, i) => ({ ..._bucketRow(r), idx: i }))
+    .map(r => _bucketRow(r))
     .filter(b => b.status === '規劃中');
 }
 
-// 一次性遷移：第一次載入若 Sheet 空、localStorage 有舊 _dwzExpenses → 搬過去
+// 統一遷移：升級舊 6-col bucket_list、整合 localStorage _dwzExpenses、合併 experience_plan
 async function _migrateBucketListIfNeeded() {
-  if (S.data.bucket_list.length > 0) return;
-  if (localStorage.getItem('bucket_list_migrated_v1') === '1') return;
-  let old;
-  try { old = JSON.parse(localStorage.getItem('dwz_expenses') || '[]'); }
-  catch { old = []; }
-  if (!Array.isArray(old) || !old.length) {
-    localStorage.setItem('bucket_list_migrated_v1', '1');
+  // 已是新 9-col schema → 跳過合併（避免跨裝置二次合併）
+  if (S.data.bucket_list.length > 0 && S.data.bucket_list[0].length >= 9) {
+    localStorage.setItem('bucket_list_migrated_v2', '1');
     return;
   }
-  S.data.bucket_list = old.map(e => [
-    String(e?.age || 0),
-    e?.name || '',
-    String(e?.amount || 0),
-    '規劃中',
-    '其他',
-    ''
-  ]);
-  try {
-    await saveSheet('bucket_list', S.data.bucket_list);
+
+  const merged = [];
+  const seenNames = new Set(); // 名稱去重 lowercase
+
+  // (1) 既有 bucket_list 舊 6-col schema 升級
+  S.data.bucket_list.forEach(r => {
+    if (!r) return;
+    if (r.length >= 9) {
+      merged.push(r);
+      const n = (r[1] || '').toLowerCase();
+      if (n) seenNames.add(n);
+      return;
+    }
+    // 舊: [age, name, budget_wan, status, category, note]
+    const name = r[1] || '';
+    merged.push([
+      _newBucketId(), name, r[4] || '其他',
+      String(r[0] || ''), String(r[2] || '0'),
+      r[3] || '規劃中', '', 'false', r[5] || '',
+    ]);
+    if (name) seenNames.add(name.toLowerCase());
+  });
+
+  // (2) localStorage _dwzExpenses 一次性
+  if (localStorage.getItem('bucket_list_migrated_v1') !== '1') {
+    let old;
+    try { old = JSON.parse(localStorage.getItem('dwz_expenses') || '[]'); }
+    catch { old = []; }
+    if (Array.isArray(old)) {
+      old.forEach(e => {
+        const name = e?.name || '';
+        if (!name || seenNames.has(name.toLowerCase())) return;
+        merged.push([
+          _newBucketId(), name, '其他',
+          String(e.age || ''), String(e.amount || 0),
+          '規劃中', '', 'false', '',
+        ]);
+        seenNames.add(name.toLowerCase());
+      });
+    }
     localStorage.setItem('bucket_list_migrated_v1', '1');
-    console.log('[bucket_list] migrated', S.data.bucket_list.length, 'items from localStorage');
-  } catch (e) { console.warn('[bucket_list] migration save failed:', e); }
+  }
+
+  // (3) experience_plan → bucket_list（dedupe by lowercase name）
+  const dwzAge = parseInt(JSON.parse(localStorage.getItem('dwz_params')||'{}').age) || 35;
+  const curYear = new Date().getFullYear();
+  (S.data.experience_plan || []).forEach(r => {
+    const name = (r[0] || '').trim();
+    if (!name || seenNames.has(name.toLowerCase())) return;
+
+    const year = parseInt(r[1]) || 0;
+    const month = parseInt(r[2]) || 1;
+    const date = year ? `${year}/${String(month).padStart(2, '0')}` : '';
+    const age = year ? (dwzAge + (year - curYear)) : '';
+    const amountTwd = parseFloat(r[3]) || 0;
+    const budget_wan = String(amountTwd / 10000);
+    const paid = r[4] === '1' ? 'true' : 'false';
+
+    merged.push([
+      _newBucketId(), name, '其他',
+      String(age), budget_wan, '規劃中',
+      date, paid, '',
+    ]);
+    seenNames.add(name.toLowerCase());
+  });
+
+  S.data.bucket_list = merged;
+
+  try {
+    if (merged.length > 0) await saveSheet('bucket_list', S.data.bucket_list);
+    localStorage.setItem('bucket_list_migrated_v2', '1');
+    if (merged.length > 0) console.log('[bucket_list] v2 migrated', merged.length, 'items');
+  } catch (e) {
+    console.warn('[bucket_list] v2 migrate save failed:', e);
+  }
 }
 let _dwzInited = false;
 let _dwzDebounce = null;
 
 // experience_plan 項目（未付）轉換為 DWZ 格式，依年份/月份計算年齡
-// 起點統一為 currentAge（= 首頁可用資產），所有未付體驗交由年度迴圈扣除。
-// 12 個月內（含過期未付）的項目歸入 currentAge + 1，避免在 startNW 上預扣。
-function _expPlanToDWZ() {
-  if (!S.data.experience_plan?.length) return [];
-  const currentAge = _dwzParam('dwz-age');
-  const now = new Date();
-  const nowYear = now.getFullYear();
-  const nowMonth = now.getMonth() + 1;
-  return S.data.experience_plan
-    .filter(r => r[4] !== '1') // 未付才匯入
-    .map(r => {
-      const year = parseInt(r[1]) || nowYear;
-      const month = parseInt(r[2]) || 1;
-      const monthOffset = (year - nowYear) * 12 + (month - nowMonth);
-      const age = Math.max(currentAge + 1, currentAge + Math.ceil(monthOffset / 12));
-      return { age, monthOffset, name: r[0] || '未命名', amount: (parseFloat(r[3]) || 0) / 10000, source: 'plan' };
-    });
-}
-
-// 手動清單 + experience_plan 合併（供模擬用）
+// DWZ 曲線扣除來源：bucket_list 中 status === '規劃中' 且未付的項目
+// （已合併原 experience_plan，所以唯一來源即為 bucket_list）
 function _allDWZExpenses() {
-  return [..._activeBucketItems(), ..._expPlanToDWZ()];
+  return _activeBucketItems().filter(b => !b.paid);
 }
 
 function _dwzParam(id) { return parseFloat(document.getElementById(id)?.value) || 0; }
@@ -4290,7 +4327,7 @@ function renderDWZ() {
   const startNW = liquid - illiquidTWD;
   // 年度迴圈從 currentAge + 1 起算，第一年的支出（含月支出預算 + 本年未付體驗
   // + 本年手動 bucket list + 本年生前贈與）都由第一年迭代一併扣除
-  const year0ManualItems = _activeBucketItems().filter(e => e.age === currentAge);
+  const year0ManualItems = _activeBucketItems().filter(e => e.age === currentAge && !e.paid);
   const year0ManualTotal = year0ManualItems.reduce((s, e) => s + e.amount * 10000, 0);
   const year0GiftTotal = (giftAge === currentAge && legacyTWD > 0) ? legacyTWD : 0;
   const annualBase = budget * 12;
@@ -4616,7 +4653,7 @@ function _renderDWZSmartTips({ currentAge, lifeAge, wealthAt90, ages, wealth, we
   el.innerHTML = tips.map(t => `<div class="dwz-tip ${t.cls}">${t.html}</div>`).join('');
 }
 
-// ── Bucket List 渲染 ───────────────────────────────────────────
+// ── Bucket List 渲染（DWZ 頁）──────────────────────────────────
 function setBucketFilter(f) {
   _bucketFilter = f;
   document.querySelectorAll('.bucket-tab').forEach(b => {
@@ -4630,7 +4667,7 @@ function _renderDWZExpensesList() {
   const statsEl = $('bucket-stats');
   if (!el) return;
 
-  const items = S.data.bucket_list.map((r, i) => ({ ..._bucketRow(r), idx: i }));
+  const items = S.data.bucket_list.map(r => _bucketRow(r));
 
   // 統計列
   const total = items.length;
@@ -4660,7 +4697,7 @@ function _renderDWZExpensesList() {
 
   // 年齡排序 + 5 年分組
   filtered.sort((a, b) => a.age - b.age);
-  const groups = new Map();  // 保留插入順序
+  const groups = new Map();
   filtered.forEach(b => {
     const lo = Math.floor(b.age / 5) * 5;
     const key = `${lo}–${lo + 4} 歲`;
@@ -4679,69 +4716,89 @@ function _renderBucketItem(b) {
   const statusKey = b.status === '已完成' ? 'done' : (b.status === '放棄' ? 'abandoned' : 'planning');
   const statusOpts = BUCKET_STATUSES.map(s =>
     `<option value="${s}" ${s === b.status ? 'selected' : ''}>${s}</option>`).join('');
+  const dateOrNote = b.date
+    ? `<div class="bucket-note">${esc(b.date)}${b.notes ? ' · ' + esc(b.notes) : ''}</div>`
+    : (b.notes ? `<div class="bucket-note">${esc(b.notes)}</div>` : '');
   return `
     <div class="bucket-item bucket-${statusKey}">
       <span class="bucket-age bucket-age-${statusKey}">${b.age}歲</span>
       <span class="bucket-cat bucket-cat-${b.category}">${esc(b.category)}</span>
       <div class="bucket-main">
         <div class="bucket-name">${esc(b.name)}</div>
-        ${b.note ? `<div class="bucket-note">${esc(b.note)}</div>` : ''}
+        ${dateOrNote}
       </div>
       <span class="bucket-amt">${b.amount.toFixed(1)}萬</span>
-      <select class="bucket-status-select" onchange="setBucketStatus(${b.idx}, this.value)">${statusOpts}</select>
-      <button class="btn-icon edit" onclick="editBucketItem(${b.idx})" title="編輯">✏</button>
-      <button class="btn-icon del" onclick="deleteBucketItem(${b.idx})" title="刪除">✕</button>
+      <select class="bucket-status-select" onchange="setBucketStatus('${b.id}', this.value)">${statusOpts}</select>
+      <button class="btn-icon edit" onclick="editBucketItem('${b.id}')" title="編輯">✏</button>
+      <button class="btn-icon del" onclick="deleteBucketItem('${b.id}')" title="刪除">✕</button>
     </div>`;
 }
 
-async function setBucketStatus(idx, newStatus) {
-  if (!S.data.bucket_list[idx]) return;
-  S.data.bucket_list[idx][3] = newStatus;
-  try { await saveSheet('bucket_list', S.data.bucket_list); }
-  catch (e) { showToast('儲存失敗', 'err'); return; }
-  renderDWZ(); // 重畫並重算曲線（status 影響扣除）
+// 兩頁共用：bucket_list 變更後同步刷新
+function _refreshBucketViews() {
+  if (typeof renderExperiencePlan === 'function') renderExperiencePlan();
+  if (_dwzInited) renderDWZ();
+  renderKPIs();
 }
 
-function deleteBucketItem(idx) {
-  const r = S.data.bucket_list[idx];
-  if (!r) return;
-  openConfirm('刪除體驗', `確定要刪除「${r[1] || ''}」嗎？`, async () => {
+async function setBucketStatus(id, newStatus) {
+  const idx = _findBucketIdx(id);
+  if (idx < 0) return;
+  S.data.bucket_list[idx][5] = newStatus;
+  try { await saveSheet('bucket_list', S.data.bucket_list); }
+  catch (e) { showToast('儲存失敗', 'err'); return; }
+  _refreshBucketViews();
+}
+
+async function setBucketPaid(id, paid) {
+  const idx = _findBucketIdx(id);
+  if (idx < 0) return;
+  S.data.bucket_list[idx][7] = paid ? 'true' : 'false';
+  try { await saveSheet('bucket_list', S.data.bucket_list); }
+  catch (e) { showToast('儲存失敗', 'err'); return; }
+  _refreshBucketViews();
+}
+
+function deleteBucketItem(id) {
+  const idx = _findBucketIdx(id);
+  if (idx < 0) return;
+  const name = S.data.bucket_list[idx]?.[1] || '';
+  openConfirm('刪除體驗', `確定要刪除「${name}」嗎？`, async () => {
     S.data.bucket_list.splice(idx, 1);
     await saveSheet('bucket_list', S.data.bucket_list);
-    renderDWZ();
+    _refreshBucketViews();
     showToast('已刪除', 'ok');
   });
 }
 
 function addDWZExpense() {
-  _openBucketModal({ age: '', name: '', amount: '', status: '規劃中', category: '其他', note: '' }, null);
+  _openBucketModal({ id: '', age: '', name: '', amount: '', status: '規劃中', category: '其他', date: '', paid: false, notes: '' });
 }
 
 // 從圖表點擊年齡進入：預填年齡
 function addDWZExpenseAtAge(age) {
-  _openBucketModal({ age, name: '', amount: '', status: '規劃中', category: '其他', note: '' }, null);
+  _openBucketModal({ id: '', age, name: '', amount: '', status: '規劃中', category: '其他', date: '', paid: false, notes: '' });
 }
 
-function editBucketItem(idx) {
-  const r = S.data.bucket_list[idx];
-  if (!r) return;
-  _openBucketModal(_bucketRow(r), idx);
+function editBucketItem(id) {
+  const idx = _findBucketIdx(id);
+  if (idx < 0) return;
+  _openBucketModal(_bucketRow(S.data.bucket_list[idx]));
 }
 
-function _openBucketModal(b, editIdx) {
-  const minAge = _dwzParam('dwz-age');
-  const maxAge = _dwzParam('dwz-life');
+function _openBucketModal(b) {
+  const editId = b.id || null;
+  const minAge = _dwzParam('dwz-age') || 30;
+  const maxAge = _dwzParam('dwz-life') || 100;
   const catOpts = BUCKET_CATEGORIES.map(c =>
     `<option value="${c}" ${c === b.category ? 'selected' : ''}>${c}</option>`).join('');
   const statusOpts = BUCKET_STATUSES.map(s =>
     `<option value="${s}" ${s === b.status ? 'selected' : ''}>${s}</option>`).join('');
-  $('modal-title').textContent = editIdx !== null ? `編輯體驗 · ${b.name || ''}` : '新增體驗';
+  // date 內部存 YYYY/MM；input type=month 用 YYYY-MM
+  const dateInput = b.date ? b.date.replace('/', '-') : '';
+  $('modal-title').textContent = editId ? `編輯體驗 · ${b.name || ''}` : '新增體驗';
   $('modal-body').innerHTML = `
     <div class="dwz-modal-form">
-      <div class="dwz-modal-group">
-        <label class="dwz-modal-label">年齡</label>
-        <input id="m-bk-age" class="dwz-modal-input" type="number" min="${minAge}" max="${maxAge}" value="${b.age || ''}" placeholder="例：45">
-      </div>
       <div class="dwz-modal-group">
         <label class="dwz-modal-label">體驗名稱</label>
         <input id="m-bk-name" class="dwz-modal-input" value="${esc(b.name)}" placeholder="例：日本親子遊">
@@ -4751,8 +4808,16 @@ function _openBucketModal(b, editIdx) {
         <select id="m-bk-cat" class="dwz-modal-input">${catOpts}</select>
       </div>
       <div class="dwz-modal-group">
+        <label class="dwz-modal-label">目標年齡</label>
+        <input id="m-bk-age" class="dwz-modal-input" type="number" min="${minAge}" max="${maxAge}" value="${b.age || ''}" placeholder="例：45">
+      </div>
+      <div class="dwz-modal-group">
         <label class="dwz-modal-label">預算（萬元）</label>
         <input id="m-bk-amt" class="dwz-modal-input" type="number" min="0" step="0.1" value="${b.amount || ''}" placeholder="例：50">
+      </div>
+      <div class="dwz-modal-group">
+        <label class="dwz-modal-label">預計日期（選填）</label>
+        <input id="m-bk-date" class="dwz-modal-input" type="month" value="${dateInput}">
       </div>
       <div class="dwz-modal-group">
         <label class="dwz-modal-label">狀態</label>
@@ -4760,42 +4825,53 @@ function _openBucketModal(b, editIdx) {
       </div>
       <div class="dwz-modal-group">
         <label class="dwz-modal-label">備註（選填）</label>
-        <textarea id="m-bk-note" class="dwz-modal-input" rows="2" placeholder="">${esc(b.note)}</textarea>
+        <textarea id="m-bk-notes" class="dwz-modal-input" rows="2">${esc(b.notes)}</textarea>
       </div>
     </div>
     <div class="modal-actions">
       <button class="btn-cancel" onclick="closeModal()">取消</button>
-      <button class="btn-ok" onclick="_confirmBucketItem(${editIdx === null ? 'null' : editIdx})">確認</button>
+      <button class="btn-ok" onclick="_confirmBucketItem('${editId || ''}')">${editId ? '更新' : '新增'}</button>
     </div>`;
   $('modal').classList.add('open');
-  setTimeout(() => $('m-bk-age')?.focus(), 80);
+  setTimeout(() => $('m-bk-name')?.focus(), 80);
 }
 
-async function _confirmBucketItem(editIdx) {
-  const minAge = _dwzParam('dwz-age');
-  const maxAge = _dwzParam('dwz-life');
-  const age = parseInt($('m-bk-age')?.value);
+async function _confirmBucketItem(editId) {
+  const minAge = _dwzParam('dwz-age') || 30;
+  const maxAge = _dwzParam('dwz-life') || 100;
   const name = $('m-bk-name')?.value.trim();
   const cat = $('m-bk-cat')?.value || '其他';
+  const age = parseInt($('m-bk-age')?.value);
   const amt = parseFloat($('m-bk-amt')?.value);
+  const dateRaw = $('m-bk-date')?.value || ''; // YYYY-MM
+  const date = dateRaw ? dateRaw.replace('-', '/') : '';
   const status = $('m-bk-status')?.value || '規劃中';
-  const note = $('m-bk-note')?.value.trim() || '';
-  if (!age || age < minAge || age > maxAge) { showToast(`年齡需介於 ${minAge}–${maxAge} 歲`, 'err'); return; }
+  const notes = $('m-bk-notes')?.value.trim() || '';
+
   if (!name) { showToast('請填寫體驗名稱', 'err'); return; }
+  if (!age || age < minAge || age > maxAge) { showToast(`年齡需介於 ${minAge}–${maxAge} 歲`, 'err'); return; }
   if (!amt || amt <= 0) { showToast('請填寫正確預算', 'err'); return; }
 
-  const row = [String(age), name, String(amt), status, cat, note];
-  if (editIdx !== null && editIdx !== undefined && S.data.bucket_list[editIdx]) {
-    S.data.bucket_list[editIdx] = row;
+  if (editId) {
+    const idx = _findBucketIdx(editId);
+    if (idx < 0) { showToast('找不到項目', 'err'); return; }
+    const old = S.data.bucket_list[idx];
+    const paid = old[7] || 'false';
+    S.data.bucket_list[idx] = [editId, name, cat, String(age), String(amt), status, date, paid, notes];
   } else {
-    S.data.bucket_list.push(row);
+    S.data.bucket_list.push([_newBucketId(), name, cat, String(age), String(amt), status, date, 'false', notes]);
   }
-  S.data.bucket_list.sort((a, b) => (parseInt(a[0]) || 0) - (parseInt(b[0]) || 0));
+  // 排序：依年齡（同年齡依名稱）
+  S.data.bucket_list.sort((a, b) => {
+    const aa = parseInt(a[3]) || 0, bb = parseInt(b[3]) || 0;
+    return aa !== bb ? aa - bb : (a[1] || '').localeCompare(b[1] || '');
+  });
+
   try { await saveSheet('bucket_list', S.data.bucket_list); }
   catch (e) { showToast('儲存失敗', 'err'); return; }
   closeModal();
-  renderDWZ();
-  showToast(editIdx !== null ? '已更新' : '已新增', 'ok');
+  _refreshBucketViews();
+  showToast(editId ? '已更新' : '已新增', 'ok');
 }
 
 function switchTab(tab) {
