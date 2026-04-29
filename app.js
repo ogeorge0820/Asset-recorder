@@ -2,7 +2,7 @@
 // CONFIG
 // ══════════════════════════════════════════════════════════════
 // Build 時間：每次修改 code 後手動更新此時間（UTC+8 台北時間）
-const BUILD_DATE = '2026/04/29 16:29';
+const BUILD_DATE = '2026/04/29 23:43';
 
 const SPREADSHEET_ID = '1lpRpxVzWaYUqL-jVPOAJCtjsJUIedPYYyOx4gg4PPFU';
 const CLIENT_ID = '149884248440-85f8dhc6ub9up10sv0f89e3e0itrnooj.apps.googleusercontent.com';
@@ -535,7 +535,10 @@ async function loadAll() {
   S.data.experience_plan = rows(expPlan);
   S.data.income_records  = rows(incomeRec);
   S.data.bucket_list     = rows(bucketList);
+  console.log('[bucket_list] raw from Sheet (' + S.data.bucket_list.length + ' rows):',
+    JSON.parse(JSON.stringify(S.data.bucket_list)));
   await _migrateBucketListIfNeeded();
+  _detectCorruptedBucketRows();
 
   S.data.settings = { insurance_total: 0, realestate_total: 0, debt: 0 };
   rows(sett).forEach(r => { if (r[0]) S.data.settings[r[0]] = parseFloat(r[1]) || 0; });
@@ -3828,6 +3831,22 @@ function _newBucketId() {
   return Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
 }
 
+// 偵測 v0.6 早期 migration bug 造成的欄位錯位（age 欄非數字）
+function _detectCorruptedBucketRows() {
+  const bad = [];
+  S.data.bucket_list.forEach((r, i) => {
+    if (!r || r.length < 4) return;
+    const ageStr = String(r[3] || '').trim();
+    // age 欄應為純數字；若是空 ok（未填），但若是 alphanumeric id 風格 → 腐化
+    if (ageStr && !/^\d+$/.test(ageStr)) bad.push({ idx: i, row: r });
+  });
+  if (bad.length > 0) {
+    console.warn('[bucket_list] ⚠ 偵測到 ' + bad.length + ' 筆欄位錯位資料（age 欄非數字）。' +
+      ' 可能為早期 migration bug 造成。請手動到 Google Sheets bucket_list tab 修正欄位順序。');
+    console.warn('[bucket_list] 範例腐化資料:', bad.slice(0, 3));
+  }
+}
+
 function _findBucketIdx(id) {
   return S.data.bucket_list.findIndex(r => r?.[0] === id);
 }
@@ -3841,8 +3860,18 @@ function _activeBucketItems() {
 
 // 統一遷移：升級舊 6-col bucket_list、整合 localStorage _dwzExpenses、合併 experience_plan
 async function _migrateBucketListIfNeeded() {
-  // 已是新 9-col schema → 跳過合併（避免跨裝置二次合併）
-  if (S.data.bucket_list.length > 0 && S.data.bucket_list[0].length >= 9) {
+  // 1) localStorage 旗標已設 → 已遷移完成，直接跳過
+  //    （Google Sheets API 會 trim trailing 空 cells → 用 length 判斷會誤判）
+  if (localStorage.getItem('bucket_list_migrated_v2') === '1') return;
+
+  // 2) 內容偵測：新 schema 第 0 欄是 alphanumeric id，舊 schema 是純數字 age
+  //    任何一列含字母即可確認是新 schema
+  const looksLikeNewSchema = S.data.bucket_list.some(r => {
+    const v = String(r?.[0] || '').trim();
+    return v && !/^\d+$/.test(v);
+  });
+  if (looksLikeNewSchema) {
+    console.log('[bucket_list] detected new schema by content, skipping migration');
     localStorage.setItem('bucket_list_migrated_v2', '1');
     return;
   }
