@@ -2,7 +2,7 @@
 // CONFIG
 // ══════════════════════════════════════════════════════════════
 // Build 時間：每次修改 code 後手動更新此時間（UTC+8 台北時間）
-const BUILD_DATE = '2026/04/29 23:43';
+const BUILD_DATE = '2026/04/29 23:47';
 
 const SPREADSHEET_ID = '1lpRpxVzWaYUqL-jVPOAJCtjsJUIedPYYyOx4gg4PPFU';
 const CLIENT_ID = '149884248440-85f8dhc6ub9up10sv0f89e3e0itrnooj.apps.googleusercontent.com';
@@ -538,7 +538,7 @@ async function loadAll() {
   console.log('[bucket_list] raw from Sheet (' + S.data.bucket_list.length + ' rows):',
     JSON.parse(JSON.stringify(S.data.bucket_list)));
   await _migrateBucketListIfNeeded();
-  _detectCorruptedBucketRows();
+  await _repairCorruptedBucketRows();
 
   S.data.settings = { insurance_total: 0, realestate_total: 0, debt: 0 };
   rows(sett).forEach(r => { if (r[0]) S.data.settings[r[0]] = parseFloat(r[1]) || 0; });
@@ -3831,19 +3831,42 @@ function _newBucketId() {
   return Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
 }
 
-// 偵測 v0.6 早期 migration bug 造成的欄位錯位（age 欄非數字）
-function _detectCorruptedBucketRows() {
-  const bad = [];
-  S.data.bucket_list.forEach((r, i) => {
-    if (!r || r.length < 4) return;
+// 自動還原 v0.6 早期 migration bug 造成的欄位錯位
+// 腐化模式（被當作舊 6-col 重新寫過一次）：
+//   [0]=新id  [1]=name  [2]=原budget  [3]=原id  [4]=原category
+//   [5]=原age [6]=''   [7]='false'   [8]=原status
+// 反向 mapping：
+//   id=[0], name=[1], category=[4], age=[5], budget_wan=[2],
+//   status=[8], date=[6], paid=[7], notes='' (遺失)
+async function _repairCorruptedBucketRows() {
+  const fixed = [];
+  S.data.bucket_list = S.data.bucket_list.map((r, i) => {
+    if (!r || r.length < 6) return r;
     const ageStr = String(r[3] || '').trim();
-    // age 欄應為純數字；若是空 ok（未填），但若是 alphanumeric id 風格 → 腐化
-    if (ageStr && !/^\d+$/.test(ageStr)) bad.push({ idx: i, row: r });
+    const statusStr = String(r[5] || '').trim();
+    // 確認腐化模式：age 欄含字母 + status 欄是純數字 + r[7] 是 'false'/'true'
+    if (!ageStr || /^\d+$/.test(ageStr)) return r;
+    if (!statusStr || !/^\d+$/.test(statusStr)) return r;
+    fixed.push({ idx: i, name: r[1], recoveredAge: statusStr, recoveredBudget: r[2] });
+    return [
+      r[0] || _newBucketId(),
+      r[1] || '',
+      r[4] || '其他',
+      String(r[5] || ''),
+      String(r[2] || '0'),
+      r[8] || '規劃中',
+      r[6] || '',
+      r[7] === 'true' ? 'true' : 'false',
+      '',
+    ];
   });
-  if (bad.length > 0) {
-    console.warn('[bucket_list] ⚠ 偵測到 ' + bad.length + ' 筆欄位錯位資料（age 欄非數字）。' +
-      ' 可能為早期 migration bug 造成。請手動到 Google Sheets bucket_list tab 修正欄位順序。');
-    console.warn('[bucket_list] 範例腐化資料:', bad.slice(0, 3));
+  if (fixed.length > 0) {
+    try {
+      await saveSheet('bucket_list', S.data.bucket_list);
+      console.log('[bucket_list] ✓ 已自動還原', fixed.length, '筆腐化資料：', fixed);
+    } catch (e) {
+      console.error('[bucket_list] 還原儲存失敗:', e);
+    }
   }
 }
 
