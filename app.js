@@ -2,7 +2,7 @@
 // CONFIG
 // ══════════════════════════════════════════════════════════════
 // Build 時間：每次修改 code 後手動更新此時間（UTC+8 台北時間）
-const BUILD_DATE = '2026/04/28 15:25';
+const BUILD_DATE = '2026/04/29 16:29';
 
 const SPREADSHEET_ID = '1lpRpxVzWaYUqL-jVPOAJCtjsJUIedPYYyOx4gg4PPFU';
 const CLIENT_ID = '149884248440-85f8dhc6ub9up10sv0f89e3e0itrnooj.apps.googleusercontent.com';
@@ -4596,7 +4596,37 @@ function renderDWZ() {
     strat4pctOn: !!$('strat-4pct')?.checked,
   });
 
+  _renderDWZWindow(currentAge);
   _renderDWZExpensesList();
+}
+
+// 體驗窗口倒數：高體驗能力期 = 目前年齡 ~ 65 歲
+function _renderDWZWindow(currentAge) {
+  const card = $('dwz-window-card');
+  if (!card) return;
+  const yearsEl  = $('dwz-window-years');
+  const fillEl   = $('dwz-window-fill');
+  const pctEl    = $('dwz-window-pct');
+  const monthsEl = $('dwz-window-months');
+
+  if (currentAge >= 65) {
+    card.classList.add('late');
+    return;
+  }
+  card.classList.remove('late');
+
+  const remainYears  = 65 - currentAge;
+  const remainMonths = remainYears * 12;
+  const usedPct = Math.max(0, Math.min(100, currentAge / 65 * 100));
+  const colorCls = remainYears > 20 ? '' : (remainYears >= 10 ? 'warn' : 'bad');
+
+  if (yearsEl)  yearsEl.textContent  = remainYears;
+  if (fillEl)  {
+    fillEl.style.width = usedPct.toFixed(1) + '%';
+    fillEl.className = 'dwz-window-progress-fill' + (colorCls ? ' ' + colorCls : '');
+  }
+  if (pctEl)    pctEl.textContent    = Math.round(usedPct) + '%';
+  if (monthsEl) monthsEl.textContent = remainMonths;
 }
 
 // 依模擬結果產生智慧建議卡片（多條同時顯示，無建議時隱藏）
