@@ -16,8 +16,8 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=DM+Sans:wght@300;400;500;600;700&display=swap">
-<link rel="stylesheet" href="theme.css?v=202604292347">
-<link rel="stylesheet" href="style.css?v=202604292347">
+<link rel="stylesheet" href="theme.css?v=202604292352">
+<link rel="stylesheet" href="style.css?v=202604292352">
 </head>
 <body>
 
@@ -402,7 +402,9 @@
               <div class="dwz-window-num"><b id="dwz-window-years">—</b><em>年</em></div>
               <div class="dwz-window-meta">
                 <div class="dwz-window-label">高體驗能力期剩餘</div>
-                <div class="dwz-window-hint">65 歲前是身體狀況最適合體驗的黃金期</div>
+                <div class="dwz-window-hint">
+                  <span class="dwz-peak-edit" onclick="_startEditPeakAge(event)" title="點擊修改高體驗能力期年齡"><b class="dwz-peak-age">65</b><span class="dwz-peak-pencil">✎</span></span> 歲前是身體狀況最適合體驗的黃金期
+                </div>
               </div>
             </div>
             <div class="dwz-window-progress">
@@ -416,7 +418,7 @@
           </div>
           <div class="dwz-window-late">
             <div class="dwz-window-late-label">體驗窗口已進入晚期階段</div>
-            <div class="dwz-window-hint">著重穩定與健康陪伴勝過大膽探索</div>
+            <div class="dwz-window-hint">著重穩定與健康陪伴勝過大膽探索（<span class="dwz-peak-edit" onclick="_startEditPeakAge(event)" title="點擊修改高體驗能力期年齡"><b class="dwz-peak-age">65</b><span class="dwz-peak-pencil">✎</span></span> 歲門檻）</div>
           </div>
         </div>
 
@@ -549,6 +551,6 @@
 <!-- ── Toast ── -->
 <div class="toast" id="toast"></div>
 
-<script src="app.js?v=202604292347"></script>
+<script src="app.js?v=202604292352"></script>
 </body>
 </html>

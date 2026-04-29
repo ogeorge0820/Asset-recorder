@@ -1713,6 +1713,43 @@ h3.section-header {
   font-size: 0.95rem; font-weight: 600; color: var(--text);
 }
 
+/* ── 可編輯高體驗能力期年齡 ── */
+.dwz-peak-edit {
+  display: inline-flex; align-items: center; gap: 2px;
+  cursor: pointer;
+  padding: 0 3px;
+  border-radius: 3px;
+  transition: background .15s ease;
+  vertical-align: baseline;
+}
+.dwz-peak-edit:hover { background: var(--accent-soft); }
+.dwz-peak-age {
+  font-family: var(--font-num);
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+  color: var(--text);
+}
+.dwz-peak-pencil {
+  font-size: 0.62rem;
+  color: var(--muted);
+  opacity: 0.7;
+  margin-left: 1px;
+}
+.dwz-peak-input {
+  width: 50px;
+  padding: 1px 4px;
+  border: 1px solid var(--accent);
+  border-radius: 3px;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-num);
+  font-variant-numeric: tabular-nums;
+  font-size: 0.78rem;
+  font-weight: 600;
+  outline: none;
+  vertical-align: baseline;
+}
+
 @media (max-width: 640px) {
   .dwz-window-card, .dwz-window-active { flex-wrap: wrap; gap: 10px; }
   .dwz-window-progress { flex-basis: 100%; }

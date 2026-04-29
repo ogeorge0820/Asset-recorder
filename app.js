@@ -2,7 +2,7 @@
 // CONFIG
 // ══════════════════════════════════════════════════════════════
 // Build 時間：每次修改 code 後手動更新此時間（UTC+8 台北時間）
-const BUILD_DATE = '2026/04/29 23:47';
+const BUILD_DATE = '2026/04/29 23:52';
 
 const SPREADSHEET_ID = '1lpRpxVzWaYUqL-jVPOAJCtjsJUIedPYYyOx4gg4PPFU';
 const CLIENT_ID = '149884248440-85f8dhc6ub9up10sv0f89e3e0itrnooj.apps.googleusercontent.com';
@@ -540,7 +540,7 @@ async function loadAll() {
   await _migrateBucketListIfNeeded();
   await _repairCorruptedBucketRows();
 
-  S.data.settings = { insurance_total: 0, realestate_total: 0, debt: 0 };
+  S.data.settings = { insurance_total: 0, realestate_total: 0, debt: 0, peak_experience_age: 65 };
   rows(sett).forEach(r => { if (r[0]) S.data.settings[r[0]] = parseFloat(r[1]) || 0; });
 }
 
@@ -4652,24 +4652,33 @@ function renderDWZ() {
   _renderDWZExpensesList();
 }
 
-// 體驗窗口倒數：高體驗能力期 = 目前年齡 ~ 65 歲
+// 高體驗能力期門檻年齡（可由使用者編輯，存於 settings）
+function _getPeakAge() {
+  const v = parseInt(S.data.settings?.peak_experience_age);
+  return v > 0 ? v : 65;
+}
+
+// 體驗窗口倒數：高體驗能力期 = 目前年齡 ~ peakAge 歲
 function _renderDWZWindow(currentAge) {
   const card = $('dwz-window-card');
   if (!card) return;
+  const peakAge  = _getPeakAge();
+  document.querySelectorAll('.dwz-peak-age').forEach(el => el.textContent = peakAge);
+
   const yearsEl  = $('dwz-window-years');
   const fillEl   = $('dwz-window-fill');
   const pctEl    = $('dwz-window-pct');
   const monthsEl = $('dwz-window-months');
 
-  if (currentAge >= 65) {
+  if (currentAge >= peakAge) {
     card.classList.add('late');
     return;
   }
   card.classList.remove('late');
 
-  const remainYears  = 65 - currentAge;
+  const remainYears  = peakAge - currentAge;
   const remainMonths = remainYears * 12;
-  const usedPct = Math.max(0, Math.min(100, currentAge / 65 * 100));
+  const usedPct = Math.max(0, Math.min(100, currentAge / peakAge * 100));
   const colorCls = remainYears > 20 ? '' : (remainYears >= 10 ? 'warn' : 'bad');
 
   if (yearsEl)  yearsEl.textContent  = remainYears;
@@ -4679,6 +4688,55 @@ function _renderDWZWindow(currentAge) {
   }
   if (pctEl)    pctEl.textContent    = Math.round(usedPct) + '%';
   if (monthsEl) monthsEl.textContent = remainMonths;
+}
+
+// inline 編輯高體驗能力期年齡
+function _startEditPeakAge(ev) {
+  const wrap = ev?.currentTarget;
+  if (!wrap || wrap.querySelector('input')) return;
+  const cur = _getPeakAge();
+  const minAge = (_dwzParam('dwz-age') || 30) + 1;
+  const maxAge = (_dwzParam('dwz-life') || 100) - 1;
+
+  const restore = (val) => {
+    wrap.innerHTML = `<b class="dwz-peak-age">${val}</b><span class="dwz-peak-pencil">✎</span>`;
+  };
+
+  wrap.innerHTML = `<input type="number" class="dwz-peak-input" min="${minAge}" max="${maxAge}" value="${cur}" onclick="event.stopPropagation()">`;
+  const input = wrap.querySelector('input');
+  input.focus();
+  input.select();
+
+  let finished = false;
+  const finish = async () => {
+    if (finished) return;
+    finished = true;
+    const val = parseInt(input.value);
+    if (!val || val < minAge || val > maxAge) {
+      showToast(`需介於 ${minAge}–${maxAge} 歲`, 'err');
+      restore(cur);
+      return;
+    }
+    if (val !== cur) {
+      S.data.settings.peak_experience_age = val;
+      const settRows = Object.entries(S.data.settings).map(([k, v]) => [k, v]);
+      try { await saveSheet('settings', settRows); }
+      catch (e) { showToast('儲存失敗', 'err'); restore(cur); return; }
+      showToast(`已更新：${val} 歲`, 'ok');
+    }
+    restore(val);
+    if (typeof renderDWZ === 'function') renderDWZ();
+  };
+
+  input.addEventListener('blur', finish);
+  input.addEventListener('keydown', e => {
+    if (e.key === 'Enter') { e.preventDefault(); input.blur(); }
+    else if (e.key === 'Escape') {
+      finished = true;
+      input.removeEventListener('blur', finish);
+      restore(cur);
+    }
+  });
 }
 
 // 依模擬結果產生智慧建議卡片（多條同時顯示，無建議時隱藏）
