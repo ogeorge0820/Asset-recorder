@@ -807,7 +807,7 @@ canvas { background: transparent !important; }
 }
 
 /* ═══════════════════════════════════════════════════════════════
-   Holdings Hero — 管理頁頂部 4 張類別卡
+   Holdings Hero — 管理頁頂部 4 張類別卡（可內嵌展開明細）
    ═══════════════════════════════════════════════════════════════ */
 .holdings-hero {
   margin: 0 auto 16px;
@@ -824,27 +824,44 @@ canvas { background: transparent !important; }
   display: grid;
   grid-template-columns: repeat(2, 1fr);
   gap: 16px;
+  align-items: start;
 }
+.holding-block {
+  display: flex;
+  flex-direction: column;
+  border-radius: 20px;
+  overflow: hidden;
+  transition: grid-column .2s ease;
+}
+.holding-block.expanded {
+  grid-column: 1 / -1;
+}
+
 .holding-card {
   position: relative;
   overflow: hidden;
   border: none;
   border-radius: 20px;
-  padding: 24px 28px;
+  padding: 24px 28px 22px;
   min-height: 180px;
   cursor: pointer;
   text-align: left;
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
   font-family: var(--font-body);
-  transition: transform .15s ease, box-shadow .2s ease;
+  transition: transform .15s ease, box-shadow .2s ease, border-radius .2s ease;
   box-shadow: 0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.04);
+  width: 100%;
 }
 .holding-card:hover {
   transform: translateY(-2px);
   box-shadow: 0 8px 24px rgba(0,0,0,0.12);
 }
+.holding-block.expanded .holding-card {
+  border-radius: 20px 20px 0 0;
+  transform: none;
+}
+
 .holding-card .hc-top {
   display: flex;
   justify-content: space-between;
@@ -852,25 +869,28 @@ canvas { background: transparent !important; }
   font-size: 12px;
   font-weight: 500;
   z-index: 1;
+  position: relative;
 }
 .holding-card .hc-label {
   letter-spacing: 0.02em;
-  opacity: 0.85;
+  opacity: 0.75;
 }
 .holding-card .hc-count {
-  opacity: 0.6;
+  opacity: 0.55;
   font-family: var(--font-num);
   font-variant-numeric: tabular-nums;
 }
 .holding-card .hc-amount {
   font-family: var(--font-num);
   font-variant-numeric: tabular-nums;
-  font-size: 32px;
+  font-size: 36px;
   font-weight: 700;
   letter-spacing: -0.02em;
   line-height: 1.1;
   margin-top: auto;
+  padding-top: 32px;
   z-index: 1;
+  position: relative;
 }
 .holding-card .hc-change {
   font-family: var(--font-num);
@@ -880,6 +900,7 @@ canvas { background: transparent !important; }
   opacity: 0.85;
   z-index: 1;
   min-height: 16px;
+  position: relative;
 }
 .holding-card .hc-change.pos { color: #4ade80; }
 .holding-card .hc-change.neg { color: #f87171; }
@@ -893,7 +914,20 @@ canvas { background: transparent !important; }
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  position: relative;
 }
+.hc-arrow {
+  position: absolute;
+  bottom: 14px;
+  right: 18px;
+  font-size: 14px;
+  opacity: 0.45;
+  transition: transform .2s ease, opacity .2s ease;
+  z-index: 1;
+  line-height: 1;
+}
+.holding-card:hover .hc-arrow { opacity: 0.8; }
+.holding-block.expanded .hc-arrow { transform: rotate(180deg); opacity: 0.9; }
 
 /* ── 卡片配色 ── */
 .hc-crypto { background: #111111; color: #ffffff; }
@@ -911,60 +945,83 @@ canvas { background: transparent !important; }
 }
 .hc-deco-rings {
   top: -40px; right: -40px;
-  width: 200px; height: 200px;
+  width: 220px; height: 220px;
   border-radius: 50%;
-  border: 1px solid rgba(255,255,255,0.08);
-  box-shadow:
-    inset 0 0 0 1px rgba(255,255,255,0),
-    0 0 0 20px rgba(255,255,255,0.04),
-    0 0 0 40px rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.06);
+}
+.hc-deco-rings::before,
+.hc-deco-rings::after {
+  content: '';
+  position: absolute;
+  border-radius: 50%;
+  border: 1px solid rgba(255,255,255,0.06);
+}
+.hc-deco-rings::before {
+  inset: 30px;
+}
+.hc-deco-rings::after {
+  inset: 60px;
 }
 .hc-deco-stars {
-  top: 12px; right: 12px; bottom: 12px; left: 50%;
+  top: 0; right: 0; bottom: 0; width: 55%;
   background-image:
-    radial-gradient(rgba(255,255,255,0.18) 1px, transparent 1px),
-    radial-gradient(rgba(255,255,255,0.10) 1px, transparent 1px);
-  background-size: 24px 24px, 18px 18px;
-  background-position: 0 0, 12px 12px;
-  opacity: 0.5;
+    radial-gradient(rgba(255,255,255,0.18) 1px, transparent 1.2px),
+    radial-gradient(rgba(255,255,255,0.12) 1px, transparent 1px),
+    radial-gradient(rgba(255,255,255,0.08) 0.8px, transparent 1px);
+  background-size: 38px 32px, 24px 28px, 16px 20px;
+  background-position: 4px 8px, 14px 6px, 8px 18px;
+  opacity: 0.55;
 }
 .hc-deco-stripes {
-  top: 0; right: 0; bottom: 0; width: 50%;
+  top: 0; right: 0; bottom: 0; width: 45%;
   background-image: repeating-linear-gradient(
     to right,
     transparent 0,
-    transparent 12px,
-    rgba(0,0,0,0.05) 12px,
-    rgba(0,0,0,0.05) 13px
+    transparent 14px,
+    rgba(0,0,0,0.06) 14px,
+    rgba(0,0,0,0.06) 15px
   );
 }
 .hc-deco-dollar {
-  top: 50%; right: -20px;
+  top: 50%; right: -30px;
   transform: translateY(-50%);
   font-family: var(--font-num);
-  font-size: 200px;
+  font-size: 220px;
   font-weight: 800;
-  color: rgba(255,255,255,0.06);
+  color: rgba(255,255,255,0.07);
   line-height: 1;
 }
 
-/* 隱藏 cash/tw/us/crypto 原本的 section-header（卡片取代）*/
-#section-cash > .section-header,
-#section-tw > .section-header,
-#section-us > .section-header,
-#section-crypto > .section-header { display: none !important; }
-#section-cash, #section-tw, #section-us, #section-crypto {
-  border: none !important;
-  background: transparent !important;
-  box-shadow: none !important;
-}
-#section-cash > .section-body,
-#section-tw > .section-body,
-#section-us > .section-body,
-#section-crypto > .section-body {
+/* ── 內嵌明細展開 ── */
+.holding-detail {
+  display: none;
   background: var(--bg-card);
   border: 1px solid var(--border);
-  border-radius: 12px;
+  border-top: none;
+  border-radius: 0 0 20px 20px;
+  padding: 20px 24px;
+  animation: hd-expand .3s ease;
+  overflow: hidden;
+}
+.holding-block.expanded .holding-detail { display: block; }
+@keyframes hd-expand {
+  from { opacity: 0; transform: translateY(-6px); max-height: 0; }
+  to   { opacity: 1; transform: translateY(0);     max-height: 1500px; }
+}
+
+/* 移除展開後的 section-card 邊框/背景，避免雙層 */
+.holding-detail .section-card {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+  margin: 0 !important;
+}
+.holding-detail .section-card .section-header { display: none !important; }
+.holding-detail .section-body {
+  max-height: none !important;
+  overflow: visible !important;
+  padding: 0 !important;
 }
 
 /* 手機 1 欄 */
@@ -972,7 +1029,9 @@ canvas { background: transparent !important; }
   .holdings-grid { grid-template-columns: 1fr; gap: 12px; }
   .holdings-hero { padding: 12px 12px 0; }
   .holding-card { min-height: 150px; padding: 20px 22px; }
-  .holding-card .hc-amount { font-size: 26px; }
+  .holding-card .hc-amount { font-size: 28px; }
+  .holding-block.expanded { grid-column: 1; }
+  .holding-detail { padding: 16px 14px; }
 }
 
 /* ═══════════════════════════════════════════════════════════════

@@ -2,7 +2,7 @@
 // CONFIG
 // ══════════════════════════════════════════════════════════════
 // Build 時間：每次修改 code 後手動更新此時間（UTC+8 台北時間）
-const BUILD_DATE = '2026/04/30 14:28';
+const BUILD_DATE = '2026/04/30 15:10';
 
 const SPREADSHEET_ID = '1lpRpxVzWaYUqL-jVPOAJCtjsJUIedPYYyOx4gg4PPFU';
 const CLIENT_ID = '149884248440-85f8dhc6ub9up10sv0f89e3e0itrnooj.apps.googleusercontent.com';
@@ -1101,8 +1101,9 @@ function renderHoldingCards() {
     return (yest > 0) ? ((today - yest) / yest * 100) : null;
   };
 
-  // Crypto
-  const cryRows = S.data.crypto || [];
+  // Crypto — 排除 USDT（顯示在流動現金）
+  const cryRowsAll = S.data.crypto || [];
+  const cryRows = cryRowsAll.filter(r => r[0]?.toUpperCase() !== 'USDT');
   const cryTot = cryRows.reduce((s, r) => s + (parseFloat(r[1])||0) * (S.prices.crypto[r[0]?.toUpperCase()]||0) * rate, 0);
   const cryChg = aggChange(cryRows,
     r => (parseFloat(r[1])||0) * (S.prices.crypto[r[0]?.toUpperCase()]||0) * rate,
@@ -1135,19 +1136,24 @@ function renderHoldingCards() {
     .slice(0,5).map(r => r[0]).filter(Boolean).join(' · ');
   setHC('tw', twRows.length, twTot, twChg, twSyms, 'holdings');
 
-  // Cash — 無日漲跌，列幣別
+  // Cash — 含 USDT TWD 折算（與 renderCash 顯示總計一致）
   const cashRows = S.data.cash || [];
-  const cashTot = cashRows.reduce((s, r) => s + cashToTWD(r), 0);
-  const currencies = [...new Set(cashRows.map(r => (r[1]||'').toUpperCase()).filter(Boolean))].slice(0, 5).join(' · ');
-  setHC('cash', cashRows.length, cashTot, null, currencies, 'accounts');
+  const usdtEntry = (S.data.crypto || []).find(r => r[0]?.toUpperCase() === 'USDT');
+  const usdtTWD = usdtEntry ? (parseFloat(usdtEntry[1]) || 0) * rate : 0;
+  const cashTot = cashRows.reduce((s, r) => s + cashToTWD(r), 0) + usdtTWD;
+  const cashCount = cashRows.length + (usdtTWD > 0 ? 1 : 0);
+  const currencies = [...new Set([
+    ...cashRows.map(r => (r[2]||'').toUpperCase()).filter(Boolean),
+    ...(usdtTWD > 0 ? ['USDT'] : [])
+  ])].slice(0, 5).join(' · ');
+  setHC('cash', cashCount, cashTot, null, currencies, 'accounts');
 }
 
-// 點擊持有卡片：展開對應 section + 滾動定位
-function openHoldingSection(cat) {
-  const sec = $('section-' + cat);
-  if (!sec) return;
-  if (sec.classList.contains('collapsed')) toggleSection(cat);
-  setTimeout(() => sec.scrollIntoView({ behavior: 'smooth', block: 'start' }), 50);
+// 點擊持有卡片：展開/收合內嵌明細
+function toggleHolding(cat) {
+  const block = $('hb-' + cat);
+  if (!block) return;
+  block.classList.toggle('expanded');
 }
 
 // 計算並更新「其他資產 & 負債」標題列淨值摘要
@@ -1234,16 +1240,15 @@ async function appendOtherHistory(key, valueBefore, valueAfter, note) {
 // ── Accordion: 折疊/展開資產分類 ──
 function initAccordion() {
   const saved = JSON.parse(localStorage.getItem('section_acc') || '{}');
-  ['cash', 'tw', 'us', 'crypto', 'other'].forEach(id => {
+  // cash/tw/us/crypto 改由 holding-card 控制展開，跳過
+  ['other'].forEach(id => {
     const card = document.getElementById('section-' + id);
     if (!card) return;
     const body = card.querySelector('.section-body');
     if (saved[id] === true) {
-      // 已儲存為展開：移除 collapsed，設為無限制高
       card.classList.remove('collapsed');
       body.style.maxHeight = '';
     } else {
-      // 預設收合
       card.classList.add('collapsed');
       body.style.maxHeight = '0';
     }

@@ -16,8 +16,8 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=DM+Sans:wght@300;400;500;600;700&display=swap">
-<link rel="stylesheet" href="theme.css?v=202604301428">
-<link rel="stylesheet" href="style.css?v=202604301428">
+<link rel="stylesheet" href="theme.css?v=202604301510">
+<link rel="stylesheet" href="style.css?v=202604301510">
 </head>
 <body>
 
@@ -166,104 +166,124 @@
       <section class="holdings-hero">
         <h3 class="holdings-hero-title">持有資產</h3>
         <div class="holdings-grid">
-          <button class="holding-card hc-crypto" onclick="openHoldingSection('crypto')" type="button">
-            <span class="hc-deco hc-deco-rings" aria-hidden="true"></span>
-            <div class="hc-top">
-              <span class="hc-label">加密貨幣 / CRYPTO</span>
-              <span class="hc-count" id="hc-count-crypto">— holdings</span>
+
+          <div class="holding-block" id="hb-crypto">
+            <button class="holding-card hc-crypto" onclick="toggleHolding('crypto')" type="button">
+              <span class="hc-deco hc-deco-rings" aria-hidden="true"></span>
+              <div class="hc-top">
+                <span class="hc-label">加密貨幣 / CRYPTO</span>
+                <span class="hc-count" id="hc-count-crypto">— holdings</span>
+              </div>
+              <div class="hc-amount" id="hc-amount-crypto">—</div>
+              <div class="hc-change" id="hc-change-crypto"></div>
+              <div class="hc-symbols" id="hc-symbols-crypto"></div>
+              <span class="hc-arrow" aria-hidden="true">▾</span>
+            </button>
+            <div class="holding-detail">
+              <div class="section-card" id="section-crypto">
+                <div class="section-body">
+                  <div class="table-wrap" id="crypto-table-wrap"><table class="data-table">
+                    <thead><tr><th>代號</th><th>數量</th><th style="text-align:right">幣價 (USD)</th><th style="text-align:right">24h漲跌</th><th style="text-align:right">現值 (TWD)</th></tr></thead>
+                    <tbody id="tb-crypto"></tbody>
+                  </table></div>
+                  <div class="crypto-cards" id="crypto-cards"></div>
+                  <div style="display:flex;gap:8px;flex-wrap:wrap">
+                    <button class="btn-add" onclick="addItem('crypto')">+ 新增加密貨幣</button>
+                    <button class="btn-add" onclick="openCMCImport()">匯入 CoinMarketCap CSV</button>
+                  </div>
+                </div>
+              </div>
             </div>
-            <div class="hc-amount" id="hc-amount-crypto">—</div>
-            <div class="hc-change" id="hc-change-crypto"></div>
-            <div class="hc-symbols" id="hc-symbols-crypto"></div>
-          </button>
-          <button class="holding-card hc-us" onclick="openHoldingSection('us')" type="button">
-            <span class="hc-deco hc-deco-stars" aria-hidden="true"></span>
-            <div class="hc-top">
-              <span class="hc-label">美股 / US STOCKS</span>
-              <span class="hc-count" id="hc-count-us">— holdings</span>
+          </div>
+
+          <div class="holding-block" id="hb-us">
+            <button class="holding-card hc-us" onclick="toggleHolding('us')" type="button">
+              <span class="hc-deco hc-deco-stars" aria-hidden="true"></span>
+              <div class="hc-top">
+                <span class="hc-label">美股 / US STOCKS</span>
+                <span class="hc-count" id="hc-count-us">— holdings</span>
+              </div>
+              <div class="hc-amount" id="hc-amount-us">—</div>
+              <div class="hc-change" id="hc-change-us"></div>
+              <div class="hc-symbols" id="hc-symbols-us"></div>
+              <span class="hc-arrow" aria-hidden="true">▾</span>
+            </button>
+            <div class="holding-detail">
+              <div class="section-card" id="section-us">
+                <div class="section-body">
+                  <div class="table-wrap" id="us-table-wrap"><table class="data-table">
+                    <thead><tr><th>代號</th><th>股數</th><th style="text-align:right">股價 (USD)</th><th style="text-align:right">日漲跌</th><th style="text-align:right">現值 (TWD)</th></tr></thead>
+                    <tbody id="tb-us"></tbody>
+                  </table></div>
+                  <div class="stock-cards" id="us-cards"></div>
+                  <button class="btn-add" onclick="addItem('us')">+ 新增美股</button>
+                </div>
+              </div>
             </div>
-            <div class="hc-amount" id="hc-amount-us">—</div>
-            <div class="hc-change" id="hc-change-us"></div>
-            <div class="hc-symbols" id="hc-symbols-us"></div>
-          </button>
-          <button class="holding-card hc-tw" onclick="openHoldingSection('tw')" type="button">
-            <span class="hc-deco hc-deco-stripes" aria-hidden="true"></span>
-            <div class="hc-top">
-              <span class="hc-label">台股 / TW STOCKS</span>
-              <span class="hc-count" id="hc-count-tw">— holdings</span>
+          </div>
+
+          <div class="holding-block" id="hb-tw">
+            <button class="holding-card hc-tw" onclick="toggleHolding('tw')" type="button">
+              <span class="hc-deco hc-deco-stripes" aria-hidden="true"></span>
+              <div class="hc-top">
+                <span class="hc-label">台股 / TW STOCKS</span>
+                <span class="hc-count" id="hc-count-tw">— holdings</span>
+              </div>
+              <div class="hc-amount" id="hc-amount-tw">—</div>
+              <div class="hc-change" id="hc-change-tw"></div>
+              <div class="hc-symbols" id="hc-symbols-tw"></div>
+              <span class="hc-arrow" aria-hidden="true">▾</span>
+            </button>
+            <div class="holding-detail">
+              <div class="section-card" id="section-tw">
+                <div class="section-body">
+                  <div class="table-wrap" id="tw-table-wrap"><table class="data-table">
+                    <thead><tr><th>代號</th><th>股數</th><th style="text-align:right">股價 (TWD)</th><th style="text-align:right">日漲跌</th><th style="text-align:right">現值 (TWD)</th></tr></thead>
+                    <tbody id="tb-tw"></tbody>
+                  </table></div>
+                  <div class="stock-cards" id="tw-cards"></div>
+                  <button class="btn-add" onclick="addItem('tw')">+ 新增台股</button>
+                </div>
+              </div>
             </div>
-            <div class="hc-amount" id="hc-amount-tw">—</div>
-            <div class="hc-change" id="hc-change-tw"></div>
-            <div class="hc-symbols" id="hc-symbols-tw"></div>
-          </button>
-          <button class="holding-card hc-cash" onclick="openHoldingSection('cash')" type="button">
-            <span class="hc-deco hc-deco-dollar" aria-hidden="true">$</span>
-            <div class="hc-top">
-              <span class="hc-label">流動現金 / CASH</span>
-              <span class="hc-count" id="hc-count-cash">— accounts</span>
+          </div>
+
+          <div class="holding-block" id="hb-cash">
+            <button class="holding-card hc-cash" onclick="toggleHolding('cash')" type="button">
+              <span class="hc-deco hc-deco-dollar" aria-hidden="true">$</span>
+              <div class="hc-top">
+                <span class="hc-label">流動現金 / CASH</span>
+                <span class="hc-count" id="hc-count-cash">— accounts</span>
+              </div>
+              <div class="hc-amount" id="hc-amount-cash">—</div>
+              <div class="hc-change" id="hc-change-cash"></div>
+              <div class="hc-symbols" id="hc-symbols-cash"></div>
+              <span class="hc-arrow" aria-hidden="true">▾</span>
+            </button>
+            <div class="holding-detail">
+              <div class="section-card" id="section-cash">
+                <div class="section-body">
+                  <div class="table-wrap" id="cash-table-wrap"><table class="data-table">
+                    <thead><tr><th>帳戶</th><th>幣別</th><th style="text-align:right">金額</th><th style="text-align:right">台幣現值</th></tr></thead>
+                    <tbody id="tb-cash"></tbody>
+                  </table></div>
+                  <div class="cash-cards" id="cash-cards"></div>
+                  <button class="btn-add" onclick="addItem('cash')">+ 新增流動現金</button>
+                  <span class="section-avail" id="avail-cash" style="display:none"></span>
+                </div>
+              </div>
             </div>
-            <div class="hc-amount" id="hc-amount-cash">—</div>
-            <div class="hc-change" id="hc-change-cash"></div>
-            <div class="hc-symbols" id="hc-symbols-cash"></div>
-          </button>
+          </div>
+
         </div>
       </section>
 
       <div class="mgmt-grid">
-
-        <!-- Row 1: 流動現金 | 台股 -->
-        <div class="section-card collapsed" id="section-cash">
-          <h3 class="section-header" onclick="toggleSection('cash')"><span>流動現金 <span class="badge" id="cnt-cash">0</span></span><span class="section-header-right"><span class="section-total" id="tot-cash">—</span><span class="section-avail" id="avail-cash" style="display:none"></span><span class="section-chevron">▾</span></span></h3>
-          <div class="section-body">
-          <div class="table-wrap" id="cash-table-wrap"><table class="data-table">
-            <thead><tr><th>帳戶</th><th>幣別</th><th style="text-align:right">金額</th><th style="text-align:right">台幣現值</th></tr></thead>
-            <tbody id="tb-cash"></tbody>
-          </table></div>
-          <div class="cash-cards" id="cash-cards"></div>
-          <button class="btn-add" onclick="addItem('cash')">+ 新增流動現金</button>
-          </div>
-        </div>
-
-        <div class="section-card collapsed" id="section-tw">
-          <h3 class="section-header" onclick="toggleSection('tw')"><span>台股 <span class="badge" id="cnt-tw">0</span></span><span class="section-header-right"><span class="section-total" id="tot-tw">—</span><span class="section-gain" id="gain-tw"></span><span class="section-chevron">▾</span></span></h3>
-          <div class="section-body">
-          <div class="table-wrap" id="tw-table-wrap"><table class="data-table">
-            <thead><tr><th>代號</th><th>股數</th><th style="text-align:right">股價 (TWD)</th><th style="text-align:right">日漲跌</th><th style="text-align:right">現值 (TWD)</th></tr></thead>
-            <tbody id="tb-tw"></tbody>
-          </table></div>
-          <div class="stock-cards" id="tw-cards"></div>
-          <button class="btn-add" onclick="addItem('tw')">+ 新增台股</button>
-          </div>
-        </div>
-
-        <!-- Row 2: 美股 全寬 -->
-        <div class="section-card collapsed" id="section-us" style="grid-column: 1 / -1">
-          <h3 class="section-header" onclick="toggleSection('us')"><span>美股 <span class="badge" id="cnt-us">0</span></span><span class="section-header-right"><span class="section-total" id="tot-us">—</span><span class="section-gain" id="gain-us"></span><span class="section-chevron">▾</span></span></h3>
-          <div class="section-body">
-          <div class="table-wrap" id="us-table-wrap"><table class="data-table">
-            <thead><tr><th>代號</th><th>股數</th><th style="text-align:right">股價 (USD)</th><th style="text-align:right">日漲跌</th><th style="text-align:right">現值 (TWD)</th></tr></thead>
-            <tbody id="tb-us"></tbody>
-          </table></div>
-          <div class="stock-cards" id="us-cards"></div>
-          <button class="btn-add" onclick="addItem('us')">+ 新增美股</button>
-          </div>
-        </div>
-
-        <!-- Row 3: 加密貨幣 全寬 -->
-        <div class="section-card collapsed" id="section-crypto" style="grid-column: 1 / -1">
-          <h3 class="section-header" onclick="toggleSection('crypto')"><span>加密貨幣 <span class="badge" id="cnt-crypto">0</span></span><span class="section-header-right"><span class="section-total" id="tot-crypto">—</span><span class="section-gain" id="gain-crypto"></span><span class="section-chevron">▾</span></span></h3>
-          <div class="section-body">
-          <div class="table-wrap" id="crypto-table-wrap"><table class="data-table">
-            <thead><tr><th>代號</th><th>數量</th><th style="text-align:right">幣價 (USD)</th><th style="text-align:right">24h漲跌</th><th style="text-align:right">現值 (TWD)</th></tr></thead>
-            <tbody id="tb-crypto"></tbody>
-          </table></div>
-          <div class="crypto-cards" id="crypto-cards"></div>
-          <div style="display:flex;gap:8px;flex-wrap:wrap">
-            <button class="btn-add" onclick="addItem('crypto')">+ 新增加密貨幣</button>
-            <button class="btn-add" onclick="openCMCImport()">匯入 CoinMarketCap CSV</button>
-          </div>
-          </div>
-        </div>
+        <!-- 隱形容器：這些 id 仍被部分 JS 讀取（cnt/tot/gain），但畫面顯示由 holding-card 接管 -->
+        <span id="cnt-cash" hidden>0</span><span id="tot-cash" hidden>—</span>
+        <span id="cnt-tw" hidden>0</span><span id="tot-tw" hidden>—</span><span id="gain-tw" hidden></span>
+        <span id="cnt-us" hidden>0</span><span id="tot-us" hidden>—</span><span id="gain-us" hidden></span>
+        <span id="cnt-crypto" hidden>0</span><span id="tot-crypto" hidden>—</span><span id="gain-crypto" hidden></span>
 
         <!-- Row 4: 其他資產＆負債 全寬 -->
         <div class="section-card collapsed" id="section-other" style="grid-column: 1 / -1">
@@ -562,6 +582,6 @@
 <!-- ── Toast ── -->
 <div class="toast" id="toast"></div>
 
-<script src="app.js?v=202604301428"></script>
+<script src="app.js?v=202604301510"></script>
 </body>
 </html>
