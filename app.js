@@ -2,7 +2,7 @@
 // CONFIG
 // ══════════════════════════════════════════════════════════════
 // Build 時間：每次修改 code 後手動更新此時間（UTC+8 台北時間）
-const BUILD_DATE = '2026/04/29 23:52';
+const BUILD_DATE = '2026/04/30 09:38';
 
 const SPREADSHEET_ID = '1lpRpxVzWaYUqL-jVPOAJCtjsJUIedPYYyOx4gg4PPFU';
 const CLIENT_ID = '149884248440-85f8dhc6ub9up10sv0f89e3e0itrnooj.apps.googleusercontent.com';
@@ -3579,7 +3579,7 @@ async function adjustAssetQty() {
     const before = S.data.settings[key] || 0;
     openModal(`增減餘額 · ${m.label}`, [
       { id: 'delta', label: `變動金額 ${m.currency}（正為增加，負為減少）`, type: 'number', step: 'any', ph: '例如 5000 或 -2000' },
-      { id: 'note', label: '備註（選填）', type: 'text', ph: '例如：保費繳納、房貸還款' },
+      { id: 'note', label: '備註（選填）', type: 'text', ph: '例如：保費繳納、房貸還款', opt: true },
     ], async vals => {
       const delta = parseFloat(vals.delta);
       if (isNaN(delta) || delta === 0) { showToast('請輸入有效的變動金額', 'err'); return false; }
@@ -3667,7 +3667,7 @@ async function setAssetQty() {
     const before = S.data.settings[key] || 0;
     openModal(`設定餘額 · ${m.label}`, [
       { id: 'amount', label: `新餘額 (${m.currency})`, type: 'number', val: before, min: 0, step: 'any' },
-      { id: 'note', label: '備註（選填）', type: 'text', ph: '例如：市值更新、年度結算' },
+      { id: 'note', label: '備註（選填）', type: 'text', ph: '例如：市值更新、年度結算', opt: true },
     ], async vals => {
       const after = parseFloat(vals.amount);
       if (isNaN(after) || after < 0) { showToast('請輸入有效金額', 'err'); return false; }
