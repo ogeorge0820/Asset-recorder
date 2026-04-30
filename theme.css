@@ -1154,17 +1154,16 @@ canvas { background: transparent !important; }
     flex: 1 1 auto !important;
     gap: 10px;
   }
-  /* 手機版資產卡片：移除左側百分比 badge，代號完整顯示 */
+  /* 手機版資產卡片：代號 + 小標籤百分比 + 現值；下方詳情 */
   .asset-card {
     display: grid !important;
-    grid-template-columns: 1fr auto !important;
+    grid-template-columns: auto auto 1fr auto !important;
     grid-template-areas:
-      "sym twd"
-      "detail detail" !important;
-    gap: 4px 12px !important;
+      "sym pct . twd"
+      "detail detail detail detail" !important;
+    gap: 2px 8px !important;
     align-items: center !important;
   }
-  .asset-card-pct { display: none !important; }
   .asset-card-sym {
     grid-area: sym !important;
     flex: none !important;
@@ -1172,17 +1171,49 @@ canvas { background: transparent !important; }
     font-weight: 600 !important;
     overflow: visible !important;
     text-overflow: clip !important;
+    white-space: nowrap !important;
+  }
+  .asset-card-pct {
+    grid-area: pct !important;
+    width: auto !important;
+    height: auto !important;
+    border-radius: 0 !important;
+    background: transparent !important;
+    color: var(--text-muted) !important;
+    font-size: 11px !important;
+    font-weight: 500 !important;
+    padding: 0 !important;
+    display: inline-flex !important;
+    align-self: center !important;
+    letter-spacing: 0 !important;
+  }
+  .asset-card.err .asset-card-pct {
+    background: transparent !important;
+    color: var(--danger) !important;
   }
   .asset-card-mid { display: contents !important; }
   .asset-card-twd {
     grid-area: twd !important;
     font-size: 15px !important;
+    white-space: nowrap !important;
   }
   .asset-card-detail {
     grid-area: detail !important;
     margin-top: 0 !important;
     font-size: 11px !important;
   }
+
+  /* 手機版圓餅圖圖例：縮小欄寬避免被切 */
+  .pie-legend {
+    padding: 0 4px !important;
+  }
+  .pie-legend li {
+    grid-template-columns: minmax(0, 1fr) 50px 80px !important;
+    gap: 6px !important;
+    font-size: 12px !important;
+  }
+  .pie-legend .pl-amt { font-size: 12px !important; }
+  .pie-legend .pl-pct { font-size: 12px !important; }
 }
 
 
