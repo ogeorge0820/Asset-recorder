@@ -929,13 +929,43 @@ canvas { background: transparent !important; }
 .holding-card:hover .hc-arrow { opacity: 0.8; }
 .holding-block.expanded .hc-arrow { transform: rotate(180deg); opacity: 0.9; }
 
-/* ── 卡片配色 ── */
-.hc-crypto { background: #111111; color: #ffffff; }
-.hc-us     { background: #1e3a5f; color: #ffffff; }
-.hc-tw     { background: #f5f0e8; color: #1a1a1a; }
-.hc-tw .hc-change.pos { color: #16a34a; }
-.hc-tw .hc-change.neg { color: #dc2626; }
-.hc-cash   { background: #1a3d2b; color: #ffffff; }
+/* ── 卡片配色 (用 !important 蓋過 theme.css 的通用 button 規則) ── */
+.holding-card.hc-crypto { background: #111111 !important; color: #ffffff !important; }
+.holding-card.hc-us     { background: #1e3a5f !important; color: #ffffff !important; }
+.holding-card.hc-tw     { background: #f5f0e8 !important; color: #1a1a1a !important; }
+.holding-card.hc-cash   { background: #1a3d2b !important; color: #ffffff !important; }
+.holding-card.hc-crypto:hover,
+.holding-card.hc-us:hover,
+.holding-card.hc-tw:hover,
+.holding-card.hc-cash:hover { border-color: transparent !important; }
+
+/* 深色卡（黑/藍/綠）：標題、標的、可用 用半透明白 */
+.hc-crypto .hc-label, .hc-us .hc-label, .hc-cash .hc-label,
+.hc-crypto .hc-count, .hc-us .hc-count, .hc-cash .hc-count { color: rgba(255,255,255,0.6); }
+.hc-crypto .hc-amount, .hc-us .hc-amount, .hc-cash .hc-amount { color: #ffffff !important; }
+.hc-crypto .hc-symbols, .hc-us .hc-symbols, .hc-cash .hc-symbols,
+.hc-crypto .hc-avail, .hc-us .hc-avail, .hc-cash .hc-avail { color: rgba(255,255,255,0.7); }
+
+/* 米白卡（台股）：標題 #666、數字 #1a1a1a、標的 #888 */
+.hc-tw .hc-label, .hc-tw .hc-count { color: #666666; }
+.hc-tw .hc-amount { color: #1a1a1a !important; }
+.hc-tw .hc-symbols, .hc-tw .hc-avail { color: #888888; }
+.hc-tw .hc-change.pos { color: #16a34a !important; }
+.hc-tw .hc-change.neg { color: #dc2626 !important; }
+
+/* 邊框：deep cards 內框透明 */
+.holding-card { border: none !important; }
+
+/* 可用現金小字 */
+.hc-avail {
+  font-family: var(--font-num);
+  font-variant-numeric: tabular-nums;
+  font-size: 12px;
+  margin-top: 4px;
+  z-index: 1;
+  position: relative;
+  min-height: 16px;
+}
 
 /* ── 裝飾元素 ── */
 .hc-deco {
