@@ -2,7 +2,7 @@
 // CONFIG
 // ══════════════════════════════════════════════════════════════
 // Build 時間：每次修改 code 後手動更新此時間（UTC+8 台北時間）
-const BUILD_DATE = '2026/04/30 15:11';
+const BUILD_DATE = '2026/04/30 16:37';
 
 const SPREADSHEET_ID = '1lpRpxVzWaYUqL-jVPOAJCtjsJUIedPYYyOx4gg4PPFU';
 const CLIENT_ID = '149884248440-85f8dhc6ub9up10sv0f89e3e0itrnooj.apps.googleusercontent.com';
@@ -1072,7 +1072,7 @@ function renderManagement() {
 // ── 管理頁頂部 4 張類別卡 ──
 function renderHoldingCards() {
   const rate = S.prices.usdtwd || 0;
-  const setHC = (cat, count, total, changePct, syms, unit) => {
+  const setHC = (cat, count, total, change, syms, unit) => {
     const cEl = $('hc-count-' + cat);
     const aEl = $('hc-amount-' + cat);
     const dEl = $('hc-change-' + cat);
@@ -1080,12 +1080,15 @@ function renderHoldingCards() {
     if (cEl) cEl.textContent = count + ' ' + unit;
     if (aEl) aEl.textContent = total > 0 ? fmt(total) : '—';
     if (dEl) {
-      if (changePct == null) {
-        dEl.textContent = '—'; dEl.className = 'hc-change';
+      if (!change || change.pct == null) {
+        dEl.textContent = ''; dEl.className = 'hc-change';
       } else {
-        const sign = changePct >= 0 ? '+' : '';
-        dEl.textContent = `${sign}${changePct.toFixed(2)}% · ${cat === 'crypto' ? '24h' : '今日'}`;
-        dEl.className = 'hc-change ' + (changePct >= 0 ? 'pos' : 'neg');
+        const pSign = change.pct >= 0 ? '+' : '';
+        const dSign = change.delta >= 0 ? '+' : '';
+        const win = cat === 'crypto' ? '24h' : '今日';
+        const deltaStr = (change.delta >= 0 ? dSign : '') + fmtWan(change.delta);
+        dEl.textContent = `${pSign}${change.pct.toFixed(2)}% · ${deltaStr} · ${win}`;
+        dEl.className = 'hc-change ' + (change.pct >= 0 ? 'pos' : 'neg');
       }
     }
     if (sEl) sEl.textContent = syms || '—';
@@ -1098,7 +1101,8 @@ function renderHoldingCards() {
       today += t;
       yest += pct != null ? t / (1 + pct/100) : t;
     });
-    return (yest > 0) ? ((today - yest) / yest * 100) : null;
+    if (yest <= 0) return null;
+    return { pct: (today - yest) / yest * 100, delta: today - yest };
   };
 
   // Crypto — 排除 USDT（顯示在流動現金）
