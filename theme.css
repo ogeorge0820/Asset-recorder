@@ -1099,23 +1099,35 @@ canvas { background: transparent !important; }
 }
 .pie-legend li {
   display: grid;
-  grid-template-columns: 12px 1fr auto auto;
+  grid-template-columns: 1fr 60px 90px;
+  align-items: center;
+  gap: 8px;
+  color: var(--text-primary);
+}
+.pie-legend .pl-name-wrap {
+  display: flex;
   align-items: center;
   gap: 10px;
-  color: var(--text-primary);
+  min-width: 0;
 }
 .pie-legend .pl-dot {
   width: 10px; height: 10px;
   border-radius: 50%;
   display: inline-block;
+  flex-shrink: 0;
 }
-.pie-legend .pl-name { color: var(--text-secondary); white-space: nowrap; }
+.pie-legend .pl-name {
+  color: var(--text-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
 .pie-legend .pl-pct {
   font-family: var(--font-num);
   font-variant-numeric: tabular-nums;
   font-weight: 500;
   color: var(--text-primary);
-  margin-right: 8px;
+  text-align: right;
 }
 .pie-legend .pl-amt {
   font-family: var(--font-num);

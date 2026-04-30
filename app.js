@@ -2,7 +2,7 @@
 // CONFIG
 // ══════════════════════════════════════════════════════════════
 // Build 時間：每次修改 code 後手動更新此時間（UTC+8 台北時間）
-const BUILD_DATE = '2026/04/30 17:08';
+const BUILD_DATE = '2026/04/30 17:10';
 
 const SPREADSHEET_ID = '1lpRpxVzWaYUqL-jVPOAJCtjsJUIedPYYyOx4gg4PPFU';
 const CLIENT_ID = '149884248440-85f8dhc6ub9up10sv0f89e3e0itrnooj.apps.googleusercontent.com';
@@ -2986,8 +2986,10 @@ function renderPie() {
     legendEl.innerHTML = entries.map(e => {
       const pct = sumValue > 0 ? (e.value / sumValue * 100) : 0;
       return `<li>
-        <span class="pl-dot" style="background:${e.color}"></span>
-        <span class="pl-name">${e.label}</span>
+        <span class="pl-name-wrap">
+          <span class="pl-dot" style="background:${e.color}"></span>
+          <span class="pl-name">${e.label}</span>
+        </span>
         <span class="pl-pct">${pct.toFixed(1)}%</span>
         <span class="pl-amt">${fmt(e.value)}</span>
       </li>`;
