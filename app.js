@@ -2,7 +2,7 @@
 // CONFIG
 // ══════════════════════════════════════════════════════════════
 // Build 時間：每次修改 code 後手動更新此時間（UTC+8 台北時間）
-const BUILD_DATE = '2026/04/30 13:16';
+const BUILD_DATE = '2026/04/30 14:28';
 
 const SPREADSHEET_ID = '1lpRpxVzWaYUqL-jVPOAJCtjsJUIedPYYyOx4gg4PPFU';
 const CLIENT_ID = '149884248440-85f8dhc6ub9up10sv0f89e3e0itrnooj.apps.googleusercontent.com';
@@ -1065,7 +1065,89 @@ function setKPI(vid, val, sid, sub) {
 // ══════════════════════════════════════════════════════════════
 function renderManagement() {
   renderCash(); renderTW(); renderUS(); renderCrypto(); renderOther(); renderRewards(); renderBudget(); renderExperiencePlan(); renderIncome();
+  renderHoldingCards();
   initAccordion();
+}
+
+// ── 管理頁頂部 4 張類別卡 ──
+function renderHoldingCards() {
+  const rate = S.prices.usdtwd || 0;
+  const setHC = (cat, count, total, changePct, syms, unit) => {
+    const cEl = $('hc-count-' + cat);
+    const aEl = $('hc-amount-' + cat);
+    const dEl = $('hc-change-' + cat);
+    const sEl = $('hc-symbols-' + cat);
+    if (cEl) cEl.textContent = count + ' ' + unit;
+    if (aEl) aEl.textContent = total > 0 ? fmt(total) : '—';
+    if (dEl) {
+      if (changePct == null) {
+        dEl.textContent = '—'; dEl.className = 'hc-change';
+      } else {
+        const sign = changePct >= 0 ? '+' : '';
+        dEl.textContent = `${sign}${changePct.toFixed(2)}% · ${cat === 'crypto' ? '24h' : '今日'}`;
+        dEl.className = 'hc-change ' + (changePct >= 0 ? 'pos' : 'neg');
+      }
+    }
+    if (sEl) sEl.textContent = syms || '—';
+  };
+  const aggChange = (rows, getToday, getPct) => {
+    let today = 0, yest = 0;
+    rows.forEach(r => {
+      const t = getToday(r); if (!t) return;
+      const pct = getPct(r);
+      today += t;
+      yest += pct != null ? t / (1 + pct/100) : t;
+    });
+    return (yest > 0) ? ((today - yest) / yest * 100) : null;
+  };
+
+  // Crypto
+  const cryRows = S.data.crypto || [];
+  const cryTot = cryRows.reduce((s, r) => s + (parseFloat(r[1])||0) * (S.prices.crypto[r[0]?.toUpperCase()]||0) * rate, 0);
+  const cryChg = aggChange(cryRows,
+    r => (parseFloat(r[1])||0) * (S.prices.crypto[r[0]?.toUpperCase()]||0) * rate,
+    r => symDailyChangePct('crypto', r[0]?.toUpperCase(), S.prices.crypto[r[0]?.toUpperCase()]));
+  const crySyms = cryRows.slice().sort((a,b) =>
+    (parseFloat(b[1])||0)*(S.prices.crypto[b[0]?.toUpperCase()]||0) -
+    (parseFloat(a[1])||0)*(S.prices.crypto[a[0]?.toUpperCase()]||0))
+    .slice(0,5).map(r => r[0]?.toUpperCase()).filter(Boolean).join(' · ');
+  setHC('crypto', cryRows.length, cryTot, cryChg, crySyms, 'holdings');
+
+  // US
+  const usRows = S.data.us || [];
+  const usTot = usRows.reduce((s, r) => s + (parseFloat(r[1])||0) * (S.prices.us[r[0]]||0) * rate, 0);
+  const usChg = aggChange(usRows,
+    r => (parseFloat(r[1])||0) * (S.prices.us[r[0]]||0) * rate,
+    r => symDailyChangePct('us', r[0], S.prices.us[r[0]]));
+  const usSyms = usRows.slice().sort((a,b) =>
+    (parseFloat(b[1])||0)*(S.prices.us[b[0]]||0) - (parseFloat(a[1])||0)*(S.prices.us[a[0]]||0))
+    .slice(0,5).map(r => r[0]).filter(Boolean).join(' · ');
+  setHC('us', usRows.length, usTot, usChg, usSyms, 'holdings');
+
+  // TW
+  const twRows = S.data.tw || [];
+  const twTot = twRows.reduce((s, r) => s + (parseFloat(r[1])||0) * (S.prices.tw[r[0]]||0), 0);
+  const twChg = aggChange(twRows,
+    r => (parseFloat(r[1])||0) * (S.prices.tw[r[0]]||0),
+    r => symDailyChangePct('tw', r[0], S.prices.tw[r[0]]));
+  const twSyms = twRows.slice().sort((a,b) =>
+    (parseFloat(b[1])||0)*(S.prices.tw[b[0]]||0) - (parseFloat(a[1])||0)*(S.prices.tw[a[0]]||0))
+    .slice(0,5).map(r => r[0]).filter(Boolean).join(' · ');
+  setHC('tw', twRows.length, twTot, twChg, twSyms, 'holdings');
+
+  // Cash — 無日漲跌，列幣別
+  const cashRows = S.data.cash || [];
+  const cashTot = cashRows.reduce((s, r) => s + cashToTWD(r), 0);
+  const currencies = [...new Set(cashRows.map(r => (r[1]||'').toUpperCase()).filter(Boolean))].slice(0, 5).join(' · ');
+  setHC('cash', cashRows.length, cashTot, null, currencies, 'accounts');
+}
+
+// 點擊持有卡片：展開對應 section + 滾動定位
+function openHoldingSection(cat) {
+  const sec = $('section-' + cat);
+  if (!sec) return;
+  if (sec.classList.contains('collapsed')) toggleSection(cat);
+  setTimeout(() => sec.scrollIntoView({ behavior: 'smooth', block: 'start' }), 50);
 }
 
 // 計算並更新「其他資產 & 負債」標題列淨值摘要

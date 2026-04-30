@@ -16,8 +16,8 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=DM+Sans:wght@300;400;500;600;700&display=swap">
-<link rel="stylesheet" href="theme.css?v=202604301316">
-<link rel="stylesheet" href="style.css?v=202604301316">
+<link rel="stylesheet" href="theme.css?v=202604301428">
+<link rel="stylesheet" href="style.css?v=202604301428">
 </head>
 <body>
 
@@ -161,6 +161,53 @@
         <span id="price-ts">價格更新中...</span>
         <span id="price-fail-lbl"></span>
       </div>
+
+      <!-- Holdings Hero Cards -->
+      <section class="holdings-hero">
+        <h3 class="holdings-hero-title">持有資產</h3>
+        <div class="holdings-grid">
+          <button class="holding-card hc-crypto" onclick="openHoldingSection('crypto')" type="button">
+            <span class="hc-deco hc-deco-rings" aria-hidden="true"></span>
+            <div class="hc-top">
+              <span class="hc-label">加密貨幣 / CRYPTO</span>
+              <span class="hc-count" id="hc-count-crypto">— holdings</span>
+            </div>
+            <div class="hc-amount" id="hc-amount-crypto">—</div>
+            <div class="hc-change" id="hc-change-crypto"></div>
+            <div class="hc-symbols" id="hc-symbols-crypto"></div>
+          </button>
+          <button class="holding-card hc-us" onclick="openHoldingSection('us')" type="button">
+            <span class="hc-deco hc-deco-stars" aria-hidden="true"></span>
+            <div class="hc-top">
+              <span class="hc-label">美股 / US STOCKS</span>
+              <span class="hc-count" id="hc-count-us">— holdings</span>
+            </div>
+            <div class="hc-amount" id="hc-amount-us">—</div>
+            <div class="hc-change" id="hc-change-us"></div>
+            <div class="hc-symbols" id="hc-symbols-us"></div>
+          </button>
+          <button class="holding-card hc-tw" onclick="openHoldingSection('tw')" type="button">
+            <span class="hc-deco hc-deco-stripes" aria-hidden="true"></span>
+            <div class="hc-top">
+              <span class="hc-label">台股 / TW STOCKS</span>
+              <span class="hc-count" id="hc-count-tw">— holdings</span>
+            </div>
+            <div class="hc-amount" id="hc-amount-tw">—</div>
+            <div class="hc-change" id="hc-change-tw"></div>
+            <div class="hc-symbols" id="hc-symbols-tw"></div>
+          </button>
+          <button class="holding-card hc-cash" onclick="openHoldingSection('cash')" type="button">
+            <span class="hc-deco hc-deco-dollar" aria-hidden="true">$</span>
+            <div class="hc-top">
+              <span class="hc-label">流動現金 / CASH</span>
+              <span class="hc-count" id="hc-count-cash">— accounts</span>
+            </div>
+            <div class="hc-amount" id="hc-amount-cash">—</div>
+            <div class="hc-change" id="hc-change-cash"></div>
+            <div class="hc-symbols" id="hc-symbols-cash"></div>
+          </button>
+        </div>
+      </section>
 
       <div class="mgmt-grid">
 
@@ -515,6 +562,6 @@
 <!-- ── Toast ── -->
 <div class="toast" id="toast"></div>
 
-<script src="app.js?v=202604301316"></script>
+<script src="app.js?v=202604301428"></script>
 </body>
 </html>
