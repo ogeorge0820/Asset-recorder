@@ -16,8 +16,8 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=DM+Sans:wght@300;400;500;600;700&display=swap">
-<link rel="stylesheet" href="theme.css?v=202604301252">
-<link rel="stylesheet" href="style.css?v=202604301252">
+<link rel="stylesheet" href="theme.css?v=202604301316">
+<link rel="stylesheet" href="style.css?v=202604301316">
 </head>
 <body>
 
@@ -115,7 +115,7 @@
               </div>
             </div>
           </div>
-          <!-- Net worth trend (swapped from side) -->
+          <!-- Net worth trend -->
           <div class="chart-card">
             <h3>淨資產趨勢</h3>
             <div class="chart-filter">
@@ -132,27 +132,22 @@
               </div>
             </div>
           </div>
-          <!-- Monthly bar -->
-          <div class="chart-card">
-            <h3>月收益</h3>
-            <div style="position:relative;height:200px" id="monthly-wrap">
-              <canvas id="monthly-chart"></canvas>
-            </div>
-          </div>
         </div><!-- /overview-main -->
 
         <div class="overview-side">
           <!-- Pie -->
           <div class="chart-card">
             <h3>資產組成</h3>
-            <div style="position:relative;height:320px" id="pie-wrap">
+            <div style="position:relative;height:280px" id="pie-wrap">
               <canvas id="pie-chart"></canvas>
             </div>
           </div>
-          <!-- Rewards summary (swapped from main) -->
+          <!-- Monthly bar (moved from main) -->
           <div class="chart-card">
-            <h3>質押 / 活存收益（本月）</h3>
-            <div id="rewards-summary"></div>
+            <h3>月收益</h3>
+            <div style="position:relative;height:160px" id="monthly-wrap">
+              <canvas id="monthly-chart"></canvas>
+            </div>
           </div>
         </div><!-- /overview-side -->
 
@@ -520,6 +515,6 @@
 <!-- ── Toast ── -->
 <div class="toast" id="toast"></div>
 
-<script src="app.js?v=202604301252"></script>
+<script src="app.js?v=202604301316"></script>
 </body>
 </html>

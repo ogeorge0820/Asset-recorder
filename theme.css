@@ -308,20 +308,11 @@ h3 {
   }
   .chart-title-row { margin-bottom: 6px !important; }
 
-  /* 固定 chart 高度 */
-  #daily-trend-wrap { height: 180px !important; }
-  #trend-wrap       { height: 180px !important; }
-  #monthly-wrap     { height: 150px !important; }
-  #pie-wrap         { height: 240px !important; }
-
-  /* 右欄質押區塊高度 120px（第二個 chart-card） */
-  .overview-side .chart-card:nth-of-type(2) {
-    max-height: 120px !important;
-    overflow: hidden !important;
-  }
-  .overview-side #rewards-summary {
-    font-size: 11px !important;
-  }
+  /* 固定 chart 高度 — 一頁看完不滾動 */
+  #daily-trend-wrap { height: 200px !important; }
+  #trend-wrap       { height: 200px !important; }
+  #monthly-wrap     { height: 180px !important; }
+  #pie-wrap         { height: 280px !important; }
 
   /* 所有圓角統一 10px */
   .kpi-card,
@@ -818,6 +809,3 @@ canvas { background: transparent !important; }
 /* ═══════════════════════════════════════════════════════════════
    圓餅圖 legend — 桌面也改為底部水平排列
    ═══════════════════════════════════════════════════════════════ */
-@media (min-width: 769px) {
-  #pie-wrap { height: 280px !important; }
-}
