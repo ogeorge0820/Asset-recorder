@@ -8,45 +8,51 @@
 /* ── 深色主題 ── */
 :root[data-theme="dark"] {
   --bg:             #0a0a0a;
-  --bg-card:        #1a1a1a;
-  --bg-hover:       #1a1a1a;   /* 與 bg-card 一致，避免主要 KPI 卡顯得過亮 */
+  --bg-card:        #111111;
+  --bg-hover:       #1a1a1a;
   --bg-input:       #1a1a1a;
-  --border:         #2a2a2a;
+  --border:         #1f1f1f;
+  --border-strong:  #2a2a2a;
   --border-hover:   #3a3a3a;
   --text-primary:   #ffffff;
-  --text-secondary: rgba(255,255,255,0.72);
-  --text-muted:     rgba(255,255,255,0.55);
+  --text-secondary: #9ca3af;
+  --text-muted:     #666666;
   --accent:         #ffffff;
   --accent-fg:      #000000;
   --accent-soft:    rgba(255,255,255,0.08);
+  --pill-bg:        #1f1f1f;
+  --hero-bg:        linear-gradient(135deg, #1a1f2e 0%, #1a1a2e 50%, #2a1f1a 100%);
   --success:        #22c55e;
   --danger:         #ef4444;
   --warn:           #eab308;
   --overlay:        rgba(0,0,0,0.7);
   --card-shadow:    none;
-  --card-shadow-hover: none;
+  --card-shadow-hover: 0 4px 12px rgba(0,0,0,0.4);
 }
 
 /* ── 淺色主題 ── */
 :root[data-theme="light"] {
-  --bg:             #f6f6f6;
+  --bg:             #fafaf8;
   --bg-card:        #ffffff;
-  --bg-hover:       #f9f9f9;
+  --bg-hover:       #f9f9fb;
   --bg-input:       #ffffff;
-  --border:         #e5e5e5;
+  --border:         #f0f0f0;
+  --border-strong:  #e5e7eb;
   --border-hover:   #d4d4d4;
-  --text-primary:   #111111;
-  --text-secondary: #666666;
-  --text-muted:     #999999;
-  --accent:         #111111;
+  --text-primary:   #1a1a1a;
+  --text-secondary: #6b7280;
+  --text-muted:     #9ca3af;
+  --accent:         #1a1a1a;
   --accent-fg:      #ffffff;
   --accent-soft:    rgba(0,0,0,0.04);
+  --pill-bg:        #f3f4f6;
+  --hero-bg:        linear-gradient(135deg, #eef2ff 0%, #faf5ff 50%, #fefce8 100%);
   --success:        #16a34a;
   --danger:         #dc2626;
   --warn:           #d97706;
   --overlay:        rgba(0,0,0,0.4);
-  --card-shadow:    0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.04);
-  --card-shadow-hover: 0 4px 12px rgba(0,0,0,0.1);
+  --card-shadow:    0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+  --card-shadow-hover: 0 4px 12px rgba(0,0,0,0.08);
 }
 
 /* ── 相容別名（舊 style.css 用的變數名） ── */
@@ -187,17 +193,29 @@ h3 {
    Desktop Layout V2 — 1440×900 單屏全覽（B2C app 質感）
    ═══════════════════════════════════════════════════════════════ */
 @media (min-width: 769px) {
-  /* App 外層 — sidebar 160px + 主內容 calc(100vw - 160px) */
+  /* App 外層 — 已移除 sidebar，全寬使用 */
   #app {
-    margin-left: 160px !important;
+    margin-left: 0 !important;
     height: 100vh !important;
     overflow: hidden !important;
   }
   #app-content {
-    padding: 12px !important;
-    height: 100vh !important;
+    padding: 0 !important;
+    height: calc(100vh - 56px) !important;
     overflow-y: auto !important;
     max-width: none !important;
+    background: var(--bg) !important;
+  }
+  #tab-management, #tab-dwz {
+    max-width: 1440px;
+    margin: 0 auto;
+    padding: 16px 24px;
+  }
+  #tab-overview { padding: 0 !important; }
+  #tab-overview .overview-grid {
+    max-width: 1440px;
+    margin: 0 auto;
+    padding: 16px 24px;
   }
 
   /* ── KPI row：6 張 × 80px，8px gap ── */
@@ -567,3 +585,239 @@ canvas { background: transparent !important; }
 .sym-change.neg  { color: var(--danger); }
 .sym-change.zero { color: var(--text-muted); }
 .sym-change.none { color: var(--text-muted); }
+
+/* ═══════════════════════════════════════════════════════════════
+   Navbar v2 — 取代 sidebar
+   ═══════════════════════════════════════════════════════════════ */
+#app-header {
+  display: flex !important;
+  height: 56px !important;
+  background: var(--bg-card) !important;
+  border-bottom: 1px solid var(--border) !important;
+  padding: 0 32px !important;
+  gap: 32px !important;
+  position: sticky !important;
+  top: 0 !important;
+  z-index: 100 !important;
+  align-items: center !important;
+}
+#app-header h1 { display: none !important; }
+
+.nav-brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: 600;
+  font-size: 15px;
+  color: var(--text-primary);
+}
+.nav-logo {
+  width: 32px; height: 32px;
+  background: var(--accent);
+  border-radius: 8px;
+  display: grid;
+  place-items: center;
+  color: var(--accent-fg);
+  font-weight: 700;
+  font-size: 16px;
+  font-family: var(--font-num);
+}
+
+/* 中間導覽 — 膠囊外框 */
+#app-header .tab-nav {
+  display: flex !important;
+  gap: 2px !important;
+  border: 1px solid var(--border-strong) !important;
+  border-radius: 999px !important;
+  padding: 4px !important;
+  background: var(--bg-card) !important;
+}
+#app-header .tab-btn {
+  padding: 6px 16px !important;
+  border-radius: 999px !important;
+  font-size: 13px !important;
+  font-weight: 500 !important;
+  color: var(--text-secondary) !important;
+  background: transparent !important;
+  border: none !important;
+  text-transform: none !important;
+  letter-spacing: 0 !important;
+  transition: all .15s !important;
+}
+#app-header .tab-btn:hover {
+  background: var(--pill-bg) !important;
+  color: var(--text-primary) !important;
+}
+#app-header .tab-btn.active {
+  background: var(--accent) !important;
+  color: var(--accent-fg) !important;
+  border: none !important;
+}
+
+/* 右側 */
+.header-right {
+  margin-left: auto !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 12px !important;
+}
+.header-right .update-badge {
+  background: transparent !important;
+  border: none !important;
+  padding: 0 !important;
+  font-size: 11px !important;
+  color: var(--text-muted) !important;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.header-right .rate-badge {
+  padding: 6px 12px !important;
+  background: var(--bg-card) !important;
+  border: 1px solid var(--border-strong) !important;
+  border-radius: 999px !important;
+  font-size: 13px !important;
+  font-weight: 500 !important;
+  color: var(--text-primary) !important;
+}
+.header-right .btn-theme {
+  width: 32px !important; height: 32px !important;
+  padding: 0 !important;
+  border-radius: 50% !important;
+  border: 1px solid var(--border-strong) !important;
+  background: var(--bg-card) !important;
+  color: var(--text-primary) !important;
+  font-size: 14px !important;
+  display: grid !important;
+  place-items: center !important;
+  transition: background .15s !important;
+}
+.header-right .btn-theme:hover {
+  background: var(--pill-bg) !important;
+  border-color: var(--border-strong) !important;
+  color: var(--text-primary) !important;
+}
+.header-right .btn-signout {
+  background: transparent !important;
+  border: none !important;
+  padding: 0 !important;
+  font-size: 13px !important;
+  color: var(--text-secondary) !important;
+}
+.header-right .btn-signout:hover {
+  color: var(--text-primary) !important;
+  border: none !important;
+}
+
+/* 隱藏舊 mobile menu btn (HTML 已移除) */
+.mobile-menu-btn { display: none !important; }
+
+/* 隱藏舊 sidebar (HTML 已移除，但保險起見) */
+#sidebar { display: none !important; }
+
+/* ═══════════════════════════════════════════════════════════════
+   Hero — KPI 區漸層背景
+   ═══════════════════════════════════════════════════════════════ */
+.app-hero {
+  position: relative;
+  background: var(--hero-bg);
+  border-bottom: 1px solid var(--border-strong);
+  overflow: hidden;
+}
+.app-hero-inner {
+  position: relative;
+  z-index: 1;
+  max-width: 1440px;
+  margin: 0 auto;
+  padding: 32px 24px;
+}
+.app-hero-blob {
+  position: absolute;
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 0;
+}
+.app-hero-blob-1 {
+  width: 320px; height: 320px;
+  background: rgba(148,163,184,0.12);
+  right: -200px; top: -80px;
+}
+.app-hero-blob-2 {
+  width: 160px; height: 160px;
+  background: rgba(148,163,184,0.08);
+  right: 120px; top: -50px;
+}
+:root[data-theme="dark"] .app-hero-blob-1 { background: rgba(148,163,184,0.06); }
+:root[data-theme="dark"] .app-hero-blob-2 { background: rgba(148,163,184,0.04); }
+
+/* Hero 內 KPI grid 不需要外距（hero 自己有 padding） */
+.app-hero .kpi-grid { margin-bottom: 0 !important; }
+
+/* Hero 內 KPI 卡片 — 白底浮在漸層上 */
+.app-hero .kpi-card {
+  background: var(--bg-card) !important;
+  border: 1px solid var(--border) !important;
+  border-radius: 16px !important;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04) !important;
+  transition: box-shadow .2s ease !important;
+}
+.app-hero .kpi-card:hover {
+  box-shadow: 0 4px 12px rgba(0,0,0,0.08) !important;
+  border-color: var(--border) !important;
+}
+:root[data-theme="dark"] .app-hero .kpi-card {
+  box-shadow: none !important;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   Page footer — 版本號（桌面 + 手機都顯示）
+   ═══════════════════════════════════════════════════════════════ */
+.page-footer {
+  max-width: 1440px;
+  margin: 0 auto;
+  padding: 16px 24px 24px;
+  font-size: 11px;
+  color: var(--text-muted);
+}
+.page-footer-build { font-family: var(--font-num); }
+
+/* 隱藏 mobile-only footer，改用統一 page-footer */
+.mobile-footer { display: none !important; }
+
+/* ═══════════════════════════════════════════════════════════════
+   手機版：直接顯示橫向 tab，不再用漢堡選單
+   ═══════════════════════════════════════════════════════════════ */
+@media (max-width: 768px) {
+  #app-header {
+    padding: 0 12px !important;
+    gap: 12px !important;
+    height: auto !important;
+    min-height: 56px !important;
+    flex-wrap: wrap;
+  }
+  #app-header .nav-brand-text { display: none; }
+  #app-header .tab-nav {
+    order: 3;
+    flex-basis: 100%;
+    justify-content: center;
+    margin: 0 -12px 8px;
+    border-radius: 0 !important;
+    border: none !important;
+    border-top: 1px solid var(--border) !important;
+    padding: 8px !important;
+    background: var(--bg-card) !important;
+  }
+  #app-header .header-right {
+    gap: 8px !important;
+  }
+  #app-header .header-right .update-badge { display: none; }
+  .app-hero-inner { padding: 16px !important; }
+  .app-hero .kpi-grid { gap: 8px !important; }
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   圓餅圖 legend — 桌面也改為底部水平排列
+   ═══════════════════════════════════════════════════════════════ */
+@media (min-width: 769px) {
+  #pie-wrap { height: 280px !important; }
+}

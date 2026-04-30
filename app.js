@@ -2,7 +2,7 @@
 // CONFIG
 // ══════════════════════════════════════════════════════════════
 // Build 時間：每次修改 code 後手動更新此時間（UTC+8 台北時間）
-const BUILD_DATE = '2026/04/30 09:38';
+const BUILD_DATE = '2026/04/30 12:52';
 
 const SPREADSHEET_ID = '1lpRpxVzWaYUqL-jVPOAJCtjsJUIedPYYyOx4gg4PPFU';
 const CLIENT_ID = '149884248440-85f8dhc6ub9up10sv0f89e3e0itrnooj.apps.googleusercontent.com';
@@ -2888,16 +2888,18 @@ function renderPie() {
                 },
               },
             }
-          // 桌面：右側垂直排列，含百分比
+          // 桌面：底部水平排列，含百分比
           : {
-              position: 'right',
+              position: 'bottom',
               align: 'center',
               labels: {
                 color: cc.legend,
-                padding: 10,
+                padding: 12,
                 font: { size: 11 },
                 boxWidth: 8,
+                boxHeight: 8,
                 usePointStyle: true,
+                pointStyle: 'circle',
                 generateLabels(chart) {
                   const ds = chart.data.datasets[0];
                   const tot = ds.data.reduce((a,b)=>a+b,0);

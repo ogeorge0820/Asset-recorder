@@ -16,45 +16,10 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=DM+Sans:wght@300;400;500;600;700&display=swap">
-<link rel="stylesheet" href="theme.css?v=202604300938">
-<link rel="stylesheet" href="style.css?v=202604300938">
+<link rel="stylesheet" href="theme.css?v=202604301252">
+<link rel="stylesheet" href="style.css?v=202604301252">
 </head>
 <body>
-
-<!-- ── Sidebar (desktop only) ── -->
-<aside id="sidebar">
-  <div class="sidebar-header">
-    <div class="sidebar-logo"><span class="sidebar-logo-text">Asset Tracker</span></div>
-  </div>
-  <nav class="sidebar-nav">
-    <button class="sidebar-nav-item active" id="snav-overview" onclick="switchTab('overview')">
-      <span>總覽</span>
-    </button>
-    <button class="sidebar-nav-item" id="snav-management" onclick="switchTab('management')">
-      <span>管理</span>
-    </button>
-    <button class="sidebar-nav-item" id="snav-dwz" onclick="switchTab('dwz')">
-      <span>Die With Zero</span>
-    </button>
-  </nav>
-  <div class="sidebar-spacer"></div>
-  <div class="sidebar-footer">
-    <div class="sidebar-actions">
-      <button class="btn-theme" id="sidebar-btn-theme" onclick="toggleTheme()">☀</button>
-      <button class="btn-signout" onclick="signOut()">登出</button>
-    </div>
-    <div class="sidebar-info-block">
-      <div class="sidebar-info-row">
-        <div class="sidebar-rate"><span>USD</span><b id="sidebar-rate-val">—</b></div>
-        <div class="sidebar-update">
-          <span class="update-dot" id="sidebar-update-dot"></span>
-          <span id="sidebar-update-ts">—</span>
-        </div>
-      </div>
-      <div class="sidebar-build-badge" id="sidebar-build-badge"></div>
-    </div>
-  </div>
-</aside>
 
 <!-- ── Login Screen ── -->
 <div id="login-screen">
@@ -69,26 +34,23 @@
 <!-- ── Main App ── -->
 <div id="app" style="display:none">
   <header id="app-header">
-    <h1>Asset Tracker</h1>
+    <div class="nav-brand">
+      <div class="nav-logo">$</div>
+      <span class="nav-brand-text">資產追蹤</span>
+    </div>
     <nav class="tab-nav">
       <button class="tab-btn active" onclick="switchTab('overview')">總覽</button>
       <button class="tab-btn" onclick="switchTab('management')">管理</button>
       <button class="tab-btn" onclick="switchTab('dwz')"><span class="tab-full">Die With Zero</span><span class="tab-short">DWZ</span></button>
     </nav>
     <div class="header-right">
-      <div class="build-badge" id="build-badge"></div>
-      <div class="rate-badge" id="header-rate"><span>USD</span><b id="header-rate-val">—</b></div>
       <div class="update-badge" id="update-badge">
         <span class="update-dot" id="update-dot"></span>
         <span id="update-ts">—</span>
       </div>
-      <button class="btn-theme" id="btn-theme" onclick="toggleTheme()">☀</button>
+      <div class="rate-badge" id="header-rate"><span>USD</span><b id="header-rate-val">—</b></div>
+      <button class="btn-theme" id="btn-theme" onclick="toggleTheme()" aria-label="切換主題">☀</button>
       <button class="btn-signout" onclick="signOut()">登出</button>
-      <button class="mobile-menu-btn" id="mobile-menu-btn" onclick="openMobileMenu()" aria-label="選單">
-        <span class="mobile-menu-icon"></span>
-        <span class="mobile-menu-icon"></span>
-        <span class="mobile-menu-icon"></span>
-      </button>
     </div>
   </header>
 
@@ -97,10 +59,11 @@
     <!-- ══ 總覽 Tab ══ -->
     <div id="tab-overview">
 
-      <!-- Mobile-only build version -->
-      <div class="mobile-build-bar" id="mobile-build-bar"></div>
-
-      <!-- KPI Cards -->
+      <!-- KPI Cards (hero gradient) -->
+      <section class="app-hero">
+        <div class="app-hero-blob app-hero-blob-1"></div>
+        <div class="app-hero-blob app-hero-blob-2"></div>
+        <div class="app-hero-inner">
       <div class="kpi-grid">
         <div class="kpi-card kpi-primary">
           <div class="kpi-label"><span class="kpi-label-dot"></span>淨資產</div>
@@ -133,6 +96,8 @@
           <div class="kpi-sub" id="ks-growth">可用資產 − 2025/12/31 基準</div>
         </div>
       </div>
+        </div><!-- /.app-hero-inner -->
+      </section><!-- /.app-hero -->
 
       <!-- Two-column layout: main (trends) | side (pie + net worth) -->
       <div class="overview-grid">
@@ -459,10 +424,14 @@
      </div><!-- /.dwz-layout -->
     </div><!-- /tab-dwz -->
 
+    <!-- Page footer: version (desktop + mobile) -->
+    <footer class="page-footer">
+      <span class="page-footer-build" id="build-badge"></span>
+    </footer>
+
   </div><!-- /app-content -->
 
-  <!-- Mobile-only footer: version + update time -->
-  <div class="mobile-footer" id="mobile-footer">
+  <div class="mobile-footer" id="mobile-footer" style="display:none">
     <span class="mobile-footer-dot" id="mobile-footer-dot"></span>
     <span id="mobile-footer-ts">—</span>
     <span class="mobile-footer-sep">·</span>
@@ -551,6 +520,6 @@
 <!-- ── Toast ── -->
 <div class="toast" id="toast"></div>
 
-<script src="app.js?v=202604300938"></script>
+<script src="app.js?v=202604301252"></script>
 </body>
 </html>
