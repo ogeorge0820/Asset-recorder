@@ -1139,15 +1139,50 @@ canvas { background: transparent !important; }
 
 @media (max-width: 768px) {
   .pie-wrap {
-    flex-direction: column;
-    height: auto;
+    flex-direction: column !important;
+    height: auto !important;
+    align-items: stretch !important;
   }
   .pie-wrap .pie-canvas {
-    flex: 0 0 240px;
-    width: 100%;
-    height: 240px;
+    flex: 0 0 220px !important;
+    width: 100% !important;
+    height: 220px !important;
+    margin-bottom: 12px;
   }
-  .pie-legend { width: 100%; gap: 8px; }
+  .pie-legend {
+    width: 100%;
+    flex: 1 1 auto !important;
+    gap: 10px;
+  }
+  /* 手機版資產卡片：移除左側百分比 badge，代號完整顯示 */
+  .asset-card {
+    display: grid !important;
+    grid-template-columns: 1fr auto !important;
+    grid-template-areas:
+      "sym twd"
+      "detail detail" !important;
+    gap: 4px 12px !important;
+    align-items: center !important;
+  }
+  .asset-card-pct { display: none !important; }
+  .asset-card-sym {
+    grid-area: sym !important;
+    flex: none !important;
+    font-size: 14px !important;
+    font-weight: 600 !important;
+    overflow: visible !important;
+    text-overflow: clip !important;
+  }
+  .asset-card-mid { display: contents !important; }
+  .asset-card-twd {
+    grid-area: twd !important;
+    font-size: 15px !important;
+  }
+  .asset-card-detail {
+    grid-area: detail !important;
+    margin-top: 0 !important;
+    font-size: 11px !important;
+  }
 }
 
 
