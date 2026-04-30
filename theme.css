@@ -1065,5 +1065,71 @@ canvas { background: transparent !important; }
 }
 
 /* ═══════════════════════════════════════════════════════════════
-   圓餅圖 legend — 桌面也改為底部水平排列
+   圓餅圖 — 圓餅左 + 圖例右（垂直）
    ═══════════════════════════════════════════════════════════════ */
+.pie-wrap {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  height: 280px;
+}
+.pie-wrap .pie-canvas {
+  flex: 0 0 45%;
+  position: relative;
+  height: 100%;
+  min-width: 0;
+}
+.pie-wrap .pie-canvas canvas { max-width: 100%; max-height: 100%; }
+.pie-legend {
+  flex: 1;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  font-size: 13px;
+  min-width: 0;
+}
+.pie-legend li {
+  display: grid;
+  grid-template-columns: 12px 1fr auto auto;
+  align-items: center;
+  gap: 10px;
+  color: var(--text-primary);
+}
+.pie-legend .pl-dot {
+  width: 10px; height: 10px;
+  border-radius: 50%;
+  display: inline-block;
+}
+.pie-legend .pl-name { color: var(--text-secondary); white-space: nowrap; }
+.pie-legend .pl-pct {
+  font-family: var(--font-num);
+  font-variant-numeric: tabular-nums;
+  font-weight: 500;
+  color: var(--text-primary);
+  margin-right: 8px;
+}
+.pie-legend .pl-amt {
+  font-family: var(--font-num);
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+  color: var(--text-secondary);
+  white-space: nowrap;
+}
+
+@media (max-width: 768px) {
+  .pie-wrap {
+    flex-direction: column;
+    height: auto;
+  }
+  .pie-wrap .pie-canvas {
+    flex: 0 0 240px;
+    width: 100%;
+    height: 240px;
+  }
+  .pie-legend { width: 100%; gap: 8px; }
+}
+
+

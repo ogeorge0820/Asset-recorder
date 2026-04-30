@@ -2,7 +2,7 @@
 // CONFIG
 // ══════════════════════════════════════════════════════════════
 // Build 時間：每次修改 code 後手動更新此時間（UTC+8 台北時間）
-const BUILD_DATE = '2026/04/30 16:37';
+const BUILD_DATE = '2026/04/30 17:04';
 
 const SPREADSHEET_ID = '1lpRpxVzWaYUqL-jVPOAJCtjsJUIedPYYyOx4gg4PPFU';
 const CLIENT_ID = '149884248440-85f8dhc6ub9up10sv0f89e3e0itrnooj.apps.googleusercontent.com';
@@ -2965,54 +2965,7 @@ function renderPie() {
       responsive: true, maintainAspectRatio: false, cutout: '55%', radius: 80,
       layout: { padding: { top: 4, bottom: 4, left: 4, right: 4 } },
       plugins: {
-        legend: window.innerWidth <= 640
-          // 手機：底部橫排，字體縮小
-          ? {
-              position: 'bottom',
-              labels: {
-                color: cc.legend,
-                padding: 10,
-                font: { size: 11 },
-                boxWidth: 10,
-                usePointStyle: true,
-                generateLabels(chart) {
-                  const ds = chart.data.datasets[0];
-                  const tot = ds.data.reduce((a,b)=>a+b,0);
-                  return chart.data.labels.map((label, i) => ({
-                    text: `${label} ${(ds.data[i]/tot*100).toFixed(1)}%`,
-                    fillStyle: ds.backgroundColor[i],
-                    strokeStyle: ds.backgroundColor[i],
-                    fontColor: cc.legend,
-                    hidden: false, index: i,
-                  }));
-                },
-              },
-            }
-          // 桌面：底部水平排列，含百分比
-          : {
-              position: 'bottom',
-              align: 'center',
-              labels: {
-                color: cc.legend,
-                padding: 12,
-                font: { size: 11 },
-                boxWidth: 8,
-                boxHeight: 8,
-                usePointStyle: true,
-                pointStyle: 'circle',
-                generateLabels(chart) {
-                  const ds = chart.data.datasets[0];
-                  const tot = ds.data.reduce((a,b)=>a+b,0);
-                  return chart.data.labels.map((label, i) => ({
-                    text: `${label}  ${(ds.data[i]/tot*100).toFixed(1)}%`,
-                    fillStyle: ds.backgroundColor[i],
-                    strokeStyle: ds.backgroundColor[i],
-                    fontColor: cc.legend,
-                    hidden: false, index: i,
-                  }));
-                },
-              },
-            },
+        legend: { display: false },
         tooltip: {
           // 跟隨游標顯示，yAlign:bottom 讓 tooltip 在游標上方展開
           position: 'cursorOffset',
@@ -3025,6 +2978,21 @@ function renderPie() {
       },
     },
   });
+
+  // 自訂 HTML 圖例（圓餅右側垂直）
+  const legendEl = $('pie-legend');
+  if (legendEl) {
+    const sumValue = entries.reduce((s, e) => s + e.value, 0);
+    legendEl.innerHTML = entries.map(e => {
+      const pct = sumValue > 0 ? (e.value / sumValue * 100) : 0;
+      return `<li>
+        <span class="pl-dot" style="background:${e.color}"></span>
+        <span class="pl-name">${e.label}</span>
+        <span class="pl-pct">${pct.toFixed(1)}%</span>
+        <span class="pl-amt">${fmt(e.value)}</span>
+      </li>`;
+    }).join('');
+  }
 }
 
 function renderTrend() {
