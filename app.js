@@ -2,7 +2,7 @@
 // CONFIG
 // ══════════════════════════════════════════════════════════════
 // Build 時間：每次修改 code 後手動更新此時間（UTC+8 台北時間）
-const BUILD_DATE = '2026/04/30 15:07';
+const BUILD_DATE = '2026/04/30 15:11';
 
 const SPREADSHEET_ID = '1lpRpxVzWaYUqL-jVPOAJCtjsJUIedPYYyOx4gg4PPFU';
 const CLIENT_ID = '149884248440-85f8dhc6ub9up10sv0f89e3e0itrnooj.apps.googleusercontent.com';
@@ -1148,16 +1148,12 @@ function renderHoldingCards() {
   ])].slice(0, 5).join(' · ');
   setHC('cash', cashCount, cashTot, null, currencies, 'accounts');
 
-  // 可用現金（與 KPI ks-liquid 同邏輯：liquid - budget - upcoming 規劃支出）
+  // 可用現金 = 流動現金總額（含 USDT）− 月生活支出預算
   const availEl = $('hc-avail-cash');
   if (availEl) {
     try {
-      const totals = calcTotals();
-      const upcoming = calcUpcomingExpenses();
-      const adj = totals.available - upcoming;
-      availEl.textContent = totals.budget > 0
-        ? (upcoming > 0 ? `可用：${fmtWan(adj)}（含規劃支出）` : `可用：${fmtWan(totals.available)}`)
-        : '';
+      const budget = calcBudgetTotal();
+      availEl.textContent = budget > 0 ? `可用：${fmtWan(cashTot - budget)}` : '';
     } catch (e) { availEl.textContent = ''; }
   }
 }
