@@ -837,10 +837,22 @@ canvas { background: transparent !important; }
   grid-column: 1 / -1;
 }
 .holding-block-full {
-  grid-column: 1 / -1;
+  grid-column: 1 / -1 !important;
 }
-.extras-hero { padding: 0 !important; margin-top: 8px; }
-.extras-hero .holdings-grid { gap: 16px; }
+.extras-hero {
+  padding: 0 !important;
+  margin: 0 !important;
+  grid-column: 1 / -1 !important;
+}
+.extras-hero .holdings-hero-title {
+  margin-top: 8px;
+}
+.extras-hero .holdings-grid {
+  display: grid !important;
+  grid-template-columns: repeat(2, 1fr) !important;
+  gap: 16px !important;
+  align-items: start !important;
+}
 
 .holding-card {
   position: relative;

@@ -2,7 +2,7 @@
 // CONFIG
 // ══════════════════════════════════════════════════════════════
 // Build 時間：每次修改 code 後手動更新此時間（UTC+8 台北時間）
-const BUILD_DATE = '2026/05/01 23:07';
+const BUILD_DATE = '2026/05/01 23:11';
 
 const SPREADSHEET_ID = '1lpRpxVzWaYUqL-jVPOAJCtjsJUIedPYYyOx4gg4PPFU';
 const CLIENT_ID = '149884248440-85f8dhc6ub9up10sv0f89e3e0itrnooj.apps.googleusercontent.com';
@@ -1198,16 +1198,27 @@ function renderExtrasCards() {
   }
 
   // 質押 / 活存收益（本月）
-  const now = new Date();
-  const curMonth = `${now.getFullYear()}/${String(now.getMonth()+1).padStart(2,'0')}`;
-  const monthRows = (S.data.rewards || []).filter(r => (r[0] || '').startsWith(curMonth));
-  const monthTWD = monthRows.reduce((s, r) => s + rewardTWD(r), 0);
-  const aREl = $('hc-amount-rewards');
-  if (aREl) aREl.textContent = monthTWD > 0 ? fmt(monthTWD) : '—';
-  const sREl = $('hc-symbols-rewards');
-  if (sREl) {
-    const syms = [...new Set(monthRows.map(r => (r[1] || '').toUpperCase()).filter(Boolean))].slice(0, 6).join(' · ');
-    sREl.textContent = syms || '—';
+  try {
+    const now = new Date();
+    const curMonth = `${now.getFullYear()}/${String(now.getMonth()+1).padStart(2,'0')}`;
+    const allRw = S.data.rewards || [];
+    const monthRows = allRw.filter(r => (r[0] || '').startsWith(curMonth));
+    const monthTWD = monthRows.reduce((s, r) => s + rewardTWD(r), 0);
+    console.log('[renderExtrasCards] rewards', {
+      total: allRw.length, curMonth, matched: monthRows.length, monthTWD,
+      sampleRow: allRw[0] || null,
+    });
+    const aREl = $('hc-amount-rewards');
+    if (aREl) aREl.textContent = monthTWD > 0 ? fmt(monthTWD) : '—';
+    const sREl = $('hc-symbols-rewards');
+    if (sREl) {
+      const syms = [...new Set(monthRows.map(r => (r[1] || '').toUpperCase()).filter(Boolean))].slice(0, 6).join(' · ');
+      sREl.textContent = syms || '—';
+    }
+  } catch (e) {
+    console.error('[renderExtrasCards] rewards 錯誤', e);
+    const aREl = $('hc-amount-rewards'); if (aREl) aREl.textContent = '—';
+    const sREl = $('hc-symbols-rewards'); if (sREl) sREl.textContent = '—';
   }
 }
 
