@@ -16,8 +16,8 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=DM+Sans:wght@300;400;500;600;700&display=swap">
-<link rel="stylesheet" href="theme.css?v=202605012259">
-<link rel="stylesheet" href="style.css?v=202605012259">
+<link rel="stylesheet" href="theme.css?v=202605012307">
+<link rel="stylesheet" href="style.css?v=202605012307">
 </head>
 <body>
 
@@ -286,22 +286,68 @@
         <span id="cnt-us" hidden>0</span><span id="tot-us" hidden>—</span><span id="gain-us" hidden></span>
         <span id="cnt-crypto" hidden>0</span><span id="tot-crypto" hidden>—</span><span id="gain-crypto" hidden></span>
 
-        <!-- Row 4: 其他資產＆負債 全寬 -->
-        <div class="section-card collapsed" id="section-other" style="grid-column: 1 / -1">
-          <h3 class="section-header" onclick="toggleSection('other')"><span>其他資產 &amp; 負債</span><span class="section-header-right"><span class="section-total" id="tot-other">—</span><span class="section-chevron">▾</span></span></h3>
-          <div class="section-body">
-          <div id="other-items" style="display:flex;flex-direction:column;gap:10px;margin-top:4px"></div>
-          </div>
-        </div>
+        <!-- 其他資產 / 負債 / 質押收益 — 卡片式 -->
+        <section class="holdings-hero extras-hero" style="grid-column: 1 / -1">
+          <h3 class="holdings-hero-title">其他資產 &amp; 收益</h3>
+          <div class="holdings-grid">
 
-        <!-- Row 5: 質押/活存收益記錄 全寬 -->
-        <div class="section-card collapsed" id="section-rewards" style="grid-column: 1 / -1">
-          <h3 class="section-header" onclick="toggleSection('rewards')"><span>質押 / 活存收益記錄</span><span class="section-header-right"><span class="section-total" id="tot-rewards-month">—</span><span class="section-chevron">▾</span></span></h3>
-          <div class="section-body">
-            <div id="rewards-accordion"></div>
-            <button class="btn-add" onclick="addReward()">+ 新增收益記錄</button>
+            <div class="holding-block" id="hb-other-assets">
+              <button class="holding-card hc-other-assets" onclick="toggleHolding('other-assets')" type="button">
+                <span class="hc-deco hc-deco-rings" aria-hidden="true"></span>
+                <div class="hc-top">
+                  <span class="hc-label">其他資產 / OTHER ASSETS</span>
+                  <span class="hc-count" id="hc-count-other-assets">— items</span>
+                </div>
+                <div class="hc-amount" id="hc-amount-other-assets">—</div>
+                <div class="hc-symbols" id="hc-symbols-other-assets">儲蓄險 · 房地產</div>
+                <span class="hc-arrow" aria-hidden="true">▾</span>
+              </button>
+              <div class="holding-detail">
+                <div id="other-assets-items" style="display:flex;flex-direction:column;gap:10px"></div>
+              </div>
+            </div>
+
+            <div class="holding-block" id="hb-liab">
+              <button class="holding-card hc-liab" onclick="toggleHolding('liab')" type="button">
+                <span class="hc-deco hc-deco-rings" aria-hidden="true"></span>
+                <div class="hc-top">
+                  <span class="hc-label">負債 / LIABILITIES</span>
+                  <span class="hc-count" id="hc-count-liab">— items</span>
+                </div>
+                <div class="hc-amount" id="hc-amount-liab">—</div>
+                <div class="hc-avail" id="hc-avail-liab"></div>
+                <div class="hc-symbols" id="hc-symbols-liab">房貸餘額</div>
+                <span class="hc-arrow" aria-hidden="true">▾</span>
+              </button>
+              <div class="holding-detail">
+                <div id="liab-items" style="display:flex;flex-direction:column;gap:10px"></div>
+              </div>
+            </div>
+
+            <div class="holding-block holding-block-full" id="hb-rewards">
+              <button class="holding-card hc-rewards" onclick="toggleHolding('rewards')" type="button">
+                <span class="hc-deco hc-deco-stars" aria-hidden="true"></span>
+                <div class="hc-top">
+                  <span class="hc-label">質押 / 活存收益 / STAKING REWARDS</span>
+                  <span class="hc-count">本月</span>
+                </div>
+                <div class="hc-amount" id="hc-amount-rewards">—</div>
+                <div class="hc-symbols" id="hc-symbols-rewards">—</div>
+                <span class="hc-arrow" aria-hidden="true">▾</span>
+              </button>
+              <div class="holding-detail">
+                <div id="rewards-accordion"></div>
+                <button class="btn-add" onclick="addReward()" style="margin-top:12px">+ 新增收益記錄</button>
+              </div>
+            </div>
+
           </div>
-        </div>
+        </section>
+
+        <!-- 隱藏舊容器 (JS 仍寫入這些 id) -->
+        <span id="tot-other" hidden>—</span>
+        <span id="tot-rewards-month" hidden>—</span>
+        <div id="other-items" hidden></div>
 
         <!-- Row 6: 生活支出預算 全寬 -->
         <div class="section-card collapsed" id="section-budget" style="grid-column: 1 / -1">
@@ -583,6 +629,6 @@
 <!-- ── Toast ── -->
 <div class="toast" id="toast"></div>
 
-<script src="app.js?v=202605012259"></script>
+<script src="app.js?v=202605012307"></script>
 </body>
 </html>

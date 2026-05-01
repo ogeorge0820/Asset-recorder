@@ -2,7 +2,7 @@
 // CONFIG
 // ══════════════════════════════════════════════════════════════
 // Build 時間：每次修改 code 後手動更新此時間（UTC+8 台北時間）
-const BUILD_DATE = '2026/05/01 22:59';
+const BUILD_DATE = '2026/05/01 23:07';
 
 const SPREADSHEET_ID = '1lpRpxVzWaYUqL-jVPOAJCtjsJUIedPYYyOx4gg4PPFU';
 const CLIENT_ID = '149884248440-85f8dhc6ub9up10sv0f89e3e0itrnooj.apps.googleusercontent.com';
@@ -1169,6 +1169,48 @@ function toggleHolding(cat) {
   block.classList.toggle('expanded');
 }
 
+// 管理頁第二排：其他資產 / 負債 / 質押收益
+function renderExtrasCards() {
+  const rate = S.prices.usdtwd || 0;
+  const ins  = (S.data.settings.insurance_total  || 0) * rate;
+  const re   = (S.data.settings.realestate_total || 0);
+  const debt = (S.data.settings.debt             || 0);
+
+  // 其他資產
+  const otherAssetsTot = ins + re;
+  let assetCount = 0;
+  if (ins > 0) assetCount++;
+  if (re > 0) assetCount++;
+  const aAEl = $('hc-amount-other-assets');
+  if (aAEl) aAEl.textContent = otherAssetsTot > 0 ? fmt(otherAssetsTot) : '—';
+  const cAEl = $('hc-count-other-assets');
+  if (cAEl) cAEl.textContent = assetCount + ' items';
+
+  // 負債
+  const aLEl = $('hc-amount-liab');
+  if (aLEl) aLEl.textContent = debt > 0 ? fmt(debt) : '—';
+  const cLEl = $('hc-count-liab');
+  if (cLEl) cLEl.textContent = debt > 0 ? '1 item' : '0 items';
+  const availLEl = $('hc-avail-liab');
+  if (availLEl) {
+    const net = ins + re - debt;
+    availLEl.textContent = (ins + re + debt) > 0 ? `淨值 ${fmtWan(net)}` : '';
+  }
+
+  // 質押 / 活存收益（本月）
+  const now = new Date();
+  const curMonth = `${now.getFullYear()}/${String(now.getMonth()+1).padStart(2,'0')}`;
+  const monthRows = (S.data.rewards || []).filter(r => (r[0] || '').startsWith(curMonth));
+  const monthTWD = monthRows.reduce((s, r) => s + rewardTWD(r), 0);
+  const aREl = $('hc-amount-rewards');
+  if (aREl) aREl.textContent = monthTWD > 0 ? fmt(monthTWD) : '—';
+  const sREl = $('hc-symbols-rewards');
+  if (sREl) {
+    const syms = [...new Set(monthRows.map(r => (r[1] || '').toUpperCase()).filter(Boolean))].slice(0, 6).join(' · ');
+    sREl.textContent = syms || '—';
+  }
+}
+
 // 計算並更新「其他資產 & 負債」標題列淨值摘要
 function updateOtherTotal() {
   const el = $('tot-other');
@@ -1214,9 +1256,7 @@ function renderOther() {
     },
   ];
 
-  const el = $('other-items');
-  if (!el) return;
-  el.innerHTML = items.map(c => `
+  const renderItemCard = c => `
     <div class="other-item-card" onclick="openOtherItemDetail('${c.key}')" role="button" tabindex="0">
       <div class="other-item-icon">${c.icon}</div>
       <div class="other-item-info">
@@ -1225,9 +1265,18 @@ function renderOther() {
       </div>
       <div class="other-item-value${c.isDebt ? ' neg' : ''}">${c.valueTWD > 0 ? fmt(c.valueTWD) : '—'}</div>
     </div>
-  `).join('');
+  `;
+  // 舊容器（保留相容性）
+  const elAll = $('other-items');
+  if (elAll) elAll.innerHTML = items.map(renderItemCard).join('');
+  // 卡片版：分拆成「其他資產」與「負債」
+  const elAssets = $('other-assets-items');
+  if (elAssets) elAssets.innerHTML = items.filter(c => !c.isDebt).map(renderItemCard).join('');
+  const elLiab = $('liab-items');
+  if (elLiab) elLiab.innerHTML = items.filter(c => c.isDebt).map(renderItemCard).join('');
 
   updateOtherTotal();
+  renderExtrasCards();
 }
 
 // 「其他資產 & 負債」三個固定項目的元資料
@@ -1731,6 +1780,7 @@ function renderRewards() {
 
   // 歷史總收益合計 for footer（與 badge 一致）
   if ($('tot-rewards-month')) $('tot-rewards-month').textContent = allTimeTWD > 0 ? fmt(allTimeTWD) : '—';
+  renderExtrasCards();
 }
 
 function toggleRewardGroup(gid) {

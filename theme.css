@@ -836,6 +836,11 @@ canvas { background: transparent !important; }
 .holding-block.expanded {
   grid-column: 1 / -1;
 }
+.holding-block-full {
+  grid-column: 1 / -1;
+}
+.extras-hero { padding: 0 !important; margin-top: 8px; }
+.extras-hero .holdings-grid { gap: 16px; }
 
 .holding-card {
   position: relative;
@@ -934,17 +939,28 @@ canvas { background: transparent !important; }
 .holding-card.hc-us     { background: #1e3a5f !important; color: #ffffff !important; }
 .holding-card.hc-tw     { background: #f5f0e8 !important; color: #1a1a1a !important; }
 .holding-card.hc-cash   { background: #1a3d2b !important; color: #ffffff !important; }
+.holding-card.hc-other-assets { background: #2d1a4a !important; color: #ffffff !important; }
+.holding-card.hc-liab         { background: #3d1a1a !important; color: #ffffff !important; }
+.holding-card.hc-rewards      { background: #1a2d1a !important; color: #ffffff !important; }
 .holding-card.hc-crypto:hover,
 .holding-card.hc-us:hover,
 .holding-card.hc-tw:hover,
-.holding-card.hc-cash:hover { border-color: transparent !important; }
+.holding-card.hc-cash:hover,
+.holding-card.hc-other-assets:hover,
+.holding-card.hc-liab:hover,
+.holding-card.hc-rewards:hover { border-color: transparent !important; }
 
-/* 深色卡（黑/藍/綠）：標題、標的、可用 用半透明白 */
+/* 深色卡（黑/藍/綠/紫/紅褐/墨綠）：標題、標的、可用 用半透明白 */
 .hc-crypto .hc-label, .hc-us .hc-label, .hc-cash .hc-label,
-.hc-crypto .hc-count, .hc-us .hc-count, .hc-cash .hc-count { color: rgba(255,255,255,0.6); }
-.hc-crypto .hc-amount, .hc-us .hc-amount, .hc-cash .hc-amount { color: #ffffff !important; }
+.hc-other-assets .hc-label, .hc-liab .hc-label, .hc-rewards .hc-label,
+.hc-crypto .hc-count, .hc-us .hc-count, .hc-cash .hc-count,
+.hc-other-assets .hc-count, .hc-liab .hc-count, .hc-rewards .hc-count { color: rgba(255,255,255,0.6); }
+.hc-crypto .hc-amount, .hc-us .hc-amount, .hc-cash .hc-amount,
+.hc-other-assets .hc-amount, .hc-liab .hc-amount, .hc-rewards .hc-amount { color: #ffffff !important; }
 .hc-crypto .hc-symbols, .hc-us .hc-symbols, .hc-cash .hc-symbols,
-.hc-crypto .hc-avail, .hc-us .hc-avail, .hc-cash .hc-avail { color: rgba(255,255,255,0.7); }
+.hc-other-assets .hc-symbols, .hc-liab .hc-symbols, .hc-rewards .hc-symbols,
+.hc-crypto .hc-avail, .hc-us .hc-avail, .hc-cash .hc-avail,
+.hc-other-assets .hc-avail, .hc-liab .hc-avail, .hc-rewards .hc-avail { color: rgba(255,255,255,0.7); }
 
 /* 米白卡（台股）：標題 #666、數字 #1a1a1a、標的 #888 */
 .hc-tw .hc-label, .hc-tw .hc-count { color: #666666; }
