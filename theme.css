@@ -1149,6 +1149,123 @@ canvas { background: transparent !important; }
 }
 
 /* ═══════════════════════════════════════════════════════════════
+   Asset card 列（管理頁展開明細）— 細線分隔 + 三欄
+   ═══════════════════════════════════════════════════════════════ */
+#cash-cards, #tw-cards, #us-cards, #crypto-cards { display: block !important; }
+#cash-cards .asset-card,
+#tw-cards .asset-card,
+#us-cards .asset-card,
+#crypto-cards .asset-card {
+  display: grid !important;
+  grid-template-columns: 48px 1fr auto !important;
+  grid-template-areas: none !important;
+  align-items: center !important;
+  gap: 0 14px !important;
+  padding: 12px 16px !important;
+  background: var(--bg-card) !important;
+  border: none !important;
+  border-bottom: 1px solid var(--border) !important;
+  border-radius: 0 !important;
+  transition: background .15s !important;
+}
+#cash-cards .asset-card:hover,
+#tw-cards .asset-card:hover,
+#us-cards .asset-card:hover,
+#crypto-cards .asset-card:hover {
+  background: var(--bg-hover) !important;
+}
+#cash-cards .asset-card:last-child,
+#tw-cards .asset-card:last-child,
+#us-cards .asset-card:last-child,
+#crypto-cards .asset-card:last-child { border-bottom: none !important; }
+
+#cash-cards .asset-card-pct,
+#tw-cards .asset-card-pct,
+#us-cards .asset-card-pct,
+#crypto-cards .asset-card-pct {
+  width: 48px !important; height: 48px !important;
+  border-radius: 50% !important;
+  display: flex !important; align-items: center !important; justify-content: center !important;
+  color: #fff !important;
+  font-size: 13px !important; font-weight: 700 !important;
+  letter-spacing: 0 !important;
+  font-family: var(--font-num) !important;
+}
+#crypto-cards .asset-card-pct { background: #f59e0b !important; }
+#us-cards     .asset-card-pct { background: #3b82f6 !important; }
+#tw-cards     .asset-card-pct { background: #1a1a1a !important; }
+#cash-cards   .asset-card-pct { background: #16a34a !important; }
+.asset-card.err .asset-card-pct {
+  background: rgba(239,68,68,0.18) !important; color: var(--danger) !important;
+}
+
+.asset-card-info {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.asset-card-sym {
+  font-family: 'Inter', var(--font-body) !important;
+  font-size: 16px !important;
+  font-weight: 600 !important;
+  color: var(--text-primary) !important;
+  letter-spacing: 0.01em !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+}
+.asset-card-sub {
+  font-size: 12px !important;
+  color: var(--text-muted) !important;
+  font-family: var(--font-num);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.asset-card-right {
+  text-align: right;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 2px;
+}
+.asset-card-twd {
+  font-size: 18px !important;
+  font-weight: 700 !important;
+  color: var(--text-primary) !important;
+  letter-spacing: -0.01em !important;
+  line-height: 1.2 !important;
+}
+.asset-card-change {
+  font-size: 12px !important;
+  font-family: var(--font-num);
+  font-variant-numeric: tabular-nums;
+}
+.asset-card-change .sym-change { font-size: 12px !important; }
+
+@media (max-width: 768px) {
+  #cash-cards .asset-card,
+  #tw-cards .asset-card,
+  #us-cards .asset-card,
+  #crypto-cards .asset-card {
+    grid-template-columns: 40px 1fr auto !important;
+    padding: 10px 12px !important;
+    gap: 0 10px !important;
+  }
+  #cash-cards .asset-card-pct,
+  #tw-cards .asset-card-pct,
+  #us-cards .asset-card-pct,
+  #crypto-cards .asset-card-pct {
+    width: 40px !important; height: 40px !important;
+    font-size: 11px !important;
+  }
+  .asset-card-sym { font-size: 14px !important; }
+  .asset-card-twd { font-size: 15px !important; }
+}
+
+/* ═══════════════════════════════════════════════════════════════
    圓餅圖 — 圓餅左 + 圖例右（垂直）
    ═══════════════════════════════════════════════════════════════ */
 .pie-wrap {

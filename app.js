@@ -2,7 +2,7 @@
 // CONFIG
 // ══════════════════════════════════════════════════════════════
 // Build 時間：每次修改 code 後手動更新此時間（UTC+8 台北時間）
-const BUILD_DATE = '2026/05/01 23:37';
+const BUILD_DATE = '2026/05/01 23:53';
 
 const SPREADSHEET_ID = '1lpRpxVzWaYUqL-jVPOAJCtjsJUIedPYYyOx4gg4PPFU';
 const CLIENT_ID = '149884248440-85f8dhc6ub9up10sv0f89e3e0itrnooj.apps.googleusercontent.com';
@@ -1405,10 +1405,12 @@ function renderCash() {
       const pct = totalCashTWD > 0 ? Math.round(usdtTWD / totalCashTWD * 100) : null;
       return `<div class="asset-card" onclick="openAssetDetail('crypto',${usdtIdx})" role="button" tabindex="0">
         <div class="asset-card-pct">${pct !== null ? pct + '%' : '—'}</div>
-        <div class="asset-card-sym">USDT</div>
-        <div class="asset-card-mid">
+        <div class="asset-card-info">
+          <div class="asset-card-sym">USDT</div>
+          <div class="asset-card-sub">USDT ${usdtQty.toLocaleString('zh-TW',{minimumFractionDigits:2,maximumFractionDigits:2})}</div>
+        </div>
+        <div class="asset-card-right">
           <div class="asset-card-twd">${fmt(usdtTWD)}</div>
-          <div class="asset-card-detail">USDT ${usdtQty.toLocaleString('zh-TW',{minimumFractionDigits:2,maximumFractionDigits:2})}</div>
         </div>
       </div>`;
     }
@@ -1422,10 +1424,12 @@ function renderCash() {
     const twdStr = hasErr ? '匯率失敗' : fmt(twd);
     return `<div class="asset-card${hasErr ? ' err' : ''}" onclick="openAssetDetail('cash',${i})" role="button" tabindex="0">
       <div class="asset-card-pct">${pctStr}</div>
-      <div class="asset-card-sym">${esc(r[0])}</div>
-      <div class="asset-card-mid">
+      <div class="asset-card-info">
+        <div class="asset-card-sym">${esc(r[0])}</div>
+        <div class="asset-card-sub">${esc(ccy)} ${fmtCashAmt(amt, ccy)}</div>
+      </div>
+      <div class="asset-card-right">
         <div class="asset-card-twd">${twdStr}</div>
-        <div class="asset-card-detail">${esc(ccy)} ${fmtCashAmt(amt, ccy)}</div>
       </div>
     </div>`;
   }).join('');
@@ -1535,15 +1539,18 @@ function renderTW() {
       const pctStr = pct !== null ? pct + '%' : '—';
       const twdStr = err ? '更新失敗' : (v !== null ? fmt(v) : skelSpan());
       const chgStr = err ? '' : renderChangePctCell(symDailyChangePct('tw', r[0], p));
-      const detailStr = err
+      const subStr = err
         ? `持有 ${qty.toLocaleString()} 股`
-        : `持有 ${qty.toLocaleString()} 股 · ${p !== undefined ? p.toLocaleString('zh-TW', {minimumFractionDigits:2,maximumFractionDigits:2}) + ' TWD' : '—'} · ${chgStr}`;
+        : `持有 ${qty.toLocaleString()} 股 · ${p !== undefined ? p.toLocaleString('zh-TW', {minimumFractionDigits:2,maximumFractionDigits:2}) + ' TWD' : '—'}`;
       return `<div class="asset-card${err ? ' err' : ''}" onclick="openAssetDetail('tw',${i})" role="button" tabindex="0">
         <div class="asset-card-pct">${pctStr}</div>
-        <div class="asset-card-sym">${esc(sym)}</div>
-        <div class="asset-card-mid">
+        <div class="asset-card-info">
+          <div class="asset-card-sym">${esc(sym)}</div>
+          <div class="asset-card-sub">${subStr}</div>
+        </div>
+        <div class="asset-card-right">
           <div class="asset-card-twd">${twdStr}</div>
-          <div class="asset-card-detail">${detailStr}</div>
+          <div class="asset-card-change">${chgStr}</div>
         </div>
       </div>`;
     }).join('');
@@ -1592,15 +1599,18 @@ function renderUS() {
       const pctStr = pct !== null ? pct + '%' : '—';
       const twdStr = err ? '更新失敗' : (v !== null ? fmt(v) : skelSpan());
       const chgStr = err ? '' : renderChangePctCell(symDailyChangePct('us', r[0], p));
-      const detailStr = err
+      const subStr = err
         ? `持有 ${qty.toLocaleString(undefined,{maximumFractionDigits:4})} 股`
-        : `持有 ${qty.toLocaleString(undefined,{maximumFractionDigits:4})} 股 · ${p !== undefined ? fmtUSD(p) + ' USD' : '—'} · ${chgStr}`;
+        : `持有 ${qty.toLocaleString(undefined,{maximumFractionDigits:4})} 股 · ${p !== undefined ? fmtUSD(p) + ' USD' : '—'}`;
       return `<div class="asset-card${err ? ' err' : ''}" onclick="openAssetDetail('us',${i})" role="button" tabindex="0">
         <div class="asset-card-pct">${pctStr}</div>
-        <div class="asset-card-sym">${esc(sym)}</div>
-        <div class="asset-card-mid">
+        <div class="asset-card-info">
+          <div class="asset-card-sym">${esc(sym)}</div>
+          <div class="asset-card-sub">${subStr}</div>
+        </div>
+        <div class="asset-card-right">
           <div class="asset-card-twd">${twdStr}</div>
-          <div class="asset-card-detail">${detailStr}</div>
+          <div class="asset-card-change">${chgStr}</div>
         </div>
       </div>`;
     }).join('');
@@ -1668,15 +1678,18 @@ function renderCrypto() {
       const pctStr = pct !== null ? pct + '%' : '—';
       const twdStr = err ? '更新失敗' : (v !== null ? fmt(v) : skelSpan());
       const chgStr = err ? '' : renderChangePctCell(symDailyChangePct('crypto', sym, p));
-      const detailStr = err
+      const subStr = err
         ? `持有 ${qty.toFixed(3)}`
-        : `持有 ${qty.toFixed(3)} · ${p !== undefined ? fmtFloor3(p) : '—'} · ${chgStr}`;
+        : `持有 ${qty.toFixed(3)} · ${p !== undefined ? fmtFloor3(p) : '—'}`;
       return `<div class="asset-card${err ? ' err' : ''}" onclick="openAssetDetail('crypto',${i})" role="button" tabindex="0">
         <div class="asset-card-pct">${pctStr}</div>
-        <div class="asset-card-sym">${esc(sym)}</div>
-        <div class="asset-card-mid">
+        <div class="asset-card-info">
+          <div class="asset-card-sym">${esc(sym)}</div>
+          <div class="asset-card-sub">${subStr}</div>
+        </div>
+        <div class="asset-card-right">
           <div class="asset-card-twd">${twdStr}</div>
-          <div class="asset-card-detail">${detailStr}</div>
+          <div class="asset-card-change">${chgStr}</div>
         </div>
       </div>`;
     }).join('');
