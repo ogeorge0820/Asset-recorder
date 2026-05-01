@@ -2,7 +2,7 @@
 // CONFIG
 // ══════════════════════════════════════════════════════════════
 // Build 時間：每次修改 code 後手動更新此時間（UTC+8 台北時間）
-const BUILD_DATE = '2026/05/01 23:17';
+const BUILD_DATE = '2026/05/01 23:23';
 
 const SPREADSHEET_ID = '1lpRpxVzWaYUqL-jVPOAJCtjsJUIedPYYyOx4gg4PPFU';
 const CLIENT_ID = '149884248440-85f8dhc6ub9up10sv0f89e3e0itrnooj.apps.googleusercontent.com';
@@ -1192,26 +1192,15 @@ function renderExtrasCards() {
   const netEl = $('hc-side-net');
   if (netEl) netEl.textContent = otherAssetsTot + debt > 0 ? fmt(net) : '—';
 
-  // 質押 / 活存收益（本月）— 強健月份比對：YYYY/M、YYYY/MM、YYYY-MM-DD 都能吃
+  // 質押 / 活存收益（歷史總計）
   try {
-    const now = new Date();
-    const curMonth = `${now.getFullYear()}/${String(now.getMonth()+1).padStart(2,'0')}`;
     const allRw = S.data.rewards || [];
-    const ymOf = s => {
-      const m = String(s || '').match(/^(\d{4})[\/-](\d{1,2})/);
-      return m ? `${m[1]}/${String(m[2]).padStart(2, '0')}` : '';
-    };
-    const monthRows = allRw.filter(r => ymOf(r[0]) === curMonth);
-    const monthTWD = monthRows.reduce((s, r) => s + rewardTWD(r), 0);
-    console.log('[renderExtrasCards] rewards', {
-      total: allRw.length, curMonth, matched: monthRows.length, monthTWD,
-      sampleRow: allRw[0] || null, sampleYM: allRw[0] ? ymOf(allRw[0][0]) : null,
-    });
+    const totalTWD = allRw.reduce((s, r) => s + rewardTWD(r), 0);
     const aREl = $('hc-amount-rewards');
-    if (aREl) aREl.textContent = monthTWD > 0 ? fmt(monthTWD) : '—';
+    if (aREl) aREl.textContent = totalTWD > 0 ? fmt(totalTWD) : '—';
     const sREl = $('hc-symbols-rewards');
     if (sREl) {
-      const syms = [...new Set(monthRows.map(r => (r[1] || '').toUpperCase()).filter(Boolean))].slice(0, 6).join(' · ');
+      const syms = [...new Set(allRw.map(r => (r[1] || '').toUpperCase()).filter(Boolean))].slice(0, 8).join(' · ');
       sREl.textContent = syms || '—';
     }
   } catch (e) {
