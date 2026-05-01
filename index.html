@@ -16,8 +16,8 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=DM+Sans:wght@300;400;500;600;700&display=swap">
-<link rel="stylesheet" href="theme.css?v=202605012326">
-<link rel="stylesheet" href="style.css?v=202605012326">
+<link rel="stylesheet" href="theme.css?v=202605012330">
+<link rel="stylesheet" href="style.css?v=202605012330">
 </head>
 <body>
 
@@ -279,15 +279,8 @@
         </div>
       </section>
 
-      <div class="mgmt-grid">
-        <!-- 隱形容器：這些 id 仍被部分 JS 讀取（cnt/tot/gain），但畫面顯示由 holding-card 接管 -->
-        <span id="cnt-cash" hidden>0</span><span id="tot-cash" hidden>—</span>
-        <span id="cnt-tw" hidden>0</span><span id="tot-tw" hidden>—</span><span id="gain-tw" hidden></span>
-        <span id="cnt-us" hidden>0</span><span id="tot-us" hidden>—</span><span id="gain-us" hidden></span>
-        <span id="cnt-crypto" hidden>0</span><span id="tot-crypto" hidden>—</span><span id="gain-crypto" hidden></span>
-
-        <!-- 其他資產 / 負債 / 質押收益 — 卡片式 -->
-        <section class="holdings-hero extras-hero" style="grid-column: 1 / -1">
+      <!-- 其他資產 / 負債 / 質押收益 — 卡片式（與上方 holdings-hero 同層） -->
+      <section class="holdings-hero extras-hero">
           <h3 class="holdings-hero-title">其他資產 &amp; 收益</h3>
           <div class="holdings-grid">
 
@@ -342,7 +335,12 @@
           </div>
         </section>
 
-        <!-- 隱藏舊容器 (JS 仍寫入這些 id) -->
+      <div class="mgmt-grid">
+        <!-- 隱形容器：這些 id 仍被部分 JS 讀取（cnt/tot/gain），但畫面顯示由 holding-card 接管 -->
+        <span id="cnt-cash" hidden>0</span><span id="tot-cash" hidden>—</span>
+        <span id="cnt-tw" hidden>0</span><span id="tot-tw" hidden>—</span><span id="gain-tw" hidden></span>
+        <span id="cnt-us" hidden>0</span><span id="tot-us" hidden>—</span><span id="gain-us" hidden></span>
+        <span id="cnt-crypto" hidden>0</span><span id="tot-crypto" hidden>—</span><span id="gain-crypto" hidden></span>
         <span id="tot-other" hidden>—</span>
         <span id="tot-rewards-month" hidden>—</span>
         <div id="other-items" hidden></div>
@@ -627,6 +625,6 @@
 <!-- ── Toast ── -->
 <div class="toast" id="toast"></div>
 
-<script src="app.js?v=202605012326"></script>
+<script src="app.js?v=202605012330"></script>
 </body>
 </html>

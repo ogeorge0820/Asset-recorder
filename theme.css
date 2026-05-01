@@ -837,15 +837,8 @@ canvas { background: transparent !important; }
   grid-column: 1 / -1;
 }
 .holding-block-full { grid-column: 1 / -1 !important; }
-.holding-card-split .hc-amount { font-size: 32px !important; }
-.extras-hero {
-  padding: 0 !important;
-  margin: 0 !important;
-  grid-column: 1 / -1 !important;
-}
-.extras-hero .holdings-hero-title {
-  margin-top: 8px;
-}
+.holding-card-split .hc-amount { font-size: 30px !important; }
+.extras-hero { margin-top: 8px; }
 .extras-hero .holdings-grid {
   display: grid !important;
   grid-template-columns: repeat(2, 1fr) !important;
@@ -858,8 +851,8 @@ canvas { background: transparent !important; }
   overflow: hidden;
   border: none;
   border-radius: 20px;
-  padding: 24px 28px 22px;
-  min-height: 260px;
+  padding: 22px 26px 20px;
+  min-height: 180px;
   cursor: pointer;
   text-align: left;
   display: flex;
@@ -899,12 +892,12 @@ canvas { background: transparent !important; }
 .holding-card .hc-amount {
   font-family: var(--font-num);
   font-variant-numeric: tabular-nums;
-  font-size: 36px;
+  font-size: 32px;
   font-weight: 700;
   letter-spacing: -0.02em;
   line-height: 1.1;
   margin-top: auto;
-  padding-top: 32px;
+  padding-top: 16px;
   z-index: 1;
   position: relative;
 }
@@ -954,13 +947,13 @@ canvas { background: transparent !important; }
 .holding-card.hc-rewards      { background: #3d1a1a !important; color: #ffffff !important; }
 
 /* 合併卡（資產+負債）內部左右分欄 */
-.holding-card-split { padding: 24px 24px 22px !important; }
+.holding-card-split { padding: 22px 24px 20px !important; }
 .holding-card-split .hc-split-body {
   display: grid;
   grid-template-columns: 1fr auto;
   gap: 16px;
   margin-top: auto;
-  padding-top: 24px;
+  padding-top: 16px;
   align-items: end;
   z-index: 1;
   position: relative;
