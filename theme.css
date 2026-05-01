@@ -1152,6 +1152,21 @@ canvas { background: transparent !important; }
    Reward 行 — 手機版改為 ⋯ + Action Sheet
    ═══════════════════════════════════════════════════════════════ */
 .rwd-more { display: none; }
+
+/* Reward 行內配色 */
+.rwd-qty   { color: #16a34a !important; font-weight: 600 !important; }
+.rwd-twd   { color: var(--text-primary) !important; font-weight: 700 !important; }
+.rwd-price { color: var(--text-muted) !important; }
+.rwd-sym {
+  background: rgba(245,158,11,0.15) !important;
+  color: #d97706 !important;
+  border-color: rgba(245,158,11,0.25) !important;
+}
+:root[data-theme="dark"] .rwd-sym {
+  background: rgba(245,158,11,0.18) !important;
+  color: #fbbf24 !important;
+  border-color: rgba(245,158,11,0.3) !important;
+}
 .reward-sheet-overlay {
   display: none;
   position: fixed;

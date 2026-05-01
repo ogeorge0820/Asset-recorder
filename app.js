@@ -2,7 +2,7 @@
 // CONFIG
 // ══════════════════════════════════════════════════════════════
 // Build 時間：每次修改 code 後手動更新此時間（UTC+8 台北時間）
-const BUILD_DATE = '2026/05/02 00:06';
+const BUILD_DATE = '2026/05/02 00:11';
 
 const SPREADSHEET_ID = '1lpRpxVzWaYUqL-jVPOAJCtjsJUIedPYYyOx4gg4PPFU';
 const CLIENT_ID = '149884248440-85f8dhc6ub9up10sv0f89e3e0itrnooj.apps.googleusercontent.com';
@@ -1774,7 +1774,7 @@ function renderRewards() {
               <span class="rwd-sym">${esc(sym)}${typeBadge}</span>
               ${note ? `<span class="rwd-note">${esc(note)}</span>` : ''}
             </div>
-            <span class="rwd-detail">+${qty.toFixed(3)}${priceStr} <span class="rwd-twd">≈ ${fmt(twd)}</span></span>
+            <span class="rwd-detail"><span class="rwd-qty">+${qty.toFixed(3)}</span>${priceStr} <span class="rwd-twd">≈ ${fmt(twd)}</span></span>
             <div class="rwd-actions">
               <button class="btn-icon edit" onclick="editReward(${i})" title="編輯">✏</button>
               <button class="btn-icon del" onclick="deleteReward(${i})" title="刪除">✕</button>
