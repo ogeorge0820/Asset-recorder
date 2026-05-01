@@ -836,9 +836,8 @@ canvas { background: transparent !important; }
 .holding-block.expanded {
   grid-column: 1 / -1;
 }
-.holding-block-full {
-  grid-column: 1 / -1 !important;
-}
+.holding-block-full { grid-column: 1 / -1 !important; }
+.holding-card-split .hc-amount { font-size: 32px !important; }
 .extras-hero {
   padding: 0 !important;
   margin: 0 !important;
@@ -952,27 +951,69 @@ canvas { background: transparent !important; }
 .holding-card.hc-tw     { background: #f5f0e8 !important; color: #1a1a1a !important; }
 .holding-card.hc-cash   { background: #1a3d2b !important; color: #ffffff !important; }
 .holding-card.hc-other-assets { background: #2d1a4a !important; color: #ffffff !important; }
-.holding-card.hc-liab         { background: #3d1a1a !important; color: #ffffff !important; }
-.holding-card.hc-rewards      { background: #1a2d1a !important; color: #ffffff !important; }
+.holding-card.hc-rewards      { background: #3d1a1a !important; color: #ffffff !important; }
+
+/* 合併卡（資產+負債）內部左右分欄 */
+.holding-card-split { padding: 24px 24px 22px !important; }
+.holding-card-split .hc-split-body {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 16px;
+  margin-top: auto;
+  padding-top: 24px;
+  align-items: end;
+  z-index: 1;
+  position: relative;
+}
+.holding-card-split .hc-split-left {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+.holding-card-split .hc-split-right {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  text-align: right;
+  font-family: var(--font-num);
+  font-variant-numeric: tabular-nums;
+  font-size: 13px;
+}
+.hc-side-row {
+  display: flex;
+  justify-content: flex-end;
+  align-items: baseline;
+  gap: 8px;
+}
+.hc-side-label {
+  font-size: 11px;
+  color: rgba(255,255,255,0.5);
+  font-family: var(--font-body);
+}
+.hc-side-val {
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+.hc-side-debt .hc-side-val { color: #f87171; }
+.hc-side-net .hc-side-val  { color: #4ade80; }
 .holding-card.hc-crypto:hover,
 .holding-card.hc-us:hover,
 .holding-card.hc-tw:hover,
 .holding-card.hc-cash:hover,
 .holding-card.hc-other-assets:hover,
-.holding-card.hc-liab:hover,
 .holding-card.hc-rewards:hover { border-color: transparent !important; }
 
 /* 深色卡（黑/藍/綠/紫/紅褐/墨綠）：標題、標的、可用 用半透明白 */
 .hc-crypto .hc-label, .hc-us .hc-label, .hc-cash .hc-label,
-.hc-other-assets .hc-label, .hc-liab .hc-label, .hc-rewards .hc-label,
+.hc-other-assets .hc-label, .hc-rewards .hc-label,
 .hc-crypto .hc-count, .hc-us .hc-count, .hc-cash .hc-count,
-.hc-other-assets .hc-count, .hc-liab .hc-count, .hc-rewards .hc-count { color: rgba(255,255,255,0.6); }
+.hc-other-assets .hc-count, .hc-rewards .hc-count { color: rgba(255,255,255,0.6); }
 .hc-crypto .hc-amount, .hc-us .hc-amount, .hc-cash .hc-amount,
-.hc-other-assets .hc-amount, .hc-liab .hc-amount, .hc-rewards .hc-amount { color: #ffffff !important; }
+.hc-other-assets .hc-amount, .hc-rewards .hc-amount { color: #ffffff !important; }
 .hc-crypto .hc-symbols, .hc-us .hc-symbols, .hc-cash .hc-symbols,
-.hc-other-assets .hc-symbols, .hc-liab .hc-symbols, .hc-rewards .hc-symbols,
+.hc-other-assets .hc-symbols, .hc-rewards .hc-symbols,
 .hc-crypto .hc-avail, .hc-us .hc-avail, .hc-cash .hc-avail,
-.hc-other-assets .hc-avail, .hc-liab .hc-avail, .hc-rewards .hc-avail { color: rgba(255,255,255,0.7); }
+.hc-other-assets .hc-avail, .hc-rewards .hc-avail { color: rgba(255,255,255,0.7); }
 
 /* 米白卡（台股）：標題 #666、數字 #1a1a1a、標的 #888 */
 .hc-tw .hc-label, .hc-tw .hc-count { color: #666666; }

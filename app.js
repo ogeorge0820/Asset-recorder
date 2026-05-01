@@ -2,7 +2,7 @@
 // CONFIG
 // ══════════════════════════════════════════════════════════════
 // Build 時間：每次修改 code 後手動更新此時間（UTC+8 台北時間）
-const BUILD_DATE = '2026/05/01 23:11';
+const BUILD_DATE = '2026/05/01 23:17';
 
 const SPREADSHEET_ID = '1lpRpxVzWaYUqL-jVPOAJCtjsJUIedPYYyOx4gg4PPFU';
 const CLIENT_ID = '149884248440-85f8dhc6ub9up10sv0f89e3e0itrnooj.apps.googleusercontent.com';
@@ -1169,44 +1169,43 @@ function toggleHolding(cat) {
   block.classList.toggle('expanded');
 }
 
-// 管理頁第二排：其他資產 / 負債 / 質押收益
+// 管理頁第二排：其他資產+負債（合併卡）/ 質押收益
 function renderExtrasCards() {
   const rate = S.prices.usdtwd || 0;
   const ins  = (S.data.settings.insurance_total  || 0) * rate;
   const re   = (S.data.settings.realestate_total || 0);
   const debt = (S.data.settings.debt             || 0);
 
-  // 其他資產
+  // 合併卡：左 = 其他資產總額；右 = 負債、淨值
   const otherAssetsTot = ins + re;
-  let assetCount = 0;
-  if (ins > 0) assetCount++;
-  if (re > 0) assetCount++;
+  const net = otherAssetsTot - debt;
+  let itemCount = 0;
+  if (ins > 0) itemCount++;
+  if (re > 0) itemCount++;
+  if (debt > 0) itemCount++;
   const aAEl = $('hc-amount-other-assets');
   if (aAEl) aAEl.textContent = otherAssetsTot > 0 ? fmt(otherAssetsTot) : '—';
   const cAEl = $('hc-count-other-assets');
-  if (cAEl) cAEl.textContent = assetCount + ' items';
+  if (cAEl) cAEl.textContent = itemCount + ' items';
+  const debtEl = $('hc-side-debt');
+  if (debtEl) debtEl.textContent = debt > 0 ? fmt(debt) : '—';
+  const netEl = $('hc-side-net');
+  if (netEl) netEl.textContent = otherAssetsTot + debt > 0 ? fmt(net) : '—';
 
-  // 負債
-  const aLEl = $('hc-amount-liab');
-  if (aLEl) aLEl.textContent = debt > 0 ? fmt(debt) : '—';
-  const cLEl = $('hc-count-liab');
-  if (cLEl) cLEl.textContent = debt > 0 ? '1 item' : '0 items';
-  const availLEl = $('hc-avail-liab');
-  if (availLEl) {
-    const net = ins + re - debt;
-    availLEl.textContent = (ins + re + debt) > 0 ? `淨值 ${fmtWan(net)}` : '';
-  }
-
-  // 質押 / 活存收益（本月）
+  // 質押 / 活存收益（本月）— 強健月份比對：YYYY/M、YYYY/MM、YYYY-MM-DD 都能吃
   try {
     const now = new Date();
     const curMonth = `${now.getFullYear()}/${String(now.getMonth()+1).padStart(2,'0')}`;
     const allRw = S.data.rewards || [];
-    const monthRows = allRw.filter(r => (r[0] || '').startsWith(curMonth));
+    const ymOf = s => {
+      const m = String(s || '').match(/^(\d{4})[\/-](\d{1,2})/);
+      return m ? `${m[1]}/${String(m[2]).padStart(2, '0')}` : '';
+    };
+    const monthRows = allRw.filter(r => ymOf(r[0]) === curMonth);
     const monthTWD = monthRows.reduce((s, r) => s + rewardTWD(r), 0);
     console.log('[renderExtrasCards] rewards', {
       total: allRw.length, curMonth, matched: monthRows.length, monthTWD,
-      sampleRow: allRw[0] || null,
+      sampleRow: allRw[0] || null, sampleYM: allRw[0] ? ymOf(allRw[0][0]) : null,
     });
     const aREl = $('hc-amount-rewards');
     if (aREl) aREl.textContent = monthTWD > 0 ? fmt(monthTWD) : '—';

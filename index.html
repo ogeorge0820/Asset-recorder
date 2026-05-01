@@ -16,8 +16,8 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=DM+Sans:wght@300;400;500;600;700&display=swap">
-<link rel="stylesheet" href="theme.css?v=202605012311">
-<link rel="stylesheet" href="style.css?v=202605012311">
+<link rel="stylesheet" href="theme.css?v=202605012317">
+<link rel="stylesheet" href="style.css?v=202605012317">
 </head>
 <body>
 
@@ -292,39 +292,37 @@
           <div class="holdings-grid">
 
             <div class="holding-block" id="hb-other-assets">
-              <button class="holding-card hc-other-assets" onclick="toggleHolding('other-assets')" type="button">
+              <button class="holding-card hc-other-assets holding-card-split" onclick="toggleHolding('other-assets')" type="button">
                 <span class="hc-deco hc-deco-rings" aria-hidden="true"></span>
-                <div class="hc-top">
-                  <span class="hc-label">其他資產 / OTHER ASSETS</span>
+                <div class="hc-split-row hc-top">
+                  <span class="hc-label">其他資產 &amp; 負債 / ASSETS &amp; LIABILITIES</span>
                   <span class="hc-count" id="hc-count-other-assets">— items</span>
                 </div>
-                <div class="hc-amount" id="hc-amount-other-assets">—</div>
-                <div class="hc-symbols" id="hc-symbols-other-assets">儲蓄險 · 房地產</div>
+                <div class="hc-split-body">
+                  <div class="hc-split-left">
+                    <div class="hc-amount" id="hc-amount-other-assets">—</div>
+                    <div class="hc-symbols" id="hc-symbols-other-assets">儲蓄險 · 房地產</div>
+                  </div>
+                  <div class="hc-split-right">
+                    <div class="hc-side-row hc-side-debt">
+                      <span class="hc-side-label">負債</span>
+                      <span class="hc-side-val" id="hc-side-debt">—</span>
+                    </div>
+                    <div class="hc-side-row hc-side-net">
+                      <span class="hc-side-label">淨值</span>
+                      <span class="hc-side-val" id="hc-side-net">—</span>
+                    </div>
+                  </div>
+                </div>
                 <span class="hc-arrow" aria-hidden="true">▾</span>
               </button>
               <div class="holding-detail">
                 <div id="other-assets-items" style="display:flex;flex-direction:column;gap:10px"></div>
+                <div id="liab-items" style="display:flex;flex-direction:column;gap:10px;margin-top:10px"></div>
               </div>
             </div>
 
-            <div class="holding-block" id="hb-liab">
-              <button class="holding-card hc-liab" onclick="toggleHolding('liab')" type="button">
-                <span class="hc-deco hc-deco-rings" aria-hidden="true"></span>
-                <div class="hc-top">
-                  <span class="hc-label">負債 / LIABILITIES</span>
-                  <span class="hc-count" id="hc-count-liab">— items</span>
-                </div>
-                <div class="hc-amount" id="hc-amount-liab">—</div>
-                <div class="hc-avail" id="hc-avail-liab"></div>
-                <div class="hc-symbols" id="hc-symbols-liab">房貸餘額</div>
-                <span class="hc-arrow" aria-hidden="true">▾</span>
-              </button>
-              <div class="holding-detail">
-                <div id="liab-items" style="display:flex;flex-direction:column;gap:10px"></div>
-              </div>
-            </div>
-
-            <div class="holding-block holding-block-full" id="hb-rewards">
+            <div class="holding-block" id="hb-rewards">
               <button class="holding-card hc-rewards" onclick="toggleHolding('rewards')" type="button">
                 <span class="hc-deco hc-deco-stars" aria-hidden="true"></span>
                 <div class="hc-top">
@@ -629,6 +627,6 @@
 <!-- ── Toast ── -->
 <div class="toast" id="toast"></div>
 
-<script src="app.js?v=202605012311"></script>
+<script src="app.js?v=202605012317"></script>
 </body>
 </html>
