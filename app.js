@@ -2,7 +2,7 @@
 // CONFIG
 // ══════════════════════════════════════════════════════════════
 // Build 時間：每次修改 code 後手動更新此時間（UTC+8 台北時間）
-const BUILD_DATE = '2026/05/01 22:54';
+const BUILD_DATE = '2026/05/01 22:59';
 
 const SPREADSHEET_ID = '1lpRpxVzWaYUqL-jVPOAJCtjsJUIedPYYyOx4gg4PPFU';
 const CLIENT_ID = '149884248440-85f8dhc6ub9up10sv0f89e3e0itrnooj.apps.googleusercontent.com';
@@ -2828,12 +2828,8 @@ function renderDailyTrend() {
     },
   };
 
-  // 長條顏色：正綠負紅，即時點降透明度提示
-  const barBg = plData.map((v, i) => {
-    if (v === null) return 'transparent';
-    const base = v >= 0 ? cc.barPos : cc.barNeg;
-    return isLiveArr[i] ? base + 'aa' : base;
-  });
+  // 長條顏色：正綠負紅
+  const barBg = plData.map(v => v === null ? 'transparent' : v >= 0 ? cc.barPos : cc.barNeg);
 
   S.charts.dailyTrend = new Chart(ctx, {
     type: 'bar',
