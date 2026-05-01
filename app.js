@@ -2,7 +2,7 @@
 // CONFIG
 // ══════════════════════════════════════════════════════════════
 // Build 時間：每次修改 code 後手動更新此時間（UTC+8 台北時間）
-const BUILD_DATE = '2026/05/01 23:58';
+const BUILD_DATE = '2026/05/02 00:06';
 
 const SPREADSHEET_ID = '1lpRpxVzWaYUqL-jVPOAJCtjsJUIedPYYyOx4gg4PPFU';
 const CLIENT_ID = '149884248440-85f8dhc6ub9up10sv0f89e3e0itrnooj.apps.googleusercontent.com';
@@ -1779,6 +1779,7 @@ function renderRewards() {
               <button class="btn-icon edit" onclick="editReward(${i})" title="編輯">✏</button>
               <button class="btn-icon del" onclick="deleteReward(${i})" title="刪除">✕</button>
             </div>
+            <button class="rwd-more" onclick="event.stopPropagation();openRewardSheet(${i})" aria-label="操作">⋯</button>
           </div>`;
         }).join('')}
       </div>
@@ -1793,6 +1794,24 @@ function renderRewards() {
   // 歷史總收益合計 for footer（與 badge 一致）
   if ($('tot-rewards-month')) $('tot-rewards-month').textContent = allTimeTWD > 0 ? fmt(allTimeTWD) : '—';
   renderExtrasCards();
+}
+
+// 手機版 reward 操作 sheet（編輯 / 刪除 / 取消）
+function openRewardSheet(idx) {
+  const sh = $('reward-sheet'); if (!sh) return;
+  $('rs-edit').onclick = () => { closeRewardSheet(); editReward(idx); };
+  $('rs-del').onclick  = () => { closeRewardSheet(); deleteReward(idx); };
+  $('rs-cancel').onclick = closeRewardSheet;
+  sh.classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+function closeRewardSheet() {
+  const sh = $('reward-sheet'); if (!sh) return;
+  sh.classList.remove('open');
+  document.body.style.overflow = '';
+}
+function rewardSheetBgClick(ev) {
+  if (ev.target.id === 'reward-sheet') closeRewardSheet();
 }
 
 function toggleRewardGroup(gid) {
