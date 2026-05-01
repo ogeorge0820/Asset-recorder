@@ -2,7 +2,7 @@
 // CONFIG
 // ══════════════════════════════════════════════════════════════
 // Build 時間：每次修改 code 後手動更新此時間（UTC+8 台北時間）
-const BUILD_DATE = '2026/04/30 17:28';
+const BUILD_DATE = '2026/05/01 22:54';
 
 const SPREADSHEET_ID = '1lpRpxVzWaYUqL-jVPOAJCtjsJUIedPYYyOx4gg4PPFU';
 const CLIENT_ID = '149884248440-85f8dhc6ub9up10sv0f89e3e0itrnooj.apps.googleusercontent.com';
@@ -2828,52 +2828,23 @@ function renderDailyTrend() {
     },
   };
 
-  // 點顏色：即時點空心、歷史點實心、null(gap) 隱藏
-  const ptBg     = plData.map((v, i) => v === null ? 'transparent' : isLiveArr[i] ? 'transparent'  : (v >= 0 ? '#34C759' : '#FF3B30'));
-  const ptBorder = plData.map((v, i) => v === null ? 'transparent' : isLiveArr[i] ? cc.line1        : 'transparent');
-  const ptRadius = plData.map((v, i) => v === null ? 0              : isLiveArr[i] ? 5               : 3);
-  const ptBorderW= plData.map((v, i) => v === null ? 0              : isLiveArr[i] ? 2               : 0);
+  // 長條顏色：正綠負紅，即時點降透明度提示
+  const barBg = plData.map((v, i) => {
+    if (v === null) return 'transparent';
+    const base = v >= 0 ? cc.barPos : cc.barNeg;
+    return isLiveArr[i] ? base + 'aa' : base;
+  });
 
   S.charts.dailyTrend = new Chart(ctx, {
-    type: 'line',
+    type: 'bar',
     data: {
       labels,
       datasets: [{
         label: '每日投資損益',
         data: plData,
-        borderColor: cc.line1,
-        borderWidth: 2,
-        tension: 0.42,
-        pointRadius: ptRadius,
-        pointHoverRadius: 7,
-        pointBackgroundColor: ptBg,
-        pointBorderColor: ptBorder,
-        pointBorderWidth: ptBorderW,
-        fill: true,
-        spanGaps: false,  // null gap 不連線
-        // 最後一段（連向即時點）改為虛線
-        segment: {
-          borderDash: ctx2 => isLiveArr[ctx2.p1DataIndex] ? [5, 4] : [],
-          borderColor: ctx2 => isLiveArr[ctx2.p1DataIndex] ? cc.line1 + 'bb' : cc.line1,
-        },
-        backgroundColor(context) {
-          const ca = context.chart?.chartArea;
-          const c2 = context.chart?.ctx;
-          if (!ca || !c2 || ca.bottom <= ca.top) return 'rgba(52,199,89,0.12)';
-          try {
-            const ySc2 = context.chart.scales?.y;
-            const top = ca.top, bot = ca.bottom;
-            const zeroY = ySc2 ? ySc2.getPixelForValue(0) : (top + bot) / 2;
-            const frac = Math.max(0.01, Math.min(0.99, (zeroY - top) / (bot - top)));
-            const g = c2.createLinearGradient(0, top, 0, bot);
-            g.addColorStop(0,                        'rgba(52,199,89,0.26)');
-            g.addColorStop(Math.max(0, frac - 0.04), 'rgba(52,199,89,0.05)');
-            g.addColorStop(frac,                     'rgba(128,128,128,0.0)');
-            g.addColorStop(Math.min(1, frac + 0.04), 'rgba(255,59,48,0.05)');
-            g.addColorStop(1,                        'rgba(255,59,48,0.26)');
-            return g;
-          } catch { return 'rgba(52,199,89,0.12)'; }
-        },
+        backgroundColor: barBg,
+        borderWidth: 0,
+        borderRadius: 4,
       }],
     },
     options: {
