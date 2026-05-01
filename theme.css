@@ -1118,12 +1118,34 @@ canvas { background: transparent !important; }
 
 /* 手機 1 欄 */
 @media (max-width: 768px) {
-  .holdings-grid { grid-template-columns: 1fr; gap: 12px; }
+  .holdings-grid,
+  .extras-hero .holdings-grid {
+    grid-template-columns: 1fr !important;
+    gap: 12px !important;
+  }
   .holdings-hero { padding: 12px 12px 0; }
-  .holding-card { min-height: 180px; padding: 20px 22px; }
-  .holding-card .hc-amount { font-size: 28px; }
-  .holding-block.expanded { grid-column: 1; }
-  .holding-detail { padding: 16px 14px; }
+  .holding-card { min-height: 160px; padding: 18px 20px; }
+  .holding-card .hc-amount,
+  .holding-card-split .hc-amount { font-size: 28px !important; padding-top: 12px !important; }
+  .holding-block.expanded { grid-column: 1 / -1; }
+  .holding-detail { padding: 14px 12px; }
+
+  /* 手機版隱藏卡片標題的英文後綴 */
+  .hc-label-en { display: none; }
+
+  /* 合併卡 split body：手機改成上下排列 */
+  .holding-card-split .hc-split-body {
+    grid-template-columns: 1fr;
+    padding-top: 12px;
+    gap: 8px;
+  }
+  .holding-card-split .hc-split-right {
+    flex-direction: row;
+    justify-content: flex-start;
+    gap: 16px;
+    text-align: left;
+  }
+  .hc-side-row { justify-content: flex-start; }
 }
 
 /* ═══════════════════════════════════════════════════════════════
