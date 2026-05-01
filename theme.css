@@ -859,7 +859,7 @@ canvas { background: transparent !important; }
   border: none;
   border-radius: 20px;
   padding: 24px 28px 22px;
-  min-height: 180px;
+  min-height: 260px;
   cursor: pointer;
   text-align: left;
   display: flex;
@@ -1127,7 +1127,7 @@ canvas { background: transparent !important; }
 @media (max-width: 768px) {
   .holdings-grid { grid-template-columns: 1fr; gap: 12px; }
   .holdings-hero { padding: 12px 12px 0; }
-  .holding-card { min-height: 150px; padding: 20px 22px; }
+  .holding-card { min-height: 180px; padding: 20px 22px; }
   .holding-card .hc-amount { font-size: 28px; }
   .holding-block.expanded { grid-column: 1; }
   .holding-detail { padding: 16px 14px; }
