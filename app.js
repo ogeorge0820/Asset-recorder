@@ -2,7 +2,7 @@
 // CONFIG
 // ══════════════════════════════════════════════════════════════
 // Build 時間：每次修改 code 後手動更新此時間（UTC+8 台北時間）
-const BUILD_DATE = '2026/05/02 00:11';
+const BUILD_DATE = '2026/05/02 11:46';
 
 const SPREADSHEET_ID = '1lpRpxVzWaYUqL-jVPOAJCtjsJUIedPYYyOx4gg4PPFU';
 const CLIENT_ID = '149884248440-85f8dhc6ub9up10sv0f89e3e0itrnooj.apps.googleusercontent.com';
@@ -525,6 +525,32 @@ async function loadAll() {
   }
   S.data.snapshots.sort((a, b) => a[0].localeCompare(b[0]));
   S.data.daily_snapshots = rows(daily);
+
+  // 補缺月：若某月份在 snapshots 中沒有，從 daily_snapshots 取該月最後一筆合成
+  try {
+    const existingMonths = new Set(S.data.snapshots.map(s => s[0]));
+    const lastDailyByMonth = {};
+    S.data.daily_snapshots.forEach(d => {
+      const ym = (d[0] || '').slice(0, 7); // "2026/04"
+      if (!ym) return;
+      if (!lastDailyByMonth[ym] || d[0] > lastDailyByMonth[ym][0]) {
+        lastDailyByMonth[ym] = d;
+      }
+    });
+    let added = 0;
+    for (const [ym, d] of Object.entries(lastDailyByMonth)) {
+      if (!existingMonths.has(ym)) {
+        S.data.snapshots.push([ym, d[1]||'0', d[2]||'0', d[3]||'0', d[4]||'0', d[5]||'0', d[6]||'0', d[7]||'0', d[8]||'0']);
+        added++;
+      }
+    }
+    if (added > 0) {
+      S.data.snapshots.sort((a, b) => a[0].localeCompare(b[0]));
+      console.log(`[snapshots] 從 daily_snapshots 補入 ${added} 個缺月`);
+    }
+  } catch (e) {
+    console.warn('[snapshots] 補缺月失敗', e);
+  }
   S.data.rewards         = rows(rw);
   S.data.crypto_history  = rows(hist);
   S.data.tw_history      = rows(twHist);
