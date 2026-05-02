@@ -16,8 +16,8 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=DM+Sans:wght@300;400;500;600;700&display=swap">
-<link rel="stylesheet" href="theme.css?v=202605021431">
-<link rel="stylesheet" href="style.css?v=202605021431">
+<link rel="stylesheet" href="theme.css?v=202605021439">
+<link rel="stylesheet" href="style.css?v=202605021439">
 </head>
 <body>
 
@@ -402,8 +402,7 @@
 
           <section class="dwz-param-block">
             <h4 class="dwz-block-title">體驗窗口設定</h4>
-            <div class="dwz-row" title="健康狀況門檻，低於此值視為體驗能力下降"><label>健康閾值 <span class="dwz-param-unit">%</span></label><input id="dwz-health-threshold" class="dwz-param-input" type="number" min="0" max="100" step="5" value="60" oninput="dwzAutoCalc()"></div>
-            <div class="dwz-row" title="留空或 0 = 使用保底金"><label>財務閾值 <span class="dwz-param-unit">萬</span></label><input id="dwz-finance-threshold" class="dwz-param-input" type="number" min="0" step="50" value="0" placeholder="留空=保底金" oninput="dwzAutoCalc()"></div>
+            <div class="dwz-row"><label>體驗窗口至 <span class="dwz-param-unit">歲</span></label><input id="dwz-window-end" class="dwz-param-input" type="number" min="36" max="119" value="70" oninput="dwzAutoCalc()"></div>
           </section>
 
           <section class="dwz-param-block">
@@ -625,6 +624,6 @@
 <!-- ── Toast ── -->
 <div class="toast" id="toast"></div>
 
-<script src="app.js?v=202605021431"></script>
+<script src="app.js?v=202605021439"></script>
 </body>
 </html>

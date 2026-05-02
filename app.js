@@ -2,7 +2,7 @@
 // CONFIG
 // ══════════════════════════════════════════════════════════════
 // Build 時間：每次修改 code 後手動更新此時間（UTC+8 台北時間）
-const BUILD_DATE = '2026/05/02 14:31';
+const BUILD_DATE = '2026/05/02 14:39';
 
 const SPREADSHEET_ID = '1lpRpxVzWaYUqL-jVPOAJCtjsJUIedPYYyOx4gg4PPFU';
 const CLIENT_ID = '149884248440-85f8dhc6ub9up10sv0f89e3e0itrnooj.apps.googleusercontent.com';
@@ -4226,8 +4226,7 @@ function _saveDWZParams() {
     safeFloor:  _dwzParam('dwz-safe-floor'),
     giftAge:    _dwzParam('dwz-gift-age'),
     expBudget:  _dwzParam('dwz-exp-budget'),
-    healthThr:  _dwzParam('dwz-health-threshold'),
-    finThr:     _dwzParam('dwz-finance-threshold'),
+    windowEnd:  _dwzParam('dwz-window-end'),
   }));
 }
 
@@ -4246,8 +4245,7 @@ function _loadDWZParams() {
   set('dwz-safe-floor', p.safeFloor);
   set('dwz-gift-age',   p.giftAge);
   set('dwz-exp-budget', p.expBudget);
-  set('dwz-health-threshold', p.healthThr);
-  set('dwz-finance-threshold', p.finThr);
+  set('dwz-window-end', p.windowEnd);
 }
 
 // ── 標的級別 ROI：預設映射表 + 類別 fallback ──
@@ -4687,20 +4685,14 @@ function renderDWZ() {
   // ── Life energy curve (100% at currentAge → 0% at lifeAge) ──
   const lifeEnergy = ages.map(a => Math.max(0, ((lifeAge - a) / totalYears) * 100));
 
-  // ── 最佳體驗窗口：健康 ≥ 健康閾值 且 財富 ≥ 財務閾值，取首段連續區間 ──
-  const healthThreshold = _dwzParam('dwz-health-threshold') || 60;
-  const finThrInput = _dwzParam('dwz-finance-threshold');
-  const financeThreshold = finThrInput > 0 ? finThrInput * 10000 : safeFloor;
+  // ── 最佳體驗窗口：目前年齡 → 使用者設定的結束年齡（夾在 [currentAge+1, lifeAge-1]） ──
+  const windowEndInput = _dwzParam('dwz-window-end') || 70;
+  const minEnd = currentAge + 1;
+  const maxEnd = lifeAge - 1;
   let goldenStart = null, goldenEnd = null;
-  for (let i = 0; i < ages.length; i++) {
-    const healthy = lifeEnergy[i] >= healthThreshold;
-    const solvent = wealth[i] >= financeThreshold;
-    if (healthy && solvent) {
-      if (goldenStart === null) goldenStart = ages[i];
-      goldenEnd = ages[i];
-    } else if (goldenStart !== null) {
-      break;
-    }
+  if (maxEnd >= minEnd) {
+    goldenStart = currentAge;
+    goldenEnd = Math.max(minEnd, Math.min(maxEnd, windowEndInput));
   }
 
   // ── Waste indicator: unspent surplus above safety floor at end of life ──
@@ -4906,6 +4898,14 @@ function renderDWZ() {
     strat4pctOn: !!$('strat-4pct')?.checked,
   });
 
+  // 同步 dwz-window-end input 的 min/max + 顯示值（夾值後寫回）
+  const winEndInput = document.getElementById('dwz-window-end');
+  if (winEndInput && goldenEnd !== null) {
+    winEndInput.min = String(currentAge + 1);
+    winEndInput.max = String(lifeAge - 1);
+    if (parseInt(winEndInput.value) !== goldenEnd) winEndInput.value = String(goldenEnd);
+  }
+
   _renderDWZBestWindow(goldenStart, goldenEnd);
   _renderDWZExpensesList();
 }
@@ -4922,7 +4922,7 @@ function _renderDWZBestWindow(start, end) {
     if (bodyEl)  bodyEl.hidden  = false;
     if (emptyEl) emptyEl.hidden = true;
     if (rangeEl) rangeEl.textContent = `${start} - ${end} 歲`;
-    if (yearsEl) yearsEl.textContent = `共 ${end - start + 1} 年`;
+    if (yearsEl) yearsEl.textContent = `共 ${end - start} 年`;
   } else {
     if (bodyEl)  bodyEl.hidden  = true;
     if (emptyEl) emptyEl.hidden = false;
