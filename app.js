@@ -2,7 +2,7 @@
 // CONFIG
 // ══════════════════════════════════════════════════════════════
 // Build 時間：每次修改 code 後手動更新此時間（UTC+8 台北時間）
-const BUILD_DATE = '2026/05/02 11:46';
+const BUILD_DATE = '2026/05/02 13:37';
 
 const SPREADSHEET_ID = '1lpRpxVzWaYUqL-jVPOAJCtjsJUIedPYYyOx4gg4PPFU';
 const CLIENT_ID = '149884248440-85f8dhc6ub9up10sv0f89e3e0itrnooj.apps.googleusercontent.com';
@@ -3016,6 +3016,7 @@ function renderPie() {
     { label:'儲蓄險',   value:ins,               color: '#f472b6' },
     { label:'房地產',   value:re,                color: '#38bdf8' },
   ].filter(e => e.value > 0);
+  entries.sort((a, b) => b.value - a.value);
 
   const ctx = $('pie-chart').getContext('2d');
   if (S.charts.pie) S.charts.pie.destroy();
