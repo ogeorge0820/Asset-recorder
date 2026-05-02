@@ -1238,6 +1238,7 @@ canvas { background: transparent !important; }
    Asset card 列（管理頁展開明細）— 細線分隔 + 三欄
    ═══════════════════════════════════════════════════════════════ */
 #cash-cards, #tw-cards, #us-cards, #crypto-cards { display: block !important; }
+#cash-table-wrap, #crypto-table-wrap, #tw-table-wrap, #us-table-wrap { display: none !important; }
 #cash-cards .asset-card,
 #tw-cards .asset-card,
 #us-cards .asset-card,
