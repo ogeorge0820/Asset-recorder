@@ -1432,10 +1432,22 @@ canvas { background: transparent !important; }
 }
 
 @media (max-width: 768px) {
+  /* 資產組成卡片：高度 auto、移除任何裁切 */
+  .overview-side .chart-card:has(#pie-wrap),
+  #pie-wrap {
+    height: auto !important;
+    min-height: 0 !important;
+    max-height: none !important;
+    overflow: visible !important;
+  }
+  /* pie 卡片與其下的 chart-card（月收益）保持間距 */
+  .overview-side .chart-card + .chart-card { margin-top: 16px; }
+
   .pie-wrap {
     flex-direction: column !important;
     height: auto !important;
     align-items: stretch !important;
+    overflow: visible !important;
   }
   .pie-wrap .pie-canvas {
     flex: 0 0 220px !important;
@@ -1447,6 +1459,8 @@ canvas { background: transparent !important; }
     width: 100%;
     flex: 1 1 auto !important;
     gap: 10px;
+    max-height: none !important;
+    overflow: visible !important;
   }
   /* 手機版資產卡片：代號 + 小標籤百分比 + 現值；下方詳情 */
   .asset-card {
