@@ -1435,9 +1435,11 @@ h3.section-header {
   -webkit-backdrop-filter: blur(10px) saturate(160%);
 }
 .dwz-kpi-tag b {
-  color: var(--accent-light); font-weight: 700; font-size: 0.78rem;
+  color: var(--accent-light);
+  font-family: 'Inter', sans-serif;
+  font-size: 14px;
+  font-weight: 500;
   font-variant-numeric: tabular-nums;
-  font-family: 'SF Mono', 'JetBrains Mono', 'Menlo', 'Consolas', ui-monospace, monospace;
   letter-spacing: -0.01em;
 }
 
