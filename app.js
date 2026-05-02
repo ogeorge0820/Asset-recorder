@@ -2,7 +2,7 @@
 // CONFIG
 // ══════════════════════════════════════════════════════════════
 // Build 時間：每次修改 code 後手動更新此時間（UTC+8 台北時間）
-const BUILD_DATE = '2026/05/02 14:17';
+const BUILD_DATE = '2026/05/02 14:21';
 
 const SPREADSHEET_ID = '1lpRpxVzWaYUqL-jVPOAJCtjsJUIedPYYyOx4gg4PPFU';
 const CLIENT_ID = '149884248440-85f8dhc6ub9up10sv0f89e3e0itrnooj.apps.googleusercontent.com';
@@ -4683,6 +4683,25 @@ function renderDWZ() {
   // ── Life energy curve (100% at currentAge → 0% at lifeAge) ──
   const lifeEnergy = ages.map(a => Math.max(0, ((lifeAge - a) / totalYears) * 100));
 
+  // ── Optimal experience window：健康 ≥60% 且 財富 ≥ 保底，取首段連續區間，end 上限為 peak age ──
+  const peakAgeCap = _getPeakAge();
+  let goldenStart = null, goldenEnd = null;
+  for (let i = 0; i < ages.length; i++) {
+    const healthy = lifeEnergy[i] >= 60;
+    const solvent = wealth[i] >= safeFloor;
+    if (healthy && solvent) {
+      if (goldenStart === null) goldenStart = ages[i];
+      goldenEnd = ages[i];
+    } else if (goldenStart !== null) {
+      break;
+    }
+  }
+  if (goldenStart !== null && goldenStart > peakAgeCap) {
+    goldenStart = goldenEnd = null;
+  } else if (goldenEnd !== null) {
+    goldenEnd = Math.min(goldenEnd, peakAgeCap);
+  }
+
   // ── Waste indicator: unspent surplus above safety floor at end of life ──
   const wastedWealth = Math.max(0, finalWealth - safeFloor);
 
@@ -4747,8 +4766,33 @@ function renderDWZ() {
     grad.addColorStop(1, 'rgba(24,24,27,0)');
   }
 
+  const goldenWindowPlugin = (goldenStart !== null && goldenEnd !== null && goldenEnd >= goldenStart) ? {
+    id: 'goldenWindow',
+    beforeDatasetsDraw(chart) {
+      const xScale = chart.scales.x;
+      const area = chart.chartArea;
+      if (!xScale || !area) return;
+      const sIdx = ages.indexOf(goldenStart);
+      const eIdx = ages.indexOf(goldenEnd);
+      if (sIdx < 0 || eIdx < 0) return;
+      const xS = xScale.getPixelForValue(sIdx);
+      const xE = xScale.getPixelForValue(eIdx);
+      const c2 = chart.ctx;
+      c2.save();
+      c2.fillStyle = 'rgba(34, 197, 94, 0.12)';
+      c2.fillRect(xS, area.top, xE - xS, area.bottom - area.top);
+      c2.fillStyle = '#16a34a';
+      c2.font = '600 12px -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif';
+      c2.textAlign = 'center';
+      c2.textBaseline = 'top';
+      c2.fillText('✦ 黃金體驗期', (xS + xE) / 2, area.top + 4);
+      c2.restore();
+    }
+  } : null;
+
   _dwzChart = new Chart(ctx, {
     type: 'line',
+    plugins: goldenWindowPlugin ? [goldenWindowPlugin] : [],
     data: {
       labels: ages,
       datasets: [
@@ -4867,6 +4911,7 @@ function renderDWZ() {
     currentAge, lifeAge, wealthAt90, ages, wealth,
     wealthBaseline: trackBaseline ? wealthBaseline : null,
     strat4pctOn: !!$('strat-4pct')?.checked,
+    goldenStart, goldenEnd,
   });
 
   _renderDWZWindow(currentAge);
@@ -4961,10 +5006,19 @@ function _startEditPeakAge(ev) {
 }
 
 // 依模擬結果產生智慧建議卡片（多條同時顯示，無建議時隱藏）
-function _renderDWZSmartTips({ currentAge, lifeAge, wealthAt90, ages, wealth, wealthBaseline, strat4pctOn }) {
+function _renderDWZSmartTips({ currentAge, lifeAge, wealthAt90, ages, wealth, wealthBaseline, strat4pctOn, goldenStart, goldenEnd }) {
   const el = $('dwz-smart-tips');
   if (!el) return;
   const tips = [];
+
+  // 黃金體驗期：財務充裕且健康狀況良好的窗口
+  if (goldenStart != null && goldenEnd != null && goldenEnd >= goldenStart) {
+    const years = goldenEnd - goldenStart + 1;
+    tips.push({
+      cls: 'dwz-tip-good',
+      html: `✦ 黃金體驗期：<b>${goldenStart} 歲 - ${goldenEnd} 歲</b>，共 ${years} 年。這段期間財務充裕且身體狀況良好，是最適合大額體驗支出的窗口`,
+    });
+  }
 
   // 條件 2 優先檢查：第一個 NW < 0 的年齡（只看死亡前）
   let bankruptAge = null;
