@@ -1465,10 +1465,9 @@ canvas { background: transparent !important; }
   }
   .pie-wrap .pie-canvas {
     display: block !important;
-    width: 100% !important;
-    max-width: 240px !important;
-    height: auto !important;
-    aspect-ratio: 1 !important;
+    width: 240px !important;
+    max-width: 100% !important;
+    height: 240px !important;
     margin: 0 auto 12px !important;
     position: relative !important;
     flex: none !important;
