@@ -2,7 +2,7 @@
 // CONFIG
 // ══════════════════════════════════════════════════════════════
 // Build 時間：每次修改 code 後手動更新此時間（UTC+8 台北時間）
-const BUILD_DATE = '2026/05/02 14:13';
+const BUILD_DATE = '2026/05/02 14:17';
 
 const SPREADSHEET_ID = '1lpRpxVzWaYUqL-jVPOAJCtjsJUIedPYYyOx4gg4PPFU';
 const CLIENT_ID = '149884248440-85f8dhc6ub9up10sv0f89e3e0itrnooj.apps.googleusercontent.com';
@@ -3082,32 +3082,6 @@ function applyMobilePieLayout() {
   const pieLegend = document.getElementById('pie-legend');
   const chartCard = pieWrap?.closest('.chart-card');
 
-  // 螢幕上的 debug 浮層（不依賴 console）
-  let dbg = document.getElementById('pie-dbg');
-  if (!dbg) {
-    dbg = document.createElement('div');
-    dbg.id = 'pie-dbg';
-    dbg.style.cssText = 'position:fixed;bottom:60px;left:8px;right:8px;background:#fff3cd;border:1px solid #ffe58f;color:#664d03;font-size:11px;padding:8px;border-radius:8px;z-index:9999;font-family:monospace;line-height:1.5;';
-    document.body.appendChild(dbg);
-  }
-  const w = window.innerWidth;
-  const lines = [`viewport: ${w}px / ≤768=${w<=768}`];
-  if (pieCanvasDiv) {
-    const r = pieCanvasDiv.getBoundingClientRect();
-    lines.push(`.pie-canvas: ${Math.round(r.width)}×${Math.round(r.height)}`);
-  } else lines.push('.pie-canvas NOT FOUND');
-  if (pieCanvas) {
-    const r = pieCanvas.getBoundingClientRect();
-    lines.push(`canvas: ${Math.round(r.width)}×${Math.round(r.height)}`);
-  }
-  if (chartCard) {
-    lines.push(`chart-card height: ${chartCard.offsetHeight}px`);
-  }
-  if (pieLegend) {
-    lines.push(`legend items: ${pieLegend.children.length}, h:${pieLegend.offsetHeight}px`);
-  }
-  dbg.textContent = lines.join(' | ');
-
   if (!pieWrap || !pieCanvasDiv || !pieLegend || !chartCard) return;
 
   if (window.innerWidth <= 768) {
@@ -3165,15 +3139,6 @@ function applyMobilePieLayout() {
 
   // Chart.js 需要重新讀容器尺寸
   if (S.charts.pie) try { S.charts.pie.resize(); } catch(e){}
-
-  // 500ms 後再量一次（看 Chart.js 有沒有把 canvas 撐回去）
-  setTimeout(() => {
-    const dbg = document.getElementById('pie-dbg');
-    if (!dbg) return;
-    const r1 = pieCanvasDiv.getBoundingClientRect();
-    const r2 = pieCanvas?.getBoundingClientRect();
-    dbg.textContent += ` [+500ms .pie-canvas:${Math.round(r1.width)}×${Math.round(r1.height)} canvas:${r2?Math.round(r2.width)+'×'+Math.round(r2.height):'?'}]`;
-  }, 500);
 }
 
 // resize 時重新套用

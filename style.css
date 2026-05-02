@@ -744,8 +744,8 @@ h3.section-header {
   /* Snapshot bar */
   .btn-snapshot { padding: 13px 28px; font-size: 0.9rem; min-height: 48px; }
 
-  /* Chart heights */
-  #pie-wrap { height: 320px !important; }
+  /* Chart heights — pie-wrap 必須 auto 才能容納 canvas + 6 列圖例 */
+  #pie-wrap { height: auto !important; }
   #trend-wrap { height: 220px !important; }
   #daily-trend-wrap { height: 180px !important; }
   #monthly-wrap { height: 160px !important; }
