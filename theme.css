@@ -1378,6 +1378,8 @@ canvas { background: transparent !important; }
 .pie-wrap .pie-canvas canvas {
   max-width: 220px !important;
   max-height: 220px !important;
+  width: auto !important;
+  height: auto !important;
 }
 .pie-legend {
   flex: 1 1 50%;
@@ -1464,17 +1466,19 @@ canvas { background: transparent !important; }
   .pie-wrap .pie-canvas {
     display: block !important;
     width: 100% !important;
-    height: 220px !important;
+    max-width: 240px !important;
+    height: auto !important;
+    aspect-ratio: 1 !important;
     margin: 0 auto 12px !important;
     position: relative !important;
     flex: none !important;
-    max-width: 240px;
   }
   .pie-wrap .pie-canvas canvas {
     width: 100% !important;
     height: 100% !important;
     max-width: 100% !important;
     max-height: 100% !important;
+    display: block !important;
   }
   .pie-legend {
     display: flex !important;
