@@ -2,7 +2,7 @@
 // CONFIG
 // ══════════════════════════════════════════════════════════════
 // Build 時間：每次修改 code 後手動更新此時間（UTC+8 台北時間）
-const BUILD_DATE = '2026/05/02 14:31';
+const BUILD_DATE = '2026/04/30 09:38';
 
 const SPREADSHEET_ID = '1lpRpxVzWaYUqL-jVPOAJCtjsJUIedPYYyOx4gg4PPFU';
 const CLIENT_ID = '149884248440-85f8dhc6ub9up10sv0f89e3e0itrnooj.apps.googleusercontent.com';
@@ -525,32 +525,6 @@ async function loadAll() {
   }
   S.data.snapshots.sort((a, b) => a[0].localeCompare(b[0]));
   S.data.daily_snapshots = rows(daily);
-
-  // 補缺月：若某月份在 snapshots 中沒有，從 daily_snapshots 取該月最後一筆合成
-  try {
-    const existingMonths = new Set(S.data.snapshots.map(s => s[0]));
-    const lastDailyByMonth = {};
-    S.data.daily_snapshots.forEach(d => {
-      const ym = (d[0] || '').slice(0, 7); // "2026/04"
-      if (!ym) return;
-      if (!lastDailyByMonth[ym] || d[0] > lastDailyByMonth[ym][0]) {
-        lastDailyByMonth[ym] = d;
-      }
-    });
-    let added = 0;
-    for (const [ym, d] of Object.entries(lastDailyByMonth)) {
-      if (!existingMonths.has(ym)) {
-        S.data.snapshots.push([ym, d[1]||'0', d[2]||'0', d[3]||'0', d[4]||'0', d[5]||'0', d[6]||'0', d[7]||'0', d[8]||'0']);
-        added++;
-      }
-    }
-    if (added > 0) {
-      S.data.snapshots.sort((a, b) => a[0].localeCompare(b[0]));
-      console.log(`[snapshots] 從 daily_snapshots 補入 ${added} 個缺月`);
-    }
-  } catch (e) {
-    console.warn('[snapshots] 補缺月失敗', e);
-  }
   S.data.rewards         = rows(rw);
   S.data.crypto_history  = rows(hist);
   S.data.tw_history      = rows(twHist);
@@ -1091,149 +1065,7 @@ function setKPI(vid, val, sid, sub) {
 // ══════════════════════════════════════════════════════════════
 function renderManagement() {
   renderCash(); renderTW(); renderUS(); renderCrypto(); renderOther(); renderRewards(); renderBudget(); renderExperiencePlan(); renderIncome();
-  renderHoldingCards();
   initAccordion();
-}
-
-// ── 管理頁頂部 4 張類別卡 ──
-function renderHoldingCards() {
-  const rate = S.prices.usdtwd || 0;
-  const setHC = (cat, count, total, change, syms, unit) => {
-    const cEl = $('hc-count-' + cat);
-    const aEl = $('hc-amount-' + cat);
-    const dEl = $('hc-change-' + cat);
-    const sEl = $('hc-symbols-' + cat);
-    if (cEl) cEl.textContent = count + ' ' + unit;
-    if (aEl) aEl.textContent = total > 0 ? fmt(total) : '—';
-    if (dEl) {
-      if (!change || change.pct == null) {
-        dEl.textContent = ''; dEl.className = 'hc-change';
-      } else {
-        const pSign = change.pct >= 0 ? '+' : '';
-        const dSign = change.delta >= 0 ? '+' : '';
-        const win = cat === 'crypto' ? '24h' : '今日';
-        const deltaStr = (change.delta >= 0 ? dSign : '') + fmtWan(change.delta);
-        dEl.textContent = `${pSign}${change.pct.toFixed(2)}% · ${deltaStr} · ${win}`;
-        dEl.className = 'hc-change ' + (change.pct >= 0 ? 'pos' : 'neg');
-      }
-    }
-    if (sEl) sEl.textContent = syms || '—';
-  };
-  const aggChange = (rows, getToday, getPct) => {
-    let today = 0, yest = 0;
-    rows.forEach(r => {
-      const t = getToday(r); if (!t) return;
-      const pct = getPct(r);
-      today += t;
-      yest += pct != null ? t / (1 + pct/100) : t;
-    });
-    if (yest <= 0) return null;
-    return { pct: (today - yest) / yest * 100, delta: today - yest };
-  };
-
-  // Crypto — 排除 USDT（顯示在流動現金）
-  const cryRowsAll = S.data.crypto || [];
-  const cryRows = cryRowsAll.filter(r => r[0]?.toUpperCase() !== 'USDT');
-  const cryTot = cryRows.reduce((s, r) => s + (parseFloat(r[1])||0) * (S.prices.crypto[r[0]?.toUpperCase()]||0) * rate, 0);
-  const cryChg = aggChange(cryRows,
-    r => (parseFloat(r[1])||0) * (S.prices.crypto[r[0]?.toUpperCase()]||0) * rate,
-    r => symDailyChangePct('crypto', r[0]?.toUpperCase(), S.prices.crypto[r[0]?.toUpperCase()]));
-  const crySyms = cryRows.slice().sort((a,b) =>
-    (parseFloat(b[1])||0)*(S.prices.crypto[b[0]?.toUpperCase()]||0) -
-    (parseFloat(a[1])||0)*(S.prices.crypto[a[0]?.toUpperCase()]||0))
-    .slice(0,5).map(r => r[0]?.toUpperCase()).filter(Boolean).join(' · ');
-  setHC('crypto', cryRows.length, cryTot, cryChg, crySyms, 'holdings');
-
-  // US
-  const usRows = S.data.us || [];
-  const usTot = usRows.reduce((s, r) => s + (parseFloat(r[1])||0) * (S.prices.us[r[0]]||0) * rate, 0);
-  const usChg = aggChange(usRows,
-    r => (parseFloat(r[1])||0) * (S.prices.us[r[0]]||0) * rate,
-    r => symDailyChangePct('us', r[0], S.prices.us[r[0]]));
-  const usSyms = usRows.slice().sort((a,b) =>
-    (parseFloat(b[1])||0)*(S.prices.us[b[0]]||0) - (parseFloat(a[1])||0)*(S.prices.us[a[0]]||0))
-    .slice(0,5).map(r => r[0]).filter(Boolean).join(' · ');
-  setHC('us', usRows.length, usTot, usChg, usSyms, 'holdings');
-
-  // TW
-  const twRows = S.data.tw || [];
-  const twTot = twRows.reduce((s, r) => s + (parseFloat(r[1])||0) * (S.prices.tw[r[0]]||0), 0);
-  const twChg = aggChange(twRows,
-    r => (parseFloat(r[1])||0) * (S.prices.tw[r[0]]||0),
-    r => symDailyChangePct('tw', r[0], S.prices.tw[r[0]]));
-  const twSyms = twRows.slice().sort((a,b) =>
-    (parseFloat(b[1])||0)*(S.prices.tw[b[0]]||0) - (parseFloat(a[1])||0)*(S.prices.tw[a[0]]||0))
-    .slice(0,5).map(r => r[0]).filter(Boolean).join(' · ');
-  setHC('tw', twRows.length, twTot, twChg, twSyms, 'holdings');
-
-  // Cash — 含 USDT TWD 折算（與 renderCash 顯示總計一致）
-  const cashRows = S.data.cash || [];
-  const usdtEntry = (S.data.crypto || []).find(r => r[0]?.toUpperCase() === 'USDT');
-  const usdtTWD = usdtEntry ? (parseFloat(usdtEntry[1]) || 0) * rate : 0;
-  const cashTot = cashRows.reduce((s, r) => s + cashToTWD(r), 0) + usdtTWD;
-  const cashCount = cashRows.length + (usdtTWD > 0 ? 1 : 0);
-  const currencies = [...new Set([
-    ...cashRows.map(r => (r[2]||'').toUpperCase()).filter(Boolean),
-    ...(usdtTWD > 0 ? ['USDT'] : [])
-  ])].slice(0, 5).join(' · ');
-  setHC('cash', cashCount, cashTot, null, currencies, 'accounts');
-
-  // 可用現金 = 流動現金總額（含 USDT）− 月生活支出預算
-  const availEl = $('hc-avail-cash');
-  if (availEl) {
-    try {
-      const budget = calcBudgetTotal();
-      availEl.textContent = budget > 0 ? `可用：${fmtWan(cashTot - budget)}` : '';
-    } catch (e) { availEl.textContent = ''; }
-  }
-}
-
-// 點擊持有卡片：展開/收合內嵌明細
-function toggleHolding(cat) {
-  const block = $('hb-' + cat);
-  if (!block) return;
-  block.classList.toggle('expanded');
-}
-
-// 管理頁第二排：其他資產+負債（合併卡）/ 質押收益
-function renderExtrasCards() {
-  const rate = S.prices.usdtwd || 0;
-  const ins  = (S.data.settings.insurance_total  || 0) * rate;
-  const re   = (S.data.settings.realestate_total || 0);
-  const debt = (S.data.settings.debt             || 0);
-
-  // 合併卡：左 = 其他資產總額；右 = 負債、淨值
-  const otherAssetsTot = ins + re;
-  const net = otherAssetsTot - debt;
-  let itemCount = 0;
-  if (ins > 0) itemCount++;
-  if (re > 0) itemCount++;
-  if (debt > 0) itemCount++;
-  const aAEl = $('hc-amount-other-assets');
-  if (aAEl) aAEl.textContent = otherAssetsTot > 0 ? fmt(otherAssetsTot) : '—';
-  const cAEl = $('hc-count-other-assets');
-  if (cAEl) cAEl.textContent = itemCount + ' items';
-  const debtEl = $('hc-side-debt');
-  if (debtEl) debtEl.textContent = debt > 0 ? fmt(debt) : '—';
-  const netEl = $('hc-side-net');
-  if (netEl) netEl.textContent = otherAssetsTot + debt > 0 ? fmt(net) : '—';
-
-  // 質押 / 活存收益（歷史總計）
-  try {
-    const allRw = S.data.rewards || [];
-    const totalTWD = allRw.reduce((s, r) => s + rewardTWD(r), 0);
-    const aREl = $('hc-amount-rewards');
-    if (aREl) aREl.textContent = totalTWD > 0 ? fmt(totalTWD) : '—';
-    const sREl = $('hc-symbols-rewards');
-    if (sREl) {
-      const syms = [...new Set(allRw.map(r => (r[1] || '').toUpperCase()).filter(Boolean))].slice(0, 8).join(' · ');
-      sREl.textContent = syms || '—';
-    }
-  } catch (e) {
-    console.error('[renderExtrasCards] rewards 錯誤', e);
-    const aREl = $('hc-amount-rewards'); if (aREl) aREl.textContent = '—';
-    const sREl = $('hc-symbols-rewards'); if (sREl) sREl.textContent = '—';
-  }
 }
 
 // 計算並更新「其他資產 & 負債」標題列淨值摘要
@@ -1281,7 +1113,9 @@ function renderOther() {
     },
   ];
 
-  const renderItemCard = c => `
+  const el = $('other-items');
+  if (!el) return;
+  el.innerHTML = items.map(c => `
     <div class="other-item-card" onclick="openOtherItemDetail('${c.key}')" role="button" tabindex="0">
       <div class="other-item-icon">${c.icon}</div>
       <div class="other-item-info">
@@ -1290,18 +1124,9 @@ function renderOther() {
       </div>
       <div class="other-item-value${c.isDebt ? ' neg' : ''}">${c.valueTWD > 0 ? fmt(c.valueTWD) : '—'}</div>
     </div>
-  `;
-  // 舊容器（保留相容性）
-  const elAll = $('other-items');
-  if (elAll) elAll.innerHTML = items.map(renderItemCard).join('');
-  // 卡片版：分拆成「其他資產」與「負債」
-  const elAssets = $('other-assets-items');
-  if (elAssets) elAssets.innerHTML = items.filter(c => !c.isDebt).map(renderItemCard).join('');
-  const elLiab = $('liab-items');
-  if (elLiab) elLiab.innerHTML = items.filter(c => c.isDebt).map(renderItemCard).join('');
+  `).join('');
 
   updateOtherTotal();
-  renderExtrasCards();
 }
 
 // 「其他資產 & 負債」三個固定項目的元資料
@@ -1327,15 +1152,16 @@ async function appendOtherHistory(key, valueBefore, valueAfter, note) {
 // ── Accordion: 折疊/展開資產分類 ──
 function initAccordion() {
   const saved = JSON.parse(localStorage.getItem('section_acc') || '{}');
-  // cash/tw/us/crypto 改由 holding-card 控制展開，跳過
-  ['other'].forEach(id => {
+  ['cash', 'tw', 'us', 'crypto', 'other'].forEach(id => {
     const card = document.getElementById('section-' + id);
     if (!card) return;
     const body = card.querySelector('.section-body');
     if (saved[id] === true) {
+      // 已儲存為展開：移除 collapsed，設為無限制高
       card.classList.remove('collapsed');
       body.style.maxHeight = '';
     } else {
+      // 預設收合
       card.classList.add('collapsed');
       body.style.maxHeight = '0';
     }
@@ -1431,12 +1257,10 @@ function renderCash() {
       const pct = totalCashTWD > 0 ? Math.round(usdtTWD / totalCashTWD * 100) : null;
       return `<div class="asset-card" onclick="openAssetDetail('crypto',${usdtIdx})" role="button" tabindex="0">
         <div class="asset-card-pct">${pct !== null ? pct + '%' : '—'}</div>
-        <div class="asset-card-info">
-          <div class="asset-card-sym">USDT</div>
-          <div class="asset-card-sub">USDT ${usdtQty.toLocaleString('zh-TW',{minimumFractionDigits:2,maximumFractionDigits:2})}</div>
-        </div>
-        <div class="asset-card-right">
+        <div class="asset-card-sym">USDT</div>
+        <div class="asset-card-mid">
           <div class="asset-card-twd">${fmt(usdtTWD)}</div>
+          <div class="asset-card-detail">USDT ${usdtQty.toLocaleString('zh-TW',{minimumFractionDigits:2,maximumFractionDigits:2})}</div>
         </div>
       </div>`;
     }
@@ -1450,12 +1274,10 @@ function renderCash() {
     const twdStr = hasErr ? '匯率失敗' : fmt(twd);
     return `<div class="asset-card${hasErr ? ' err' : ''}" onclick="openAssetDetail('cash',${i})" role="button" tabindex="0">
       <div class="asset-card-pct">${pctStr}</div>
-      <div class="asset-card-info">
-        <div class="asset-card-sym">${esc(r[0])}</div>
-        <div class="asset-card-sub">${esc(ccy)} ${fmtCashAmt(amt, ccy)}</div>
-      </div>
-      <div class="asset-card-right">
+      <div class="asset-card-sym">${esc(r[0])}</div>
+      <div class="asset-card-mid">
         <div class="asset-card-twd">${twdStr}</div>
+        <div class="asset-card-detail">${esc(ccy)} ${fmtCashAmt(amt, ccy)}</div>
       </div>
     </div>`;
   }).join('');
@@ -1565,18 +1387,15 @@ function renderTW() {
       const pctStr = pct !== null ? pct + '%' : '—';
       const twdStr = err ? '更新失敗' : (v !== null ? fmt(v) : skelSpan());
       const chgStr = err ? '' : renderChangePctCell(symDailyChangePct('tw', r[0], p));
-      const subStr = err
+      const detailStr = err
         ? `持有 ${qty.toLocaleString()} 股`
-        : `持有 ${qty.toLocaleString()} 股 · ${p !== undefined ? p.toLocaleString('zh-TW', {minimumFractionDigits:2,maximumFractionDigits:2}) + ' TWD' : '—'}`;
+        : `持有 ${qty.toLocaleString()} 股 · ${p !== undefined ? p.toLocaleString('zh-TW', {minimumFractionDigits:2,maximumFractionDigits:2}) + ' TWD' : '—'} · ${chgStr}`;
       return `<div class="asset-card${err ? ' err' : ''}" onclick="openAssetDetail('tw',${i})" role="button" tabindex="0">
         <div class="asset-card-pct">${pctStr}</div>
-        <div class="asset-card-info">
-          <div class="asset-card-sym">${esc(sym)}</div>
-          <div class="asset-card-sub">${subStr}</div>
-        </div>
-        <div class="asset-card-right">
+        <div class="asset-card-sym">${esc(sym)}</div>
+        <div class="asset-card-mid">
           <div class="asset-card-twd">${twdStr}</div>
-          <div class="asset-card-change">${chgStr}</div>
+          <div class="asset-card-detail">${detailStr}</div>
         </div>
       </div>`;
     }).join('');
@@ -1625,18 +1444,15 @@ function renderUS() {
       const pctStr = pct !== null ? pct + '%' : '—';
       const twdStr = err ? '更新失敗' : (v !== null ? fmt(v) : skelSpan());
       const chgStr = err ? '' : renderChangePctCell(symDailyChangePct('us', r[0], p));
-      const subStr = err
+      const detailStr = err
         ? `持有 ${qty.toLocaleString(undefined,{maximumFractionDigits:4})} 股`
-        : `持有 ${qty.toLocaleString(undefined,{maximumFractionDigits:4})} 股 · ${p !== undefined ? fmtUSD(p) + ' USD' : '—'}`;
+        : `持有 ${qty.toLocaleString(undefined,{maximumFractionDigits:4})} 股 · ${p !== undefined ? fmtUSD(p) + ' USD' : '—'} · ${chgStr}`;
       return `<div class="asset-card${err ? ' err' : ''}" onclick="openAssetDetail('us',${i})" role="button" tabindex="0">
         <div class="asset-card-pct">${pctStr}</div>
-        <div class="asset-card-info">
-          <div class="asset-card-sym">${esc(sym)}</div>
-          <div class="asset-card-sub">${subStr}</div>
-        </div>
-        <div class="asset-card-right">
+        <div class="asset-card-sym">${esc(sym)}</div>
+        <div class="asset-card-mid">
           <div class="asset-card-twd">${twdStr}</div>
-          <div class="asset-card-change">${chgStr}</div>
+          <div class="asset-card-detail">${detailStr}</div>
         </div>
       </div>`;
     }).join('');
@@ -1704,18 +1520,15 @@ function renderCrypto() {
       const pctStr = pct !== null ? pct + '%' : '—';
       const twdStr = err ? '更新失敗' : (v !== null ? fmt(v) : skelSpan());
       const chgStr = err ? '' : renderChangePctCell(symDailyChangePct('crypto', sym, p));
-      const subStr = err
+      const detailStr = err
         ? `持有 ${qty.toFixed(3)}`
-        : `持有 ${qty.toFixed(3)} · ${p !== undefined ? fmtFloor3(p) : '—'}`;
+        : `持有 ${qty.toFixed(3)} · ${p !== undefined ? fmtFloor3(p) : '—'} · ${chgStr}`;
       return `<div class="asset-card${err ? ' err' : ''}" onclick="openAssetDetail('crypto',${i})" role="button" tabindex="0">
         <div class="asset-card-pct">${pctStr}</div>
-        <div class="asset-card-info">
-          <div class="asset-card-sym">${esc(sym)}</div>
-          <div class="asset-card-sub">${subStr}</div>
-        </div>
-        <div class="asset-card-right">
+        <div class="asset-card-sym">${esc(sym)}</div>
+        <div class="asset-card-mid">
           <div class="asset-card-twd">${twdStr}</div>
-          <div class="asset-card-change">${chgStr}</div>
+          <div class="asset-card-detail">${detailStr}</div>
         </div>
       </div>`;
     }).join('');
@@ -1800,12 +1613,11 @@ function renderRewards() {
               <span class="rwd-sym">${esc(sym)}${typeBadge}</span>
               ${note ? `<span class="rwd-note">${esc(note)}</span>` : ''}
             </div>
-            <span class="rwd-detail"><span class="rwd-qty">+${qty.toFixed(3)}</span>${priceStr} <span class="rwd-twd">≈ ${fmt(twd)}</span></span>
+            <span class="rwd-detail">+${qty.toFixed(3)}${priceStr} <span class="rwd-twd">≈ ${fmt(twd)}</span></span>
             <div class="rwd-actions">
               <button class="btn-icon edit" onclick="editReward(${i})" title="編輯">✏</button>
               <button class="btn-icon del" onclick="deleteReward(${i})" title="刪除">✕</button>
             </div>
-            <button class="rwd-more" onclick="event.stopPropagation();openRewardSheet(${i})" aria-label="操作">⋯</button>
           </div>`;
         }).join('')}
       </div>
@@ -1819,25 +1631,6 @@ function renderRewards() {
 
   // 歷史總收益合計 for footer（與 badge 一致）
   if ($('tot-rewards-month')) $('tot-rewards-month').textContent = allTimeTWD > 0 ? fmt(allTimeTWD) : '—';
-  renderExtrasCards();
-}
-
-// 手機版 reward 操作 sheet（編輯 / 刪除 / 取消）
-function openRewardSheet(idx) {
-  const sh = $('reward-sheet'); if (!sh) return;
-  $('rs-edit').onclick = () => { closeRewardSheet(); editReward(idx); };
-  $('rs-del').onclick  = () => { closeRewardSheet(); deleteReward(idx); };
-  $('rs-cancel').onclick = closeRewardSheet;
-  sh.classList.add('open');
-  document.body.style.overflow = 'hidden';
-}
-function closeRewardSheet() {
-  const sh = $('reward-sheet'); if (!sh) return;
-  sh.classList.remove('open');
-  document.body.style.overflow = '';
-}
-function rewardSheetBgClick(ev) {
-  if (ev.target.id === 'reward-sheet') closeRewardSheet();
 }
 
 function toggleRewardGroup(gid) {
@@ -2935,19 +2728,52 @@ function renderDailyTrend() {
     },
   };
 
-  // 長條顏色：正綠負紅
-  const barBg = plData.map(v => v === null ? 'transparent' : v >= 0 ? cc.barPos : cc.barNeg);
+  // 點顏色：即時點空心、歷史點實心、null(gap) 隱藏
+  const ptBg     = plData.map((v, i) => v === null ? 'transparent' : isLiveArr[i] ? 'transparent'  : (v >= 0 ? '#34C759' : '#FF3B30'));
+  const ptBorder = plData.map((v, i) => v === null ? 'transparent' : isLiveArr[i] ? cc.line1        : 'transparent');
+  const ptRadius = plData.map((v, i) => v === null ? 0              : isLiveArr[i] ? 5               : 3);
+  const ptBorderW= plData.map((v, i) => v === null ? 0              : isLiveArr[i] ? 2               : 0);
 
   S.charts.dailyTrend = new Chart(ctx, {
-    type: 'bar',
+    type: 'line',
     data: {
       labels,
       datasets: [{
         label: '每日投資損益',
         data: plData,
-        backgroundColor: barBg,
-        borderWidth: 0,
-        borderRadius: 4,
+        borderColor: cc.line1,
+        borderWidth: 2,
+        tension: 0.42,
+        pointRadius: ptRadius,
+        pointHoverRadius: 7,
+        pointBackgroundColor: ptBg,
+        pointBorderColor: ptBorder,
+        pointBorderWidth: ptBorderW,
+        fill: true,
+        spanGaps: false,  // null gap 不連線
+        // 最後一段（連向即時點）改為虛線
+        segment: {
+          borderDash: ctx2 => isLiveArr[ctx2.p1DataIndex] ? [5, 4] : [],
+          borderColor: ctx2 => isLiveArr[ctx2.p1DataIndex] ? cc.line1 + 'bb' : cc.line1,
+        },
+        backgroundColor(context) {
+          const ca = context.chart?.chartArea;
+          const c2 = context.chart?.ctx;
+          if (!ca || !c2 || ca.bottom <= ca.top) return 'rgba(52,199,89,0.12)';
+          try {
+            const ySc2 = context.chart.scales?.y;
+            const top = ca.top, bot = ca.bottom;
+            const zeroY = ySc2 ? ySc2.getPixelForValue(0) : (top + bot) / 2;
+            const frac = Math.max(0.01, Math.min(0.99, (zeroY - top) / (bot - top)));
+            const g = c2.createLinearGradient(0, top, 0, bot);
+            g.addColorStop(0,                        'rgba(52,199,89,0.26)');
+            g.addColorStop(Math.max(0, frac - 0.04), 'rgba(52,199,89,0.05)');
+            g.addColorStop(frac,                     'rgba(128,128,128,0.0)');
+            g.addColorStop(Math.min(1, frac + 0.04), 'rgba(255,59,48,0.05)');
+            g.addColorStop(1,                        'rgba(255,59,48,0.26)');
+            return g;
+          } catch { return 'rgba(52,199,89,0.12)'; }
+        },
       }],
     },
     options: {
@@ -3016,10 +2842,8 @@ function renderPie() {
     { label:'儲蓄險',   value:ins,               color: '#f472b6' },
     { label:'房地產',   value:re,                color: '#38bdf8' },
   ].filter(e => e.value > 0);
-  entries.sort((a, b) => b.value - a.value);
 
-  const pieCanvas = $('pie-chart');
-  const ctx = pieCanvas.getContext('2d');
+  const ctx = $('pie-chart').getContext('2d');
   if (S.charts.pie) S.charts.pie.destroy();
 
   const cc = chartColors();
@@ -3038,10 +2862,55 @@ function renderPie() {
       datasets: [{ data: entries.map(e => e.value), backgroundColor: entries.map(e => e.color), borderColor: cc.border, borderWidth: 2 }],
     },
     options: {
-      responsive: true, maintainAspectRatio: false, cutout: '55%',
+      responsive: true, maintainAspectRatio: false, cutout: '55%', radius: 80,
       layout: { padding: { top: 4, bottom: 4, left: 4, right: 4 } },
       plugins: {
-        legend: { display: false },
+        legend: window.innerWidth <= 640
+          // 手機：底部橫排，字體縮小
+          ? {
+              position: 'bottom',
+              labels: {
+                color: cc.legend,
+                padding: 10,
+                font: { size: 11 },
+                boxWidth: 10,
+                usePointStyle: true,
+                generateLabels(chart) {
+                  const ds = chart.data.datasets[0];
+                  const tot = ds.data.reduce((a,b)=>a+b,0);
+                  return chart.data.labels.map((label, i) => ({
+                    text: `${label} ${(ds.data[i]/tot*100).toFixed(1)}%`,
+                    fillStyle: ds.backgroundColor[i],
+                    strokeStyle: ds.backgroundColor[i],
+                    fontColor: cc.legend,
+                    hidden: false, index: i,
+                  }));
+                },
+              },
+            }
+          // 桌面：右側垂直排列，含百分比
+          : {
+              position: 'right',
+              align: 'center',
+              labels: {
+                color: cc.legend,
+                padding: 10,
+                font: { size: 11 },
+                boxWidth: 8,
+                usePointStyle: true,
+                generateLabels(chart) {
+                  const ds = chart.data.datasets[0];
+                  const tot = ds.data.reduce((a,b)=>a+b,0);
+                  return chart.data.labels.map((label, i) => ({
+                    text: `${label}  ${(ds.data[i]/tot*100).toFixed(1)}%`,
+                    fillStyle: ds.backgroundColor[i],
+                    strokeStyle: ds.backgroundColor[i],
+                    fontColor: cc.legend,
+                    hidden: false, index: i,
+                  }));
+                },
+              },
+            },
         tooltip: {
           // 跟隨游標顯示，yAlign:bottom 讓 tooltip 在游標上方展開
           position: 'cursorOffset',
@@ -3054,97 +2923,7 @@ function renderPie() {
       },
     },
   });
-
-  // 自訂 HTML 圖例（圓餅右側垂直）
-  const legendEl = $('pie-legend');
-  if (legendEl) {
-    const sumValue = entries.reduce((s, e) => s + e.value, 0);
-    legendEl.innerHTML = entries.map(e => {
-      const pct = sumValue > 0 ? (e.value / sumValue * 100) : 0;
-      return `<li>
-        <span class="pl-name-wrap">
-          <span class="pl-dot" style="background:${e.color}"></span>
-          <span class="pl-name">${e.label}</span>
-        </span>
-        <span class="pl-pct">${pct.toFixed(1)}%</span>
-        <span class="pl-amt">${fmt(e.value)}</span>
-      </li>`;
-    }).join('');
-  }
-  applyMobilePieLayout();
 }
-
-// 強制以 JS 套用手機版資產組成佈局（規避 CSS / Chart.js 互動 bug）
-function applyMobilePieLayout() {
-  const pieWrap = document.getElementById('pie-wrap');
-  const pieCanvasDiv = pieWrap?.querySelector('.pie-canvas');
-  const pieCanvas = document.getElementById('pie-chart');
-  const pieLegend = document.getElementById('pie-legend');
-  const chartCard = pieWrap?.closest('.chart-card');
-
-  if (!pieWrap || !pieCanvasDiv || !pieLegend || !chartCard) return;
-
-  if (window.innerWidth <= 768) {
-    // 卡片：高度 auto、移除任何裁切
-    chartCard.style.height = 'auto';
-    chartCard.style.maxHeight = 'none';
-    chartCard.style.minHeight = '0';
-    chartCard.style.overflow = 'visible';
-
-    // pie-wrap 改為 column flex
-    pieWrap.style.display = 'flex';
-    pieWrap.style.flexDirection = 'column';
-    pieWrap.style.alignItems = 'center';
-    pieWrap.style.gap = '12px';
-    pieWrap.style.height = 'auto';
-    pieWrap.style.maxHeight = 'none';
-    pieWrap.style.overflow = 'visible';
-
-    // canvas 容器固定 240×240 置中
-    pieCanvasDiv.style.width = '240px';
-    pieCanvasDiv.style.height = '240px';
-    pieCanvasDiv.style.maxWidth = '100%';
-    pieCanvasDiv.style.flex = 'none';
-    pieCanvasDiv.style.margin = '0 auto';
-    pieCanvasDiv.style.display = 'block';
-    if (pieCanvas) {
-      pieCanvas.style.width = '240px';
-      pieCanvas.style.height = '240px';
-      pieCanvas.style.maxWidth = '100%';
-    }
-
-    // 圖例容器：寬 100% 垂直列表，無高度/裁切限制
-    pieLegend.style.width = '100%';
-    pieLegend.style.maxHeight = 'none';
-    pieLegend.style.overflow = 'visible';
-    pieLegend.style.display = 'flex';
-    pieLegend.style.flexDirection = 'column';
-    pieLegend.style.gap = '10px';
-    pieLegend.style.padding = '0';
-    pieLegend.style.margin = '0';
-
-    console.log('[applyMobilePieLayout] 套用手機版佈局', {
-      cardHeight: chartCard.offsetHeight,
-      legendItems: pieLegend.children.length,
-    });
-  } else {
-    // 桌面：清除手機 inline style，回到 CSS 控制
-    [pieWrap, pieCanvasDiv, pieLegend].forEach(el => el && el.removeAttribute('style'));
-    if (pieCanvas) pieCanvas.removeAttribute('style');
-    chartCard.style.height = '';
-    chartCard.style.maxHeight = '';
-    chartCard.style.minHeight = '';
-    chartCard.style.overflow = '';
-  }
-
-  // Chart.js 需要重新讀容器尺寸
-  if (S.charts.pie) try { S.charts.pie.resize(); } catch(e){}
-}
-
-// resize 時重新套用
-window.addEventListener('resize', () => {
-  applyMobilePieLayout();
-});
 
 function renderTrend() {
   let snaps = [...S.data.snapshots];
@@ -4226,8 +4005,6 @@ function _saveDWZParams() {
     safeFloor:  _dwzParam('dwz-safe-floor'),
     giftAge:    _dwzParam('dwz-gift-age'),
     expBudget:  _dwzParam('dwz-exp-budget'),
-    healthThr:  _dwzParam('dwz-health-threshold'),
-    finThr:     _dwzParam('dwz-finance-threshold'),
   }));
 }
 
@@ -4246,8 +4023,6 @@ function _loadDWZParams() {
   set('dwz-safe-floor', p.safeFloor);
   set('dwz-gift-age',   p.giftAge);
   set('dwz-exp-budget', p.expBudget);
-  set('dwz-health-threshold', p.healthThr);
-  set('dwz-finance-threshold', p.finThr);
 }
 
 // ── 標的級別 ROI：預設映射表 + 類別 fallback ──
@@ -4687,22 +4462,6 @@ function renderDWZ() {
   // ── Life energy curve (100% at currentAge → 0% at lifeAge) ──
   const lifeEnergy = ages.map(a => Math.max(0, ((lifeAge - a) / totalYears) * 100));
 
-  // ── 最佳體驗窗口：健康 ≥ 健康閾值 且 財富 ≥ 財務閾值，取首段連續區間 ──
-  const healthThreshold = _dwzParam('dwz-health-threshold') || 60;
-  const finThrInput = _dwzParam('dwz-finance-threshold');
-  const financeThreshold = finThrInput > 0 ? finThrInput * 10000 : safeFloor;
-  let goldenStart = null, goldenEnd = null;
-  for (let i = 0; i < ages.length; i++) {
-    const healthy = lifeEnergy[i] >= healthThreshold;
-    const solvent = wealth[i] >= financeThreshold;
-    if (healthy && solvent) {
-      if (goldenStart === null) goldenStart = ages[i];
-      goldenEnd = ages[i];
-    } else if (goldenStart !== null) {
-      break;
-    }
-  }
-
   // ── Waste indicator: unspent surplus above safety floor at end of life ──
   const wastedWealth = Math.max(0, finalWealth - safeFloor);
 
@@ -4723,6 +4482,14 @@ function renderDWZ() {
     } else {
       warnEl.style.display = 'none';
     }
+  }
+
+  // ── Peak pill ──
+  const peakEl = $('dwz-peak-info');
+  if (peakEl && peakNW > -Infinity) {
+    peakEl.style.display = 'inline-flex';
+    peakEl.innerHTML = `<em>巔峰</em> <b>${peakAge} 歲</b> ${fmtWan(peakNW)}`;
+    peakEl.title = `資產高點：${peakAge} 歲 ${fmtWan(peakNW)}`;
   }
 
   // ── Waste pill ──
@@ -4759,33 +4526,8 @@ function renderDWZ() {
     grad.addColorStop(1, 'rgba(24,24,27,0)');
   }
 
-  const goldenWindowPlugin = (goldenStart !== null && goldenEnd !== null && goldenEnd >= goldenStart) ? {
-    id: 'goldenWindow',
-    beforeDatasetsDraw(chart) {
-      const xScale = chart.scales.x;
-      const area = chart.chartArea;
-      if (!xScale || !area) return;
-      const sIdx = ages.indexOf(goldenStart);
-      const eIdx = ages.indexOf(goldenEnd);
-      if (sIdx < 0 || eIdx < 0) return;
-      const xS = xScale.getPixelForValue(sIdx);
-      const xE = xScale.getPixelForValue(eIdx);
-      const c2 = chart.ctx;
-      c2.save();
-      c2.fillStyle = 'rgba(34, 197, 94, 0.12)';
-      c2.fillRect(xS, area.top, xE - xS, area.bottom - area.top);
-      c2.fillStyle = '#16a34a';
-      c2.font = '600 12px -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif';
-      c2.textAlign = 'center';
-      c2.textBaseline = 'top';
-      c2.fillText('✦ 最佳體驗窗口', (xS + xE) / 2, area.top + 4);
-      c2.restore();
-    }
-  } : null;
-
   _dwzChart = new Chart(ctx, {
     type: 'line',
-    plugins: goldenWindowPlugin ? [goldenWindowPlugin] : [],
     data: {
       labels: ages,
       datasets: [
@@ -4906,27 +4648,95 @@ function renderDWZ() {
     strat4pctOn: !!$('strat-4pct')?.checked,
   });
 
-  _renderDWZBestWindow(goldenStart, goldenEnd);
+  _renderDWZWindow(currentAge);
   _renderDWZExpensesList();
 }
 
-function _renderDWZBestWindow(start, end) {
-  const card = $('dwz-best-window');
+// 高體驗能力期門檻年齡（可由使用者編輯，存於 settings）
+function _getPeakAge() {
+  const v = parseInt(S.data.settings?.peak_experience_age);
+  return v > 0 ? v : 65;
+}
+
+// 體驗窗口倒數：高體驗能力期 = 目前年齡 ~ peakAge 歲
+function _renderDWZWindow(currentAge) {
+  const card = $('dwz-window-card');
   if (!card) return;
-  const rangeEl = $('dwz-bw-range');
-  const yearsEl = $('dwz-bw-years');
-  const emptyEl = $('dwz-bw-empty');
-  const bodyEl  = card.querySelector('.dwz-bw-body');
-  const has = start != null && end != null && end >= start;
-  if (has) {
-    if (bodyEl)  bodyEl.hidden  = false;
-    if (emptyEl) emptyEl.hidden = true;
-    if (rangeEl) rangeEl.textContent = `${start} - ${end} 歲`;
-    if (yearsEl) yearsEl.textContent = `共 ${end - start + 1} 年`;
-  } else {
-    if (bodyEl)  bodyEl.hidden  = true;
-    if (emptyEl) emptyEl.hidden = false;
+  const peakAge  = _getPeakAge();
+  document.querySelectorAll('.dwz-peak-age').forEach(el => el.textContent = peakAge);
+
+  const yearsEl  = $('dwz-window-years');
+  const fillEl   = $('dwz-window-fill');
+  const pctEl    = $('dwz-window-pct');
+  const monthsEl = $('dwz-window-months');
+
+  if (currentAge >= peakAge) {
+    card.classList.add('late');
+    return;
   }
+  card.classList.remove('late');
+
+  const remainYears  = peakAge - currentAge;
+  const remainMonths = remainYears * 12;
+  const usedPct = Math.max(0, Math.min(100, currentAge / peakAge * 100));
+  const colorCls = remainYears > 20 ? '' : (remainYears >= 10 ? 'warn' : 'bad');
+
+  if (yearsEl)  yearsEl.textContent  = remainYears;
+  if (fillEl)  {
+    fillEl.style.width = usedPct.toFixed(1) + '%';
+    fillEl.className = 'dwz-window-progress-fill' + (colorCls ? ' ' + colorCls : '');
+  }
+  if (pctEl)    pctEl.textContent    = Math.round(usedPct) + '%';
+  if (monthsEl) monthsEl.textContent = remainMonths;
+}
+
+// inline 編輯高體驗能力期年齡
+function _startEditPeakAge(ev) {
+  const wrap = ev?.currentTarget;
+  if (!wrap || wrap.querySelector('input')) return;
+  const cur = _getPeakAge();
+  const minAge = (_dwzParam('dwz-age') || 30) + 1;
+  const maxAge = (_dwzParam('dwz-life') || 100) - 1;
+
+  const restore = (val) => {
+    wrap.innerHTML = `<b class="dwz-peak-age">${val}</b><span class="dwz-peak-pencil">✎</span>`;
+  };
+
+  wrap.innerHTML = `<input type="number" class="dwz-peak-input" min="${minAge}" max="${maxAge}" value="${cur}" onclick="event.stopPropagation()">`;
+  const input = wrap.querySelector('input');
+  input.focus();
+  input.select();
+
+  let finished = false;
+  const finish = async () => {
+    if (finished) return;
+    finished = true;
+    const val = parseInt(input.value);
+    if (!val || val < minAge || val > maxAge) {
+      showToast(`需介於 ${minAge}–${maxAge} 歲`, 'err');
+      restore(cur);
+      return;
+    }
+    if (val !== cur) {
+      S.data.settings.peak_experience_age = val;
+      const settRows = Object.entries(S.data.settings).map(([k, v]) => [k, v]);
+      try { await saveSheet('settings', settRows); }
+      catch (e) { showToast('儲存失敗', 'err'); restore(cur); return; }
+      showToast(`已更新：${val} 歲`, 'ok');
+    }
+    restore(val);
+    if (typeof renderDWZ === 'function') renderDWZ();
+  };
+
+  input.addEventListener('blur', finish);
+  input.addEventListener('keydown', e => {
+    if (e.key === 'Enter') { e.preventDefault(); input.blur(); }
+    else if (e.key === 'Escape') {
+      finished = true;
+      input.removeEventListener('blur', finish);
+      restore(cur);
+    }
+  });
 }
 
 // 依模擬結果產生智慧建議卡片（多條同時顯示，無建議時隱藏）

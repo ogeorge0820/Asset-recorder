@@ -1,0 +1,671 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>資產追蹤 — 設計稿</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg: #fafaf8;
+    --bg-page: #f8f9fa;
+    --bg-hero: linear-gradient(135deg, #dbeafe 0%, #ede9fe 100%);
+    --card: #ffffff;
+    --navbar: #ffffff;
+    --border: #f0f0f0;
+    --border-strong: #e5e7eb;
+    --text: #1a1a1a;
+    --text-sub: #6b7280;
+    --text-mute: #9ca3af;
+    --accent: #1a1a1a;
+    --pos: #16a34a;
+    --neg: #dc2626;
+    --pill: #1a1a1a;
+    --grid: rgba(0,0,0,0.05);
+    --pill-bg: #f3f4f6;
+  }
+  [data-theme="dark"] {
+    --bg: #0a0a0a;
+    --bg-page: #0a0a0a;
+    --bg-hero: linear-gradient(135deg, #1a1f2e 0%, #1a1a2e 100%);
+    --card: #111111;
+    --navbar: #111111;
+    --border: #1f1f1f;
+    --border-strong: #2a2a2a;
+    --text: #ffffff;
+    --text-sub: #9ca3af;
+    --text-mute: #666666;
+    --accent: #ffffff;
+    --pill: #ffffff;
+    --grid: rgba(255,255,255,0.06);
+    --pill-bg: #1f1f1f;
+  }
+  html, body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    font-feature-settings: 'tnum';
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* Navbar */
+  .navbar {
+    height: 56px;
+    background: var(--navbar);
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    padding: 0 32px;
+    gap: 32px;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+  }
+  .nav-brand {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-weight: 600;
+    font-size: 15px;
+    color: var(--text);
+  }
+  .nav-logo {
+    width: 32px; height: 32px;
+    background: var(--accent);
+    border-radius: 8px;
+    display: grid; place-items: center;
+    color: var(--navbar); font-weight: 700; font-size: 15px;
+  }
+  .nav-links {
+    display: flex;
+    gap: 2px;
+    border: 1px solid var(--border-strong);
+    border-radius: 999px;
+    padding: 4px;
+    background: var(--navbar);
+  }
+  .nav-link {
+    padding: 6px 16px;
+    border-radius: 999px;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-sub);
+    text-decoration: none;
+    transition: all .15s;
+  }
+  .nav-link:hover { background: var(--pill-bg); color: var(--text); }
+  .nav-link.active {
+    background: var(--accent);
+    color: var(--navbar);
+  }
+  .nav-link.active:hover { background: var(--accent); color: var(--navbar); }
+  .nav-right {
+    margin-left: auto;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 13px;
+    color: var(--text-sub);
+  }
+  .nav-status {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 11px;
+    color: var(--text-mute);
+  }
+  .nav-status-dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: #22c55e;
+    box-shadow: 0 0 0 2px rgba(34,197,94,0.18);
+  }
+  .nav-version {
+    font-size: 11px;
+    color: var(--text-mute);
+    font-variant-numeric: tabular-nums;
+  }
+  .nav-rate {
+    padding: 6px 12px;
+    background: var(--navbar);
+    border: 1px solid var(--border-strong);
+    border-radius: 999px;
+    font-weight: 500;
+    font-size: 13px;
+    color: var(--text);
+  }
+  .btn-theme {
+    width: 32px; height: 32px;
+    border-radius: 50%;
+    border: 1px solid var(--border-strong);
+    background: var(--navbar);
+    color: var(--text);
+    cursor: pointer;
+    font-family: inherit;
+    font-size: 14px;
+    line-height: 1;
+    display: grid; place-items: center;
+    transition: background .15s;
+  }
+  .btn-theme:hover { background: var(--pill-bg); }
+  .btn-logout {
+    padding: 0;
+    background: transparent;
+    border: none;
+    font-size: 13px;
+    color: var(--text-sub);
+    cursor: pointer;
+    font-family: inherit;
+    transition: color .15s;
+  }
+  .btn-logout:hover { color: var(--text); }
+
+  /* Hero (gradient header section) */
+  .hero {
+    position: relative;
+    background: var(--bg-hero);
+    overflow: hidden;
+    border-bottom: 1px solid var(--border-strong);
+  }
+  .hero-inner {
+    max-width: 1440px;
+    margin: 0 auto;
+    padding: 20px 32px 32px;
+    position: relative;
+    z-index: 1;
+  }
+  .hero-blob {
+    position: absolute;
+    border-radius: 50%;
+    pointer-events: none;
+    z-index: 0;
+  }
+  .hero-blob.b1 {
+    width: 320px; height: 320px;
+    background: rgba(148,163,184,0.12);
+    right: -200px; top: -80px;
+  }
+  .hero-blob.b2 {
+    width: 160px; height: 160px;
+    background: rgba(148,163,184,0.08);
+    right: 120px; top: -50px;
+  }
+
+  /* Page (main area below hero) */
+  .page {
+    background: var(--bg-page);
+  }
+  .page-footer {
+    max-width: 1440px;
+    margin: 0 auto;
+    padding: 16px 32px 24px;
+    font-size: 11px;
+    color: var(--text-mute);
+  }
+  .page-inner {
+    max-width: 1440px;
+    margin: 0 auto;
+    padding: 32px;
+  }
+
+  /* KPI grid */
+  .kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 16px;
+  }
+  .kpi-card {
+    background: var(--card);
+    border-radius: 16px;
+    padding: 16px 20px;
+    height: 100px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+    transition: box-shadow .2s ease;
+  }
+  .kpi-card:hover {
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+  }
+  .kpi-label {
+    font-size: 11px;
+    color: var(--text-mute);
+    font-weight: 500;
+    margin-bottom: 6px;
+  }
+  .kpi-value {
+    font-size: 28px;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    color: var(--text);
+    line-height: 1.1;
+    display: flex;
+    align-items: baseline;
+    gap: 4px;
+  }
+  .kpi-value .unit {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-sub);
+  }
+  .kpi-sub {
+    font-size: 11px;
+    color: var(--text-mute);
+    margin-top: 4px;
+    font-weight: 400;
+  }
+  .kpi-card { height: 110px; }
+  .kpi-value.pos { color: var(--pos); }
+  .kpi-value.neg { color: var(--neg); }
+
+  /* Two-column layout */
+  .grid-2 {
+    display: grid;
+    grid-template-columns: 60fr 40fr;
+    gap: 16px;
+  }
+  .col { display: flex; flex-direction: column; gap: 16px; }
+
+  /* Card */
+  .card {
+    background: var(--card);
+    border-radius: 16px;
+    padding: 24px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+  }
+  .card-title {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--text);
+    margin-bottom: 14px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .card-sub {
+    font-size: 12px;
+    color: var(--text-sub);
+    font-weight: 400;
+  }
+  .chart-wrap { position: relative; height: 240px; }
+  .chart-wrap.tall { height: 260px; }
+  .chart-filter {
+    display: inline-flex;
+    gap: 2px;
+    background: var(--pill-bg);
+    border-radius: 999px;
+    padding: 3px;
+  }
+  .filter-btn {
+    border: none;
+    background: transparent;
+    color: var(--text-sub);
+    font-size: 12px;
+    font-weight: 500;
+    padding: 5px 12px;
+    border-radius: 999px;
+    cursor: pointer;
+    font-family: inherit;
+    transition: all .15s;
+  }
+  .filter-btn:hover { color: var(--text); }
+  .filter-btn.active { background: var(--card); color: var(--text); box-shadow: 0 1px 2px rgba(0,0,0,0.06); }
+
+  .pie-center {
+    position: absolute;
+    left: 0; right: 0; top: 0; bottom: 56px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    pointer-events: none;
+  }
+  .pie-center-value {
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--text);
+    letter-spacing: -0.01em;
+    line-height: 1.1;
+  }
+  .pie-center-label {
+    font-size: 11px;
+    color: var(--text-mute);
+    margin-top: 4px;
+  }
+
+  /* Staking table */
+  .stake-table {
+    width: 100%;
+    font-size: 13px;
+  }
+  .stake-table th, .stake-table td {
+    text-align: left;
+    padding: 10px 8px;
+    border-bottom: 1px solid var(--border);
+  }
+  .stake-table th {
+    font-weight: 500;
+    color: var(--text-mute);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+  .stake-table td { font-weight: 500; }
+  .stake-table td:last-child, .stake-table th:last-child { text-align: right; }
+  .stake-table tr:last-child td { border-bottom: none; }
+  .stake-table tbody tr { transition: background .15s; }
+  .stake-table tbody tr:hover { background: var(--pill-bg); }
+
+  @media (max-width: 1100px) {
+    .kpi-grid { grid-template-columns: repeat(3, 1fr); }
+    .grid-2 { grid-template-columns: 1fr; }
+  }
+  @media (max-width: 640px) {
+    .navbar { padding: 0 16px; gap: 16px; }
+    .nav-links { display: none; }
+    .hero-inner, .page-inner { padding-left: 16px; padding-right: 16px; }
+    .kpi-grid { grid-template-columns: repeat(2, 1fr); }
+  }
+</style>
+</head>
+<body>
+
+<nav class="navbar">
+  <div class="nav-brand">
+    <div class="nav-logo">$</div>
+    <span>資產追蹤</span>
+  </div>
+  <div class="nav-links">
+    <a href="#" class="nav-link active">總覽</a>
+    <a href="#" class="nav-link">管理</a>
+    <a href="#" class="nav-link">Die With Zero</a>
+  </div>
+  <div class="nav-right">
+    <span class="nav-status"><span class="nav-status-dot"></span>下午12:25 更新</span>
+    <span class="nav-rate">USD 31.54</span>
+    <button class="btn-theme" id="btnTheme" onclick="toggleTheme()" aria-label="切換主題">🌙</button>
+    <button class="btn-logout">登出</button>
+  </div>
+</nav>
+
+<section class="hero">
+  <div class="hero-blob b1"></div>
+  <div class="hero-blob b2"></div>
+  <div class="hero-inner">
+    <div class="kpi-grid">
+      <div class="kpi-card">
+        <div class="kpi-label">淨資產</div>
+        <div class="kpi-value">2,257萬</div>
+        <div class="kpi-sub">總資產 − 房地產</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">可用資產</div>
+        <div class="kpi-value">1,927萬</div>
+        <div class="kpi-sub">可用：1,597萬（含規劃支出）</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">財務存活</div>
+        <div class="kpi-value">10.8<span class="unit">個月</span></div>
+        <div class="kpi-sub">含未來預計收入模擬</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">本日損益</div>
+        <div class="kpi-value neg">-15.6萬</div>
+        <div class="kpi-sub">對比 2026/04/29 快照</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">本月收益</div>
+        <div class="kpi-value pos">+145萬</div>
+        <div class="kpi-sub">可用資產 − 3/31 基準</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">本年收益</div>
+        <div class="kpi-value neg">-291萬</div>
+        <div class="kpi-sub">可用資產 − 2025/12/31 基準</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<main class="page">
+  <div class="page-inner">
+  <section class="grid-2">
+    <div class="col">
+      <div class="card">
+        <div class="card-title">每日投資損益 <span class="card-sub">最近 30 天</span></div>
+        <div class="chart-wrap"><canvas id="chartDaily"></canvas></div>
+      </div>
+      <div class="card">
+        <div class="card-title">
+          <span>淨資產趨勢</span>
+          <div class="chart-filter">
+            <button class="filter-btn active">全部</button>
+            <button class="filter-btn">近1年</button>
+            <button class="filter-btn">近6個月</button>
+          </div>
+        </div>
+        <div class="chart-wrap tall"><canvas id="chartNW"></canvas></div>
+      </div>
+      <div class="card">
+        <div class="card-title">月收益 <span class="card-sub">最近 4 個月</span></div>
+        <div class="chart-wrap"><canvas id="chartMonthly"></canvas></div>
+      </div>
+    </div>
+
+    <div class="col">
+      <div class="card">
+        <div class="card-title">資產組成</div>
+        <div class="chart-wrap tall">
+          <canvas id="chartPie"></canvas>
+          <div class="pie-center">
+            <div class="pie-center-value">3,197萬</div>
+            <div class="pie-center-label">總資產</div>
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">本月質押收益</div>
+        <table class="stake-table">
+          <thead><tr><th>幣種</th><th>數量</th><th>價值 (TWD)</th></tr></thead>
+          <tbody>
+            <tr><td>USDT</td><td>185.42</td><td>5,852</td></tr>
+            <tr><td>BTC</td><td>0.0023</td><td>7,210</td></tr>
+            <tr><td>ETH</td><td>0.058</td><td>4,140</td></tr>
+            <tr><td>SOL</td><td>1.24</td><td>2,030</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+  </div>
+  <footer class="page-footer">版本 2026/04/30 09:38 · commit 020bd84</footer>
+</main>
+
+<script>
+  Chart.defaults.font.family = "'Inter', sans-serif";
+  function readVar(n) { return getComputedStyle(document.documentElement).getPropertyValue(n).trim(); }
+  function applyChartTheme() {
+    const sub = readVar('--text-sub') || '#6b7280';
+    const g = readVar('--grid') || 'rgba(0,0,0,0.05)';
+    Chart.defaults.color = sub;
+    Chart.defaults.borderColor = g;
+    Object.values(Chart.instances || {}).forEach(c => {
+      if (c.options.scales) {
+        ['x','y'].forEach(k => {
+          if (c.options.scales[k]) {
+            if (c.options.scales[k].grid) c.options.scales[k].grid.color = g;
+            if (c.options.scales[k].ticks) c.options.scales[k].ticks.color = sub;
+          }
+        });
+      }
+      if (c.config.type === 'doughnut') {
+        c.data.datasets[0].borderColor = readVar('--card') || '#fff';
+      }
+      c.update('none');
+    });
+  }
+  function toggleTheme() {
+    const root = document.documentElement;
+    const next = root.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+    if (next === 'dark') root.setAttribute('data-theme', 'dark');
+    else root.removeAttribute('data-theme');
+    document.getElementById('btnTheme').textContent = next === 'dark' ? '☀️' : '🌙';
+    applyChartTheme();
+  }
+  Chart.defaults.color = readVar('--text-sub') || '#6b7280';
+  Chart.defaults.borderColor = readVar('--grid') || 'rgba(0,0,0,0.05)';
+  const grid = readVar('--grid') || 'rgba(0,0,0,0.05)';
+
+  // Daily P&L
+  const dailyLabels = Array.from({length: 30}, (_, i) => (i + 1) + '日');
+  const dailyData = [12, -8, 15, 22, -5, 18, 7, -12, 25, 31, -18, 9, 14, -22, 28, 35, 12, -15, 18, 24, -8, 32, 41, -28, 19, 12, -16, 23, -15.6, 14];
+  const posData = dailyData.map(v => v >= 0 ? v : null);
+  const negData = dailyData.map(v => v < 0 ? v : null);
+  new Chart(document.getElementById('chartDaily'), {
+    type: 'line',
+    data: {
+      labels: dailyLabels,
+      datasets: [
+        {
+          data: dailyData,
+          borderColor: '#1a1a1a',
+          backgroundColor: 'transparent',
+          fill: false,
+          tension: 0.35,
+          borderWidth: 2,
+          pointRadius: 0,
+          pointHoverRadius: 4,
+        },
+        {
+          data: posData,
+          borderColor: 'transparent',
+          backgroundColor: 'rgba(22,163,74,0.08)',
+          fill: { target: { value: 0 } },
+          pointRadius: 0,
+          spanGaps: true,
+          tension: 0.35,
+        },
+        {
+          data: negData,
+          borderColor: 'transparent',
+          backgroundColor: 'rgba(220,38,38,0.06)',
+          fill: { target: { value: 0 } },
+          pointRadius: 0,
+          spanGaps: true,
+          tension: 0.35,
+        }
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: {
+        x: { grid: { display: false }, ticks: { maxTicksLimit: 8, font: { size: 11 } } },
+        y: { grid: { color: grid }, ticks: { font: { size: 11 }, callback: v => v + '萬' } }
+      }
+    }
+  });
+
+  // NW trend
+  const nwLabels = ['11月', '12月', '1月', '2月', '3月', '4月'];
+  const nwData = [2080, 2150, 2200, 2180, 2240, 2257];
+  new Chart(document.getElementById('chartNW'), {
+    type: 'line',
+    data: {
+      labels: nwLabels,
+      datasets: [{
+        data: nwData,
+        borderColor: '#2563eb',
+        backgroundColor: 'rgba(37,99,235,0.08)',
+        fill: true,
+        tension: 0.35,
+        borderWidth: 2.5,
+        pointRadius: 4,
+        pointBackgroundColor: '#2563eb',
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: {
+        x: { grid: { display: false }, ticks: { font: { size: 12 } } },
+        y: { grid: { color: grid }, ticks: { font: { size: 11 }, callback: v => (v/10000).toFixed(2) + '億' } }
+      }
+    }
+  });
+
+  // Monthly bar
+  const monthlyData = [-30, -45, 5, 115];
+  new Chart(document.getElementById('chartMonthly'), {
+    type: 'bar',
+    data: {
+      labels: ['2026/01', '2026/02', '2026/03', '2026/04'],
+      datasets: [{
+        data: monthlyData,
+        backgroundColor: monthlyData.map(v => v >= 0 ? 'rgba(22,163,74,0.85)' : 'rgba(220,38,38,0.85)'),
+        borderRadius: 6,
+        borderSkipped: false,
+        barThickness: 36,
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: {
+        x: { grid: { display: false }, ticks: { font: { size: 12 } } },
+        y: { grid: { color: grid }, ticks: { font: { size: 11 }, callback: v => (v >= 0 ? '+' : '') + v + '萬' } }
+      }
+    }
+  });
+
+  // Pie
+  new Chart(document.getElementById('chartPie'), {
+    type: 'doughnut',
+    data: {
+      labels: ['房地產', '加密貨幣', '美股', '流動現金', '儲蓄險', '台股'],
+      datasets: [{
+        data: [40, 39, 13, 3.4, 2.2, 1.4],
+        backgroundColor: ['#1a1a1a', '#f59e0b', '#2563eb', '#6b7280', '#ec4899', '#10b981'],
+        borderColor: '#fff',
+        borderWidth: 2,
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      cutout: '62%',
+      plugins: {
+        legend: {
+          position: 'bottom',
+          labels: {
+            font: { size: 11 },
+            padding: 10,
+            boxWidth: 8,
+            boxHeight: 8,
+            usePointStyle: true,
+            pointStyle: 'circle',
+            generateLabels: (chart) => {
+              const data = chart.data;
+              return data.labels.map((l, i) => ({
+                text: `${l}  ${data.datasets[0].data[i]}%`,
+                fillStyle: data.datasets[0].backgroundColor[i],
+                strokeStyle: data.datasets[0].backgroundColor[i],
+                fontColor: readVar('--text') || '#1a1a1a',
+                index: i,
+              }));
+            }
+          }
+        }
+      }
+    }
+  });
+
+  applyChartTheme();
+</script>
+
+</body>
+</html>

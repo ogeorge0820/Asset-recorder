@@ -16,10 +16,45 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=DM+Sans:wght@300;400;500;600;700&display=swap">
-<link rel="stylesheet" href="theme.css?v=202605021431">
-<link rel="stylesheet" href="style.css?v=202605021431">
+<link rel="stylesheet" href="theme.css?v=202604300938">
+<link rel="stylesheet" href="style.css?v=202604300938">
 </head>
 <body>
+
+<!-- ── Sidebar (desktop only) ── -->
+<aside id="sidebar">
+  <div class="sidebar-header">
+    <div class="sidebar-logo"><span class="sidebar-logo-text">Asset Tracker</span></div>
+  </div>
+  <nav class="sidebar-nav">
+    <button class="sidebar-nav-item active" id="snav-overview" onclick="switchTab('overview')">
+      <span>總覽</span>
+    </button>
+    <button class="sidebar-nav-item" id="snav-management" onclick="switchTab('management')">
+      <span>管理</span>
+    </button>
+    <button class="sidebar-nav-item" id="snav-dwz" onclick="switchTab('dwz')">
+      <span>Die With Zero</span>
+    </button>
+  </nav>
+  <div class="sidebar-spacer"></div>
+  <div class="sidebar-footer">
+    <div class="sidebar-actions">
+      <button class="btn-theme" id="sidebar-btn-theme" onclick="toggleTheme()">☀</button>
+      <button class="btn-signout" onclick="signOut()">登出</button>
+    </div>
+    <div class="sidebar-info-block">
+      <div class="sidebar-info-row">
+        <div class="sidebar-rate"><span>USD</span><b id="sidebar-rate-val">—</b></div>
+        <div class="sidebar-update">
+          <span class="update-dot" id="sidebar-update-dot"></span>
+          <span id="sidebar-update-ts">—</span>
+        </div>
+      </div>
+      <div class="sidebar-build-badge" id="sidebar-build-badge"></div>
+    </div>
+  </div>
+</aside>
 
 <!-- ── Login Screen ── -->
 <div id="login-screen">
@@ -34,23 +69,26 @@
 <!-- ── Main App ── -->
 <div id="app" style="display:none">
   <header id="app-header">
-    <div class="nav-brand">
-      <div class="nav-logo">$</div>
-      <span class="nav-brand-text">資產追蹤</span>
-    </div>
+    <h1>Asset Tracker</h1>
     <nav class="tab-nav">
       <button class="tab-btn active" onclick="switchTab('overview')">總覽</button>
       <button class="tab-btn" onclick="switchTab('management')">管理</button>
       <button class="tab-btn" onclick="switchTab('dwz')"><span class="tab-full">Die With Zero</span><span class="tab-short">DWZ</span></button>
     </nav>
     <div class="header-right">
+      <div class="build-badge" id="build-badge"></div>
+      <div class="rate-badge" id="header-rate"><span>USD</span><b id="header-rate-val">—</b></div>
       <div class="update-badge" id="update-badge">
         <span class="update-dot" id="update-dot"></span>
         <span id="update-ts">—</span>
       </div>
-      <div class="rate-badge" id="header-rate"><span>USD</span><b id="header-rate-val">—</b></div>
-      <button class="btn-theme" id="btn-theme" onclick="toggleTheme()" aria-label="切換主題">☀</button>
+      <button class="btn-theme" id="btn-theme" onclick="toggleTheme()">☀</button>
       <button class="btn-signout" onclick="signOut()">登出</button>
+      <button class="mobile-menu-btn" id="mobile-menu-btn" onclick="openMobileMenu()" aria-label="選單">
+        <span class="mobile-menu-icon"></span>
+        <span class="mobile-menu-icon"></span>
+        <span class="mobile-menu-icon"></span>
+      </button>
     </div>
   </header>
 
@@ -59,11 +97,10 @@
     <!-- ══ 總覽 Tab ══ -->
     <div id="tab-overview">
 
-      <!-- KPI Cards (hero gradient) -->
-      <section class="app-hero">
-        <div class="app-hero-blob app-hero-blob-1"></div>
-        <div class="app-hero-blob app-hero-blob-2"></div>
-        <div class="app-hero-inner">
+      <!-- Mobile-only build version -->
+      <div class="mobile-build-bar" id="mobile-build-bar"></div>
+
+      <!-- KPI Cards -->
       <div class="kpi-grid">
         <div class="kpi-card kpi-primary">
           <div class="kpi-label"><span class="kpi-label-dot"></span>淨資產</div>
@@ -96,8 +133,6 @@
           <div class="kpi-sub" id="ks-growth">可用資產 − 2025/12/31 基準</div>
         </div>
       </div>
-        </div><!-- /.app-hero-inner -->
-      </section><!-- /.app-hero -->
 
       <!-- Two-column layout: main (trends) | side (pie + net worth) -->
       <div class="overview-grid">
@@ -115,7 +150,7 @@
               </div>
             </div>
           </div>
-          <!-- Net worth trend -->
+          <!-- Net worth trend (swapped from side) -->
           <div class="chart-card">
             <h3>淨資產趨勢</h3>
             <div class="chart-filter">
@@ -132,23 +167,27 @@
               </div>
             </div>
           </div>
+          <!-- Monthly bar -->
+          <div class="chart-card">
+            <h3>月收益</h3>
+            <div style="position:relative;height:200px" id="monthly-wrap">
+              <canvas id="monthly-chart"></canvas>
+            </div>
+          </div>
         </div><!-- /overview-main -->
 
         <div class="overview-side">
           <!-- Pie -->
           <div class="chart-card">
             <h3>資產組成</h3>
-            <div class="pie-wrap" id="pie-wrap">
-              <div class="pie-canvas"><canvas id="pie-chart"></canvas></div>
-              <ul class="pie-legend" id="pie-legend"></ul>
+            <div style="position:relative;height:320px" id="pie-wrap">
+              <canvas id="pie-chart"></canvas>
             </div>
           </div>
-          <!-- Monthly bar (moved from main) -->
+          <!-- Rewards summary (swapped from main) -->
           <div class="chart-card">
-            <h3>月收益</h3>
-            <div style="position:relative;height:160px" id="monthly-wrap">
-              <canvas id="monthly-chart"></canvas>
-            </div>
+            <h3>質押 / 活存收益（本月）</h3>
+            <div id="rewards-summary"></div>
           </div>
         </div><!-- /overview-side -->
 
@@ -163,187 +202,78 @@
         <span id="price-fail-lbl"></span>
       </div>
 
-      <!-- Holdings Hero Cards -->
-      <section class="holdings-hero">
-        <h3 class="holdings-hero-title">持有資產</h3>
-        <div class="holdings-grid">
-
-          <div class="holding-block" id="hb-crypto">
-            <button class="holding-card hc-crypto" onclick="toggleHolding('crypto')" type="button">
-              <span class="hc-deco hc-deco-rings" aria-hidden="true"></span>
-              <div class="hc-top">
-                <span class="hc-label">加密貨幣 / CRYPTO</span>
-                <span class="hc-count" id="hc-count-crypto">— holdings</span>
-              </div>
-              <div class="hc-amount" id="hc-amount-crypto">—</div>
-              <div class="hc-change" id="hc-change-crypto"></div>
-              <div class="hc-symbols" id="hc-symbols-crypto"></div>
-              <span class="hc-arrow" aria-hidden="true">▾</span>
-            </button>
-            <div class="holding-detail">
-              <div class="section-card" id="section-crypto">
-                <div class="section-body">
-                  <div class="table-wrap" id="crypto-table-wrap"><table class="data-table">
-                    <thead><tr><th>代號</th><th>數量</th><th style="text-align:right">幣價 (USD)</th><th style="text-align:right">24h漲跌</th><th style="text-align:right">現值 (TWD)</th></tr></thead>
-                    <tbody id="tb-crypto"></tbody>
-                  </table></div>
-                  <div class="crypto-cards" id="crypto-cards"></div>
-                  <div style="display:flex;gap:8px;flex-wrap:wrap">
-                    <button class="btn-add" onclick="addItem('crypto')">+ 新增加密貨幣</button>
-                    <button class="btn-add" onclick="openCMCImport()">匯入 CoinMarketCap CSV</button>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div class="holding-block" id="hb-us">
-            <button class="holding-card hc-us" onclick="toggleHolding('us')" type="button">
-              <span class="hc-deco hc-deco-stars" aria-hidden="true"></span>
-              <div class="hc-top">
-                <span class="hc-label">美股 / US STOCKS</span>
-                <span class="hc-count" id="hc-count-us">— holdings</span>
-              </div>
-              <div class="hc-amount" id="hc-amount-us">—</div>
-              <div class="hc-change" id="hc-change-us"></div>
-              <div class="hc-symbols" id="hc-symbols-us"></div>
-              <span class="hc-arrow" aria-hidden="true">▾</span>
-            </button>
-            <div class="holding-detail">
-              <div class="section-card" id="section-us">
-                <div class="section-body">
-                  <div class="table-wrap" id="us-table-wrap"><table class="data-table">
-                    <thead><tr><th>代號</th><th>股數</th><th style="text-align:right">股價 (USD)</th><th style="text-align:right">日漲跌</th><th style="text-align:right">現值 (TWD)</th></tr></thead>
-                    <tbody id="tb-us"></tbody>
-                  </table></div>
-                  <div class="stock-cards" id="us-cards"></div>
-                  <button class="btn-add" onclick="addItem('us')">+ 新增美股</button>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div class="holding-block" id="hb-tw">
-            <button class="holding-card hc-tw" onclick="toggleHolding('tw')" type="button">
-              <span class="hc-deco hc-deco-stripes" aria-hidden="true"></span>
-              <div class="hc-top">
-                <span class="hc-label">台股 / TW STOCKS</span>
-                <span class="hc-count" id="hc-count-tw">— holdings</span>
-              </div>
-              <div class="hc-amount" id="hc-amount-tw">—</div>
-              <div class="hc-change" id="hc-change-tw"></div>
-              <div class="hc-symbols" id="hc-symbols-tw"></div>
-              <span class="hc-arrow" aria-hidden="true">▾</span>
-            </button>
-            <div class="holding-detail">
-              <div class="section-card" id="section-tw">
-                <div class="section-body">
-                  <div class="table-wrap" id="tw-table-wrap"><table class="data-table">
-                    <thead><tr><th>代號</th><th>股數</th><th style="text-align:right">股價 (TWD)</th><th style="text-align:right">日漲跌</th><th style="text-align:right">現值 (TWD)</th></tr></thead>
-                    <tbody id="tb-tw"></tbody>
-                  </table></div>
-                  <div class="stock-cards" id="tw-cards"></div>
-                  <button class="btn-add" onclick="addItem('tw')">+ 新增台股</button>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div class="holding-block" id="hb-cash">
-            <button class="holding-card hc-cash" onclick="toggleHolding('cash')" type="button">
-              <span class="hc-deco hc-deco-dollar" aria-hidden="true">$</span>
-              <div class="hc-top">
-                <span class="hc-label">流動現金 / CASH</span>
-                <span class="hc-count" id="hc-count-cash">— accounts</span>
-              </div>
-              <div class="hc-amount" id="hc-amount-cash">—</div>
-              <div class="hc-avail" id="hc-avail-cash"></div>
-              <div class="hc-symbols" id="hc-symbols-cash"></div>
-              <span class="hc-arrow" aria-hidden="true">▾</span>
-            </button>
-            <div class="holding-detail">
-              <div class="section-card" id="section-cash">
-                <div class="section-body">
-                  <div class="table-wrap" id="cash-table-wrap"><table class="data-table">
-                    <thead><tr><th>帳戶</th><th>幣別</th><th style="text-align:right">金額</th><th style="text-align:right">台幣現值</th></tr></thead>
-                    <tbody id="tb-cash"></tbody>
-                  </table></div>
-                  <div class="cash-cards" id="cash-cards"></div>
-                  <button class="btn-add" onclick="addItem('cash')">+ 新增流動現金</button>
-                  <span class="section-avail" id="avail-cash" style="display:none"></span>
-                </div>
-              </div>
-            </div>
-          </div>
-
-        </div>
-      </section>
-
-      <!-- 其他資產 / 負債 / 質押收益 — 卡片式（與上方 holdings-hero 同層） -->
-      <section class="holdings-hero extras-hero">
-          <h3 class="holdings-hero-title">其他資產 &amp; 收益</h3>
-          <div class="holdings-grid">
-
-            <div class="holding-block" id="hb-other-assets">
-              <button class="holding-card hc-other-assets holding-card-split" onclick="toggleHolding('other-assets')" type="button">
-                <span class="hc-deco hc-deco-rings" aria-hidden="true"></span>
-                <div class="hc-split-row hc-top">
-                  <span class="hc-label">其他資產 &amp; 負債<span class="hc-label-en"> / ASSETS &amp; LIABILITIES</span></span>
-                  <span class="hc-count" id="hc-count-other-assets">— items</span>
-                </div>
-                <div class="hc-split-body">
-                  <div class="hc-split-left">
-                    <div class="hc-amount" id="hc-amount-other-assets">—</div>
-                    <div class="hc-symbols" id="hc-symbols-other-assets">儲蓄險 · 房地產</div>
-                  </div>
-                  <div class="hc-split-right">
-                    <div class="hc-side-row hc-side-debt">
-                      <span class="hc-side-label">負債</span>
-                      <span class="hc-side-val" id="hc-side-debt">—</span>
-                    </div>
-                    <div class="hc-side-row hc-side-net">
-                      <span class="hc-side-label">淨值</span>
-                      <span class="hc-side-val" id="hc-side-net">—</span>
-                    </div>
-                  </div>
-                </div>
-                <span class="hc-arrow" aria-hidden="true">▾</span>
-              </button>
-              <div class="holding-detail">
-                <div id="other-assets-items" style="display:flex;flex-direction:column;gap:10px"></div>
-                <div id="liab-items" style="display:flex;flex-direction:column;gap:10px;margin-top:10px"></div>
-              </div>
-            </div>
-
-            <div class="holding-block" id="hb-rewards">
-              <button class="holding-card hc-rewards" onclick="toggleHolding('rewards')" type="button">
-                <span class="hc-deco hc-deco-stars" aria-hidden="true"></span>
-                <div class="hc-top">
-                  <span class="hc-label">質押 / 活存收益<span class="hc-label-en"> / STAKING REWARDS</span></span>
-                  <span class="hc-count">總計</span>
-                </div>
-                <div class="hc-amount" id="hc-amount-rewards">—</div>
-                <div class="hc-symbols" id="hc-symbols-rewards">—</div>
-                <span class="hc-arrow" aria-hidden="true">▾</span>
-              </button>
-              <div class="holding-detail">
-                <div id="rewards-accordion"></div>
-                <button class="btn-add" onclick="addReward()" style="margin-top:12px">+ 新增收益記錄</button>
-              </div>
-            </div>
-
-          </div>
-        </section>
-
       <div class="mgmt-grid">
-        <!-- 隱形容器：這些 id 仍被部分 JS 讀取（cnt/tot/gain），但畫面顯示由 holding-card 接管 -->
-        <span id="cnt-cash" hidden>0</span><span id="tot-cash" hidden>—</span>
-        <span id="cnt-tw" hidden>0</span><span id="tot-tw" hidden>—</span><span id="gain-tw" hidden></span>
-        <span id="cnt-us" hidden>0</span><span id="tot-us" hidden>—</span><span id="gain-us" hidden></span>
-        <span id="cnt-crypto" hidden>0</span><span id="tot-crypto" hidden>—</span><span id="gain-crypto" hidden></span>
-        <span id="tot-other" hidden>—</span>
-        <span id="tot-rewards-month" hidden>—</span>
-        <div id="other-items" hidden></div>
+
+        <!-- Row 1: 流動現金 | 台股 -->
+        <div class="section-card collapsed" id="section-cash">
+          <h3 class="section-header" onclick="toggleSection('cash')"><span>流動現金 <span class="badge" id="cnt-cash">0</span></span><span class="section-header-right"><span class="section-total" id="tot-cash">—</span><span class="section-avail" id="avail-cash" style="display:none"></span><span class="section-chevron">▾</span></span></h3>
+          <div class="section-body">
+          <div class="table-wrap" id="cash-table-wrap"><table class="data-table">
+            <thead><tr><th>帳戶</th><th>幣別</th><th style="text-align:right">金額</th><th style="text-align:right">台幣現值</th></tr></thead>
+            <tbody id="tb-cash"></tbody>
+          </table></div>
+          <div class="cash-cards" id="cash-cards"></div>
+          <button class="btn-add" onclick="addItem('cash')">+ 新增流動現金</button>
+          </div>
+        </div>
+
+        <div class="section-card collapsed" id="section-tw">
+          <h3 class="section-header" onclick="toggleSection('tw')"><span>台股 <span class="badge" id="cnt-tw">0</span></span><span class="section-header-right"><span class="section-total" id="tot-tw">—</span><span class="section-gain" id="gain-tw"></span><span class="section-chevron">▾</span></span></h3>
+          <div class="section-body">
+          <div class="table-wrap" id="tw-table-wrap"><table class="data-table">
+            <thead><tr><th>代號</th><th>股數</th><th style="text-align:right">股價 (TWD)</th><th style="text-align:right">日漲跌</th><th style="text-align:right">現值 (TWD)</th></tr></thead>
+            <tbody id="tb-tw"></tbody>
+          </table></div>
+          <div class="stock-cards" id="tw-cards"></div>
+          <button class="btn-add" onclick="addItem('tw')">+ 新增台股</button>
+          </div>
+        </div>
+
+        <!-- Row 2: 美股 全寬 -->
+        <div class="section-card collapsed" id="section-us" style="grid-column: 1 / -1">
+          <h3 class="section-header" onclick="toggleSection('us')"><span>美股 <span class="badge" id="cnt-us">0</span></span><span class="section-header-right"><span class="section-total" id="tot-us">—</span><span class="section-gain" id="gain-us"></span><span class="section-chevron">▾</span></span></h3>
+          <div class="section-body">
+          <div class="table-wrap" id="us-table-wrap"><table class="data-table">
+            <thead><tr><th>代號</th><th>股數</th><th style="text-align:right">股價 (USD)</th><th style="text-align:right">日漲跌</th><th style="text-align:right">現值 (TWD)</th></tr></thead>
+            <tbody id="tb-us"></tbody>
+          </table></div>
+          <div class="stock-cards" id="us-cards"></div>
+          <button class="btn-add" onclick="addItem('us')">+ 新增美股</button>
+          </div>
+        </div>
+
+        <!-- Row 3: 加密貨幣 全寬 -->
+        <div class="section-card collapsed" id="section-crypto" style="grid-column: 1 / -1">
+          <h3 class="section-header" onclick="toggleSection('crypto')"><span>加密貨幣 <span class="badge" id="cnt-crypto">0</span></span><span class="section-header-right"><span class="section-total" id="tot-crypto">—</span><span class="section-gain" id="gain-crypto"></span><span class="section-chevron">▾</span></span></h3>
+          <div class="section-body">
+          <div class="table-wrap" id="crypto-table-wrap"><table class="data-table">
+            <thead><tr><th>代號</th><th>數量</th><th style="text-align:right">幣價 (USD)</th><th style="text-align:right">24h漲跌</th><th style="text-align:right">現值 (TWD)</th></tr></thead>
+            <tbody id="tb-crypto"></tbody>
+          </table></div>
+          <div class="crypto-cards" id="crypto-cards"></div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap">
+            <button class="btn-add" onclick="addItem('crypto')">+ 新增加密貨幣</button>
+            <button class="btn-add" onclick="openCMCImport()">匯入 CoinMarketCap CSV</button>
+          </div>
+          </div>
+        </div>
+
+        <!-- Row 4: 其他資產＆負債 全寬 -->
+        <div class="section-card collapsed" id="section-other" style="grid-column: 1 / -1">
+          <h3 class="section-header" onclick="toggleSection('other')"><span>其他資產 &amp; 負債</span><span class="section-header-right"><span class="section-total" id="tot-other">—</span><span class="section-chevron">▾</span></span></h3>
+          <div class="section-body">
+          <div id="other-items" style="display:flex;flex-direction:column;gap:10px;margin-top:4px"></div>
+          </div>
+        </div>
+
+        <!-- Row 5: 質押/活存收益記錄 全寬 -->
+        <div class="section-card collapsed" id="section-rewards" style="grid-column: 1 / -1">
+          <h3 class="section-header" onclick="toggleSection('rewards')"><span>質押 / 活存收益記錄</span><span class="section-header-right"><span class="section-total" id="tot-rewards-month">—</span><span class="section-chevron">▾</span></span></h3>
+          <div class="section-body">
+            <div id="rewards-accordion"></div>
+            <button class="btn-add" onclick="addReward()">+ 新增收益記錄</button>
+          </div>
+        </div>
 
         <!-- Row 6: 生活支出預算 全寬 -->
         <div class="section-card collapsed" id="section-budget" style="grid-column: 1 / -1">
@@ -398,12 +328,6 @@
             <div class="dwz-row"><label>目前年齡</label><input id="dwz-age" class="dwz-param-input" type="number" min="20" max="80" value="35" oninput="dwzAutoCalc()"></div>
             <div class="dwz-row"><label>退休年齡</label><input id="dwz-retire" class="dwz-param-input" type="number" min="30" max="80" value="55" oninput="dwzAutoCalc()"></div>
             <div class="dwz-row"><label>預計壽命</label><input id="dwz-life" class="dwz-param-input" type="number" min="60" max="120" value="90" oninput="dwzAutoCalc()"></div>
-          </section>
-
-          <section class="dwz-param-block">
-            <h4 class="dwz-block-title">體驗窗口設定</h4>
-            <div class="dwz-row" title="健康狀況門檻，低於此值視為體驗能力下降"><label>健康閾值 <span class="dwz-param-unit">%</span></label><input id="dwz-health-threshold" class="dwz-param-input" type="number" min="0" max="100" step="5" value="60" oninput="dwzAutoCalc()"></div>
-            <div class="dwz-row" title="留空或 0 = 使用保底金"><label>財務閾值 <span class="dwz-param-unit">萬</span></label><input id="dwz-finance-threshold" class="dwz-param-input" type="number" min="0" step="50" value="0" placeholder="留空=保底金" oninput="dwzAutoCalc()"></div>
           </section>
 
           <section class="dwz-param-block">
@@ -467,20 +391,35 @@
       <!-- ═══ 右欄：曲線 + 分析 ═══ -->
       <main class="dwz-right">
         <div class="dwz-alerts-row">
+          <div id="dwz-peak-info" class="dwz-pill dwz-pill-peak" style="display:none"></div>
           <div id="dwz-warning" class="dwz-pill" style="display:none"></div>
           <div id="dwz-waste-info" class="dwz-pill dwz-pill-waste" style="display:none"></div>
         </div>
 
-        <div class="dwz-best-window-card" id="dwz-best-window">
-          <div class="dwz-bw-header">最佳體驗窗口</div>
-          <div class="dwz-bw-body">
-            <div class="dwz-bw-range" id="dwz-bw-range">—</div>
-            <div class="dwz-bw-meta">
-              <div class="dwz-bw-years" id="dwz-bw-years">—</div>
-              <div class="dwz-bw-hint">健康良好且財務充裕的黃金期</div>
+        <div class="dwz-window-card" id="dwz-window-card">
+          <div class="dwz-window-active">
+            <div class="dwz-window-main">
+              <div class="dwz-window-num"><b id="dwz-window-years">—</b><em>年</em></div>
+              <div class="dwz-window-meta">
+                <div class="dwz-window-label">高體驗能力期剩餘</div>
+                <div class="dwz-window-hint">
+                  <span class="dwz-peak-edit" onclick="_startEditPeakAge(event)" title="點擊修改高體驗能力期年齡"><b class="dwz-peak-age">65</b><span class="dwz-peak-pencil">✎</span></span> 歲前是身體狀況最適合體驗的黃金期
+                </div>
+              </div>
+            </div>
+            <div class="dwz-window-progress">
+              <div class="dwz-window-progress-track">
+                <div class="dwz-window-progress-fill" id="dwz-window-fill" style="width:0%"></div>
+              </div>
+              <div class="dwz-window-progress-meta">
+                <span id="dwz-window-pct">0%</span> 已使用 · 剩 <span id="dwz-window-months">—</span> 個月
+              </div>
             </div>
           </div>
-          <div class="dwz-bw-empty" id="dwz-bw-empty" hidden>目前條件下無符合的最佳體驗窗口</div>
+          <div class="dwz-window-late">
+            <div class="dwz-window-late-label">體驗窗口已進入晚期階段</div>
+            <div class="dwz-window-hint">著重穩定與健康陪伴勝過大膽探索（<span class="dwz-peak-edit" onclick="_startEditPeakAge(event)" title="點擊修改高體驗能力期年齡"><b class="dwz-peak-age">65</b><span class="dwz-peak-pencil">✎</span></span> 歲門檻）</div>
+          </div>
         </div>
 
         <div class="chart-card dwz-chart-card">
@@ -520,14 +459,10 @@
      </div><!-- /.dwz-layout -->
     </div><!-- /tab-dwz -->
 
-    <!-- Page footer: version (desktop + mobile) -->
-    <footer class="page-footer">
-      <span class="page-footer-build" id="build-badge"></span>
-    </footer>
-
   </div><!-- /app-content -->
 
-  <div class="mobile-footer" id="mobile-footer" style="display:none">
+  <!-- Mobile-only footer: version + update time -->
+  <div class="mobile-footer" id="mobile-footer">
     <span class="mobile-footer-dot" id="mobile-footer-dot"></span>
     <span id="mobile-footer-ts">—</span>
     <span class="mobile-footer-sep">·</span>
@@ -613,18 +548,9 @@
   </div>
 </div>
 
-<!-- ── Reward Action Sheet (mobile) ── -->
-<div class="reward-sheet-overlay" id="reward-sheet" onclick="rewardSheetBgClick(event)">
-  <div class="reward-sheet">
-    <button class="rs-btn rs-edit" id="rs-edit">編輯</button>
-    <button class="rs-btn rs-del" id="rs-del">刪除</button>
-    <button class="rs-btn rs-cancel" id="rs-cancel">取消</button>
-  </div>
-</div>
-
 <!-- ── Toast ── -->
 <div class="toast" id="toast"></div>
 
-<script src="app.js?v=202605021431"></script>
+<script src="app.js?v=202604300938"></script>
 </body>
 </html>
