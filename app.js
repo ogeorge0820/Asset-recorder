@@ -2,7 +2,7 @@
 // CONFIG
 // ══════════════════════════════════════════════════════════════
 // Build 時間：每次修改 code 後手動更新此時間（UTC+8 台北時間）
-const BUILD_DATE = '2026/05/02 14:39';
+const BUILD_DATE = '2026/05/02 14:48';
 
 const SPREADSHEET_ID = '1lpRpxVzWaYUqL-jVPOAJCtjsJUIedPYYyOx4gg4PPFU';
 const CLIENT_ID = '149884248440-85f8dhc6ub9up10sv0f89e3e0itrnooj.apps.googleusercontent.com';
@@ -4220,7 +4220,6 @@ function _saveDWZParams() {
     ret:        _dwzParam('dwz-return'),
     inf:        _dwzParam('dwz-inflation'),
     legacy:     _dwzParam('dwz-legacy'),
-    illiquid:   _dwzParam('dwz-illiquid'),
     multEarly:  _dwzParam('dwz-mult-early'),
     multLate:   _dwzParam('dwz-mult-late'),
     safeFloor:  _dwzParam('dwz-safe-floor'),
@@ -4239,7 +4238,6 @@ function _loadDWZParams() {
   set('dwz-return',     p.ret);
   set('dwz-inflation',  p.inf);
   set('dwz-legacy',     p.legacy);
-  set('dwz-illiquid',   p.illiquid);
   set('dwz-mult-early', p.multEarly);
   set('dwz-mult-late',  p.multLate);
   set('dwz-safe-floor', p.safeFloor);
@@ -4590,7 +4588,6 @@ function renderDWZ() {
   const r           = _dwzParam('dwz-return') / 100;
   const inf         = _dwzParam('dwz-inflation') / 100;
   const legacyTWD   = _dwzParam('dwz-legacy') * 10000;
-  const illiquidTWD = _dwzParam('dwz-illiquid') * 10000;
   const multEarly   = _dwzParam('dwz-mult-early') / 100 || 1.2;
   const multLate    = _dwzParam('dwz-mult-late')  / 100 || 0.8;
   const safeFloor   = _dwzParam('dwz-safe-floor') * 10000;
@@ -4598,8 +4595,8 @@ function renderDWZ() {
   const expBudgetTWD = _dwzParam('dwz-exp-budget') * 10000;  // 40–65 歲年度體驗預算
 
   const { liquid, budget } = calcTotals();
-  // 起點統一為可用資產（與首頁同步）：不再在 startNW 上預扣 12 個月生活費
-  const startNW = liquid - illiquidTWD;
+  // 起點統一為可用資產（與首頁同步）
+  const startNW = liquid;
   // 年度迴圈從 currentAge + 1 起算，第一年的支出（含月支出預算 + 本年未付體驗
   // + 本年手動 bucket list + 本年生前贈與）都由第一年迭代一併扣除
   const year0ManualItems = _activeBucketItems().filter(e => e.age === currentAge && !e.paid);
