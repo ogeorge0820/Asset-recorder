@@ -2,7 +2,7 @@
 // CONFIG
 // ══════════════════════════════════════════════════════════════
 // Build 時間：每次修改 code 後手動更新此時間（UTC+8 台北時間）
-const BUILD_DATE = '2026/05/02 15:08';
+const BUILD_DATE = '2026/05/02 20:55';
 
 const SPREADSHEET_ID = '1lpRpxVzWaYUqL-jVPOAJCtjsJUIedPYYyOx4gg4PPFU';
 const CLIENT_ID = '149884248440-85f8dhc6ub9up10sv0f89e3e0itrnooj.apps.googleusercontent.com';
@@ -4903,23 +4903,37 @@ function renderDWZ() {
     if (parseInt(winEndInput.value) !== goldenEnd) winEndInput.value = String(goldenEnd);
   }
 
-  _renderDWZBestWindow(goldenStart, goldenEnd);
+  _renderDWZBestWindow(goldenStart, goldenEnd, currentAge);
   _renderDWZExpensesList();
 }
 
-function _renderDWZBestWindow(start, end) {
+function _renderDWZBestWindow(start, end, currentAge) {
   const card = $('dwz-best-window');
   if (!card) return;
   const rangeEl = $('dwz-bw-range');
   const yearsEl = $('dwz-bw-years');
   const emptyEl = $('dwz-bw-empty');
   const bodyEl  = card.querySelector('.dwz-bw-body');
+  const fillEl  = $('dwz-bw-fill');
+  const pctEl   = $('dwz-bw-pct');
+  const monthsEl = $('dwz-bw-months');
   const has = start != null && end != null && end >= start;
   if (has) {
     if (bodyEl)  bodyEl.hidden  = false;
     if (emptyEl) emptyEl.hidden = true;
     if (rangeEl) rangeEl.textContent = `${start} - ${end} 歲`;
     if (yearsEl) yearsEl.textContent = `共 ${end - start} 年`;
+    // 進度：以 0 → end 為總時間軸，currentAge / end 為已過比例（與舊版「高體驗能力期」算法一致）
+    const usedPct = end > 0 ? Math.max(0, Math.min(100, currentAge / end * 100)) : 0;
+    const remainYears  = Math.max(0, end - currentAge);
+    const remainMonths = remainYears * 12;
+    const colorCls = remainYears > 20 ? '' : (remainYears >= 10 ? 'warn' : 'bad');
+    if (fillEl)  {
+      fillEl.style.width = usedPct.toFixed(1) + '%';
+      fillEl.className = 'dwz-bw-progress-fill' + (colorCls ? ' ' + colorCls : '');
+    }
+    if (pctEl)    pctEl.textContent    = Math.round(usedPct) + '%';
+    if (monthsEl) monthsEl.textContent = remainMonths;
   } else {
     if (bodyEl)  bodyEl.hidden  = true;
     if (emptyEl) emptyEl.hidden = false;
