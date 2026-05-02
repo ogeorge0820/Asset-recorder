@@ -2,7 +2,7 @@
 // CONFIG
 // ══════════════════════════════════════════════════════════════
 // Build 時間：每次修改 code 後手動更新此時間（UTC+8 台北時間）
-const BUILD_DATE = '2026/05/02 13:58';
+const BUILD_DATE = '2026/05/02 14:03';
 
 const SPREADSHEET_ID = '1lpRpxVzWaYUqL-jVPOAJCtjsJUIedPYYyOx4gg4PPFU';
 const CLIENT_ID = '149884248440-85f8dhc6ub9up10sv0f89e3e0itrnooj.apps.googleusercontent.com';
@@ -3018,7 +3018,19 @@ function renderPie() {
   ].filter(e => e.value > 0);
   entries.sort((a, b) => b.value - a.value);
 
-  const ctx = $('pie-chart').getContext('2d');
+  const pieCanvas = $('pie-chart');
+  // 強制限制 canvas 父容器尺寸（解決 iOS WebKit + Chart.js 撐爆問題）
+  if (window.innerWidth <= 768) {
+    const wrap = pieCanvas.parentElement; // .pie-canvas
+    if (wrap) {
+      wrap.style.width = '240px';
+      wrap.style.height = '240px';
+      wrap.style.maxWidth = '100%';
+      wrap.style.margin = '0 auto 12px';
+      wrap.style.display = 'block';
+    }
+  }
+  const ctx = pieCanvas.getContext('2d');
   if (S.charts.pie) S.charts.pie.destroy();
 
   const cc = chartColors();
