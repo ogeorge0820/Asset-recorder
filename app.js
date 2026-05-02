@@ -2,7 +2,7 @@
 // CONFIG
 // ══════════════════════════════════════════════════════════════
 // Build 時間：每次修改 code 後手動更新此時間（UTC+8 台北時間）
-const BUILD_DATE = '2026/05/02 14:03';
+const BUILD_DATE = '2026/05/02 14:06';
 
 const SPREADSHEET_ID = '1lpRpxVzWaYUqL-jVPOAJCtjsJUIedPYYyOx4gg4PPFU';
 const CLIENT_ID = '149884248440-85f8dhc6ub9up10sv0f89e3e0itrnooj.apps.googleusercontent.com';
@@ -3019,17 +3019,6 @@ function renderPie() {
   entries.sort((a, b) => b.value - a.value);
 
   const pieCanvas = $('pie-chart');
-  // 強制限制 canvas 父容器尺寸（解決 iOS WebKit + Chart.js 撐爆問題）
-  if (window.innerWidth <= 768) {
-    const wrap = pieCanvas.parentElement; // .pie-canvas
-    if (wrap) {
-      wrap.style.width = '240px';
-      wrap.style.height = '240px';
-      wrap.style.maxWidth = '100%';
-      wrap.style.margin = '0 auto 12px';
-      wrap.style.display = 'block';
-    }
-  }
   const ctx = pieCanvas.getContext('2d');
   if (S.charts.pie) S.charts.pie.destroy();
 
@@ -3082,7 +3071,79 @@ function renderPie() {
       </li>`;
     }).join('');
   }
+  applyMobilePieLayout();
 }
+
+// 強制以 JS 套用手機版資產組成佈局（規避 CSS / Chart.js 互動 bug）
+function applyMobilePieLayout() {
+  const pieWrap = document.getElementById('pie-wrap');
+  const pieCanvasDiv = pieWrap?.querySelector('.pie-canvas');
+  const pieCanvas = document.getElementById('pie-chart');
+  const pieLegend = document.getElementById('pie-legend');
+  const chartCard = pieWrap?.closest('.chart-card');
+  if (!pieWrap || !pieCanvasDiv || !pieLegend || !chartCard) return;
+
+  if (window.innerWidth <= 768) {
+    // 卡片：高度 auto、移除任何裁切
+    chartCard.style.height = 'auto';
+    chartCard.style.maxHeight = 'none';
+    chartCard.style.minHeight = '0';
+    chartCard.style.overflow = 'visible';
+
+    // pie-wrap 改為 column flex
+    pieWrap.style.display = 'flex';
+    pieWrap.style.flexDirection = 'column';
+    pieWrap.style.alignItems = 'center';
+    pieWrap.style.gap = '12px';
+    pieWrap.style.height = 'auto';
+    pieWrap.style.maxHeight = 'none';
+    pieWrap.style.overflow = 'visible';
+
+    // canvas 容器固定 240×240 置中
+    pieCanvasDiv.style.width = '240px';
+    pieCanvasDiv.style.height = '240px';
+    pieCanvasDiv.style.maxWidth = '100%';
+    pieCanvasDiv.style.flex = 'none';
+    pieCanvasDiv.style.margin = '0 auto';
+    pieCanvasDiv.style.display = 'block';
+    if (pieCanvas) {
+      pieCanvas.style.width = '240px';
+      pieCanvas.style.height = '240px';
+      pieCanvas.style.maxWidth = '100%';
+    }
+
+    // 圖例容器：寬 100% 垂直列表，無高度/裁切限制
+    pieLegend.style.width = '100%';
+    pieLegend.style.maxHeight = 'none';
+    pieLegend.style.overflow = 'visible';
+    pieLegend.style.display = 'flex';
+    pieLegend.style.flexDirection = 'column';
+    pieLegend.style.gap = '10px';
+    pieLegend.style.padding = '0';
+    pieLegend.style.margin = '0';
+
+    console.log('[applyMobilePieLayout] 套用手機版佈局', {
+      cardHeight: chartCard.offsetHeight,
+      legendItems: pieLegend.children.length,
+    });
+  } else {
+    // 桌面：清除手機 inline style，回到 CSS 控制
+    [pieWrap, pieCanvasDiv, pieLegend].forEach(el => el && el.removeAttribute('style'));
+    if (pieCanvas) pieCanvas.removeAttribute('style');
+    chartCard.style.height = '';
+    chartCard.style.maxHeight = '';
+    chartCard.style.minHeight = '';
+    chartCard.style.overflow = '';
+  }
+
+  // Chart.js 需要重新讀容器尺寸
+  if (S.charts.pie) try { S.charts.pie.resize(); } catch(e){}
+}
+
+// resize 時重新套用
+window.addEventListener('resize', () => {
+  applyMobilePieLayout();
+});
 
 function renderTrend() {
   let snaps = [...S.data.snapshots];
