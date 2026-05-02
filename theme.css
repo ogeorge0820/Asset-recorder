@@ -1443,40 +1443,49 @@ canvas { background: transparent !important; }
   .overview-side .chart-card,
   .overview-main .chart-card {
     position: relative !important;
+    display: block !important;
     height: auto !important;
     min-height: 0 !important;
     max-height: none !important;
     overflow: visible !important;
+    flex: 0 0 auto !important;
   }
-  /* 資產組成卡片：圖例 6 項完整、無裁切 */
-  #pie-wrap {
-    position: relative !important;
-    height: auto !important;
-    min-height: 0 !important;
-    max-height: none !important;
-    overflow: visible !important;
-  }
+  /* 資產組成卡片：簡化為 block 流，避免 flex 計算高度錯誤 */
+  #pie-wrap,
   .pie-wrap {
-    flex-direction: column !important;
-    height: auto !important;
-    align-items: stretch !important;
-    overflow: visible !important;
+    display: block !important;
     position: relative !important;
+    width: 100% !important;
+    height: auto !important;
+    min-height: 0 !important;
+    max-height: none !important;
+    overflow: visible !important;
   }
   .pie-wrap .pie-canvas {
-    flex: 0 0 220px !important;
+    display: block !important;
     width: 100% !important;
     height: 220px !important;
-    margin-bottom: 12px;
+    margin: 0 auto 12px !important;
     position: relative !important;
+    flex: none !important;
+    max-width: 240px;
+  }
+  .pie-wrap .pie-canvas canvas {
+    width: 100% !important;
+    height: 100% !important;
+    max-width: 100% !important;
+    max-height: 100% !important;
   }
   .pie-legend {
-    width: 100%;
-    flex: 1 1 auto !important;
-    gap: 10px;
+    display: flex !important;
+    flex-direction: column !important;
+    width: 100% !important;
+    gap: 10px !important;
     max-height: none !important;
     overflow: visible !important;
     position: relative !important;
+    margin: 0 !important;
+    padding: 0 4px !important;
   }
   /* 手機版資產卡片：代號 + 小標籤百分比 + 現值；下方詳情 */
   .asset-card {
