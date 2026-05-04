@@ -2,7 +2,7 @@
 // CONFIG
 // ══════════════════════════════════════════════════════════════
 // Build 時間：每次修改 code 後手動更新此時間（UTC+8 台北時間）
-const BUILD_DATE = '2026/05/02 20:55';
+const BUILD_DATE = '2026/05/04 23:12';
 
 const SPREADSHEET_ID = '1lpRpxVzWaYUqL-jVPOAJCtjsJUIedPYYyOx4gg4PPFU';
 const CLIENT_ID = '149884248440-85f8dhc6ub9up10sv0f89e3e0itrnooj.apps.googleusercontent.com';
@@ -1023,18 +1023,29 @@ function renderKPIs() {
   if (igEl) {
     const { twT, usT, cryT } = calcTotals();
     const curInvest = twT + usT + cryT;
-    const todayStrIG = (() => { const n = new Date(); return `${n.getFullYear()}/${String(n.getMonth()+1).padStart(2,'0')}/${String(n.getDate()).padStart(2,'0')}`; })();
+    const _ng = new Date();
+    const todayStrIG = `${_ng.getFullYear()}/${String(_ng.getMonth()+1).padStart(2,'0')}/${String(_ng.getDate()).padStart(2,'0')}`;
+    const todayYM = `${_ng.getFullYear()}-${String(_ng.getMonth()+1).padStart(2,'0')}`;
     const prevSnapIG = [...dailySnaps].reverse().find(s => s[0] < todayStrIG);
+    let prevInvest = null, baselineLabel = null, baselineDate = null;
     if (prevSnapIG) {
-      const prevTW  = parseFloat(prevSnapIG[2]) || 0;
-      const prevUS  = parseFloat(prevSnapIG[3]) || 0;
-      const prevCry = parseFloat(prevSnapIG[4]) || 0;
-      const prevInvest = prevTW + prevUS + prevCry;
-      // Guard：前日快照投資合計為 0 但現有持倉非空 → 快照可能為無效記錄
-      const hasHoldings = S.data.tw.length || S.data.us.length || S.data.crypto.length;
+      prevInvest = (parseFloat(prevSnapIG[2]) || 0) + (parseFloat(prevSnapIG[3]) || 0) + (parseFloat(prevSnapIG[4]) || 0);
+      baselineLabel = `對比 ${prevSnapIG[0]} 快照`;
+      baselineDate = prevSnapIG[0];
+    } else {
+      // Fallback：最近月度快照（本月之前）
+      const prevMonthlyIG = [...(S.data.snapshots || [])].reverse().find(s => s[0] && s[0] < todayYM);
+      if (prevMonthlyIG) {
+        prevInvest = (parseFloat(prevMonthlyIG[2]) || 0) + (parseFloat(prevMonthlyIG[3]) || 0) + (parseFloat(prevMonthlyIG[4]) || 0);
+        baselineLabel = `對比 ${prevMonthlyIG[0]} 月底`;
+        baselineDate = prevMonthlyIG[0];
+      }
+    }
+    const hasHoldings = S.data.tw.length || S.data.us.length || S.data.crypto.length;
+    if (prevInvest != null) {
       if (prevInvest === 0 && hasHoldings) {
         igEl.textContent = '—'; igEl.className = 'kpi-value';
-        if (igSub) igSub.textContent = `${prevSnapIG[0]} 快照異常，資料不可靠`;
+        if (igSub) igSub.textContent = `${baselineDate} 快照異常，資料不可靠`;
       } else {
         const igDiff = curInvest - prevInvest;
         if (Math.abs(igDiff) < 100) {
@@ -1045,11 +1056,11 @@ function renderKPIs() {
           igEl.className = `kpi-value ${igDiff > 0 ? 'pos' : 'neg'}`;
           if (igCard) igCard.className = `kpi-card ${igDiff > 0 ? 'kpi-gain' : 'kpi-loss'}`;
         }
-        if (igSub) igSub.textContent = `對比 ${prevSnapIG[0]} 快照`;
+        if (igSub) igSub.textContent = baselineLabel;
       }
     } else {
       igEl.textContent = '—'; igEl.className = 'kpi-value';
-      if (igSub) igSub.textContent = '尚無前日快照';
+      if (igSub) igSub.textContent = '尚無比對基準';
     }
   }
 
@@ -1111,7 +1122,7 @@ function renderHoldingCards() {
       } else {
         const pSign = change.pct >= 0 ? '+' : '';
         const dSign = change.delta >= 0 ? '+' : '';
-        const win = cat === 'crypto' ? '24h' : '今日';
+        const win = change.win || (cat === 'crypto' ? '24h' : '今日');
         const deltaStr = (change.delta >= 0 ? dSign : '') + fmtWan(change.delta);
         dEl.textContent = `${pSign}${change.pct.toFixed(2)}% · ${deltaStr} · ${win}`;
         dEl.className = 'hc-change ' + (change.pct >= 0 ? 'pos' : 'neg');
@@ -1120,15 +1131,40 @@ function renderHoldingCards() {
     if (sEl) sEl.textContent = syms || '—';
   };
   const aggChange = (rows, getToday, getPct) => {
-    let today = 0, yest = 0;
+    let today = 0, yest = 0, anyValid = false;
     rows.forEach(r => {
       const t = getToday(r); if (!t) return;
       const pct = getPct(r);
       today += t;
-      yest += pct != null ? t / (1 + pct/100) : t;
+      if (pct != null) {
+        anyValid = true;
+        yest += t / (1 + pct/100);
+      } else {
+        yest += t;
+      }
     });
-    if (yest <= 0) return null;
+    if (!anyValid || yest <= 0) return null;
     return { pct: (today - yest) / yest * 100, delta: today - yest };
+  };
+
+  // ── Fallback：最近月度快照（用於 daily snapshot 缺失時的類別級漲跌比對） ──
+  const _now = new Date();
+  const _curYM = `${_now.getFullYear()}-${String(_now.getMonth()+1).padStart(2,'0')}`;
+  const prevMonthlySnap = [...(S.data.snapshots || [])].reverse().find(s => s[0] && s[0] < _curYM);
+  const monthlyPrev = prevMonthlySnap ? {
+    cash:   parseFloat(prevMonthlySnap[1]) || 0,
+    tw:     parseFloat(prevMonthlySnap[2]) || 0,
+    us:     parseFloat(prevMonthlySnap[3]) || 0,
+    crypto: parseFloat(prevMonthlySnap[4]) || 0,
+    ym:     prevMonthlySnap[0],
+  } : null;
+  const fallbackMonthly = (curTotal, prevTotal) => {
+    if (!prevTotal || prevTotal <= 0) return null;
+    return {
+      pct:   (curTotal - prevTotal) / prevTotal * 100,
+      delta: curTotal - prevTotal,
+      win:   `${monthlyPrev.ym} 月底`,
+    };
   };
 
   // Crypto — 排除 USDT（顯示在流動現金）
@@ -1137,7 +1173,8 @@ function renderHoldingCards() {
   const cryTot = cryRows.reduce((s, r) => s + (parseFloat(r[1])||0) * (S.prices.crypto[r[0]?.toUpperCase()]||0) * rate, 0);
   const cryChg = aggChange(cryRows,
     r => (parseFloat(r[1])||0) * (S.prices.crypto[r[0]?.toUpperCase()]||0) * rate,
-    r => symDailyChangePct('crypto', r[0]?.toUpperCase(), S.prices.crypto[r[0]?.toUpperCase()]));
+    r => symDailyChangePct('crypto', r[0]?.toUpperCase(), S.prices.crypto[r[0]?.toUpperCase()]))
+    || fallbackMonthly(cryTot, monthlyPrev?.crypto);
   const crySyms = cryRows.slice().sort((a,b) =>
     (parseFloat(b[1])||0)*(S.prices.crypto[b[0]?.toUpperCase()]||0) -
     (parseFloat(a[1])||0)*(S.prices.crypto[a[0]?.toUpperCase()]||0))
@@ -1149,7 +1186,8 @@ function renderHoldingCards() {
   const usTot = usRows.reduce((s, r) => s + (parseFloat(r[1])||0) * (S.prices.us[r[0]]||0) * rate, 0);
   const usChg = aggChange(usRows,
     r => (parseFloat(r[1])||0) * (S.prices.us[r[0]]||0) * rate,
-    r => symDailyChangePct('us', r[0], S.prices.us[r[0]]));
+    r => symDailyChangePct('us', r[0], S.prices.us[r[0]]))
+    || fallbackMonthly(usTot, monthlyPrev?.us);
   const usSyms = usRows.slice().sort((a,b) =>
     (parseFloat(b[1])||0)*(S.prices.us[b[0]]||0) - (parseFloat(a[1])||0)*(S.prices.us[a[0]]||0))
     .slice(0,5).map(r => r[0]).filter(Boolean).join(' · ');
@@ -1160,7 +1198,8 @@ function renderHoldingCards() {
   const twTot = twRows.reduce((s, r) => s + (parseFloat(r[1])||0) * (S.prices.tw[r[0]]||0), 0);
   const twChg = aggChange(twRows,
     r => (parseFloat(r[1])||0) * (S.prices.tw[r[0]]||0),
-    r => symDailyChangePct('tw', r[0], S.prices.tw[r[0]]));
+    r => symDailyChangePct('tw', r[0], S.prices.tw[r[0]]))
+    || fallbackMonthly(twTot, monthlyPrev?.tw);
   const twSyms = twRows.slice().sort((a,b) =>
     (parseFloat(b[1])||0)*(S.prices.tw[b[0]]||0) - (parseFloat(a[1])||0)*(S.prices.tw[a[0]]||0))
     .slice(0,5).map(r => r[0]).filter(Boolean).join(' · ');
