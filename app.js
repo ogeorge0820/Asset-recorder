@@ -2,7 +2,7 @@
 // CONFIG
 // ══════════════════════════════════════════════════════════════
 // Build 時間：每次修改 code 後手動更新此時間（UTC+8 台北時間）
-const BUILD_DATE = '2026/05/04 23:12';
+const BUILD_DATE = '2026/05/04 23:17';
 
 const SPREADSHEET_ID = '1lpRpxVzWaYUqL-jVPOAJCtjsJUIedPYYyOx4gg4PPFU';
 const CLIENT_ID = '149884248440-85f8dhc6ub9up10sv0f89e3e0itrnooj.apps.googleusercontent.com';
@@ -1033,8 +1033,12 @@ function renderKPIs() {
       baselineLabel = `對比 ${prevSnapIG[0]} 快照`;
       baselineDate = prevSnapIG[0];
     } else {
-      // Fallback：最近月度快照（本月之前）
-      const prevMonthlyIG = [...(S.data.snapshots || [])].reverse().find(s => s[0] && s[0] < todayYM);
+      // Fallback：最近「投資合計非零」的月度快照（跳過 seed/bootstrap 的全 0 列）
+      const prevMonthlyIG = [...(S.data.snapshots || [])].reverse().find(s => {
+        if (!s[0] || s[0] >= todayYM) return false;
+        const inv = (parseFloat(s[2]) || 0) + (parseFloat(s[3]) || 0) + (parseFloat(s[4]) || 0);
+        return inv > 0;
+      });
       if (prevMonthlyIG) {
         prevInvest = (parseFloat(prevMonthlyIG[2]) || 0) + (parseFloat(prevMonthlyIG[3]) || 0) + (parseFloat(prevMonthlyIG[4]) || 0);
         baselineLabel = `對比 ${prevMonthlyIG[0]} 月底`;
@@ -1148,23 +1152,30 @@ function renderHoldingCards() {
   };
 
   // ── Fallback：最近月度快照（用於 daily snapshot 缺失時的類別級漲跌比對） ──
+  // 各類別獨立尋找「非零」的最近月底快照，跳過 seed/bootstrap 的全 0 列
   const _now = new Date();
   const _curYM = `${_now.getFullYear()}-${String(_now.getMonth()+1).padStart(2,'0')}`;
-  const prevMonthlySnap = [...(S.data.snapshots || [])].reverse().find(s => s[0] && s[0] < _curYM);
-  const monthlyPrev = prevMonthlySnap ? {
-    cash:   parseFloat(prevMonthlySnap[1]) || 0,
-    tw:     parseFloat(prevMonthlySnap[2]) || 0,
-    us:     parseFloat(prevMonthlySnap[3]) || 0,
-    crypto: parseFloat(prevMonthlySnap[4]) || 0,
-    ym:     prevMonthlySnap[0],
-  } : null;
-  const fallbackMonthly = (curTotal, prevTotal) => {
-    if (!prevTotal || prevTotal <= 0) return null;
+  const _snaps = (S.data.snapshots || []).filter(s => s[0] && s[0] < _curYM).reverse();
+  const findPrevMonthly = (colIdx) => {
+    for (const s of _snaps) {
+      const v = parseFloat(s[colIdx]) || 0;
+      if (v > 0) return { value: v, ym: s[0] };
+    }
+    return null;
+  };
+  const fallbackMonthly = (curTotal, prev) => {
+    if (!prev || !(prev.value > 0)) return null;
     return {
-      pct:   (curTotal - prevTotal) / prevTotal * 100,
-      delta: curTotal - prevTotal,
-      win:   `${monthlyPrev.ym} 月底`,
+      pct:   (curTotal - prev.value) / prev.value * 100,
+      delta: curTotal - prev.value,
+      win:   `${prev.ym} 月底`,
     };
+  };
+  const monthlyPrev = {
+    cash:   findPrevMonthly(1),
+    tw:     findPrevMonthly(2),
+    us:     findPrevMonthly(3),
+    crypto: findPrevMonthly(4),
   };
 
   // Crypto — 排除 USDT（顯示在流動現金）
