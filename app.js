@@ -2,7 +2,7 @@
 // CONFIG
 // ══════════════════════════════════════════════════════════════
 // Build 時間：每次修改 code 後手動更新此時間（UTC+8 台北時間）
-const BUILD_DATE = '2026/05/04 23:17';
+const BUILD_DATE = '2026/05/04 23:25';
 
 const SPREADSHEET_ID = '1lpRpxVzWaYUqL-jVPOAJCtjsJUIedPYYyOx4gg4PPFU';
 const CLIENT_ID = '149884248440-85f8dhc6ub9up10sv0f89e3e0itrnooj.apps.googleusercontent.com';
@@ -514,17 +514,17 @@ async function loadAll() {
     sheetGet('bucket_list!A:I'),
   ]);
 
-  S.data.cash            = rows(cash);
-  S.data.tw              = rows(tw);
-  S.data.us              = rows(us);
-  S.data.crypto          = rows(crypto);
-  S.data.snapshots       = rows(snap);
+  S.data.cash            = rows(cash, 'cash_accounts');
+  S.data.tw              = rows(tw, 'holdings_tw');
+  S.data.us              = rows(us, 'holdings_us');
+  S.data.crypto          = rows(crypto, 'holdings_crypto');
+  S.data.snapshots       = rows(snap, 'snapshots');
   // 合併歷史種子：Sheet 有的月份不覆蓋，Sheet 沒有的才補入
   for (const seed of SNAPSHOT_SEEDS) {
     if (!S.data.snapshots.some(s => s[0] === seed[0])) S.data.snapshots.push(seed);
   }
   S.data.snapshots.sort((a, b) => a[0].localeCompare(b[0]));
-  S.data.daily_snapshots = rows(daily);
+  S.data.daily_snapshots = rows(daily, 'daily_snapshots');
 
   // 補缺月：若某月份在 snapshots 中沒有，從 daily_snapshots 取該月最後一筆合成
   try {
@@ -551,31 +551,82 @@ async function loadAll() {
   } catch (e) {
     console.warn('[snapshots] 補缺月失敗', e);
   }
-  S.data.rewards         = rows(rw);
-  S.data.crypto_history  = rows(hist);
-  S.data.tw_history      = rows(twHist);
-  S.data.us_history      = rows(usHist);
-  S.data.cash_history    = rows(cashHist);
-  S.data.other_history   = rows(otherHist);
-  S.data.expense_budget  = rows(expBudget);
-  S.data.experience_plan = rows(expPlan);
-  S.data.income_records  = rows(incomeRec);
-  S.data.bucket_list     = rows(bucketList);
+  S.data.rewards         = rows(rw, 'crypto_rewards');
+  S.data.crypto_history  = rows(hist, 'crypto_history');
+  S.data.tw_history      = rows(twHist, 'tw_history');
+  S.data.us_history      = rows(usHist, 'us_history');
+  S.data.cash_history    = rows(cashHist, 'cash_history');
+  S.data.other_history   = rows(otherHist, 'other_history');
+  S.data.expense_budget  = rows(expBudget, 'expense_budget');
+  S.data.experience_plan = rows(expPlan, 'experience_plan');
+  S.data.income_records  = rows(incomeRec, 'income_records');
+  S.data.bucket_list     = rows(bucketList, 'bucket_list');
   console.log('[bucket_list] raw from Sheet (' + S.data.bucket_list.length + ' rows):',
     JSON.parse(JSON.stringify(S.data.bucket_list)));
   await _migrateBucketListIfNeeded();
   await _repairCorruptedBucketRows();
 
   S.data.settings = { insurance_total: 0, realestate_total: 0, debt: 0, peak_experience_age: 65 };
-  rows(sett).forEach(r => { if (r[0]) S.data.settings[r[0]] = parseFloat(r[1]) || 0; });
+  rows(sett, 'settings').forEach(r => { if (r[0]) S.data.settings[r[0]] = parseFloat(r[1]) || 0; });
+
+  // 防呆：任何 sheet 讀失敗就中止——避免後續 saveSheet 把 Sheet 當空陣列寫光歷史
+  const failedSheets = [];
+  for (const [k, arr] of Object.entries(S.data)) {
+    if (Array.isArray(arr) && arr._failed) failedSheets.push(arr._label || k);
+  }
+  if (failedSheets.length > 0) {
+    const msg = `讀取失敗：${failedSheets.join(', ')}。為保護歷史資料，本次不繼續載入。請重新整理。`;
+    showToast(msg, 'err');
+    throw new Error('[loadAll] aborted due to read failures: ' + failedSheets.join(', '));
+  }
+
+  // 記錄各 Sheet 的初始 size（saveSheet 防呆 baseline）
+  const _track = (name, arr) => { if (Array.isArray(arr)) _SHEET_HIGH_WATER[name] = Math.max(_SHEET_HIGH_WATER[name] || 0, arr.length); };
+  _track('cash_accounts', S.data.cash);
+  _track('holdings_tw', S.data.tw);
+  _track('holdings_us', S.data.us);
+  _track('holdings_crypto', S.data.crypto);
+  _track('snapshots', S.data.snapshots);
+  _track('daily_snapshots', S.data.daily_snapshots);
+  _track('crypto_rewards', S.data.rewards);
+  _track('crypto_history', S.data.crypto_history);
+  _track('tw_history', S.data.tw_history);
+  _track('us_history', S.data.us_history);
+  _track('cash_history', S.data.cash_history);
+  _track('other_history', S.data.other_history);
+  _track('expense_budget', S.data.expense_budget);
+  _track('experience_plan', S.data.experience_plan);
+  _track('income_records', S.data.income_records);
+  _track('bucket_list', S.data.bucket_list);
 }
 
-function rows(settled) {
-  if (settled.status === 'rejected') return [];
+// rejected → 標記為失敗（保留 _failed 旗標讓上層判斷），不再靜默回空
+function rows(settled, label) {
+  if (settled.status === 'rejected') {
+    console.error(`[loadAll] sheetGet failed: ${label}`, settled.reason);
+    const arr = [];
+    arr._failed = true;
+    arr._label = label;
+    return arr;
+  }
   return (settled.value || []).slice(1).filter(r => r?.length && r[0] !== '');
 }
 
+// 防呆：拒絕把曾有歷史的 Sheet 寫成只剩 1 行（防 transient read fail 後 save 把 Sheet 抹光）
+const _SHEET_HIGH_WATER = {}; // name → max rows seen this session
 async function saveSheet(name, dataRows) {
+  const prevHigh = _SHEET_HIGH_WATER[name] || 0;
+  const newSize = (dataRows || []).length;
+  // size guard：本次 session 看過該 Sheet 有 N 列，但這次要寫 < N/2 → 中止
+  // （留容錯空間給 normal CRUD：刪一筆不會觸發；只擋 N→1 / N→0 這種戲劇性收縮）
+  if (prevHigh >= 5 && newSize < Math.max(2, Math.floor(prevHigh / 2))) {
+    const msg = `[saveSheet] BLOCKED: ${name} would shrink ${prevHigh} → ${newSize}. ` +
+                `Likely transient read failure earlier. Refusing to wipe history.`;
+    console.error(msg);
+    showToast(`寫入 ${name} 已中止：避免抹掉歷史紀錄（${prevHigh}→${newSize}）`, 'err');
+    throw new Error(msg);
+  }
+  _SHEET_HIGH_WATER[name] = Math.max(prevHigh, newSize);
   const values = [HEADERS[name], ...dataRows.map(r => r.map(v => v ?? ''))];
   await sheetClear(`${name}!A:Z`);   // 先清空，防止刪除後舊列殘留
   await sheetPut(`${name}!A1`, values);
