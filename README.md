@@ -1,21 +1,25 @@
-# 💰 個人資產追蹤
+# 個人資產追蹤
 
 一個用來追蹤和管理個人資產的網頁應用，支援多種資產類型（現金、台股、美股、加密貨幣、儲蓄險等），並與 Google Sheets 整合進行資料儲存，同時串接即時市場報價 API。
 
-🔗 **線上預覽**：[https://ogeorge0820.github.io/Asset-recorder](https://ogeorge0820.github.io/Asset-recorder)
+**線上預覽**：[https://ogeorge0820.github.io/Asset-recorder](https://ogeorge0820.github.io/Asset-recorder)
+
+**目前穩定版**：`v0.7`（tag 已保留在 GitHub，對應 commit `e79e929`）
+
+**開發協作**：本專案原由 Claude Code 建立，目前改為 Claude Code 與 Codex 共用維護。所有 agent 動工前需遵守 [AGENTS.md](AGENTS.md) 的工作守則，尤其是 `BUILD_DATE`、cache-buster、commit/push 與資料寫入防呆規範。
 
 ---
 
-## ✨ 功能特色
+## 功能特色
 
-### 📊 儀表板（總覽）
+### 儀表板（總覽）
 - 即時顯示 6 張 KPI 卡：**總資產、淨資產、可用資產**（總資產 − 房地產）、**本月收益、本年收益、本日收益**
 - 收益卡片動態顏色邊框（正值綠色、負值紅色），累計成長率依每日快照計算
 - 資產組成圓形圖表、每日淨資產趨勢折線圖、月收益長條圖（Chart.js）
 - 質押/活存收益歷史累計摘要
 - USD/TWD 即時匯率顯示於 Header badge 與 Sidebar
 
-### 💼 資產管理（管理）
+### 資產管理（管理）
 | 資產類型 | 功能說明 |
 |----------|----------|
 | 流動現金 | 支援多幣種（TWD、USD、JPY、SGD、EUR、HKD），自動換算台幣現值；USDT 自動整合顯示 |
@@ -32,22 +36,22 @@
 - Panel 功能：增減數量、設定餘額、完整變動記錄 table、刪除資產
 - 每次操作自動寫入對應 history sheet（`cash_history` / `tw_history` / `us_history` / `crypto_history`）
 
-### 🔄 自動更新
+### 自動更新
 - 每 10 分鐘自動刷新所有市場報價（含快取機制，防止 API rate limit）
 - Header 顯示最後更新時間、狀態指示燈與版本號
 - 支援部分報價失敗時的錯誤提示
 
-### 📸 快照功能
+### 快照功能
 - 每天 23:59 自動靜默記錄每日淨資產快照，用於計算本日 / 本月 / 本年收益
 - 每次資產變動後同步觸發靜默快照更新，趨勢圖即時反映最新數據
 
-### 🎨 主題切換
+### 主題切換
 - 支援 Dark Mode（深色）與 Light Mode（白色木質調）
 - 主題設定自動保存，重新整理後保持
 
 ---
 
-## 🛠️ 技術棧
+## 技術棧
 
 | 類別 | 技術 |
 |------|------|
@@ -62,7 +66,7 @@
 
 ---
 
-## 🚀 使用方法
+## 使用方法
 
 1. 訪問 [https://ogeorge0820.github.io/Asset-recorder](https://ogeorge0820.github.io/Asset-recorder)
 2. 點擊「使用 Google 帳號登入」按鈕
@@ -72,7 +76,7 @@
 
 ---
 
-## ⚙️ 開發設定
+## 開發設定
 
 ### 前置需求
 - Google Cloud Console 專案
@@ -100,18 +104,35 @@ python3 -m http.server 8080
 
 ---
 
-## 📁 專案結構
+## 專案結構
 
 ```
 asset-recorder/
+├── AGENTS.md     # Claude Code / Codex 共用工作守則
 ├── index.html    # HTML 結構（登入畫面、儀表板、管理頁面）
-├── style.css     # 所有樣式（Dark/Light Mode、RWD）
-└── app.js        # 所有邏輯（API 串接、資料處理、圖表渲染）
+├── theme.css     # 主題變數與 Dark/Light Mode
+├── style.css     # 主要樣式與 RWD
+└── app.js        # 單檔邏輯（API 串接、資料處理、圖表渲染）
 ```
 
 ---
 
-## 📋 版本歷史
+## 版本歷史
+
+### v0.7 (2026/05/05)
+
+#### 維護與協作
+
+- 建立 GitHub tag `v0.7`，作為後續 redesign 前的穩定還原點
+- 新增 `AGENTS.md`，統一 Claude Code 與 Codex 的工作規範
+- 明確規範每次 commit 必須同步更新 `BUILD_DATE` 與 `index.html` 內三個 cache-buster
+
+#### KPI 與資料安全
+
+- 本月收益、本年收益基準改為從 `snapshots` 自動取值，不再依賴硬編碼快照金額
+- KPI fallback 會跳過全 0 的 seed/bootstrap 月度快照，避免收益基準失真
+- 強化 `loadAll()` / `rows()` / `saveSheet()` 防呆：讀取 Sheet transient failure 時不靜默回空陣列，並以 high-water guard 防止歷史資料被覆蓋清空
+- 保留 `daily_snapshots` 寫入 `prices_json`，作為個股與幣種次日漲跌計算來源
 
 ### v0.6 (2026/04/27)
 
