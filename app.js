@@ -2,7 +2,7 @@
 // CONFIG
 // ══════════════════════════════════════════════════════════════
 // Build 時間：每次修改 code 後手動更新此時間（UTC+8 台北時間）
-const BUILD_DATE = '2026/05/04 23:25';
+const BUILD_DATE = '2026/05/05 17:25';
 
 const SPREADSHEET_ID = '1lpRpxVzWaYUqL-jVPOAJCtjsJUIedPYYyOx4gg4PPFU';
 const CLIENT_ID = '149884248440-85f8dhc6ub9up10sv0f89e3e0itrnooj.apps.googleusercontent.com';
@@ -1001,8 +1001,16 @@ function renderKPIs() {
       : '總資產 − 房地產'
   );
 
-  // 本月收益：可用資產 − 上月底快照基準
-  const monthlyDiff = liquid - LAST_MONTH_AVAILABLE_SNAPSHOT;
+  // 本月收益：可用資產 − 上月底快照基準（從 snapshots 自動取，不再用 hardcoded 常數）
+  // snapshot 格式：[YYYY/MM, cash, tw, us, crypto, ins, re, debt, net]
+  // liquid = cash + tw + us + crypto + ins（排除房地產 re）
+  const _now2 = new Date();
+  const _curYMKey = `${_now2.getFullYear()}/${String(_now2.getMonth()+1).padStart(2,'0')}`;
+  const liquidFromSnap = (s) => (parseFloat(s[1])||0)+(parseFloat(s[2])||0)+(parseFloat(s[3])||0)+(parseFloat(s[4])||0)+(parseFloat(s[5])||0);
+  const prevMonthSnap = [...(S.data.snapshots || [])].reverse().find(s => s[0] && s[0] < _curYMKey && liquidFromSnap(s) > 0);
+  const monthBaseline = prevMonthSnap ? liquidFromSnap(prevMonthSnap) : LAST_MONTH_AVAILABLE_SNAPSHOT;
+  const monthBaselineLabel = prevMonthSnap ? prevMonthSnap[0].replace('/', '/') : '3/31';
+  const monthlyDiff = liquid - monthBaseline;
   const elMonthly = $('kv-monthly');
   const cardMonthly = $('card-monthly');
   if (monthlyDiff === 0) {
@@ -1013,10 +1021,14 @@ function renderKPIs() {
     elMonthly.className = `kpi-value ${monthlyDiff > 0 ? 'pos' : 'neg'}`;
     if (cardMonthly) cardMonthly.className = `kpi-card ${monthlyDiff > 0 ? 'kpi-gain' : 'kpi-loss'}`;
   }
-  const sMonthly = $('ks-monthly'); if (sMonthly) sMonthly.textContent = '可用資產 − 3/31 基準';
+  const sMonthly = $('ks-monthly');
+  if (sMonthly) sMonthly.textContent = `可用資產 − ${monthBaselineLabel} 月底基準`;
 
-  // 本年收益：可用資產 − 2025/12/31 快照基準
-  const yearlyDiff = liquid - LAST_YEAR_END_AVAILABLE_SNAPSHOT;
+  // 本年收益：可用資產 − 去年 12 月快照基準（自動取）
+  const _prevYearEndKey = `${_now2.getFullYear() - 1}/12`;
+  const prevYearSnap = (S.data.snapshots || []).find(s => s[0] === _prevYearEndKey && liquidFromSnap(s) > 0);
+  const yearBaseline = prevYearSnap ? liquidFromSnap(prevYearSnap) : LAST_YEAR_END_AVAILABLE_SNAPSHOT;
+  const yearlyDiff = liquid - yearBaseline;
   const elGrowth = $('kv-growth');
   const cardGrowth = $('card-growth');
   if (yearlyDiff === 0) {
@@ -1027,7 +1039,8 @@ function renderKPIs() {
     elGrowth.className = `kpi-value ${yearlyDiff > 0 ? 'pos' : 'neg'}`;
     if (cardGrowth) cardGrowth.className = `kpi-card ${yearlyDiff > 0 ? 'kpi-gain' : 'kpi-loss'}`;
   }
-  const sGrowth = $('ks-growth'); if (sGrowth) sGrowth.textContent = '可用資產 − 2025/12/31 基準';
+  const sGrowth = $('ks-growth');
+  if (sGrowth) sGrowth.textContent = `可用資產 − ${_now2.getFullYear() - 1}/12/31 基準`;
 
   // 匯率 — header + sidebar + mobile menu
   const rateStr = S.prices.usdtwd.toFixed(2);
