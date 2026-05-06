@@ -2,7 +2,7 @@
 // CONFIG
 // ══════════════════════════════════════════════════════════════
 // Build 時間：每次修改 code 後手動更新此時間（UTC+8 台北時間）
-const BUILD_DATE = '2026/05/06 15:37';
+const BUILD_DATE = '2026/05/06 15:48';
 
 const SPREADSHEET_ID = '1lpRpxVzWaYUqL-jVPOAJCtjsJUIedPYYyOx4gg4PPFU';
 const CLIENT_ID = '149884248440-85f8dhc6ub9up10sv0f89e3e0itrnooj.apps.googleusercontent.com';
@@ -3420,13 +3420,14 @@ function renderLongTerm() {
     listEl.innerHTML = '<div style="color:var(--text-muted);font-size:0.85rem">尚無長期持有資產</div>';
     return;
   }
-  // Bar 比例以佔總資產百分比繪製
+  // Bar 寬度用組內相對比例（視覺差異明顯）；amount 後面附總資產佔比
   listEl.innerHTML = rows.map(r => {
-    const pct = total > 0 ? (r.value / total * 100) : 0;
+    const innerPct = subtotal > 0 ? (r.value / subtotal * 100) : 0;
+    const totalPct = total > 0 ? (r.value / total * 100) : 0;
     return `<div class="ov2-lt-row">
       <div class="ov2-lt-row-label">${esc(r.label)}</div>
-      <div class="ov2-lt-row-bar"><div class="ov2-lt-row-bar-fill" style="width:${pct.toFixed(1)}%;background:${r.color}"></div></div>
-      <div class="ov2-lt-row-amt">${fmt(r.value)}</div>
+      <div class="ov2-lt-row-bar"><div class="ov2-lt-row-bar-fill" style="width:${innerPct.toFixed(1)}%;background:${r.color}"></div></div>
+      <div class="ov2-lt-row-amt">${fmt(r.value)} · ${totalPct.toFixed(1)}%</div>
     </div>`;
   }).join('');
 }

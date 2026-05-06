@@ -16,8 +16,8 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=DM+Sans:wght@300;400;500;600;700&display=swap">
-<link rel="stylesheet" href="theme.css?v=202605061537">
-<link rel="stylesheet" href="style.css?v=202605061537">
+<link rel="stylesheet" href="theme.css?v=202605061548">
+<link rel="stylesheet" href="style.css?v=202605061548">
 </head>
 <body>
 
@@ -59,35 +59,47 @@
     <!-- ══ 總覽 Tab ══ -->
     <div id="tab-overview">
 
-      <!-- Hero (v2) — 可用資產 + 淨資產 + 12 月趨勢 -->
-      <section class="ov2-hero">
-        <div class="ov2-hero-head">
-          <div class="ov2-hero-primary">
-            <div class="ov2-hero-label">可用資產 · LIQUID NET WORTH</div>
-            <div class="ov2-hero-num skel" id="kv-liquid">—</div>
-            <div class="ov2-hero-meta" id="ks-liquid">現金 + 投資組合</div>
+      <!-- Top row — Hero (左) + Donut (右) -->
+      <section class="ov2-top-row">
+        <div class="ov2-hero">
+          <div class="ov2-hero-head">
+            <div class="ov2-hero-primary">
+              <div class="ov2-hero-label">可用資產 · LIQUID NET WORTH</div>
+              <div class="ov2-hero-num skel" id="kv-liquid">—</div>
+              <div class="ov2-hero-meta" id="ks-liquid">現金 + 投資組合</div>
+            </div>
+            <div class="ov2-hero-secondary">
+              <div class="ov2-hero-sub-label">淨資產</div>
+              <div class="ov2-hero-sub-num" id="kv-net">—</div>
+              <div class="ov2-hero-sub-meta" id="ks-net">含長期持有與負債</div>
+            </div>
+            <div class="chart-filter ov2-trend-filter">
+              <button class="filter-btn" data-f="6m" onclick="setTrendFilter(this)">6M</button>
+              <button class="filter-btn" data-f="1y" onclick="setTrendFilter(this)">1Y</button>
+              <button class="filter-btn active" data-f="all" onclick="setTrendFilter(this)">MAX</button>
+            </div>
           </div>
-          <div class="ov2-hero-secondary">
-            <div class="ov2-hero-sub-label">淨資產</div>
-            <div class="ov2-hero-sub-num" id="kv-net">—</div>
-            <div class="ov2-hero-sub-meta" id="ks-net">含長期持有與負債</div>
-          </div>
-          <div class="chart-filter ov2-trend-filter">
-            <button class="filter-btn" data-f="6m" onclick="setTrendFilter(this)">6M</button>
-            <button class="filter-btn" data-f="1y" onclick="setTrendFilter(this)">1Y</button>
-            <button class="filter-btn active" data-f="all" onclick="setTrendFilter(this)">MAX</button>
+          <div class="ov2-hero-trend">
+            <canvas id="trend-chart"></canvas>
+            <div id="trend-nodata" class="chart-nodata" style="display:none">
+              <div style="color:var(--muted);font-size:0.9rem">尚無歷史資料</div>
+            </div>
           </div>
         </div>
-        <div class="ov2-hero-trend">
-          <canvas id="trend-chart"></canvas>
-          <div id="trend-nodata" class="chart-nodata" style="display:none">
-            <div style="color:var(--muted);font-size:0.9rem">尚無歷史資料</div>
+        <div class="ov2-alloc-card">
+          <div class="ov2-alloc-head">
+            <h3>可用資產分布</h3>
+            <span class="ov2-alloc-sub">4 類 · 現金 / 加密 / 美股 / 台股</span>
+          </div>
+          <div class="pie-wrap" id="pie-wrap">
+            <div class="pie-canvas"><canvas id="pie-chart"></canvas></div>
+            <ul class="pie-legend" id="pie-legend"></ul>
           </div>
         </div>
       </section>
 
-      <!-- P&L row — 本日 + 本月 -->
-      <section class="ov2-pl-row">
+      <!-- Mid row — 4 KPI 並排：本日 / 本月 / 本年 / 財務存活 -->
+      <section class="ov2-mid-row">
         <div class="ov2-pl-card" id="card-invest-gain">
           <div class="ov2-pl-head">
             <div>
@@ -117,37 +129,21 @@
             <canvas id="monthly-chart"></canvas>
           </div>
         </div>
-      </section>
-
-      <!-- Allocation row — Donut + 側欄 KPI -->
-      <section class="ov2-alloc-row">
-        <div class="ov2-alloc-card">
-          <div class="ov2-alloc-head">
-            <h3>可用資產分布</h3>
-            <span class="ov2-alloc-sub">4 類 · 現金 / 加密 / 美股 / 台股</span>
-          </div>
-          <div class="pie-wrap" id="pie-wrap">
-            <div class="pie-canvas"><canvas id="pie-chart"></canvas></div>
-            <ul class="pie-legend" id="pie-legend"></ul>
-          </div>
+        <div class="ov2-stat-card" id="card-growth">
+          <div class="ov2-stat-label">本年收益</div>
+          <div class="ov2-stat-num skel" id="kv-growth">—</div>
+          <div class="ov2-stat-meta" id="ks-growth">可用資產 − 2025/12/31 基準</div>
         </div>
-        <div class="ov2-alloc-side">
-          <div class="kpi-card" id="card-growth">
-            <div class="kpi-label">本年收益</div>
-            <div class="kpi-value skel" id="kv-growth">—</div>
-            <div class="kpi-sub" id="ks-growth">可用資產 − 2025/12/31 基準</div>
-          </div>
-          <div class="kpi-card" id="card-survival">
-            <div class="kpi-label">財務存活</div>
-            <div class="kpi-value skel" id="kv-survival">—</div>
-            <div class="kpi-sub" id="ks-survival">含未來預計收入模擬</div>
-          </div>
+        <div class="ov2-stat-card" id="card-survival">
+          <div class="ov2-stat-label">財務存活</div>
+          <div class="ov2-stat-num skel" id="kv-survival">—</div>
+          <div class="ov2-stat-meta" id="ks-survival">含未來預計收入模擬</div>
         </div>
       </section>
 
-      <!-- 長期持有 — 房地產 + 儲蓄險 -->
-      <section class="ov2-longterm">
-        <div class="ov2-lt-head">
+      <!-- 長期持有（橫向 compact）— 房地產 + 儲蓄險 -->
+      <section class="ov2-longterm ov2-longterm-h">
+        <div class="ov2-lt-title-block">
           <div class="ov2-lt-title">長期持有</div>
           <div class="ov2-lt-meta" id="lt-meta">—</div>
         </div>
@@ -628,6 +624,6 @@
 <!-- ── Toast ── -->
 <div class="toast" id="toast"></div>
 
-<script src="app.js?v=202605061537"></script>
+<script src="app.js?v=202605061548"></script>
 </body>
 </html>
