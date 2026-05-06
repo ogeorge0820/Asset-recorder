@@ -2,7 +2,7 @@
 // CONFIG
 // ══════════════════════════════════════════════════════════════
 // Build 時間：每次修改 code 後手動更新此時間（UTC+8 台北時間）
-const BUILD_DATE = '2026/05/06 15:53';
+const BUILD_DATE = '2026/05/06 15:57';
 
 const SPREADSHEET_ID = '1lpRpxVzWaYUqL-jVPOAJCtjsJUIedPYYyOx4gg4PPFU';
 const CLIENT_ID = '149884248440-85f8dhc6ub9up10sv0f89e3e0itrnooj.apps.googleusercontent.com';
@@ -3293,9 +3293,17 @@ function renderTrend() {
 
   // 加入當月即時數據點（若最後一筆快照不是本月）
   // v2: 趨勢線追蹤「可用資產」(investable, cols 1-4) — cash + tw + us + crypto
+  // 舊快照僅 col[8] (net) 有值時，近似還原：investable = net − ins − re + debt
   const todayM = `${now.getFullYear()}/${String(now.getMonth()+1).padStart(2,'0')}`;
-  const liquidFromSnapTrend = (s) =>
-    (parseFloat(s[1])||0)+(parseFloat(s[2])||0)+(parseFloat(s[3])||0)+(parseFloat(s[4])||0);
+  const liquidFromSnapTrend = (s) => {
+    const inv = (parseFloat(s[1])||0)+(parseFloat(s[2])||0)+(parseFloat(s[3])||0)+(parseFloat(s[4])||0);
+    if (inv > 0) return inv;
+    const net  = parseFloat(s[8]) || 0;
+    const ins  = parseFloat(s[5]) || 0;
+    const re   = parseFloat(s[6]) || 0;
+    const debt = parseFloat(s[7]) || 0;
+    return Math.max(0, net - ins - re + debt);
+  };
   if (!snaps.length || snaps[snaps.length-1][0] < todayM) {
     const { cashT, twT, usT, cryT } = calcTotals();
     const liveInvestable = cashT + twT + usT + cryT;
