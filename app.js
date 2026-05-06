@@ -2,7 +2,7 @@
 // CONFIG
 // ══════════════════════════════════════════════════════════════
 // Build 時間：每次修改 code 後手動更新此時間（UTC+8 台北時間）
-const BUILD_DATE = '2026/05/06 15:04';
+const BUILD_DATE = '2026/05/06 15:19';
 
 const SPREADSHEET_ID = '1lpRpxVzWaYUqL-jVPOAJCtjsJUIedPYYyOx4gg4PPFU';
 const CLIENT_ID = '149884248440-85f8dhc6ub9up10sv0f89e3e0itrnooj.apps.googleusercontent.com';
@@ -988,29 +988,28 @@ function calcTotals() {
 // RENDER — KPIs
 // ══════════════════════════════════════════════════════════════
 function renderKPIs() {
-  const { cashT, total, net, liquid, available, budget } = calcTotals();
+  const { cashT, twT, usT, cryT, ins, re, total, net, liquid, available, budget } = calcTotals();
   const snaps = S.data.snapshots;
 
-  setKPI('kv-total', fmt(total), 'ks-total', '');
-  setKPI('kv-net', fmt(net), 'ks-net', '');
-  const upcoming = calcUpcomingExpenses();
-  const availableAdj = available - upcoming;
-  setKPI('kv-liquid', fmt(liquid), 'ks-liquid',
-    budget > 0
-      ? (upcoming > 0 ? `可用：${fmtWan(availableAdj)}（含規劃支出）` : `可用：${fmtWan(available)}`)
-      : '總資產 − 房地產'
-  );
+  // v2 redesign: 「可用資產」改為 4 類純流動資產（現金 + 加密 + 美股 + 台股，不含保險）
+  // 保險與房地產歸入「長期持有」獨立 section，不算進 hero 數字也不進 donut。
+  // 注意：calcTotals().liquid 維持原定義（含保險）給 DWZ 使用，不更動。
+  const investable = cashT + twT + usT + cryT;
 
-  // 本月收益：可用資產 − 上月底快照基準（從 snapshots 自動取，不再用 hardcoded 常數）
+  setKPI('kv-total', fmt(total), 'ks-total', '');
+  setKPI('kv-net', fmt(net), 'ks-net', '含長期持有與負債');
+  // hero kv-liquid 不用 setKPI（meta 內含色彩 delta，下面手動寫）
+  const elLiquid = $('kv-liquid'); if (elLiquid) elLiquid.textContent = fmt(investable);
+
+  // 本月收益：v2 — investable − 上月底 investable 快照（cols 1-4，不含保險 col 5）
   // snapshot 格式：[YYYY/MM, cash, tw, us, crypto, ins, re, debt, net]
-  // liquid = cash + tw + us + crypto + ins（排除房地產 re）
   const _now2 = new Date();
   const _curYMKey = `${_now2.getFullYear()}/${String(_now2.getMonth()+1).padStart(2,'0')}`;
-  const liquidFromSnap = (s) => (parseFloat(s[1])||0)+(parseFloat(s[2])||0)+(parseFloat(s[3])||0)+(parseFloat(s[4])||0)+(parseFloat(s[5])||0);
+  const liquidFromSnap = (s) => (parseFloat(s[1])||0)+(parseFloat(s[2])||0)+(parseFloat(s[3])||0)+(parseFloat(s[4])||0);
   const prevMonthSnap = [...(S.data.snapshots || [])].reverse().find(s => s[0] && s[0] < _curYMKey && liquidFromSnap(s) > 0);
   const monthBaseline = prevMonthSnap ? liquidFromSnap(prevMonthSnap) : LAST_MONTH_AVAILABLE_SNAPSHOT;
   const monthBaselineLabel = prevMonthSnap ? prevMonthSnap[0].replace('/', '/') : '3/31';
-  const monthlyDiff = liquid - monthBaseline;
+  const monthlyDiff = investable - monthBaseline;
   const elMonthly = $('kv-monthly');
   const cardMonthly = $('card-monthly');
   if (monthlyDiff === 0) {
@@ -1028,7 +1027,7 @@ function renderKPIs() {
   const _prevYearEndKey = `${_now2.getFullYear() - 1}/12`;
   const prevYearSnap = (S.data.snapshots || []).find(s => s[0] === _prevYearEndKey && liquidFromSnap(s) > 0);
   const yearBaseline = prevYearSnap ? liquidFromSnap(prevYearSnap) : LAST_YEAR_END_AVAILABLE_SNAPSHOT;
-  const yearlyDiff = liquid - yearBaseline;
+  const yearlyDiff = investable - yearBaseline;
   const elGrowth = $('kv-growth');
   const cardGrowth = $('card-growth');
   if (yearlyDiff === 0) {
@@ -1041,6 +1040,15 @@ function renderKPIs() {
   }
   const sGrowth = $('ks-growth');
   if (sGrowth) sGrowth.textContent = `可用資產 − ${_now2.getFullYear() - 1}/12/31 基準`;
+
+  // Hero meta — YTD delta + 變動率 + 基準
+  const heroMeta = $('ks-liquid');
+  if (heroMeta) {
+    const pct = yearBaseline > 0 ? (yearlyDiff / yearBaseline * 100) : 0;
+    const sign = yearlyDiff >= 0 ? '+' : '';
+    const cls  = yearlyDiff > 100 ? 'delta-pos' : yearlyDiff < -100 ? 'delta-neg' : '';
+    heroMeta.innerHTML = `<span class="${cls}">${sign}${fmt(yearlyDiff)} (${sign}${pct.toFixed(2)}%)</span><span>本年至今 · 基準 ${_now2.getFullYear() - 1}/12/31</span>`;
+  }
 
   // 匯率 — header + sidebar + mobile menu
   const rateStr = S.prices.usdtwd.toFixed(2);
@@ -2892,6 +2900,7 @@ function renderCharts() {
   renderPie();
   renderDailyTrend();
   renderTrend();
+  renderLongTerm();
   renderRewardsSummary();
   renderMonthly();
 }
@@ -3108,29 +3117,26 @@ function renderDailyTrend() {
 }
 
 function renderPie() {
-  const { cashT, twT, usT, cryT, ins, re, total } = calcTotals();
+  const { cashT, twT, usT, cryT } = calcTotals();
   // USDT 視覺歸類至「流動現金」，不改變整體加總
   const usdtEntry = S.data.crypto.find(r => r[0]?.toUpperCase() === 'USDT');
   const usdtTWD   = usdtEntry ? (parseFloat(usdtEntry[1]) || 0) * S.prices.usdtwd : 0;
-  // Phase 8 Apple 霓虹：流動現金 藍 / 台股 綠 / 美股 紫 / 加密 金 / 儲蓄險 粉 / 房地產 青
-  // Phase 7 Stripe 淺色柔和；保留兩種主題配色
-  const light = document.documentElement.dataset.theme === 'light';
-  const entries = light ? [
-    { label:'流動現金', value:cashT + usdtTWD,   color: '#64748b' },
-    { label:'加密貨幣', value:cryT - usdtTWD,    color: '#f59e0b' },
-    { label:'美股',     value:usT,               color: '#6366f1' },
-    { label:'台股',     value:twT,               color: '#3b82f6' },
-    { label:'儲蓄險',   value:ins,               color: '#ec4899' },
-    { label:'房地產',   value:re,                color: '#10b981' },
-  ].filter(e => e.value > 0) : [
-    { label:'流動現金', value:cashT + usdtTWD,   color: '#60a5fa' },
-    { label:'加密貨幣', value:cryT - usdtTWD,    color: '#fbbf24' },
-    { label:'美股',     value:usT,               color: '#a78bfa' },
-    { label:'台股',     value:twT,               color: '#34d399' },
-    { label:'儲蓄險',   value:ins,               color: '#f472b6' },
-    { label:'房地產',   value:re,                color: '#38bdf8' },
+  // v2 Redesign: 可用資產分布 — 4 類純流動資產（現金 / 加密 / 美股 / 台股）
+  // 儲蓄險與房地產屬「長期持有」，獨立 section 呈現，不進 donut。
+  const entries = [
+    { label:'加密貨幣', value:cryT - usdtTWD,    color: 'var(--asset-crypto)' },
+    { label:'美股',     value:usT,               color: 'var(--asset-us)' },
+    { label:'流動現金', value:cashT + usdtTWD,   color: 'var(--asset-cash)' },
+    { label:'台股',     value:twT,               color: 'var(--asset-tw)' },
   ].filter(e => e.value > 0);
+  // 把 var(--asset-...) 解析成實際色碼，Chart.js 不認 CSS variables
+  const _root = getComputedStyle(document.documentElement);
+  entries.forEach(e => { if (e.color.startsWith('var(')) {
+    const name = e.color.slice(4, -1).trim();
+    e.color = _root.getPropertyValue(name).trim() || '#888';
+  }});
   entries.sort((a, b) => b.value - a.value);
+  const investable = entries.reduce((s, e) => s + e.value, 0);
 
   const pieCanvas = $('pie-chart');
   const ctx = pieCanvas.getContext('2d');
@@ -3164,7 +3170,7 @@ function renderPie() {
             return ` ${c.label}: ${fmt(c.parsed)}`;
           }},
         },
-        doughnutCenter: { text: fmt(total), sub: '總資產' },
+        doughnutCenter: { text: fmt(investable), sub: '可用合計' },
       },
     },
   });
@@ -3283,10 +3289,14 @@ function renderTrend() {
   }
 
   // 加入當月即時數據點（若最後一筆快照不是本月）
+  // v2: 趨勢線追蹤「可用資產」(investable, cols 1-4) — cash + tw + us + crypto
   const todayM = `${now.getFullYear()}/${String(now.getMonth()+1).padStart(2,'0')}`;
+  const liquidFromSnapTrend = (s) =>
+    (parseFloat(s[1])||0)+(parseFloat(s[2])||0)+(parseFloat(s[3])||0)+(parseFloat(s[4])||0);
   if (!snaps.length || snaps[snaps.length-1][0] < todayM) {
-    const { net: liveNet } = calcTotals();
-    snaps = [...snaps, [todayM + ' ▸', 0,0,0,0,0,0,0, liveNet]];
+    const { cashT, twT, usT, cryT } = calcTotals();
+    const liveInvestable = cashT + twT + usT + cryT;
+    snaps = [...snaps, [todayM + ' ▸', cashT, twT, usT, cryT, 0, 0, 0, liveInvestable]];
   }
 
   const cc = chartColors();
@@ -3295,8 +3305,8 @@ function renderTrend() {
     data: {
       labels: snaps.map(s => s[0]),
       datasets: [{
-        label: '淨資產',
-        data: snaps.map(s => parseFloat(s[8]) || 0),
+        label: '可用資產',
+        data: snaps.map(liquidFromSnapTrend),
         borderColor: cc.line1,
         borderWidth: 2.5,
         tension: 0.42,
@@ -3320,7 +3330,7 @@ function renderTrend() {
       layout: { padding: { top: 8, right: 8, bottom: 0, left: 4 } },
       plugins: {
         legend: { display: false },
-        tooltip: { callbacks: { label(c) { return ` 淨資產: ${fmt(c.parsed.y)}`; } } },
+        tooltip: { callbacks: { label(c) { return ` 可用資產: ${fmt(c.parsed.y)}`; } } },
       },
       scales: {
         x: { offset: false, grid: { display: false }, ticks: { color: cc.tick, font: { size: 10 }, maxTicksLimit: 6, maxRotation: 0 }, border: { display: false } },
@@ -3389,6 +3399,33 @@ function setTrendFilter(btn) {
   btn.classList.add('active');
   S.trendFilter = btn.dataset.f;
   renderTrend();
+}
+
+// v2 redesign — 長期持有 section（房地產 + 儲蓄險 + ...）
+function renderLongTerm() {
+  const listEl = document.getElementById('lt-list');
+  const metaEl = document.getElementById('lt-meta');
+  if (!listEl) return;
+  const { ins, re, total } = calcTotals();
+  const rows = [
+    { key: 'realty',    label: '房地產',   value: re,  color: 'var(--asset-realty)' },
+    { key: 'insurance', label: '儲蓄險',   value: ins, color: 'var(--asset-insurance)' },
+  ].filter(r => r.value > 0);
+  const subtotal = rows.reduce((s, r) => s + r.value, 0);
+  if (metaEl) metaEl.textContent = `合計 ${fmt(subtotal)} · 總資產佔比 ${total > 0 ? (subtotal/total*100).toFixed(1) : '0.0'}%`;
+  if (!rows.length) {
+    listEl.innerHTML = '<div style="color:var(--text-muted);font-size:0.85rem">尚無長期持有資產</div>';
+    return;
+  }
+  // Bar 比例以佔總資產百分比繪製
+  listEl.innerHTML = rows.map(r => {
+    const pct = total > 0 ? (r.value / total * 100) : 0;
+    return `<div class="ov2-lt-row">
+      <div class="ov2-lt-row-label">${esc(r.label)}</div>
+      <div class="ov2-lt-row-bar"><div class="ov2-lt-row-bar-fill" style="width:${pct.toFixed(1)}%;background:${r.color}"></div></div>
+      <div class="ov2-lt-row-amt">${fmt(r.value)}</div>
+    </div>`;
+  }).join('');
 }
 
 // ══════════════════════════════════════════════════════════════
