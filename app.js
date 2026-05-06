@@ -2,7 +2,7 @@
 // CONFIG
 // ══════════════════════════════════════════════════════════════
 // Build 時間：每次修改 code 後手動更新此時間（UTC+8 台北時間）
-const BUILD_DATE = '2026/05/06 15:57';
+const BUILD_DATE = '2026/05/06 22:22';
 
 const SPREADSHEET_ID = '1lpRpxVzWaYUqL-jVPOAJCtjsJUIedPYYyOx4gg4PPFU';
 const CLIENT_ID = '149884248440-85f8dhc6ub9up10sv0f89e3e0itrnooj.apps.googleusercontent.com';
@@ -3292,22 +3292,13 @@ function renderTrend() {
   }
 
   // 加入當月即時數據點（若最後一筆快照不是本月）
-  // v2: 趨勢線追蹤「可用資產」(investable, cols 1-4) — cash + tw + us + crypto
-  // 舊快照僅 col[8] (net) 有值時，近似還原：investable = net − ins − re + debt
+  // v2: 趨勢線追蹤「淨資產」(net, col 8) — 舊快照只有 net 是完整連續的歷史資料，
+  //   投資可用資產 (cols 1-4) 在早期快照可能未填，硬切會出現假跌幅
   const todayM = `${now.getFullYear()}/${String(now.getMonth()+1).padStart(2,'0')}`;
-  const liquidFromSnapTrend = (s) => {
-    const inv = (parseFloat(s[1])||0)+(parseFloat(s[2])||0)+(parseFloat(s[3])||0)+(parseFloat(s[4])||0);
-    if (inv > 0) return inv;
-    const net  = parseFloat(s[8]) || 0;
-    const ins  = parseFloat(s[5]) || 0;
-    const re   = parseFloat(s[6]) || 0;
-    const debt = parseFloat(s[7]) || 0;
-    return Math.max(0, net - ins - re + debt);
-  };
+  const trendValueFromSnap = (s) => parseFloat(s[8]) || 0;
   if (!snaps.length || snaps[snaps.length-1][0] < todayM) {
-    const { cashT, twT, usT, cryT } = calcTotals();
-    const liveInvestable = cashT + twT + usT + cryT;
-    snaps = [...snaps, [todayM + ' ▸', cashT, twT, usT, cryT, 0, 0, 0, liveInvestable]];
+    const { cashT, twT, usT, cryT, ins, re, net: liveNet } = calcTotals();
+    snaps = [...snaps, [todayM + ' ▸', cashT, twT, usT, cryT, ins, re, 0, liveNet]];
   }
 
   const cc = chartColors();
@@ -3316,8 +3307,8 @@ function renderTrend() {
     data: {
       labels: snaps.map(s => s[0]),
       datasets: [{
-        label: '可用資產',
-        data: snaps.map(liquidFromSnapTrend),
+        label: '淨資產',
+        data: snaps.map(trendValueFromSnap),
         borderColor: cc.line1,
         borderWidth: 2.5,
         tension: 0.42,
@@ -3341,7 +3332,7 @@ function renderTrend() {
       layout: { padding: { top: 8, right: 8, bottom: 0, left: 4 } },
       plugins: {
         legend: { display: false },
-        tooltip: { callbacks: { label(c) { return ` 可用資產: ${fmt(c.parsed.y)}`; } } },
+        tooltip: { callbacks: { label(c) { return ` 淨資產: ${fmt(c.parsed.y)}`; } } },
       },
       scales: {
         x: { offset: false, grid: { display: false }, ticks: { color: cc.tick, font: { size: 10 }, maxTicksLimit: 6, maxRotation: 0 }, border: { display: false } },
