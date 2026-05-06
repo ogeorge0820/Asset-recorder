@@ -32,7 +32,7 @@
 
 /* ── 淺色主題 ── */
 :root[data-theme="light"] {
-  --bg:             #fafaf8;
+  --bg:             #f6f4ef;
   --bg-card:        #ffffff;
   --bg-hover:       #f9f9fb;
   --bg-input:       #ffffff;
@@ -65,6 +65,33 @@
   --green:         var(--success);
   --red:           var(--danger);
   --accent-light:  var(--accent);
+}
+
+/* ── v2 Redesign — 資產品牌色（Wallet 風格卡片） ── */
+:root {
+  /* 資產品牌色（Donut / 圖例 / accent） */
+  --asset-crypto:    #d97757;  /* 起司橘 */
+  --asset-us:        #5b8def;  /* soft blue */
+  --asset-tw:        #6fae7e;  /* sage green */
+  --asset-cash:      #c9a96e;  /* warm gold */
+  --asset-realty:    #a8a29e;  /* warm taupe */
+  --asset-insurance: #9b7eb8;  /* dusty plum */
+  --asset-staking:   #c0392b;  /* deep red — yield */
+
+  /* Wallet 卡片 gradient（管理頁主動資產卡） */
+  --card-crypto-bg:    linear-gradient(135deg, #18181b 0%, #050505 100%);
+  --card-us-bg:        linear-gradient(135deg, #15315a 0%, #060f24 100%);
+  --card-tw-bg:        linear-gradient(135deg, #faf5eb 0%, #ebe2d2 100%);
+  --card-cash-bg:      linear-gradient(135deg, #2f5946 0%, #15291f 100%);
+  --card-realty-bg:    linear-gradient(135deg, #5a4636 0%, #2a1f18 100%);
+  --card-insurance-bg: linear-gradient(135deg, #5a4862 0%, #28202c 100%);
+  --card-staking-bg:   linear-gradient(135deg, #4a1f1f 0%, #1f0a0a 100%);
+
+  /* v2 動畫 */
+  --ease-out:        cubic-bezier(.2, .8, .2, 1);
+  --duration-fast:   180ms;
+  --duration-base:   240ms;
+  --duration-slow:   320ms;
 }
 
 /* ── Typography tokens ── */
@@ -597,9 +624,10 @@ canvas { background: transparent !important; }
 .nav-brand {
   display: flex;
   align-items: center;
-  gap: 10px;
-  font-weight: 600;
-  font-size: 15px;
+  gap: 14px;
+  font-weight: 700;
+  font-size: 18px;
+  letter-spacing: -0.01em;
   color: var(--text-primary);
 }
 .nav-logo {
@@ -610,21 +638,21 @@ canvas { background: transparent !important; }
   place-items: center;
   color: var(--accent-fg);
   font-weight: 700;
-  font-size: 16px;
+  font-size: 18px;
   font-family: var(--font-num);
 }
 
-/* 中間導覽 — 膠囊外框 */
+/* v2 — 獨立 pill tabs，無外框容器 */
 #app-header .tab-nav {
   display: flex !important;
-  gap: 2px !important;
-  border: 1px solid var(--border-strong) !important;
-  border-radius: 999px !important;
-  padding: 4px !important;
-  background: var(--bg-card) !important;
+  gap: 4px !important;
+  border: none !important;
+  border-radius: 0 !important;
+  padding: 0 !important;
+  background: transparent !important;
 }
 #app-header .tab-btn {
-  padding: 6px 16px !important;
+  padding: 8px 14px !important;
   border-radius: 999px !important;
   font-size: 13px !important;
   font-weight: 500 !important;
@@ -633,7 +661,7 @@ canvas { background: transparent !important; }
   border: none !important;
   text-transform: none !important;
   letter-spacing: 0 !important;
-  transition: all .15s !important;
+  transition: all var(--duration-fast) !important;
 }
 #app-header .tab-btn:hover {
   background: var(--pill-bg) !important;
