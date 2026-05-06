@@ -2,7 +2,7 @@
 // CONFIG
 // ══════════════════════════════════════════════════════════════
 // Build 時間：每次修改 code 後手動更新此時間（UTC+8 台北時間）
-const BUILD_DATE = '2026/05/06 15:19';
+const BUILD_DATE = '2026/05/06 15:37';
 
 const SPREADSHEET_ID = '1lpRpxVzWaYUqL-jVPOAJCtjsJUIedPYYyOx4gg4PPFU';
 const CLIENT_ID = '149884248440-85f8dhc6ub9up10sv0f89e3e0itrnooj.apps.googleusercontent.com';
@@ -997,9 +997,12 @@ function renderKPIs() {
   const investable = cashT + twT + usT + cryT;
 
   setKPI('kv-total', fmt(total), 'ks-total', '');
-  setKPI('kv-net', fmt(net), 'ks-net', '含長期持有與負債');
-  // hero kv-liquid 不用 setKPI（meta 內含色彩 delta，下面手動寫）
-  const elLiquid = $('kv-liquid'); if (elLiquid) elLiquid.textContent = fmt(investable);
+  // hero kv-liquid / kv-net 都不能用 setKPI（會洗掉 ov2-* 專屬尺寸 class），改手動 + 移除 skel
+  const elLiquid = $('kv-liquid');
+  if (elLiquid) { elLiquid.textContent = fmt(investable); elLiquid.classList.remove('skel'); }
+  const elNet = $('kv-net');
+  if (elNet) { elNet.textContent = fmt(net); elNet.classList.remove('skel'); }
+  const sNet = $('ks-net'); if (sNet) sNet.textContent = '含長期持有與負債';
 
   // 本月收益：v2 — investable − 上月底 investable 快照（cols 1-4，不含保險 col 5）
   // snapshot 格式：[YYYY/MM, cash, tw, us, crypto, ins, re, debt, net]
@@ -1013,12 +1016,12 @@ function renderKPIs() {
   const elMonthly = $('kv-monthly');
   const cardMonthly = $('card-monthly');
   if (monthlyDiff === 0) {
-    elMonthly.textContent = '持平'; elMonthly.className = 'kpi-value neutral';
-    if (cardMonthly) cardMonthly.className = 'kpi-card';
+    elMonthly.textContent = '持平'; elMonthly.className = 'ov2-pl-num neutral';
+    if (cardMonthly) cardMonthly.className = 'ov2-pl-card';
   } else {
     elMonthly.textContent = (monthlyDiff > 0 ? '+' : '') + fmt(monthlyDiff);
-    elMonthly.className = `kpi-value ${monthlyDiff > 0 ? 'pos' : 'neg'}`;
-    if (cardMonthly) cardMonthly.className = `kpi-card ${monthlyDiff > 0 ? 'kpi-gain' : 'kpi-loss'}`;
+    elMonthly.className = `ov2-pl-num ${monthlyDiff > 0 ? 'pos' : 'neg'}`;
+    if (cardMonthly) cardMonthly.className = `ov2-pl-card ${monthlyDiff > 0 ? 'kpi-gain' : 'kpi-loss'}`;
   }
   const sMonthly = $('ks-monthly');
   if (sMonthly) sMonthly.textContent = `可用資產 − ${monthBaselineLabel} 月底基準`;
@@ -1120,22 +1123,22 @@ function renderKPIs() {
     const hasHoldings = S.data.tw.length || S.data.us.length || S.data.crypto.length;
     if (prevInvest != null) {
       if (prevInvest === 0 && hasHoldings) {
-        igEl.textContent = '—'; igEl.className = 'kpi-value';
+        igEl.textContent = '—'; igEl.className = 'ov2-pl-num';
         if (igSub) igSub.textContent = `${baselineDate} 快照異常，資料不可靠`;
       } else {
         const igDiff = curInvest - prevInvest;
         if (Math.abs(igDiff) < 100) {
-          igEl.textContent = '持平'; igEl.className = 'kpi-value neutral';
-          if (igCard) igCard.className = 'kpi-card';
+          igEl.textContent = '持平'; igEl.className = 'ov2-pl-num neutral';
+          if (igCard) igCard.className = 'ov2-pl-card';
         } else {
           igEl.textContent = (igDiff > 0 ? '+' : '') + fmt(igDiff);
-          igEl.className = `kpi-value ${igDiff > 0 ? 'pos' : 'neg'}`;
-          if (igCard) igCard.className = `kpi-card ${igDiff > 0 ? 'kpi-gain' : 'kpi-loss'}`;
+          igEl.className = `ov2-pl-num ${igDiff > 0 ? 'pos' : 'neg'}`;
+          if (igCard) igCard.className = `ov2-pl-card ${igDiff > 0 ? 'kpi-gain' : 'kpi-loss'}`;
         }
         if (igSub) igSub.textContent = baselineLabel;
       }
     } else {
-      igEl.textContent = '—'; igEl.className = 'kpi-value';
+      igEl.textContent = '—'; igEl.className = 'ov2-pl-num';
       if (igSub) igSub.textContent = '尚無比對基準';
     }
   }
