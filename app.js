@@ -2,7 +2,7 @@
 // CONFIG
 // ══════════════════════════════════════════════════════════════
 // Build 時間：每次修改 code 後手動更新此時間（UTC+8 台北時間）
-const BUILD_DATE = '2026/05/06 15:48';
+const BUILD_DATE = '2026/05/06 15:53';
 
 const SPREADSHEET_ID = '1lpRpxVzWaYUqL-jVPOAJCtjsJUIedPYYyOx4gg4PPFU';
 const CLIENT_ID = '149884248440-85f8dhc6ub9up10sv0f89e3e0itrnooj.apps.googleusercontent.com';
@@ -1034,12 +1034,12 @@ function renderKPIs() {
   const elGrowth = $('kv-growth');
   const cardGrowth = $('card-growth');
   if (yearlyDiff === 0) {
-    elGrowth.textContent = '持平'; elGrowth.className = 'kpi-value neutral';
-    if (cardGrowth) cardGrowth.className = 'kpi-card';
+    elGrowth.textContent = '持平'; elGrowth.className = 'ov2-stat-num neutral';
+    if (cardGrowth) cardGrowth.className = 'ov2-stat-card';
   } else {
     elGrowth.textContent = (yearlyDiff > 0 ? '+' : '') + fmt(yearlyDiff);
-    elGrowth.className = `kpi-value ${yearlyDiff > 0 ? 'pos' : 'neg'}`;
-    if (cardGrowth) cardGrowth.className = `kpi-card ${yearlyDiff > 0 ? 'kpi-gain' : 'kpi-loss'}`;
+    elGrowth.className = `ov2-stat-num ${yearlyDiff > 0 ? 'pos' : 'neg'}`;
+    if (cardGrowth) cardGrowth.className = `ov2-stat-card ${yearlyDiff > 0 ? 'kpi-gain' : 'kpi-loss'}`;
   }
   const sGrowth = $('ks-growth');
   if (sGrowth) sGrowth.textContent = `可用資產 − ${_now2.getFullYear() - 1}/12/31 基準`;
@@ -1156,10 +1156,10 @@ function renderKPIs() {
       });
       const mf = sim.monthsFloat;
       svEl.textContent = sim.isInfinite ? '∞ 個月' : mf.toFixed(1) + ' 個月';
-      svEl.className = 'kpi-value' + (sim.isInfinite || mf >= 6 ? '' : mf >= 3 ? ' neutral' : ' neg');
+      svEl.className = 'ov2-stat-num' + (sim.isInfinite || mf >= 6 ? '' : mf >= 3 ? ' neutral' : ' neg');
       if (svSub) svSub.textContent = '含未來預計收入模擬';
     } else {
-      svEl.textContent = '—'; svEl.className = 'kpi-value';
+      svEl.textContent = '—'; svEl.className = 'ov2-stat-num';
       if (svSub) svSub.textContent = '含未來預計收入模擬';
     }
   }
