@@ -2,7 +2,7 @@
 // CONFIG
 // ══════════════════════════════════════════════════════════════
 // Build 時間：每次修改 code 後手動更新此時間（UTC+8 台北時間）
-const BUILD_DATE = '2026/05/07 10:31';
+const BUILD_DATE = '2026/05/07 10:37';
 
 const SPREADSHEET_ID = '1lpRpxVzWaYUqL-jVPOAJCtjsJUIedPYYyOx4gg4PPFU';
 const CLIENT_ID = '149884248440-85f8dhc6ub9up10sv0f89e3e0itrnooj.apps.googleusercontent.com';
@@ -992,9 +992,10 @@ function renderKPIs() {
   const snaps = S.data.snapshots;
 
   // v2 redesign: 「可用資產」改為 4 類純流動資產（現金 + 加密 + 美股 + 台股，不含保險）
-  // 保險與房地產歸入「長期持有」獨立 section，不算進 hero 數字也不進 donut。
+  // 房地產歸入「長期持有」獨立 section，不算進 hero 數字也不進 donut。
+  // 儲蓄險視為可流動（可解約 / 質借），納入 investable 與 donut。
   // 注意：calcTotals().liquid 維持原定義（含保險）給 DWZ 使用，不更動。
-  const investable = cashT + twT + usT + cryT;
+  const investable = cashT + twT + usT + cryT + ins;
 
   setKPI('kv-total', fmt(total), 'ks-total', '');
   // hero kv-liquid / kv-net 都不能用 setKPI（會洗掉 ov2-* 專屬尺寸 class），改手動 + 移除 skel
@@ -3121,17 +3122,18 @@ function renderDailyTrend() {
 }
 
 function renderPie() {
-  const { cashT, twT, usT, cryT } = calcTotals();
+  const { cashT, twT, usT, cryT, ins } = calcTotals();
   // USDT 視覺歸類至「流動現金」，不改變整體加總
   const usdtEntry = S.data.crypto.find(r => r[0]?.toUpperCase() === 'USDT');
   const usdtTWD   = usdtEntry ? (parseFloat(usdtEntry[1]) || 0) * S.prices.usdtwd : 0;
-  // v2 Redesign: 可用資產分布 — 4 類純流動資產（現金 / 加密 / 美股 / 台股）
-  // 儲蓄險與房地產屬「長期持有」，獨立 section 呈現，不進 donut。
+  // v2 Redesign: 可用資產分布 — 5 類（現金 / 加密 / 美股 / 台股 / 儲蓄險）
+  // 房地產屬「長期持有」獨立 section，不進 donut。
   const entries = [
     { label:'加密貨幣', value:cryT - usdtTWD,    color: 'var(--asset-crypto)' },
     { label:'美股',     value:usT,               color: 'var(--asset-us)' },
     { label:'流動現金', value:cashT + usdtTWD,   color: 'var(--asset-cash)' },
     { label:'台股',     value:twT,               color: 'var(--asset-tw)' },
+    { label:'儲蓄險',   value:ins,               color: 'var(--asset-insurance)' },
   ].filter(e => e.value > 0);
   // 把 var(--asset-...) 解析成實際色碼，Chart.js 不認 CSS variables
   const _root = getComputedStyle(document.documentElement);
@@ -3410,10 +3412,9 @@ function renderLongTerm() {
   const listEl = document.getElementById('lt-list');
   const metaEl = document.getElementById('lt-meta');
   if (!listEl) return;
-  const { ins, re, total } = calcTotals();
+  const { re, total } = calcTotals();
   const rows = [
-    { key: 'realty',    label: '房地產',   value: re,  color: 'var(--asset-realty)' },
-    { key: 'insurance', label: '儲蓄險',   value: ins, color: 'var(--asset-insurance)' },
+    { key: 'realty', label: '房地產', value: re, color: 'var(--asset-realty)' },
   ].filter(r => r.value > 0);
   const subtotal = rows.reduce((s, r) => s + r.value, 0);
   if (metaEl) metaEl.textContent = `合計 ${fmt(subtotal)} · 總資產佔比 ${total > 0 ? (subtotal/total*100).toFixed(1) : '0.0'}%`;
