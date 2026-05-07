@@ -16,8 +16,8 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=DM+Sans:wght@300;400;500;600;700&display=swap">
-<link rel="stylesheet" href="theme.css?v=202605071037">
-<link rel="stylesheet" href="style.css?v=202605071037">
+<link rel="stylesheet" href="theme.css?v=202605071046">
+<link rel="stylesheet" href="style.css?v=202605071046">
 </head>
 <body>
 
@@ -98,7 +98,7 @@
         </div>
       </section>
 
-      <!-- Mid row — 4 KPI 並排：本日 / 本月 / 本年 / 財務存活 -->
+      <!-- Mid row — 本日 (大) / 本月 (大) / 雙併卡（本年收益 + 財務存活） -->
       <section class="ov2-mid-row">
         <div class="ov2-pl-card" id="card-invest-gain">
           <div class="ov2-pl-head">
@@ -129,15 +129,17 @@
             <canvas id="monthly-chart"></canvas>
           </div>
         </div>
-        <div class="ov2-stat-card" id="card-growth">
-          <div class="ov2-stat-label">本年收益</div>
-          <div class="ov2-stat-num skel" id="kv-growth">—</div>
-          <div class="ov2-stat-meta" id="ks-growth">可用資產 − 2025/12/31 基準</div>
-        </div>
-        <div class="ov2-stat-card" id="card-survival">
-          <div class="ov2-stat-label">財務存活</div>
-          <div class="ov2-stat-num skel" id="kv-survival">—</div>
-          <div class="ov2-stat-meta" id="ks-survival">含未來預計收入模擬</div>
+        <div class="ov2-stat-pair">
+          <div class="ov2-stat-half" id="card-growth">
+            <div class="ov2-stat-label">本年收益</div>
+            <div class="ov2-stat-num skel" id="kv-growth">—</div>
+            <div class="ov2-stat-meta" id="ks-growth">淨資產 − 2025/12/31 基準</div>
+          </div>
+          <div class="ov2-stat-half" id="card-survival">
+            <div class="ov2-stat-label">財務存活</div>
+            <div class="ov2-stat-num skel" id="kv-survival">—</div>
+            <div class="ov2-stat-meta" id="ks-survival">含未來預計收入模擬</div>
+          </div>
         </div>
       </section>
 
@@ -624,6 +626,6 @@
 <!-- ── Toast ── -->
 <div class="toast" id="toast"></div>
 
-<script src="app.js?v=202605071037"></script>
+<script src="app.js?v=202605071046"></script>
 </body>
 </html>

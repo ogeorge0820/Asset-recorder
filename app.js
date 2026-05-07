@@ -2,7 +2,7 @@
 // CONFIG
 // ══════════════════════════════════════════════════════════════
 // Build 時間：每次修改 code 後手動更新此時間（UTC+8 台北時間）
-const BUILD_DATE = '2026/05/07 10:37';
+const BUILD_DATE = '2026/05/07 10:46';
 
 const SPREADSHEET_ID = '1lpRpxVzWaYUqL-jVPOAJCtjsJUIedPYYyOx4gg4PPFU';
 const CLIENT_ID = '149884248440-85f8dhc6ub9up10sv0f89e3e0itrnooj.apps.googleusercontent.com';
@@ -1037,11 +1037,11 @@ function renderKPIs() {
   const cardGrowth = $('card-growth');
   if (yearlyDiff === 0) {
     elGrowth.textContent = '持平'; elGrowth.className = 'ov2-stat-num neutral';
-    if (cardGrowth) cardGrowth.className = 'ov2-stat-card';
+    if (cardGrowth) cardGrowth.className = 'ov2-stat-half';
   } else {
     elGrowth.textContent = (yearlyDiff > 0 ? '+' : '') + fmt(yearlyDiff);
     elGrowth.className = `ov2-stat-num ${yearlyDiff > 0 ? 'pos' : 'neg'}`;
-    if (cardGrowth) cardGrowth.className = `ov2-stat-card ${yearlyDiff > 0 ? 'kpi-gain' : 'kpi-loss'}`;
+    if (cardGrowth) cardGrowth.className = `ov2-stat-half ${yearlyDiff > 0 ? 'kpi-gain' : 'kpi-loss'}`;
   }
   const sGrowth = $('ks-growth');
   if (sGrowth) sGrowth.textContent = `淨資產 − ${_now2.getFullYear() - 1}/12/31 基準`;

@@ -1689,10 +1689,10 @@ canvas { background: transparent !important; }
   width: 100%;
 }
 
-/* Mid row — 4 KPI 並排：本日 / 本月 (含 mini chart) + 本年 / 財務存活 (純數字) */
+/* Mid row — 本日 (大) / 本月 (大) / 雙併卡 */
 .ov2-mid-row {
   display: grid;
-  grid-template-columns: 1.2fr 1.2fr 0.9fr 0.9fr;
+  grid-template-columns: 1.4fr 1.4fr 1fr;
   gap: 14px;
 }
 .ov2-pl-card {
@@ -1738,26 +1738,34 @@ canvas { background: transparent !important; }
   min-height: 56px;
 }
 
-/* Stat card — 純數字（本年收益 / 財務存活） */
-.ov2-stat-card {
+/* Stat pair — 本年收益 + 財務存活 上下併在同一張卡 */
+.ov2-stat-pair {
   background: var(--bg-card);
   border-radius: 16px;
-  padding: 16px 18px;
   box-shadow: var(--card-shadow);
   border: 1px solid var(--border);
+  display: flex; flex-direction: column;
+  overflow: hidden;
+}
+.ov2-stat-half {
+  flex: 1;
+  padding: 14px 18px;
   display: flex; flex-direction: column; justify-content: center;
+}
+.ov2-stat-half + .ov2-stat-half {
+  border-top: 1px solid var(--border);
 }
 .ov2-stat-label {
   font-size: 10px; font-weight: 500;
   letter-spacing: 0.05em; text-transform: uppercase;
   color: var(--text-secondary);
-  margin-bottom: 6px;
+  margin-bottom: 4px;
 }
 .ov2-stat-num {
   font-family: var(--font-num);
   font-variant-numeric: tabular-nums;
   font-weight: 700;
-  font-size: 26px;
+  font-size: 24px;
   letter-spacing: -0.02em;
   line-height: 1;
   color: var(--text-primary);
@@ -1766,7 +1774,7 @@ canvas { background: transparent !important; }
   font-family: var(--font-num);
   font-size: 10px;
   color: var(--text-muted);
-  margin-top: 6px;
+  margin-top: 4px;
 }
 
 /* Allocation 卡（top row 右側） */
@@ -1883,9 +1891,11 @@ canvas { background: transparent !important; }
   .ov2-hero-sub-num { font-size: 20px; }
   .ov2-trend-filter { margin-left: 0 !important; }
   .ov2-hero-trend { min-height: 120px; }
-  .ov2-pl-card, .ov2-alloc-card, .ov2-stat-card, .ov2-longterm {
+  .ov2-pl-card, .ov2-alloc-card, .ov2-longterm {
     padding: 14px 16px; border-radius: 12px;
   }
+  .ov2-stat-pair { border-radius: 12px; }
+  .ov2-stat-half { padding: 12px 16px; }
   .ov2-pl-num, .ov2-stat-num { font-size: 22px; }
   .ov2-pl-chart { min-height: 60px; }
   .ov2-longterm-h { grid-template-columns: 1fr; gap: 10px; }
