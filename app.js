@@ -2,7 +2,7 @@
 // CONFIG
 // ══════════════════════════════════════════════════════════════
 // Build 時間：每次修改 code 後手動更新此時間（UTC+8 台北時間）
-const BUILD_DATE = '2026/05/07 10:26';
+const BUILD_DATE = '2026/05/07 10:31';
 
 const SPREADSHEET_ID = '1lpRpxVzWaYUqL-jVPOAJCtjsJUIedPYYyOx4gg4PPFU';
 const CLIENT_ID = '149884248440-85f8dhc6ub9up10sv0f89e3e0itrnooj.apps.googleusercontent.com';
@@ -1004,15 +1004,16 @@ function renderKPIs() {
   if (elNet) { elNet.textContent = fmt(net); elNet.classList.remove('skel'); }
   const sNet = $('ks-net'); if (sNet) sNet.textContent = '含長期持有與負債';
 
-  // 本月收益：v2 — investable − 上月底 investable 快照（cols 1-4，不含保險 col 5）
+  // 本月收益：用淨資產 (col 8) − 上月底淨資產，跟趨勢圖 / 月度長條圖一致
+  // 投資可用資產 (cols 1-4) 在舊快照可能未填，會出現假跌幅；net 是完整連續歷史資料
   // snapshot 格式：[YYYY/MM, cash, tw, us, crypto, ins, re, debt, net]
   const _now2 = new Date();
   const _curYMKey = `${_now2.getFullYear()}/${String(_now2.getMonth()+1).padStart(2,'0')}`;
-  const liquidFromSnap = (s) => (parseFloat(s[1])||0)+(parseFloat(s[2])||0)+(parseFloat(s[3])||0)+(parseFloat(s[4])||0);
-  const prevMonthSnap = [...(S.data.snapshots || [])].reverse().find(s => s[0] && s[0] < _curYMKey && liquidFromSnap(s) > 0);
-  const monthBaseline = prevMonthSnap ? liquidFromSnap(prevMonthSnap) : LAST_MONTH_AVAILABLE_SNAPSHOT;
+  const netFromSnap = (s) => parseFloat(s[8]) || 0;
+  const prevMonthSnap = [...(S.data.snapshots || [])].reverse().find(s => s[0] && s[0] < _curYMKey && netFromSnap(s) > 0);
+  const monthBaseline = prevMonthSnap ? netFromSnap(prevMonthSnap) : LAST_MONTH_AVAILABLE_SNAPSHOT;
   const monthBaselineLabel = prevMonthSnap ? prevMonthSnap[0].replace('/', '/') : '3/31';
-  const monthlyDiff = investable - monthBaseline;
+  const monthlyDiff = net - monthBaseline;
   const elMonthly = $('kv-monthly');
   const cardMonthly = $('card-monthly');
   if (monthlyDiff === 0) {
@@ -1024,13 +1025,13 @@ function renderKPIs() {
     if (cardMonthly) cardMonthly.className = `ov2-pl-card ${monthlyDiff > 0 ? 'kpi-gain' : 'kpi-loss'}`;
   }
   const sMonthly = $('ks-monthly');
-  if (sMonthly) sMonthly.textContent = `可用資產 − ${monthBaselineLabel} 月底基準`;
+  if (sMonthly) sMonthly.textContent = `淨資產 − ${monthBaselineLabel} 月底基準`;
 
-  // 本年收益：可用資產 − 去年 12 月快照基準（自動取）
+  // 本年收益：淨資產 − 去年 12 月快照基準
   const _prevYearEndKey = `${_now2.getFullYear() - 1}/12`;
-  const prevYearSnap = (S.data.snapshots || []).find(s => s[0] === _prevYearEndKey && liquidFromSnap(s) > 0);
-  const yearBaseline = prevYearSnap ? liquidFromSnap(prevYearSnap) : LAST_YEAR_END_AVAILABLE_SNAPSHOT;
-  const yearlyDiff = investable - yearBaseline;
+  const prevYearSnap = (S.data.snapshots || []).find(s => s[0] === _prevYearEndKey && netFromSnap(s) > 0);
+  const yearBaseline = prevYearSnap ? netFromSnap(prevYearSnap) : LAST_YEAR_END_AVAILABLE_SNAPSHOT;
+  const yearlyDiff = net - yearBaseline;
   const elGrowth = $('kv-growth');
   const cardGrowth = $('card-growth');
   if (yearlyDiff === 0) {
@@ -1042,7 +1043,7 @@ function renderKPIs() {
     if (cardGrowth) cardGrowth.className = `ov2-stat-card ${yearlyDiff > 0 ? 'kpi-gain' : 'kpi-loss'}`;
   }
   const sGrowth = $('ks-growth');
-  if (sGrowth) sGrowth.textContent = `可用資產 − ${_now2.getFullYear() - 1}/12/31 基準`;
+  if (sGrowth) sGrowth.textContent = `淨資產 − ${_now2.getFullYear() - 1}/12/31 基準`;
 
   // Hero meta — YTD delta + 變動率 + 基準
   const heroMeta = $('ks-liquid');
@@ -3355,32 +3356,21 @@ function renderMonthly() {
     return;
   }
 
-  // v2: 跟「本月收益」KPI 一致 — 用可用資產 (cols 1-4) 月度 diff
-  // 舊快照若 cols 1-4 為 0 則退回 net − ins − re + debt 近似
-  const investableFromSnap = (s) => {
-    const inv = (parseFloat(s[1])||0)+(parseFloat(s[2])||0)+(parseFloat(s[3])||0)+(parseFloat(s[4])||0);
-    if (inv > 0) return inv;
-    const net  = parseFloat(s[8]) || 0;
-    const ins  = parseFloat(s[5]) || 0;
-    const re   = parseFloat(s[6]) || 0;
-    const debt = parseFloat(s[7]) || 0;
-    return Math.max(0, net - ins - re + debt);
-  };
+  // 跟「本月收益」KPI 與趨勢圖一致 — 用 net (col 8) 月度 diff
   const labels=[], vals=[];
   for (let i=1;i<snaps.length;i++) {
     labels.push(snaps[i][0]);
-    vals.push(investableFromSnap(snaps[i]) - investableFromSnap(snaps[i-1]));
+    vals.push((parseFloat(snaps[i][8])||0) - (parseFloat(snaps[i-1][8])||0));
   }
 
   // 加入當月即時數據（若最後一筆快照不是本月）
   const nowM = new Date();
   const todayM2 = `${nowM.getFullYear()}/${String(nowM.getMonth()+1).padStart(2,'0')}`;
   if (snaps.length && snaps[snaps.length-1][0] < todayM2) {
-    const lastInv = investableFromSnap(snaps[snaps.length-1]);
-    const { cashT, twT, usT, cryT } = calcTotals();
-    const curInv = cashT + twT + usT + cryT;
+    const lastNet = parseFloat(snaps[snaps.length-1][8]) || 0;
+    const { net: curNet } = calcTotals();
     labels.push(todayM2 + ' ▸');
-    vals.push(curInv - lastInv);
+    vals.push(curNet - lastNet);
   }
 
   S.charts.monthly = new Chart(ctx, {
