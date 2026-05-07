@@ -2,7 +2,7 @@
 // CONFIG
 // ══════════════════════════════════════════════════════════════
 // Build 時間：每次修改 code 後手動更新此時間（UTC+8 台北時間）
-const BUILD_DATE = '2026/05/06 22:22';
+const BUILD_DATE = '2026/05/07 10:26';
 
 const SPREADSHEET_ID = '1lpRpxVzWaYUqL-jVPOAJCtjsJUIedPYYyOx4gg4PPFU';
 const CLIENT_ID = '149884248440-85f8dhc6ub9up10sv0f89e3e0itrnooj.apps.googleusercontent.com';
@@ -3355,20 +3355,32 @@ function renderMonthly() {
     return;
   }
 
+  // v2: 跟「本月收益」KPI 一致 — 用可用資產 (cols 1-4) 月度 diff
+  // 舊快照若 cols 1-4 為 0 則退回 net − ins − re + debt 近似
+  const investableFromSnap = (s) => {
+    const inv = (parseFloat(s[1])||0)+(parseFloat(s[2])||0)+(parseFloat(s[3])||0)+(parseFloat(s[4])||0);
+    if (inv > 0) return inv;
+    const net  = parseFloat(s[8]) || 0;
+    const ins  = parseFloat(s[5]) || 0;
+    const re   = parseFloat(s[6]) || 0;
+    const debt = parseFloat(s[7]) || 0;
+    return Math.max(0, net - ins - re + debt);
+  };
   const labels=[], vals=[];
   for (let i=1;i<snaps.length;i++) {
     labels.push(snaps[i][0]);
-    vals.push((parseFloat(snaps[i][8])||0) - (parseFloat(snaps[i-1][8])||0));
+    vals.push(investableFromSnap(snaps[i]) - investableFromSnap(snaps[i-1]));
   }
 
   // 加入當月即時數據（若最後一筆快照不是本月）
   const nowM = new Date();
   const todayM2 = `${nowM.getFullYear()}/${String(nowM.getMonth()+1).padStart(2,'0')}`;
   if (snaps.length && snaps[snaps.length-1][0] < todayM2) {
-    const lastNet = parseFloat(snaps[snaps.length-1][8]) || 0;
-    const { net: curNet } = calcTotals();
+    const lastInv = investableFromSnap(snaps[snaps.length-1]);
+    const { cashT, twT, usT, cryT } = calcTotals();
+    const curInv = cashT + twT + usT + cryT;
     labels.push(todayM2 + ' ▸');
-    vals.push(curNet - lastNet);
+    vals.push(curInv - lastInv);
   }
 
   S.charts.monthly = new Chart(ctx, {
