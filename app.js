@@ -2,7 +2,7 @@
 // CONFIG
 // ══════════════════════════════════════════════════════════════
 // Build 時間：每次修改 code 後手動更新此時間（UTC+8 台北時間）
-const BUILD_DATE = '2026/05/08 22:00';
+const BUILD_DATE = '2026/05/08 22:38';
 
 const SPREADSHEET_ID = '1lpRpxVzWaYUqL-jVPOAJCtjsJUIedPYYyOx4gg4PPFU';
 const CLIENT_ID = '149884248440-85f8dhc6ub9up10sv0f89e3e0itrnooj.apps.googleusercontent.com';
@@ -2598,6 +2598,21 @@ function renderIncome() {
       ? `本月預計總收入（含未入帳）：${fmt(monthForecast)}`
       : '';
     forecastEl.style.display = monthForecast > 0 ? '' : 'none';
+  }
+
+  // 本月應收（未入帳）— 顯示在卡片副標題
+  const monthReceivable = items
+    .filter(r => r[5] !== '1' && (r[4] || '').startsWith(curYMDash))
+    .reduce((s, r) => s + (parseFloat(r[3]) || 0), 0);
+  const symEl = $('hc-symbols-income');
+  if (symEl) {
+    if (monthReceivable > 0) {
+      symEl.textContent = `本月已入帳 · 應收 ${fmt(monthReceivable)}`;
+    } else if (monthSettled > 0) {
+      symEl.textContent = '本月已入帳 · 應收已收齊';
+    } else {
+      symEl.textContent = '本月尚無入帳';
+    }
   }
 
   if (!items.length) {
