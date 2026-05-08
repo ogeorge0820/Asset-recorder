@@ -16,8 +16,8 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=DM+Sans:wght@300;400;500;600;700&display=swap">
-<link rel="stylesheet" href="theme.css?v=202605081446">
-<link rel="stylesheet" href="style.css?v=202605081446">
+<link rel="stylesheet" href="theme.css?v=202605081517">
+<link rel="stylesheet" href="style.css?v=202605081517">
 </head>
 <body>
 
@@ -334,46 +334,77 @@
           </div>
         </section>
 
-      <div class="mgmt-grid">
-        <!-- 隱形容器：這些 id 仍被部分 JS 讀取（cnt/tot/gain），但畫面顯示由 holding-card 接管 -->
-        <span id="cnt-cash" hidden>0</span><span id="tot-cash" hidden>—</span>
-        <span id="cnt-tw" hidden>0</span><span id="tot-tw" hidden>—</span><span id="gain-tw" hidden></span>
-        <span id="cnt-us" hidden>0</span><span id="tot-us" hidden>—</span><span id="gain-us" hidden></span>
-        <span id="cnt-crypto" hidden>0</span><span id="tot-crypto" hidden>—</span><span id="gain-crypto" hidden></span>
-        <span id="tot-other" hidden>—</span>
-        <span id="tot-rewards-month" hidden>—</span>
-        <div id="other-items" hidden></div>
+      <!-- 隱形 ID 容器（其他 JS 讀取用） -->
+      <div class="mgmt-grid" hidden>
+        <span id="cnt-cash">0</span><span id="tot-cash">—</span>
+        <span id="cnt-tw">0</span><span id="tot-tw">—</span><span id="gain-tw"></span>
+        <span id="cnt-us">0</span><span id="tot-us">—</span><span id="gain-us"></span>
+        <span id="cnt-crypto">0</span><span id="tot-crypto">—</span><span id="gain-crypto"></span>
+        <span id="tot-other">—</span>
+        <span id="tot-rewards-month">—</span>
+        <div id="other-items"></div>
+      </div>
 
-        <!-- Row 6: 生活支出預算 全寬 -->
-        <div class="section-card collapsed" id="section-budget" style="grid-column: 1 / -1">
-          <h3 class="section-header" onclick="toggleSection('budget')"><span>生活支出預算 <span class="badge" id="cnt-budget">0</span></span><span class="section-header-right"><span class="budget-total-label">月支出：</span><span class="section-total" id="tot-budget">—</span><span class="section-chevron">▾</span></span></h3>
-          <div class="budget-ratio-bar" id="budget-ratio-bar"></div>
-          <div class="section-body">
-            <div class="budget-cats" id="budget-cats"></div>
-            <button class="btn-add budget-add-btn" onclick="addBudgetItem()">+ 新增支出項目</button>
+      <!-- 支出 & 收入 — 卡片式（與 holdings-hero 同層） -->
+      <section class="holdings-hero expenses-hero">
+        <h3 class="holdings-hero-title">支出 &amp; 收入</h3>
+        <div class="holdings-grid">
+
+          <div class="holding-block holding-block-full" id="hb-budget">
+            <button class="holding-card hc-budget" onclick="toggleHolding('budget')" type="button">
+              <span class="hc-deco hc-deco-stripes" aria-hidden="true"></span>
+              <div class="hc-top">
+                <span class="hc-label">生活支出預算<span class="hc-label-en"> / MONTHLY BUDGET</span></span>
+                <span class="hc-count"><span id="cnt-budget">0</span> 項</span>
+              </div>
+              <div class="hc-amount"><span id="tot-budget">—</span></div>
+              <div class="hc-symbols" id="hc-symbols-budget">月支出總額</div>
+              <span class="hc-arrow" aria-hidden="true">▾</span>
+            </button>
+            <div class="holding-detail">
+              <div class="budget-ratio-bar" id="budget-ratio-bar"></div>
+              <div class="budget-cats" id="budget-cats"></div>
+              <button class="btn-add budget-add-btn" onclick="addBudgetItem()">+ 新增支出項目</button>
+            </div>
           </div>
-        </div>
 
-        <!-- Row 7: 重大體驗支出規劃 全寬 -->
-        <div class="section-card collapsed" id="section-exp-plan" style="grid-column: 1 / -1">
-          <h3 class="section-header" onclick="toggleSection('exp-plan')"><span>重大體驗支出規劃 <span class="badge" id="cnt-exp-plan">0</span></span><span class="section-header-right"><span class="section-total" id="tot-exp-plan">—</span><span class="section-chevron">▾</span></span></h3>
-          <div class="section-body">
-            <div class="exp-plan-list" id="exp-plan-list"></div>
-            <button class="btn-add" onclick="addExpPlanItem()">+ 新增體驗支出</button>
+          <div class="holding-block holding-block-full" id="hb-exp-plan">
+            <button class="holding-card hc-exp-plan" onclick="toggleHolding('exp-plan')" type="button">
+              <span class="hc-deco hc-deco-rings" aria-hidden="true"></span>
+              <div class="hc-top">
+                <span class="hc-label">重大體驗支出規劃<span class="hc-label-en"> / EXPERIENCE PLAN</span></span>
+                <span class="hc-count"><span id="cnt-exp-plan">0</span> 項</span>
+              </div>
+              <div class="hc-amount"><span id="tot-exp-plan">—</span></div>
+              <div class="hc-symbols" id="hc-symbols-exp-plan">規劃中</div>
+              <span class="hc-arrow" aria-hidden="true">▾</span>
+            </button>
+            <div class="holding-detail">
+              <div class="exp-plan-list" id="exp-plan-list"></div>
+              <button class="btn-add" onclick="addExpPlanItem()">+ 新增體驗支出</button>
+            </div>
           </div>
-        </div>
 
-        <!-- Row 8: 主動收入管理 全寬 -->
-        <div class="section-card collapsed" id="section-income" style="grid-column: 1 / -1">
-          <h3 class="section-header" onclick="toggleSection('income')"><span>主動收入管理 <span class="badge" id="cnt-income">0</span></span><span class="section-header-right"><span class="income-header-label">本月已入帳：</span><span class="section-total" id="tot-income">—</span><span class="section-chevron">▾</span></span></h3>
-          <div class="section-body">
-            <div id="income-accordion"></div>
-            <div class="income-forecast" id="income-month-forecast" style="display:none"></div>
-            <button class="btn-add" onclick="addIncomeItem()">+ 新增收入</button>
+          <div class="holding-block holding-block-full" id="hb-income">
+            <button class="holding-card hc-income" onclick="toggleHolding('income')" type="button">
+              <span class="hc-deco hc-deco-stars" aria-hidden="true"></span>
+              <div class="hc-top">
+                <span class="hc-label">主動收入管理<span class="hc-label-en"> / ACTIVE INCOME</span></span>
+                <span class="hc-count"><span id="cnt-income">0</span> 項</span>
+              </div>
+              <div class="hc-amount"><span id="tot-income">—</span></div>
+              <div class="hc-symbols" id="hc-symbols-income">本月已入帳</div>
+              <span class="hc-arrow" aria-hidden="true">▾</span>
+            </button>
+            <div class="holding-detail">
+              <div id="income-accordion"></div>
+              <div class="income-forecast" id="income-month-forecast" style="display:none"></div>
+              <button class="btn-add" onclick="addIncomeItem()">+ 新增收入</button>
+            </div>
           </div>
-        </div>
 
-      </div><!-- /mgmt-grid -->
+        </div>
+      </section>
 
     </div><!-- /tab-management -->
 
@@ -626,6 +657,6 @@
 <!-- ── Toast ── -->
 <div class="toast" id="toast"></div>
 
-<script src="app.js?v=202605081446"></script>
+<script src="app.js?v=202605081517"></script>
 </body>
 </html>

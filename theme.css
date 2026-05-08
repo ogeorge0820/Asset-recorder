@@ -1904,29 +1904,15 @@ canvas { background: transparent !important; }
 }
 
 /* ═══════════════════════════════════════════════════════════════
-   v2 Mgmt — 生活預算 / 重大體驗 / 主動收入 緊縮（壓掉中間空白）
+   v2 Mgmt — 支出 & 收入 卡片化（生活預算 / 重大體驗 / 主動收入）
    ═══════════════════════════════════════════════════════════════ */
-#section-budget,
-#section-exp-plan,
-#section-income {
-  padding: 14px 18px !important;
-}
-#section-budget h3.section-header,
-#section-exp-plan h3.section-header,
-#section-income h3.section-header {
-  margin-bottom: 8px !important;
-}
-/* 預算：類別 row 緊縮 */
-#section-budget .budget-cats { margin: 4px 0 6px !important; gap: 4px !important; }
-#section-budget .budget-cat-header { padding: 5px 12px !important; }
-#section-budget .budget-ratio-bar + .budget-cats { margin-top: 8px !important; }
-/* 重大體驗：每列縮 padding */
-#section-exp-plan .exp-plan-item { padding: 6px 4px !important; }
-/* 主動收入：accordion 邊框圓角縮、每列 4px */
-#section-income #income-accordion { border-radius: 8px; }
-#section-income .income-item { padding: 4px 10px !important; }
-#section-income .income-forecast { padding-top: 6px !important; margin-top: 6px !important; }
-/* 三 section 內的 + 新增 按鈕：margin-top 縮 */
-#section-budget .btn-add,
-#section-exp-plan .btn-add,
-#section-income .btn-add { margin-top: 6px !important; padding: 5px 0 !important; }
+.expenses-hero { margin-top: 8px; }
+.holding-card.hc-budget   { background: linear-gradient(135deg, #a8552c 0%, #4a1d10 100%) !important; color:#fff !important; }
+.holding-card.hc-exp-plan { background: linear-gradient(135deg, #2c5a6f 0%, #0f2330 100%) !important; color:#fff !important; }
+.holding-card.hc-income   { background: linear-gradient(135deg, #3c5c3a 0%, #15291f 100%) !important; color:#fff !important; }
+/* 展開後 detail 內的 + 新增 按鈕：間距更緊 */
+#hb-budget .btn-add,
+#hb-exp-plan .btn-add,
+#hb-income .btn-add { margin-top: 8px !important; padding: 6px 0 !important; }
+/* 收入 accordion 在 detail 內不需要外框（外面已有 detail card 邊框） */
+#hb-income #income-accordion { border: none; max-height: 360px; }
