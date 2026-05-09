@@ -1919,9 +1919,9 @@ canvas { background: transparent !important; }
 /* 收入清單：固定 column 寬，跨列對齊 */
 #hb-income .income-item {
   display: grid !important;
-  grid-template-columns: 24px minmax(0, 1fr) 110px 90px 110px !important;
-  gap: 14px !important;
-  padding: 8px 16px !important;
+  grid-template-columns: 22px minmax(0, 1fr) 100px 80px 120px !important;
+  gap: 12px !important;
+  padding: 6px 14px !important;
   align-items: center;
 }
 #hb-income .income-item-info {
@@ -1940,4 +1940,14 @@ canvas { background: transparent !important; }
   justify-self: end !important;
   display: flex;
   gap: 4px;
+}
+/* 收入卡內按鈕縮成桌面密度（原 .btn-icon min 44×44 是 mobile touch target） */
+#hb-income .btn-icon {
+  min-width: 32px !important;
+  min-height: 32px !important;
+  padding: 4px 6px !important;
+  font-size: 0.85rem;
+}
+#hb-income .income-status-btn {
+  width: 22px; height: 22px;
 }
