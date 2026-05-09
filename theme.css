@@ -1916,3 +1916,28 @@ canvas { background: transparent !important; }
 #hb-income .btn-add { margin-top: 8px !important; padding: 6px 0 !important; }
 /* 收入 accordion 在 detail 內不需要外框（外面已有 detail card 邊框） */
 #hb-income #income-accordion { border: none; max-height: 360px; }
+/* 收入清單：固定 column 寬，跨列對齊 */
+#hb-income .income-item {
+  display: grid !important;
+  grid-template-columns: 24px minmax(0, 1fr) 110px 90px 110px !important;
+  gap: 14px !important;
+  padding: 8px 16px !important;
+  align-items: center;
+}
+#hb-income .income-item-info {
+  min-width: 0;
+  display: flex !important;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+#hb-income .income-item-date,
+#hb-income .income-item-amt {
+  text-align: right !important;
+  white-space: nowrap;
+}
+#hb-income .income-item-actions {
+  justify-self: end !important;
+  display: flex;
+  gap: 4px;
+}

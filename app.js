@@ -2,7 +2,7 @@
 // CONFIG
 // ══════════════════════════════════════════════════════════════
 // Build 時間：每次修改 code 後手動更新此時間（UTC+8 台北時間）
-const BUILD_DATE = '2026/05/08 22:38';
+const BUILD_DATE = '2026/05/09 21:50';
 
 const SPREADSHEET_ID = '1lpRpxVzWaYUqL-jVPOAJCtjsJUIedPYYyOx4gg4PPFU';
 const CLIENT_ID = '149884248440-85f8dhc6ub9up10sv0f89e3e0itrnooj.apps.googleusercontent.com';
@@ -2583,36 +2583,40 @@ function renderIncome() {
   const curYMDash  = `${now.getUTCFullYear()}-${String(now.getUTCMonth()+1).padStart(2,'0')}`;
   const curYMSlash = `${now.getUTCFullYear()}/${String(now.getUTCMonth()+1).padStart(2,'0')}`;
 
-  if (cntEl) cntEl.textContent = items.length;
-
-  const monthSettled = items
-    .filter(r => r[5] === '1' && (r[7] || '').startsWith(curYMSlash))
+  // 卡片只顯示「尚未入帳總和」(已入帳的金額已轉至流動現金，不重複呈現)
+  const unsettled = items
+    .filter(r => r[5] !== '1')
     .reduce((s, r) => s + (parseFloat(r[3]) || 0), 0);
-  if (totEl) totEl.textContent = monthSettled > 0 ? fmt(monthSettled) : '—';
+  const unsettledCount = items.filter(r => r[5] !== '1').length;
+  if (cntEl) cntEl.textContent = unsettledCount;
+  if (totEl) totEl.textContent = unsettled > 0 ? fmt(unsettled) : '—';
 
-  const monthForecast = items
-    .filter(r => (r[4] || '').startsWith(curYMDash))
-    .reduce((s, r) => s + (parseFloat(r[3]) || 0), 0);
-  if (forecastEl) {
-    forecastEl.textContent = monthForecast > 0
-      ? `本月預計總收入（含未入帳）：${fmt(monthForecast)}`
-      : '';
-    forecastEl.style.display = monthForecast > 0 ? '' : 'none';
-  }
-
-  // 本月應收（未入帳）— 顯示在卡片副標題
   const monthReceivable = items
     .filter(r => r[5] !== '1' && (r[4] || '').startsWith(curYMDash))
     .reduce((s, r) => s + (parseFloat(r[3]) || 0), 0);
   const symEl = $('hc-symbols-income');
   if (symEl) {
-    if (monthReceivable > 0) {
-      symEl.textContent = `本月已入帳 · 應收 ${fmt(monthReceivable)}`;
-    } else if (monthSettled > 0) {
-      symEl.textContent = '本月已入帳 · 應收已收齊';
+    if (unsettled <= 0) {
+      symEl.textContent = '目前無應收';
+    } else if (monthReceivable > 0) {
+      symEl.textContent = `應收帳款 · 本月 ${fmt(monthReceivable)}`;
     } else {
-      symEl.textContent = '本月尚無入帳';
+      symEl.textContent = '應收帳款 · 預期未來入帳';
     }
+  }
+
+  // forecast 文字（detail 內 footer）保留原始：本月預計總收入
+  const monthSettled = items
+    .filter(r => r[5] === '1' && (r[7] || '').startsWith(curYMSlash))
+    .reduce((s, r) => s + (parseFloat(r[3]) || 0), 0);
+  const monthForecast = items
+    .filter(r => (r[4] || '').startsWith(curYMDash))
+    .reduce((s, r) => s + (parseFloat(r[3]) || 0), 0);
+  if (forecastEl) {
+    forecastEl.textContent = monthForecast > 0
+      ? `本月預計總收入：${fmt(monthForecast)}（已入帳 ${fmt(monthSettled)}）`
+      : '';
+    forecastEl.style.display = monthForecast > 0 ? '' : 'none';
   }
 
   if (!items.length) {
