@@ -2,7 +2,7 @@
 // CONFIG
 // ══════════════════════════════════════════════════════════════
 // Build 時間：每次修改 code 後手動更新此時間（UTC+8 台北時間）
-const BUILD_DATE = '2026/05/09 21:54';
+const BUILD_DATE = '2026/05/09 21:57';
 
 const SPREADSHEET_ID = '1lpRpxVzWaYUqL-jVPOAJCtjsJUIedPYYyOx4gg4PPFU';
 const CLIENT_ID = '149884248440-85f8dhc6ub9up10sv0f89e3e0itrnooj.apps.googleusercontent.com';
@@ -2648,9 +2648,11 @@ function renderIncome() {
       <button class="income-status-btn${settled ? ' settled' : ''}" onclick="toggleIncomeStatus(${idx})" title="${settled ? '點擊取消入帳' : '點擊標記已入帳'}">${settled ? '☑' : '☐'}</button>
       <div class="income-item-info">
         <span class="income-item-name">${esc(r[1] || '—')}</span>
-        ${recurring ? '<span class="income-recurring-badge" title="同名同金額重複出現">🔁 週期</span>' : ''}
-        ${r[2] ? `<span class="income-cat-badge">${esc(r[2])}</span>` : ''}
-        ${r[8] ? `<span class="income-payer">${esc(r[8])}</span>` : ''}
+        <span class="income-badges">${
+          (recurring ? '<span class="income-recurring-badge" title="同名同金額重複出現">🔁 週期</span>' : '')
+          + (r[2] ? `<span class="income-cat-badge">${esc(r[2])}</span>` : '')
+        }</span>
+        <span class="income-payer">${r[8] ? esc(r[8]) : ''}</span>
       </div>
       <span class="income-item-date">${esc(r[4] || '—')}</span>
       <span class="income-item-amt">${fmt(amt)}</span>
