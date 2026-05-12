@@ -2,7 +2,7 @@
 // CONFIG
 // ══════════════════════════════════════════════════════════════
 // Build 時間：每次修改 code 後手動更新此時間（UTC+8 台北時間）
-const BUILD_DATE = '2026/05/12 21:41';
+const BUILD_DATE = '2026/05/12 21:49';
 
 const SPREADSHEET_ID = '1lpRpxVzWaYUqL-jVPOAJCtjsJUIedPYYyOx4gg4PPFU';
 const CLIENT_ID = '149884248440-85f8dhc6ub9up10sv0f89e3e0itrnooj.apps.googleusercontent.com';
@@ -2972,12 +2972,18 @@ function renderDailyTrend() {
     if (!win[i].isGap && win[i].net !== null) lastValidNet[i] = win[i].net;
     else if (i > 0) lastValidNet[i] = lastValidNet[i - 1];
   }
+  // 今日 delta 改用 calcInvestDelta()（與 KPI / 持有卡片同源）
+  const _liveDelta = calcInvestDelta();
   for (let i = 1; i < win.length; i++) {
     labels.push(win[i].date.slice(5)); // MM/DD
     if (win[i].isGap || win[i].net === null) {
       // gap 日：不繪製
       plData.push(null);
       netData.push(null);
+    } else if (win[i].isLive && _liveDelta.anyValid) {
+      // 今日即時點：用逐 symbol pct 加總（不含匯差、新加部位）
+      plData.push(_liveDelta.total);
+      netData.push(win[i].net);
     } else if (win[i-1].isGap || win[i-1].net === null) {
       // 前一天是 gap（如週末）→ 用最近一筆有效 net 當基準，顯示跨假期累計變動
       const prevNet = lastValidNet[i - 1];
