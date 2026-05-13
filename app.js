@@ -2,7 +2,7 @@
 // CONFIG
 // ══════════════════════════════════════════════════════════════
 // Build 時間：每次修改 code 後手動更新此時間（UTC+8 台北時間）
-const BUILD_DATE = '2026/05/13 21:27';
+const BUILD_DATE = '2026/05/13 21:34';
 
 const SPREADSHEET_ID = '1lpRpxVzWaYUqL-jVPOAJCtjsJUIedPYYyOx4gg4PPFU';
 const CLIENT_ID = '149884248440-85f8dhc6ub9up10sv0f89e3e0itrnooj.apps.googleusercontent.com';
@@ -1047,13 +1047,21 @@ function renderKPIs() {
   const sGrowth = $('ks-growth');
   if (sGrowth) sGrowth.textContent = `淨資產 − ${_now2.getFullYear() - 1}/12/31 基準`;
 
-  // Hero meta — YTD delta + 變動率 + 基準
+  // Hero meta — 本日投資損益（與右側 KPI 卡同源 calcInvestDelta）
   const heroMeta = $('ks-liquid');
   if (heroMeta) {
-    const pct = yearBaseline > 0 ? (yearlyDiff / yearBaseline * 100) : 0;
-    const sign = yearlyDiff >= 0 ? '+' : '';
-    const cls  = yearlyDiff > 100 ? 'delta-pos' : yearlyDiff < -100 ? 'delta-neg' : '';
-    heroMeta.innerHTML = `<span class="${cls}">${sign}${fmt(yearlyDiff)} (${sign}${pct.toFixed(2)}%)</span><span>本年至今 · 基準 ${_now2.getFullYear() - 1}/12/31</span>`;
+    const inv = calcInvestDelta();
+    if (!inv.anyValid) {
+      heroMeta.innerHTML = `<span>—</span><span>本日投資損益</span>`;
+    } else {
+      const { twT, usT, cryT } = calcTotals();
+      const curSum = twT + usT + cryT;
+      const prevSum = curSum - inv.total;
+      const pct = prevSum > 0 ? (inv.total / prevSum * 100) : 0;
+      const sign = inv.total >= 0 ? '+' : '';
+      const cls  = inv.total > 100 ? 'delta-pos' : inv.total < -100 ? 'delta-neg' : '';
+      heroMeta.innerHTML = `<span class="${cls}">${sign}${fmt(inv.total)} (${sign}${pct.toFixed(2)}%)</span><span>本日投資損益</span>`;
+    }
   }
 
   // 匯率 — header + sidebar + mobile menu
