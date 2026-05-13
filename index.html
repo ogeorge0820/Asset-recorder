@@ -16,8 +16,8 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=DM+Sans:wght@300;400;500;600;700&display=swap">
-<link rel="stylesheet" href="theme.css?v=202605122149">
-<link rel="stylesheet" href="style.css?v=202605122149">
+<link rel="stylesheet" href="theme.css?v=202605131705">
+<link rel="stylesheet" href="style.css?v=202605131705">
 </head>
 <body>
 
@@ -143,13 +143,22 @@
         </div>
       </section>
 
-      <!-- 長期持有（橫向 compact）— 房地產 + 儲蓄險 -->
-      <section class="ov2-longterm ov2-longterm-h">
-        <div class="ov2-lt-title-block">
-          <div class="ov2-lt-title">長期持有</div>
-          <div class="ov2-lt-meta" id="lt-meta">—</div>
+      <!-- 持倉 Top Movers — 近 14 天領漲 / 領跌 -->
+      <section class="ov2-movers">
+        <div class="ov2-movers-head">
+          <div class="ov2-movers-title">持倉 Top Movers</div>
+          <div class="ov2-movers-window" id="movers-window">近 14 天</div>
         </div>
-        <div class="ov2-lt-list" id="lt-list"></div>
+        <div class="ov2-movers-grid">
+          <div class="ov2-movers-col ov2-movers-up">
+            <div class="ov2-movers-col-head">領漲 ▲</div>
+            <div class="ov2-movers-list" id="movers-up"></div>
+          </div>
+          <div class="ov2-movers-col ov2-movers-down">
+            <div class="ov2-movers-col-head">領跌 ▼</div>
+            <div class="ov2-movers-list" id="movers-down"></div>
+          </div>
+        </div>
       </section>
 
     </div><!-- /tab-overview -->
@@ -657,6 +666,6 @@
 <!-- ── Toast ── -->
 <div class="toast" id="toast"></div>
 
-<script src="app.js?v=202605122149"></script>
+<script src="app.js?v=202605131705"></script>
 </body>
 </html>

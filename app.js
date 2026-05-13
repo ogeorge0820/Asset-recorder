@@ -2,7 +2,7 @@
 // CONFIG
 // ══════════════════════════════════════════════════════════════
 // Build 時間：每次修改 code 後手動更新此時間（UTC+8 台北時間）
-const BUILD_DATE = '2026/05/12 21:49';
+const BUILD_DATE = '2026/05/13 17:05';
 
 const SPREADSHEET_ID = '1lpRpxVzWaYUqL-jVPOAJCtjsJUIedPYYyOx4gg4PPFU';
 const CLIENT_ID = '149884248440-85f8dhc6ub9up10sv0f89e3e0itrnooj.apps.googleusercontent.com';
@@ -2895,7 +2895,7 @@ function renderCharts() {
   renderPie();
   renderDailyTrend();
   renderTrend();
-  renderLongTerm();
+  renderTopMovers();
   renderRewardsSummary();
   renderMonthly();
 }
@@ -3403,31 +3403,72 @@ function setTrendFilter(btn) {
   renderTrend();
 }
 
-// v2 redesign — 長期持有 section（房地產 + 儲蓄險 + ...）
-function renderLongTerm() {
-  const listEl = document.getElementById('lt-list');
-  const metaEl = document.getElementById('lt-meta');
-  if (!listEl) return;
-  const { re, total } = calcTotals();
-  const rows = [
-    { key: 'realty', label: '房地產', value: re, color: 'var(--asset-realty)' },
-  ].filter(r => r.value > 0);
-  const subtotal = rows.reduce((s, r) => s + r.value, 0);
-  if (metaEl) metaEl.textContent = `合計 ${fmt(subtotal)} · 總資產佔比 ${total > 0 ? (subtotal/total*100).toFixed(1) : '0.0'}%`;
-  if (!rows.length) {
-    listEl.innerHTML = '<div style="color:var(--text-muted);font-size:0.85rem">尚無長期持有資產</div>';
-    return;
-  }
-  // Bar 寬度用組內相對比例（視覺差異明顯）；amount 後面附總資產佔比
-  listEl.innerHTML = rows.map(r => {
-    const innerPct = subtotal > 0 ? (r.value / subtotal * 100) : 0;
-    const totalPct = total > 0 ? (r.value / total * 100) : 0;
-    return `<div class="ov2-lt-row">
-      <div class="ov2-lt-row-label">${esc(r.label)}</div>
-      <div class="ov2-lt-row-bar"><div class="ov2-lt-row-bar-fill" style="width:${innerPct.toFixed(1)}%;background:${r.color}"></div></div>
-      <div class="ov2-lt-row-amt">${fmt(r.value)} · ${totalPct.toFixed(1)}%</div>
-    </div>`;
-  }).join('');
+// v2 redesign — 持倉 Top Movers section（近 N 天領漲/領跌 Top 3）
+function renderTopMovers(windowDays = 14) {
+  const upEl = document.getElementById('movers-up');
+  const dnEl = document.getElementById('movers-down');
+  const winEl = document.getElementById('movers-window');
+  if (!upEl || !dnEl) return;
+
+  const empty = (msg) => {
+    upEl.innerHTML = `<div class="ov2-mover-empty">${esc(msg)}</div>`;
+    dnEl.innerHTML = '';
+  };
+
+  // 1. 找近 N 天最接近 windowDays 天前的 daily snapshot
+  const todayStr = getNowTW8().slice(0, 10); // 'YYYY/MM/DD'
+  const dayMs = 86400000;
+  const target = new Date(todayStr.replace(/\//g, '-') + 'T00:00:00');
+  target.setTime(target.getTime() - windowDays * dayMs);
+  const pad = n => String(n).padStart(2, '0');
+  const targetStr = `${target.getUTCFullYear()}/${pad(target.getUTCMonth()+1)}/${pad(target.getUTCDate())}`;
+  const snaps = (S.data.daily_snapshots || []).filter(s => s[0] && s[0] < todayStr && s[9]);
+  if (!snaps.length) { empty('資料不足'); if (winEl) winEl.textContent = '近 14 天'; return; }
+  const cand = snaps.filter(s => s[0] <= targetStr);
+  const prevSnap = cand.length ? cand[cand.length - 1] : snaps[0];
+  let prevPrices;
+  try { prevPrices = JSON.parse(prevSnap[9]); } catch { empty('資料不足'); return; }
+  if (!prevPrices || typeof prevPrices !== 'object') { empty('資料不足'); return; }
+  // 動態 label：以 prevSnap[0] 距今實際天數
+  const prevDate = new Date(prevSnap[0].replace(/\//g, '-') + 'T00:00:00');
+  const todayDate = new Date(todayStr.replace(/\//g, '-') + 'T00:00:00');
+  const actualDays = Math.round((todayDate - prevDate) / dayMs);
+  if (winEl) winEl.textContent = `近 ${actualDays} 天`;
+
+  // 2. 對每持倉 symbol 算 { sym, type, pct, deltaTWD }
+  const rate = S.prices.usdtwd || 0;
+  const movers = [];
+  const pushMover = (type, rows, getCur, isUSD) => {
+    rows.forEach(r => {
+      const sym = type === 'crypto' ? r[0]?.toUpperCase() : r[0];
+      if (!sym || (type === 'crypto' && sym === 'USDT')) return;
+      const cur = getCur(sym);
+      const qty = parseFloat(r[1]) || 0;
+      const prev = prevPrices[type]?.[sym];
+      if (!cur || !prev || prev <= 0 || !qty) return;
+      const pct = (cur - prev) / prev * 100;
+      const deltaNative = qty * (cur - prev);
+      const deltaTWD = isUSD ? deltaNative * rate : deltaNative;
+      movers.push({ sym, type, pct, deltaTWD });
+    });
+  };
+  pushMover('crypto', S.data.crypto || [], s => S.prices.crypto[s], true);
+  pushMover('us',     S.data.us || [],     s => S.prices.us[s],     true);
+  pushMover('tw',     S.data.tw || [],     s => S.prices.tw[s],     false);
+
+  // 3. 過濾持平、排序、取 Top 3
+  const sig = movers.filter(m => Math.abs(m.pct) >= 0.1);
+  const ups = sig.filter(m => m.pct > 0).sort((a, b) => b.pct - a.pct).slice(0, 3);
+  const dns = sig.filter(m => m.pct < 0).sort((a, b) => a.pct - b.pct).slice(0, 3);
+
+  // 4. 渲染
+  const row = m => `<div class="ov2-mover-row">
+    <span class="ov2-mover-sym">${esc(m.sym)}</span>
+    <span class="ov2-mover-pct ${m.pct >= 0 ? 'pos' : 'neg'}">${m.pct >= 0 ? '+' : ''}${m.pct.toFixed(2)}%</span>
+    <span class="ov2-mover-delta">${m.deltaTWD >= 0 ? '+' : ''}${fmtWan(m.deltaTWD)}</span>
+  </div>`;
+  upEl.innerHTML = ups.length ? ups.map(row).join('') : '<div class="ov2-mover-empty">無顯著上漲</div>';
+  dnEl.innerHTML = dns.length ? dns.map(row).join('') : '<div class="ov2-mover-empty">無顯著下跌</div>';
 }
 
 // ══════════════════════════════════════════════════════════════

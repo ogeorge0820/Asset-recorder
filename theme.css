@@ -1802,66 +1802,71 @@ canvas { background: transparent !important; }
   color: var(--text-muted);
 }
 
-/* 長期持有 — 橫向 compact (title 在左、items 在右) */
-.ov2-longterm {
+/* 持倉 Top Movers — 雙欄全寬 section */
+.ov2-movers {
   background: var(--bg-card);
   border-radius: 16px;
-  padding: 14px 20px;
+  padding: 16px 20px;
   box-shadow: var(--card-shadow);
   border: 1px solid var(--border);
 }
-.ov2-longterm-h {
-  display: grid;
-  grid-template-columns: 180px 1fr;
-  align-items: center;
-  gap: 20px;
+.ov2-movers-head {
+  display: flex; justify-content: space-between; align-items: baseline;
+  margin-bottom: 12px;
 }
-.ov2-lt-title-block { display: flex; flex-direction: column; gap: 2px; }
-.ov2-lt-title {
-  font-size: 12px; font-weight: 600;
+.ov2-movers-title {
+  font-size: 13px; font-weight: 600;
   color: var(--text-primary);
 }
-.ov2-lt-meta {
+.ov2-movers-window {
   font-family: var(--font-num);
   font-variant-numeric: tabular-nums;
   font-size: 11px;
   color: var(--text-muted);
 }
-.ov2-lt-list {
+.ov2-movers-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 14px;
+  gap: 24px;
 }
-.ov2-lt-row {
+.ov2-movers-col-head {
+  font-size: 11px; font-weight: 600; letter-spacing: 0.5px;
+  margin-bottom: 6px;
+  color: var(--text-muted);
+}
+.ov2-movers-up   .ov2-movers-col-head { color: var(--success); }
+.ov2-movers-down .ov2-movers-col-head { color: var(--danger); }
+.ov2-mover-row {
   display: grid;
-  grid-template-columns: 60px 1fr auto;
-  align-items: center;
-  gap: 10px;
+  grid-template-columns: 1fr auto auto;
+  gap: 12px;
+  padding: 7px 0;
+  align-items: baseline;
+  border-bottom: 1px solid var(--border);
 }
-.ov2-lt-row-label {
-  font-size: 11px; font-weight: 500;
-  color: var(--text-secondary);
+.ov2-mover-row:last-child { border-bottom: none; }
+.ov2-mover-sym {
+  font-weight: 600; font-size: 13px;
+  color: var(--text-primary);
 }
-.ov2-lt-row-bar {
-  position: relative;
-  height: 6px;
-  background: var(--accent-soft);
-  border-radius: 3px;
-  overflow: hidden;
-}
-.ov2-lt-row-bar-fill {
-  position: absolute; top: 0; left: 0; bottom: 0;
-  border-radius: 3px;
-  transition: width var(--duration-slow) var(--ease-out);
-}
-.ov2-lt-row-amt {
+.ov2-mover-pct {
   font-family: var(--font-num);
   font-variant-numeric: tabular-nums;
-  font-weight: 600;
+  font-weight: 600; font-size: 12px;
+}
+.ov2-mover-pct.pos { color: var(--success); }
+.ov2-mover-pct.neg { color: var(--danger); }
+.ov2-mover-delta {
+  font-family: var(--font-num);
+  font-variant-numeric: tabular-nums;
   font-size: 12px;
-  text-align: right;
-  color: var(--text-primary);
-  white-space: nowrap;
+  color: var(--text-muted);
+  min-width: 70px; text-align: right;
+}
+.ov2-mover-empty {
+  color: var(--text-muted);
+  font-size: 12px;
+  padding: 8px 0;
 }
 
 /* KPI value 著色（ov2 各 num 共用） */
@@ -1891,16 +1896,14 @@ canvas { background: transparent !important; }
   .ov2-hero-sub-num { font-size: 20px; }
   .ov2-trend-filter { margin-left: 0 !important; }
   .ov2-hero-trend { min-height: 120px; }
-  .ov2-pl-card, .ov2-alloc-card, .ov2-longterm {
+  .ov2-pl-card, .ov2-alloc-card, .ov2-movers {
     padding: 14px 16px; border-radius: 12px;
   }
   .ov2-stat-pair { border-radius: 12px; }
   .ov2-stat-half { padding: 12px 16px; }
   .ov2-pl-num, .ov2-stat-num { font-size: 22px; }
   .ov2-pl-chart { min-height: 60px; }
-  .ov2-longterm-h { grid-template-columns: 1fr; gap: 10px; }
-  .ov2-lt-list { grid-template-columns: 1fr; gap: 8px; }
-  .ov2-lt-row { grid-template-columns: 60px 1fr auto; gap: 10px; }
+  .ov2-movers-grid { grid-template-columns: 1fr; gap: 14px; }
 }
 
 /* ═══════════════════════════════════════════════════════════════
