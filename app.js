@@ -2,7 +2,7 @@
 // CONFIG
 // ══════════════════════════════════════════════════════════════
 // Build 時間：每次修改 code 後手動更新此時間（UTC+8 台北時間）
-const BUILD_DATE = '2026/05/13 17:13';
+const BUILD_DATE = '2026/05/13 17:21';
 
 const SPREADSHEET_ID = '1lpRpxVzWaYUqL-jVPOAJCtjsJUIedPYYyOx4gg4PPFU';
 const CLIENT_ID = '149884248440-85f8dhc6ub9up10sv0f89e3e0itrnooj.apps.googleusercontent.com';
@@ -196,6 +196,7 @@ const S = {
 
   charts: { pie: null, trend: null, monthly: null, dailyTrend: null },
   trendFilter: 'all',
+  moversWindow: 15,
   lastUpdate: null,
 };
 
@@ -3397,14 +3398,23 @@ function renderMonthly() {
 }
 
 function setTrendFilter(btn) {
-  document.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active'));
+  // 只清除 trend filter 自己這組的 active（避免影響 movers filter）
+  btn.parentElement.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active'));
   btn.classList.add('active');
   S.trendFilter = btn.dataset.f;
   renderTrend();
 }
 
+function setMoversWindow(btn, days) {
+  btn.parentElement.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  S.moversWindow = days;
+  renderTopMovers(days);
+}
+
 // v2 redesign — 持倉 Top Movers section（近 N 天領漲/領跌 Top 3）
-function renderTopMovers(windowDays = 14) {
+function renderTopMovers(windowDays) {
+  if (windowDays == null) windowDays = S.moversWindow || 15;
   const upPctEl = document.getElementById('movers-up-pct');
   const upAmtEl = document.getElementById('movers-up-amt');
   const dnEl    = document.getElementById('movers-down');
@@ -3415,6 +3425,7 @@ function renderTopMovers(windowDays = 14) {
     upPctEl.innerHTML = `<div class="ov2-mover-empty">${esc(msg)}</div>`;
     upAmtEl.innerHTML = '';
     dnEl.innerHTML = '';
+    if (winEl) winEl.textContent = '';
   };
 
   // 1. 找近 N 天最接近 windowDays 天前的 daily snapshot
@@ -3431,11 +3442,11 @@ function renderTopMovers(windowDays = 14) {
   let prevPrices;
   try { prevPrices = JSON.parse(prevSnap[9]); } catch { empty('資料不足'); return; }
   if (!prevPrices || typeof prevPrices !== 'object') { empty('資料不足'); return; }
-  // 動態 label：以 prevSnap[0] 距今實際天數
+  // 動態 label：實際天數 ≠ 請求天數才顯示（資料不足 fallback 時）
   const prevDate = new Date(prevSnap[0].replace(/\//g, '-') + 'T00:00:00');
   const todayDate = new Date(todayStr.replace(/\//g, '-') + 'T00:00:00');
   const actualDays = Math.round((todayDate - prevDate) / dayMs);
-  if (winEl) winEl.textContent = `近 ${actualDays} 天`;
+  if (winEl) winEl.textContent = actualDays !== windowDays ? `實際 ${actualDays} 天` : '';
 
   // 2. 對每持倉 symbol 算 { sym, type, pct, deltaTWD }
   const rate = S.prices.usdtwd || 0;

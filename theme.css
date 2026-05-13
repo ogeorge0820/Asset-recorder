@@ -1818,12 +1818,16 @@ canvas { background: transparent !important; }
   font-size: 13px; font-weight: 600;
   color: var(--text-primary);
 }
+.ov2-movers-period {
+  display: flex; align-items: center; gap: 10px;
+}
 .ov2-movers-window {
   font-family: var(--font-num);
   font-variant-numeric: tabular-nums;
   font-size: 11px;
   color: var(--text-muted);
 }
+.ov2-movers-filter { display: flex; gap: 0; }
 .ov2-movers-grid {
   display: grid;
   grid-template-columns: 1fr 1fr 1fr;
