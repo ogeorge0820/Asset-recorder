@@ -2,7 +2,7 @@
 // CONFIG
 // ══════════════════════════════════════════════════════════════
 // Build 時間：每次修改 code 後手動更新此時間（UTC+8 台北時間）
-const BUILD_DATE = '2026/05/05 20:30';
+const BUILD_DATE = '2026/05/13 17:21';
 
 const SPREADSHEET_ID = '1lpRpxVzWaYUqL-jVPOAJCtjsJUIedPYYyOx4gg4PPFU';
 const CLIENT_ID = '149884248440-85f8dhc6ub9up10sv0f89e3e0itrnooj.apps.googleusercontent.com';
@@ -196,6 +196,7 @@ const S = {
 
   charts: { pie: null, trend: null, monthly: null, dailyTrend: null },
   trendFilter: 'all',
+  moversWindow: 15,
   lastUpdate: null,
 };
 
@@ -988,59 +989,72 @@ function calcTotals() {
 // RENDER — KPIs
 // ══════════════════════════════════════════════════════════════
 function renderKPIs() {
-  const { cashT, total, net, liquid, available, budget } = calcTotals();
+  const { cashT, twT, usT, cryT, ins, re, total, net, liquid, available, budget } = calcTotals();
   const snaps = S.data.snapshots;
 
-  setKPI('kv-total', fmt(total), 'ks-total', '');
-  setKPI('kv-net', fmt(net), 'ks-net', '');
-  const upcoming = calcUpcomingExpenses();
-  const availableAdj = available - upcoming;
-  setKPI('kv-liquid', fmt(liquid), 'ks-liquid',
-    budget > 0
-      ? (upcoming > 0 ? `可用：${fmtWan(availableAdj)}（含規劃支出）` : `可用：${fmtWan(available)}`)
-      : '總資產 − 房地產'
-  );
+  // v2 redesign: 「可用資產」改為 4 類純流動資產（現金 + 加密 + 美股 + 台股，不含保險）
+  // 房地產歸入「長期持有」獨立 section，不算進 hero 數字也不進 donut。
+  // 儲蓄險視為可流動（可解約 / 質借），納入 investable 與 donut。
+  // 注意：calcTotals().liquid 維持原定義（含保險）給 DWZ 使用，不更動。
+  const investable = cashT + twT + usT + cryT + ins;
 
-  // 本月收益：可用資產 − 上月底快照基準（從 snapshots 自動取，不再用 hardcoded 常數）
+  setKPI('kv-total', fmt(total), 'ks-total', '');
+  // hero kv-liquid / kv-net 都不能用 setKPI（會洗掉 ov2-* 專屬尺寸 class），改手動 + 移除 skel
+  const elLiquid = $('kv-liquid');
+  if (elLiquid) { elLiquid.textContent = fmt(investable); elLiquid.classList.remove('skel'); }
+  const elNet = $('kv-net');
+  if (elNet) { elNet.textContent = fmt(net); elNet.classList.remove('skel'); }
+  const sNet = $('ks-net'); if (sNet) sNet.textContent = '含長期持有與負債';
+
+  // 本月收益：用淨資產 (col 8) − 上月底淨資產，跟趨勢圖 / 月度長條圖一致
+  // 投資可用資產 (cols 1-4) 在舊快照可能未填，會出現假跌幅；net 是完整連續歷史資料
   // snapshot 格式：[YYYY/MM, cash, tw, us, crypto, ins, re, debt, net]
-  // liquid = cash + tw + us + crypto + ins（排除房地產 re）
   const _now2 = new Date();
   const _curYMKey = `${_now2.getFullYear()}/${String(_now2.getMonth()+1).padStart(2,'0')}`;
-  const liquidFromSnap = (s) => (parseFloat(s[1])||0)+(parseFloat(s[2])||0)+(parseFloat(s[3])||0)+(parseFloat(s[4])||0)+(parseFloat(s[5])||0);
-  const prevMonthSnap = [...(S.data.snapshots || [])].reverse().find(s => s[0] && s[0] < _curYMKey && liquidFromSnap(s) > 0);
-  const monthBaseline = prevMonthSnap ? liquidFromSnap(prevMonthSnap) : LAST_MONTH_AVAILABLE_SNAPSHOT;
+  const netFromSnap = (s) => parseFloat(s[8]) || 0;
+  const prevMonthSnap = [...(S.data.snapshots || [])].reverse().find(s => s[0] && s[0] < _curYMKey && netFromSnap(s) > 0);
+  const monthBaseline = prevMonthSnap ? netFromSnap(prevMonthSnap) : LAST_MONTH_AVAILABLE_SNAPSHOT;
   const monthBaselineLabel = prevMonthSnap ? prevMonthSnap[0].replace('/', '/') : '3/31';
-  const monthlyDiff = liquid - monthBaseline;
+  const monthlyDiff = net - monthBaseline;
   const elMonthly = $('kv-monthly');
   const cardMonthly = $('card-monthly');
   if (monthlyDiff === 0) {
-    elMonthly.textContent = '持平'; elMonthly.className = 'kpi-value neutral';
-    if (cardMonthly) cardMonthly.className = 'kpi-card';
+    elMonthly.textContent = '持平'; elMonthly.className = 'ov2-pl-num neutral';
+    if (cardMonthly) cardMonthly.className = 'ov2-pl-card';
   } else {
     elMonthly.textContent = (monthlyDiff > 0 ? '+' : '') + fmt(monthlyDiff);
-    elMonthly.className = `kpi-value ${monthlyDiff > 0 ? 'pos' : 'neg'}`;
-    if (cardMonthly) cardMonthly.className = `kpi-card ${monthlyDiff > 0 ? 'kpi-gain' : 'kpi-loss'}`;
+    elMonthly.className = `ov2-pl-num ${monthlyDiff > 0 ? 'pos' : 'neg'}`;
+    if (cardMonthly) cardMonthly.className = `ov2-pl-card ${monthlyDiff > 0 ? 'kpi-gain' : 'kpi-loss'}`;
   }
   const sMonthly = $('ks-monthly');
-  if (sMonthly) sMonthly.textContent = `可用資產 − ${monthBaselineLabel} 月底基準`;
+  if (sMonthly) sMonthly.textContent = `淨資產 − ${monthBaselineLabel} 月底基準`;
 
-  // 本年收益：可用資產 − 去年 12 月快照基準（自動取）
+  // 本年收益：淨資產 − 去年 12 月快照基準
   const _prevYearEndKey = `${_now2.getFullYear() - 1}/12`;
-  const prevYearSnap = (S.data.snapshots || []).find(s => s[0] === _prevYearEndKey && liquidFromSnap(s) > 0);
-  const yearBaseline = prevYearSnap ? liquidFromSnap(prevYearSnap) : LAST_YEAR_END_AVAILABLE_SNAPSHOT;
-  const yearlyDiff = liquid - yearBaseline;
+  const prevYearSnap = (S.data.snapshots || []).find(s => s[0] === _prevYearEndKey && netFromSnap(s) > 0);
+  const yearBaseline = prevYearSnap ? netFromSnap(prevYearSnap) : LAST_YEAR_END_AVAILABLE_SNAPSHOT;
+  const yearlyDiff = net - yearBaseline;
   const elGrowth = $('kv-growth');
   const cardGrowth = $('card-growth');
   if (yearlyDiff === 0) {
-    elGrowth.textContent = '持平'; elGrowth.className = 'kpi-value neutral';
-    if (cardGrowth) cardGrowth.className = 'kpi-card';
+    elGrowth.textContent = '持平'; elGrowth.className = 'ov2-stat-num neutral';
+    if (cardGrowth) cardGrowth.className = 'ov2-stat-half';
   } else {
     elGrowth.textContent = (yearlyDiff > 0 ? '+' : '') + fmt(yearlyDiff);
-    elGrowth.className = `kpi-value ${yearlyDiff > 0 ? 'pos' : 'neg'}`;
-    if (cardGrowth) cardGrowth.className = `kpi-card ${yearlyDiff > 0 ? 'kpi-gain' : 'kpi-loss'}`;
+    elGrowth.className = `ov2-stat-num ${yearlyDiff > 0 ? 'pos' : 'neg'}`;
+    if (cardGrowth) cardGrowth.className = `ov2-stat-half ${yearlyDiff > 0 ? 'kpi-gain' : 'kpi-loss'}`;
   }
   const sGrowth = $('ks-growth');
-  if (sGrowth) sGrowth.textContent = `可用資產 − ${_now2.getFullYear() - 1}/12/31 基準`;
+  if (sGrowth) sGrowth.textContent = `淨資產 − ${_now2.getFullYear() - 1}/12/31 基準`;
+
+  // Hero meta — YTD delta + 變動率 + 基準
+  const heroMeta = $('ks-liquid');
+  if (heroMeta) {
+    const pct = yearBaseline > 0 ? (yearlyDiff / yearBaseline * 100) : 0;
+    const sign = yearlyDiff >= 0 ? '+' : '';
+    const cls  = yearlyDiff > 100 ? 'delta-pos' : yearlyDiff < -100 ? 'delta-neg' : '';
+    heroMeta.innerHTML = `<span class="${cls}">${sign}${fmt(yearlyDiff)} (${sign}${pct.toFixed(2)}%)</span><span>本年至今 · 基準 ${_now2.getFullYear() - 1}/12/31</span>`;
+  }
 
   // 匯率 — header + sidebar + mobile menu
   const rateStr = S.prices.usdtwd.toFixed(2);
@@ -1080,55 +1094,25 @@ function renderKPIs() {
     }
   }
 
-  // 本日投資損益（台股 + 美股 + 加密貨幣，排除現金與其他資產）
+  // 本日投資損益（台股 + 美股 + 加密貨幣逐 symbol pct 加總，與持有卡片一致）
   const igEl = $('kv-invest-gain');
   const igSub = $('ks-invest-gain');
   const igCard = $('card-invest-gain');
   if (igEl) {
-    const { twT, usT, cryT } = calcTotals();
-    const curInvest = twT + usT + cryT;
-    const _ng = new Date();
-    const todayStrIG = `${_ng.getFullYear()}/${String(_ng.getMonth()+1).padStart(2,'0')}/${String(_ng.getDate()).padStart(2,'0')}`;
-    const todayYM = `${_ng.getFullYear()}-${String(_ng.getMonth()+1).padStart(2,'0')}`;
-    const prevSnapIG = [...dailySnaps].reverse().find(s => s[0] < todayStrIG);
-    let prevInvest = null, baselineLabel = null, baselineDate = null;
-    if (prevSnapIG) {
-      prevInvest = (parseFloat(prevSnapIG[2]) || 0) + (parseFloat(prevSnapIG[3]) || 0) + (parseFloat(prevSnapIG[4]) || 0);
-      baselineLabel = `對比 ${prevSnapIG[0]} 快照`;
-      baselineDate = prevSnapIG[0];
+    const inv = calcInvestDelta();
+    if (!inv.anyValid) {
+      igEl.textContent = '—'; igEl.className = 'ov2-pl-num';
+      if (igSub) igSub.textContent = '尚無漲跌資料';
+      if (igCard) igCard.className = 'ov2-pl-card';
+    } else if (Math.abs(inv.total) < 100) {
+      igEl.textContent = '持平'; igEl.className = 'ov2-pl-num neutral';
+      if (igCard) igCard.className = 'ov2-pl-card';
+      if (igSub) igSub.textContent = '台股 / 美股 / 加密當日';
     } else {
-      // Fallback：最近「投資合計非零」的月度快照（跳過 seed/bootstrap 的全 0 列）
-      const prevMonthlyIG = [...(S.data.snapshots || [])].reverse().find(s => {
-        if (!s[0] || s[0] >= todayYM) return false;
-        const inv = (parseFloat(s[2]) || 0) + (parseFloat(s[3]) || 0) + (parseFloat(s[4]) || 0);
-        return inv > 0;
-      });
-      if (prevMonthlyIG) {
-        prevInvest = (parseFloat(prevMonthlyIG[2]) || 0) + (parseFloat(prevMonthlyIG[3]) || 0) + (parseFloat(prevMonthlyIG[4]) || 0);
-        baselineLabel = `對比 ${prevMonthlyIG[0]} 月底`;
-        baselineDate = prevMonthlyIG[0];
-      }
-    }
-    const hasHoldings = S.data.tw.length || S.data.us.length || S.data.crypto.length;
-    if (prevInvest != null) {
-      if (prevInvest === 0 && hasHoldings) {
-        igEl.textContent = '—'; igEl.className = 'kpi-value';
-        if (igSub) igSub.textContent = `${baselineDate} 快照異常，資料不可靠`;
-      } else {
-        const igDiff = curInvest - prevInvest;
-        if (Math.abs(igDiff) < 100) {
-          igEl.textContent = '持平'; igEl.className = 'kpi-value neutral';
-          if (igCard) igCard.className = 'kpi-card';
-        } else {
-          igEl.textContent = (igDiff > 0 ? '+' : '') + fmt(igDiff);
-          igEl.className = `kpi-value ${igDiff > 0 ? 'pos' : 'neg'}`;
-          if (igCard) igCard.className = `kpi-card ${igDiff > 0 ? 'kpi-gain' : 'kpi-loss'}`;
-        }
-        if (igSub) igSub.textContent = baselineLabel;
-      }
-    } else {
-      igEl.textContent = '—'; igEl.className = 'kpi-value';
-      if (igSub) igSub.textContent = '尚無比對基準';
+      igEl.textContent = (inv.total > 0 ? '+' : '') + fmt(inv.total);
+      igEl.className = `ov2-pl-num ${inv.total > 0 ? 'pos' : 'neg'}`;
+      if (igCard) igCard.className = `ov2-pl-card ${inv.total > 0 ? 'kpi-gain' : 'kpi-loss'}`;
+      if (igSub) igSub.textContent = '台股 / 美股 / 加密當日';
     }
   }
 
@@ -1145,10 +1129,10 @@ function renderKPIs() {
       });
       const mf = sim.monthsFloat;
       svEl.textContent = sim.isInfinite ? '∞ 個月' : mf.toFixed(1) + ' 個月';
-      svEl.className = 'kpi-value' + (sim.isInfinite || mf >= 6 ? '' : mf >= 3 ? ' neutral' : ' neg');
+      svEl.className = 'ov2-stat-num' + (sim.isInfinite || mf >= 6 ? '' : mf >= 3 ? ' neutral' : ' neg');
       if (svSub) svSub.textContent = '含未來預計收入模擬';
     } else {
-      svEl.textContent = '—'; svEl.className = 'kpi-value';
+      svEl.textContent = '—'; svEl.className = 'ov2-stat-num';
       if (svSub) svSub.textContent = '含未來預計收入模擬';
     }
   }
@@ -1172,6 +1156,59 @@ function renderManagement() {
   renderCash(); renderTW(); renderUS(); renderCrypto(); renderOther(); renderRewards(); renderBudget(); renderExperiencePlan(); renderIncome();
   renderHoldingCards();
   initAccordion();
+}
+
+// 共用：逐 symbol pct 加總出投資類別當日 delta；缺少當日 pct 時自動 fallback 至最近月底快照
+// 回傳 { cry, us, tw, total, anyValid }；cry/us/tw 形如 { pct, delta, win } 或 null
+function calcInvestDelta() {
+  const rate = S.prices.usdtwd || 0;
+  const agg = (rows, getToday, getPct) => {
+    let today = 0, yest = 0, anyValid = false;
+    rows.forEach(r => {
+      const t = getToday(r); if (!t) return;
+      const pct = getPct(r);
+      today += t;
+      if (pct != null) { anyValid = true; yest += t / (1 + pct/100); }
+      else { yest += t; }
+    });
+    if (!anyValid || yest <= 0) return null;
+    return { pct: (today - yest) / yest * 100, delta: today - yest };
+  };
+  // 月底 fallback：對應 snapshot 欄位 (cash=1, tw=2, us=3, crypto=4)
+  const _now = new Date();
+  const _curYM = `${_now.getFullYear()}-${String(_now.getMonth()+1).padStart(2,'0')}`;
+  const _snaps = (S.data.snapshots || []).filter(s => s[0] && s[0] < _curYM).reverse();
+  const findPrevMonthly = (colIdx) => {
+    for (const s of _snaps) {
+      const v = parseFloat(s[colIdx]) || 0;
+      if (v > 0) return { value: v, ym: s[0] };
+    }
+    return null;
+  };
+  const withFallback = (intraday, curTotal, colIdx) => {
+    if (intraday) return intraday;
+    const prev = findPrevMonthly(colIdx);
+    if (!prev || !(prev.value > 0)) return null;
+    return { pct: (curTotal - prev.value) / prev.value * 100, delta: curTotal - prev.value, win: `${prev.ym} 月底` };
+  };
+  const cryRows = (S.data.crypto || []).filter(r => r[0]?.toUpperCase() !== 'USDT');
+  const cryTot = cryRows.reduce((s, r) => s + (parseFloat(r[1])||0) * (S.prices.crypto[r[0]?.toUpperCase()]||0) * rate, 0);
+  const cry = withFallback(agg(cryRows,
+    r => (parseFloat(r[1])||0) * (S.prices.crypto[r[0]?.toUpperCase()]||0) * rate,
+    r => symDailyChangePct('crypto', r[0]?.toUpperCase(), S.prices.crypto[r[0]?.toUpperCase()])), cryTot, 4);
+  const usRows = S.data.us || [];
+  const usTot = usRows.reduce((s, r) => s + (parseFloat(r[1])||0) * (S.prices.us[r[0]]||0) * rate, 0);
+  const us = withFallback(agg(usRows,
+    r => (parseFloat(r[1])||0) * (S.prices.us[r[0]]||0) * rate,
+    r => symDailyChangePct('us', r[0], S.prices.us[r[0]])), usTot, 3);
+  const twRows = S.data.tw || [];
+  const twTot = twRows.reduce((s, r) => s + (parseFloat(r[1])||0) * (S.prices.tw[r[0]]||0), 0);
+  const tw = withFallback(agg(twRows,
+    r => (parseFloat(r[1])||0) * (S.prices.tw[r[0]]||0),
+    r => symDailyChangePct('tw', r[0], S.prices.tw[r[0]])), twTot, 2);
+  const total = (cry?.delta || 0) + (us?.delta || 0) + (tw?.delta || 0);
+  const anyValid = !!(cry || us || tw);
+  return { cry, us, tw, total, anyValid };
 }
 
 // ── 管理頁頂部 4 張類別卡 ──
@@ -1198,87 +1235,33 @@ function renderHoldingCards() {
     }
     if (sEl) sEl.textContent = syms || '—';
   };
-  const aggChange = (rows, getToday, getPct) => {
-    let today = 0, yest = 0, anyValid = false;
-    rows.forEach(r => {
-      const t = getToday(r); if (!t) return;
-      const pct = getPct(r);
-      today += t;
-      if (pct != null) {
-        anyValid = true;
-        yest += t / (1 + pct/100);
-      } else {
-        yest += t;
-      }
-    });
-    if (!anyValid || yest <= 0) return null;
-    return { pct: (today - yest) / yest * 100, delta: today - yest };
-  };
-
-  // ── Fallback：最近月度快照（用於 daily snapshot 缺失時的類別級漲跌比對） ──
-  // 各類別獨立尋找「非零」的最近月底快照，跳過 seed/bootstrap 的全 0 列
-  const _now = new Date();
-  const _curYM = `${_now.getFullYear()}-${String(_now.getMonth()+1).padStart(2,'0')}`;
-  const _snaps = (S.data.snapshots || []).filter(s => s[0] && s[0] < _curYM).reverse();
-  const findPrevMonthly = (colIdx) => {
-    for (const s of _snaps) {
-      const v = parseFloat(s[colIdx]) || 0;
-      if (v > 0) return { value: v, ym: s[0] };
-    }
-    return null;
-  };
-  const fallbackMonthly = (curTotal, prev) => {
-    if (!prev || !(prev.value > 0)) return null;
-    return {
-      pct:   (curTotal - prev.value) / prev.value * 100,
-      delta: curTotal - prev.value,
-      win:   `${prev.ym} 月底`,
-    };
-  };
-  const monthlyPrev = {
-    cash:   findPrevMonthly(1),
-    tw:     findPrevMonthly(2),
-    us:     findPrevMonthly(3),
-    crypto: findPrevMonthly(4),
-  };
+  // 共用 calcInvestDelta() — 與 Dashboard「本日投資損益」KPI 同源
+  const inv = calcInvestDelta();
 
   // Crypto — 排除 USDT（顯示在流動現金）
-  const cryRowsAll = S.data.crypto || [];
-  const cryRows = cryRowsAll.filter(r => r[0]?.toUpperCase() !== 'USDT');
+  const cryRows = (S.data.crypto || []).filter(r => r[0]?.toUpperCase() !== 'USDT');
   const cryTot = cryRows.reduce((s, r) => s + (parseFloat(r[1])||0) * (S.prices.crypto[r[0]?.toUpperCase()]||0) * rate, 0);
-  const cryChg = aggChange(cryRows,
-    r => (parseFloat(r[1])||0) * (S.prices.crypto[r[0]?.toUpperCase()]||0) * rate,
-    r => symDailyChangePct('crypto', r[0]?.toUpperCase(), S.prices.crypto[r[0]?.toUpperCase()]))
-    || fallbackMonthly(cryTot, monthlyPrev?.crypto);
   const crySyms = cryRows.slice().sort((a,b) =>
     (parseFloat(b[1])||0)*(S.prices.crypto[b[0]?.toUpperCase()]||0) -
     (parseFloat(a[1])||0)*(S.prices.crypto[a[0]?.toUpperCase()]||0))
     .slice(0,5).map(r => r[0]?.toUpperCase()).filter(Boolean).join(' · ');
-  setHC('crypto', cryRows.length, cryTot, cryChg, crySyms, 'holdings');
+  setHC('crypto', cryRows.length, cryTot, inv.cry, crySyms, 'holdings');
 
   // US
   const usRows = S.data.us || [];
   const usTot = usRows.reduce((s, r) => s + (parseFloat(r[1])||0) * (S.prices.us[r[0]]||0) * rate, 0);
-  const usChg = aggChange(usRows,
-    r => (parseFloat(r[1])||0) * (S.prices.us[r[0]]||0) * rate,
-    r => symDailyChangePct('us', r[0], S.prices.us[r[0]]))
-    || fallbackMonthly(usTot, monthlyPrev?.us);
   const usSyms = usRows.slice().sort((a,b) =>
     (parseFloat(b[1])||0)*(S.prices.us[b[0]]||0) - (parseFloat(a[1])||0)*(S.prices.us[a[0]]||0))
     .slice(0,5).map(r => r[0]).filter(Boolean).join(' · ');
-  setHC('us', usRows.length, usTot, usChg, usSyms, 'holdings');
+  setHC('us', usRows.length, usTot, inv.us, usSyms, 'holdings');
 
   // TW
   const twRows = S.data.tw || [];
   const twTot = twRows.reduce((s, r) => s + (parseFloat(r[1])||0) * (S.prices.tw[r[0]]||0), 0);
-  const twChg = aggChange(twRows,
-    r => (parseFloat(r[1])||0) * (S.prices.tw[r[0]]||0),
-    r => symDailyChangePct('tw', r[0], S.prices.tw[r[0]]))
-    || fallbackMonthly(twTot, monthlyPrev?.tw);
   const twSyms = twRows.slice().sort((a,b) =>
     (parseFloat(b[1])||0)*(S.prices.tw[b[0]]||0) - (parseFloat(a[1])||0)*(S.prices.tw[a[0]]||0))
     .slice(0,5).map(r => r[0]).filter(Boolean).join(' · ');
-  setHC('tw', twRows.length, twTot, twChg, twSyms, 'holdings');
+  setHC('tw', twRows.length, twTot, inv.tw, twSyms, 'holdings');
 
   // Cash — 含 USDT TWD 折算（與 renderCash 顯示總計一致）
   const cashRows = S.data.cash || [];
@@ -2570,19 +2553,38 @@ function renderIncome() {
   const curYMDash  = `${now.getUTCFullYear()}-${String(now.getUTCMonth()+1).padStart(2,'0')}`;
   const curYMSlash = `${now.getUTCFullYear()}/${String(now.getUTCMonth()+1).padStart(2,'0')}`;
 
-  if (cntEl) cntEl.textContent = items.length;
+  // 卡片只顯示「尚未入帳總和」(已入帳的金額已轉至流動現金，不重複呈現)
+  const unsettled = items
+    .filter(r => r[5] !== '1')
+    .reduce((s, r) => s + (parseFloat(r[3]) || 0), 0);
+  const unsettledCount = items.filter(r => r[5] !== '1').length;
+  if (cntEl) cntEl.textContent = unsettledCount;
+  if (totEl) totEl.textContent = unsettled > 0 ? fmt(unsettled) : '—';
 
+  const monthReceivable = items
+    .filter(r => r[5] !== '1' && (r[4] || '').startsWith(curYMDash))
+    .reduce((s, r) => s + (parseFloat(r[3]) || 0), 0);
+  const symEl = $('hc-symbols-income');
+  if (symEl) {
+    if (unsettled <= 0) {
+      symEl.textContent = '目前無應收';
+    } else if (monthReceivable > 0) {
+      symEl.textContent = `應收帳款 · 本月 ${fmt(monthReceivable)}`;
+    } else {
+      symEl.textContent = '應收帳款 · 預期未來入帳';
+    }
+  }
+
+  // forecast 文字（detail 內 footer）保留原始：本月預計總收入
   const monthSettled = items
     .filter(r => r[5] === '1' && (r[7] || '').startsWith(curYMSlash))
     .reduce((s, r) => s + (parseFloat(r[3]) || 0), 0);
-  if (totEl) totEl.textContent = monthSettled > 0 ? fmt(monthSettled) : '—';
-
   const monthForecast = items
     .filter(r => (r[4] || '').startsWith(curYMDash))
     .reduce((s, r) => s + (parseFloat(r[3]) || 0), 0);
   if (forecastEl) {
     forecastEl.textContent = monthForecast > 0
-      ? `本月預計總收入（含未入帳）：${fmt(monthForecast)}`
+      ? `本月預計總收入：${fmt(monthForecast)}（已入帳 ${fmt(monthSettled)}）`
       : '';
     forecastEl.style.display = monthForecast > 0 ? '' : 'none';
   }
@@ -2616,9 +2618,11 @@ function renderIncome() {
       <button class="income-status-btn${settled ? ' settled' : ''}" onclick="toggleIncomeStatus(${idx})" title="${settled ? '點擊取消入帳' : '點擊標記已入帳'}">${settled ? '☑' : '☐'}</button>
       <div class="income-item-info">
         <span class="income-item-name">${esc(r[1] || '—')}</span>
-        ${recurring ? '<span class="income-recurring-badge" title="同名同金額重複出現">🔁 週期</span>' : ''}
-        ${r[2] ? `<span class="income-cat-badge">${esc(r[2])}</span>` : ''}
-        ${r[8] ? `<span class="income-payer">${esc(r[8])}</span>` : ''}
+        <span class="income-badges">${
+          (recurring ? '<span class="income-recurring-badge" title="同名同金額重複出現">🔁 週期</span>' : '')
+          + (r[2] ? `<span class="income-cat-badge">${esc(r[2])}</span>` : '')
+        }</span>
+        <span class="income-payer">${r[8] ? esc(r[8]) : ''}</span>
       </div>
       <span class="income-item-date">${esc(r[4] || '—')}</span>
       <span class="income-item-amt">${fmt(amt)}</span>
@@ -2892,6 +2896,7 @@ function renderCharts() {
   renderPie();
   renderDailyTrend();
   renderTrend();
+  renderTopMovers();
   renderRewardsSummary();
   renderMonthly();
 }
@@ -2968,12 +2973,18 @@ function renderDailyTrend() {
     if (!win[i].isGap && win[i].net !== null) lastValidNet[i] = win[i].net;
     else if (i > 0) lastValidNet[i] = lastValidNet[i - 1];
   }
+  // 今日 delta 改用 calcInvestDelta()（與 KPI / 持有卡片同源）
+  const _liveDelta = calcInvestDelta();
   for (let i = 1; i < win.length; i++) {
     labels.push(win[i].date.slice(5)); // MM/DD
     if (win[i].isGap || win[i].net === null) {
       // gap 日：不繪製
       plData.push(null);
       netData.push(null);
+    } else if (win[i].isLive && _liveDelta.anyValid) {
+      // 今日即時點：用逐 symbol pct 加總（不含匯差、新加部位）
+      plData.push(_liveDelta.total);
+      netData.push(win[i].net);
     } else if (win[i-1].isGap || win[i-1].net === null) {
       // 前一天是 gap（如週末）→ 用最近一筆有效 net 當基準，顯示跨假期累計變動
       const prevNet = lastValidNet[i - 1];
@@ -3108,29 +3119,27 @@ function renderDailyTrend() {
 }
 
 function renderPie() {
-  const { cashT, twT, usT, cryT, ins, re, total } = calcTotals();
+  const { cashT, twT, usT, cryT, ins } = calcTotals();
   // USDT 視覺歸類至「流動現金」，不改變整體加總
   const usdtEntry = S.data.crypto.find(r => r[0]?.toUpperCase() === 'USDT');
   const usdtTWD   = usdtEntry ? (parseFloat(usdtEntry[1]) || 0) * S.prices.usdtwd : 0;
-  // Phase 8 Apple 霓虹：流動現金 藍 / 台股 綠 / 美股 紫 / 加密 金 / 儲蓄險 粉 / 房地產 青
-  // Phase 7 Stripe 淺色柔和；保留兩種主題配色
-  const light = document.documentElement.dataset.theme === 'light';
-  const entries = light ? [
-    { label:'流動現金', value:cashT + usdtTWD,   color: '#64748b' },
-    { label:'加密貨幣', value:cryT - usdtTWD,    color: '#f59e0b' },
-    { label:'美股',     value:usT,               color: '#6366f1' },
-    { label:'台股',     value:twT,               color: '#3b82f6' },
-    { label:'儲蓄險',   value:ins,               color: '#ec4899' },
-    { label:'房地產',   value:re,                color: '#10b981' },
-  ].filter(e => e.value > 0) : [
-    { label:'流動現金', value:cashT + usdtTWD,   color: '#60a5fa' },
-    { label:'加密貨幣', value:cryT - usdtTWD,    color: '#fbbf24' },
-    { label:'美股',     value:usT,               color: '#a78bfa' },
-    { label:'台股',     value:twT,               color: '#34d399' },
-    { label:'儲蓄險',   value:ins,               color: '#f472b6' },
-    { label:'房地產',   value:re,                color: '#38bdf8' },
+  // v2 Redesign: 可用資產分布 — 5 類（現金 / 加密 / 美股 / 台股 / 儲蓄險）
+  // 房地產屬「長期持有」獨立 section，不進 donut。
+  const entries = [
+    { label:'加密貨幣', value:cryT - usdtTWD,    color: 'var(--asset-crypto)' },
+    { label:'美股',     value:usT,               color: 'var(--asset-us)' },
+    { label:'流動現金', value:cashT + usdtTWD,   color: 'var(--asset-cash)' },
+    { label:'台股',     value:twT,               color: 'var(--asset-tw)' },
+    { label:'儲蓄險',   value:ins,               color: 'var(--asset-insurance)' },
   ].filter(e => e.value > 0);
+  // 把 var(--asset-...) 解析成實際色碼，Chart.js 不認 CSS variables
+  const _root = getComputedStyle(document.documentElement);
+  entries.forEach(e => { if (e.color.startsWith('var(')) {
+    const name = e.color.slice(4, -1).trim();
+    e.color = _root.getPropertyValue(name).trim() || '#888';
+  }});
   entries.sort((a, b) => b.value - a.value);
+  const investable = entries.reduce((s, e) => s + e.value, 0);
 
   const pieCanvas = $('pie-chart');
   const ctx = pieCanvas.getContext('2d');
@@ -3164,7 +3173,7 @@ function renderPie() {
             return ` ${c.label}: ${fmt(c.parsed)}`;
           }},
         },
-        doughnutCenter: { text: fmt(total), sub: '總資產' },
+        doughnutCenter: { text: fmt(investable), sub: '可用合計' },
       },
     },
   });
@@ -3283,10 +3292,13 @@ function renderTrend() {
   }
 
   // 加入當月即時數據點（若最後一筆快照不是本月）
+  // v2: 趨勢線追蹤「淨資產」(net, col 8) — 舊快照只有 net 是完整連續的歷史資料，
+  //   投資可用資產 (cols 1-4) 在早期快照可能未填，硬切會出現假跌幅
   const todayM = `${now.getFullYear()}/${String(now.getMonth()+1).padStart(2,'0')}`;
+  const trendValueFromSnap = (s) => parseFloat(s[8]) || 0;
   if (!snaps.length || snaps[snaps.length-1][0] < todayM) {
-    const { net: liveNet } = calcTotals();
-    snaps = [...snaps, [todayM + ' ▸', 0,0,0,0,0,0,0, liveNet]];
+    const { cashT, twT, usT, cryT, ins, re, net: liveNet } = calcTotals();
+    snaps = [...snaps, [todayM + ' ▸', cashT, twT, usT, cryT, ins, re, 0, liveNet]];
   }
 
   const cc = chartColors();
@@ -3296,7 +3308,7 @@ function renderTrend() {
       labels: snaps.map(s => s[0]),
       datasets: [{
         label: '淨資產',
-        data: snaps.map(s => parseFloat(s[8]) || 0),
+        data: snaps.map(trendValueFromSnap),
         borderColor: cc.line1,
         borderWidth: 2.5,
         tension: 0.42,
@@ -3343,6 +3355,7 @@ function renderMonthly() {
     return;
   }
 
+  // 跟「本月收益」KPI 與趨勢圖一致 — 用 net (col 8) 月度 diff
   const labels=[], vals=[];
   for (let i=1;i<snaps.length;i++) {
     labels.push(snaps[i][0]);
@@ -3385,10 +3398,92 @@ function renderMonthly() {
 }
 
 function setTrendFilter(btn) {
-  document.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active'));
+  // 只清除 trend filter 自己這組的 active（避免影響 movers filter）
+  btn.parentElement.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active'));
   btn.classList.add('active');
   S.trendFilter = btn.dataset.f;
   renderTrend();
+}
+
+function setMoversWindow(btn, days) {
+  btn.parentElement.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  S.moversWindow = days;
+  renderTopMovers(days);
+}
+
+// v2 redesign — 持倉 Top Movers section（近 N 天領漲/領跌 Top 3）
+function renderTopMovers(windowDays) {
+  if (windowDays == null) windowDays = S.moversWindow || 15;
+  const upPctEl = document.getElementById('movers-up-pct');
+  const upAmtEl = document.getElementById('movers-up-amt');
+  const dnEl    = document.getElementById('movers-down');
+  const winEl   = document.getElementById('movers-window');
+  if (!upPctEl || !upAmtEl || !dnEl) return;
+
+  const empty = (msg) => {
+    upPctEl.innerHTML = `<div class="ov2-mover-empty">${esc(msg)}</div>`;
+    upAmtEl.innerHTML = '';
+    dnEl.innerHTML = '';
+    if (winEl) winEl.textContent = '';
+  };
+
+  // 1. 找近 N 天最接近 windowDays 天前的 daily snapshot
+  const todayStr = getNowTW8().slice(0, 10); // 'YYYY/MM/DD'
+  const dayMs = 86400000;
+  const target = new Date(todayStr.replace(/\//g, '-') + 'T00:00:00');
+  target.setTime(target.getTime() - windowDays * dayMs);
+  const pad = n => String(n).padStart(2, '0');
+  const targetStr = `${target.getUTCFullYear()}/${pad(target.getUTCMonth()+1)}/${pad(target.getUTCDate())}`;
+  const snaps = (S.data.daily_snapshots || []).filter(s => s[0] && s[0] < todayStr && s[9]);
+  if (!snaps.length) { empty('資料不足'); if (winEl) winEl.textContent = '近 14 天'; return; }
+  const cand = snaps.filter(s => s[0] <= targetStr);
+  const prevSnap = cand.length ? cand[cand.length - 1] : snaps[0];
+  let prevPrices;
+  try { prevPrices = JSON.parse(prevSnap[9]); } catch { empty('資料不足'); return; }
+  if (!prevPrices || typeof prevPrices !== 'object') { empty('資料不足'); return; }
+  // 動態 label：實際天數 ≠ 請求天數才顯示（資料不足 fallback 時）
+  const prevDate = new Date(prevSnap[0].replace(/\//g, '-') + 'T00:00:00');
+  const todayDate = new Date(todayStr.replace(/\//g, '-') + 'T00:00:00');
+  const actualDays = Math.round((todayDate - prevDate) / dayMs);
+  if (winEl) winEl.textContent = actualDays !== windowDays ? `實際 ${actualDays} 天` : '';
+
+  // 2. 對每持倉 symbol 算 { sym, type, pct, deltaTWD }
+  const rate = S.prices.usdtwd || 0;
+  const movers = [];
+  const pushMover = (type, rows, getCur, isUSD) => {
+    rows.forEach(r => {
+      const sym = type === 'crypto' ? r[0]?.toUpperCase() : r[0];
+      if (!sym || (type === 'crypto' && sym === 'USDT')) return;
+      const cur = getCur(sym);
+      const qty = parseFloat(r[1]) || 0;
+      const prev = prevPrices[type]?.[sym];
+      if (!cur || !prev || prev <= 0 || !qty) return;
+      const pct = (cur - prev) / prev * 100;
+      const deltaNative = qty * (cur - prev);
+      const deltaTWD = isUSD ? deltaNative * rate : deltaNative;
+      movers.push({ sym, type, pct, deltaTWD });
+    });
+  };
+  pushMover('crypto', S.data.crypto || [], s => S.prices.crypto[s], true);
+  pushMover('us',     S.data.us || [],     s => S.prices.us[s],     true);
+  pushMover('tw',     S.data.tw || [],     s => S.prices.tw[s],     false);
+
+  // 3. 過濾持平、排序、取 Top 3
+  const sig = movers.filter(m => Math.abs(m.pct) >= 0.1);
+  const upsPct = sig.filter(m => m.pct > 0).sort((a, b) => b.pct - a.pct).slice(0, 3);
+  const upsAmt = sig.filter(m => m.deltaTWD > 0).sort((a, b) => b.deltaTWD - a.deltaTWD).slice(0, 3);
+  const dns    = sig.filter(m => m.pct < 0).sort((a, b) => a.pct - b.pct).slice(0, 3);
+
+  // 4. 渲染
+  const row = m => `<div class="ov2-mover-row">
+    <span class="ov2-mover-sym">${esc(m.sym)}</span>
+    <span class="ov2-mover-pct ${m.pct >= 0 ? 'pos' : 'neg'}">${m.pct >= 0 ? '+' : ''}${m.pct.toFixed(2)}%</span>
+    <span class="ov2-mover-delta">${m.deltaTWD >= 0 ? '+' : ''}${fmtWan(m.deltaTWD)}</span>
+  </div>`;
+  upPctEl.innerHTML = upsPct.length ? upsPct.map(row).join('') : '<div class="ov2-mover-empty">無顯著上漲</div>';
+  upAmtEl.innerHTML = upsAmt.length ? upsAmt.map(row).join('') : '<div class="ov2-mover-empty">無顯著上漲</div>';
+  dnEl.innerHTML    = dns.length    ? dns.map(row).join('')    : '<div class="ov2-mover-empty">無顯著下跌</div>';
 }
 
 // ══════════════════════════════════════════════════════════════

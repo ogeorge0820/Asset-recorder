@@ -16,8 +16,8 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=DM+Sans:wght@300;400;500;600;700&display=swap">
-<link rel="stylesheet" href="theme.css?v=202605052030">
-<link rel="stylesheet" href="style.css?v=202605052030">
+<link rel="stylesheet" href="theme.css?v=202605131721">
+<link rel="stylesheet" href="style.css?v=202605131721">
 </head>
 <body>
 
@@ -59,100 +59,119 @@
     <!-- ══ 總覽 Tab ══ -->
     <div id="tab-overview">
 
-      <!-- KPI Cards (hero gradient) -->
-      <section class="app-hero">
-        <div class="app-hero-blob app-hero-blob-1"></div>
-        <div class="app-hero-blob app-hero-blob-2"></div>
-        <div class="app-hero-inner">
-      <div class="kpi-grid">
-        <div class="kpi-card kpi-primary">
-          <div class="kpi-label"><span class="kpi-label-dot"></span>淨資產</div>
-          <div class="kpi-value skel" id="kv-net">—</div>
-          <div class="kpi-sub" id="ks-net"></div>
-        </div>
-        <div class="kpi-card kpi-primary">
-          <div class="kpi-label"><span class="kpi-label-dot"></span>可用資產</div>
-          <div class="kpi-value skel" id="kv-liquid">—</div>
-          <div class="kpi-sub" id="ks-liquid">總資產 − 房地產</div>
-        </div>
-        <div class="kpi-card kpi-primary" id="card-survival">
-          <div class="kpi-label"><span class="kpi-label-dot"></span>財務存活</div>
-          <div class="kpi-value skel" id="kv-survival">—</div>
-          <div class="kpi-sub" id="ks-survival">含未來預計收入模擬</div>
-        </div>
-        <div class="kpi-card" id="card-invest-gain">
-          <div class="kpi-label">本日投資損益</div>
-          <div class="kpi-value skel" id="kv-invest-gain">—</div>
-          <div class="kpi-sub" id="ks-invest-gain">僅含台美股與加密貨幣</div>
-        </div>
-        <div class="kpi-card" id="card-monthly">
-          <div class="kpi-label">本月收益</div>
-          <div class="kpi-value skel" id="kv-monthly">—</div>
-          <div class="kpi-sub" id="ks-monthly">與上月快照比較</div>
-        </div>
-        <div class="kpi-card" id="card-growth">
-          <div class="kpi-label">本年收益</div>
-          <div class="kpi-value skel" id="kv-growth">—</div>
-          <div class="kpi-sub" id="ks-growth">可用資產 − 2025/12/31 基準</div>
-        </div>
-      </div>
-        </div><!-- /.app-hero-inner -->
-      </section><!-- /.app-hero -->
-
-      <!-- Two-column layout: main (trends) | side (pie + net worth) -->
-      <div class="overview-grid">
-
-        <div class="overview-main">
-          <!-- Daily trend -->
-          <div class="chart-card">
-            <div class="chart-title-row"><h3>每日投資損益</h3></div>
-            <div style="position:relative;height:240px" id="daily-trend-wrap">
-              <canvas id="daily-trend-chart"></canvas>
-              <div id="daily-trend-nodata" class="chart-nodata" style="display:none">
-                <div style="color:var(--muted);font-size:0.9rem;max-width:300px;line-height:1.7">
-                  尚無每日資料，每天 23:59 自動記錄
-                </div>
-              </div>
+      <!-- Top row — Hero (左) + Donut (右) -->
+      <section class="ov2-top-row">
+        <div class="ov2-hero">
+          <div class="ov2-hero-head">
+            <div class="ov2-hero-primary">
+              <div class="ov2-hero-label">可用資產 · LIQUID NET WORTH</div>
+              <div class="ov2-hero-num skel" id="kv-liquid">—</div>
+              <div class="ov2-hero-meta" id="ks-liquid">現金 + 投資組合</div>
+            </div>
+            <div class="ov2-hero-secondary">
+              <div class="ov2-hero-sub-label">淨資產</div>
+              <div class="ov2-hero-sub-num" id="kv-net">—</div>
+              <div class="ov2-hero-sub-meta" id="ks-net">含長期持有與負債</div>
+            </div>
+            <div class="chart-filter ov2-trend-filter">
+              <button class="filter-btn" data-f="6m" onclick="setTrendFilter(this)">6M</button>
+              <button class="filter-btn" data-f="1y" onclick="setTrendFilter(this)">1Y</button>
+              <button class="filter-btn active" data-f="all" onclick="setTrendFilter(this)">MAX</button>
             </div>
           </div>
-          <!-- Net worth trend -->
-          <div class="chart-card">
-            <h3>淨資產趨勢</h3>
-            <div class="chart-filter">
-              <button class="filter-btn active" data-f="all" onclick="setTrendFilter(this)">全部</button>
-              <button class="filter-btn" data-f="1y" onclick="setTrendFilter(this)">近1年</button>
-              <button class="filter-btn" data-f="6m" onclick="setTrendFilter(this)">近6個月</button>
-            </div>
-            <div style="position:relative;height:200px" id="trend-wrap">
-              <canvas id="trend-chart"></canvas>
-              <div id="trend-nodata" class="chart-nodata" style="display:none">
-                <div style="color:var(--muted);font-size:0.9rem;max-width:380px;line-height:1.7">
-                  尚無歷史資料
-                </div>
-              </div>
+          <div class="ov2-hero-trend">
+            <canvas id="trend-chart"></canvas>
+            <div id="trend-nodata" class="chart-nodata" style="display:none">
+              <div style="color:var(--muted);font-size:0.9rem">尚無歷史資料</div>
             </div>
           </div>
-        </div><!-- /overview-main -->
+        </div>
+        <div class="ov2-alloc-card">
+          <div class="ov2-alloc-head">
+            <h3>可用資產分布</h3>
+            <span class="ov2-alloc-sub">5 類 · 現金 / 加密 / 美股 / 台股 / 儲蓄險</span>
+          </div>
+          <div class="pie-wrap" id="pie-wrap">
+            <div class="pie-canvas"><canvas id="pie-chart"></canvas></div>
+            <ul class="pie-legend" id="pie-legend"></ul>
+          </div>
+        </div>
+      </section>
 
-        <div class="overview-side">
-          <!-- Pie -->
-          <div class="chart-card">
-            <h3>資產組成</h3>
-            <div class="pie-wrap" id="pie-wrap">
-              <div class="pie-canvas"><canvas id="pie-chart"></canvas></div>
-              <ul class="pie-legend" id="pie-legend"></ul>
+      <!-- Mid row — 本日 (大) / 本月 (大) / 雙併卡（本年收益 + 財務存活） -->
+      <section class="ov2-mid-row">
+        <div class="ov2-pl-card" id="card-invest-gain">
+          <div class="ov2-pl-head">
+            <div>
+              <div class="ov2-pl-label">本日投資損益</div>
+              <div class="ov2-pl-num skel" id="kv-invest-gain">—</div>
+              <div class="ov2-pl-meta" id="ks-invest-gain">僅含台美股與加密貨幣</div>
+            </div>
+            <div class="ov2-pl-period">近 14 天</div>
+          </div>
+          <div class="ov2-pl-chart" id="daily-trend-wrap">
+            <canvas id="daily-trend-chart"></canvas>
+            <div id="daily-trend-nodata" class="chart-nodata" style="display:none">
+              <div style="color:var(--muted);font-size:0.85rem">尚無每日資料</div>
             </div>
           </div>
-          <!-- Monthly bar (moved from main) -->
-          <div class="chart-card">
-            <h3>月收益</h3>
-            <div style="position:relative;height:160px" id="monthly-wrap">
-              <canvas id="monthly-chart"></canvas>
+        </div>
+        <div class="ov2-pl-card" id="card-monthly">
+          <div class="ov2-pl-head">
+            <div>
+              <div class="ov2-pl-label">本月收益</div>
+              <div class="ov2-pl-num skel" id="kv-monthly">—</div>
+              <div class="ov2-pl-meta" id="ks-monthly">與上月快照比較</div>
             </div>
+            <div class="ov2-pl-period">近 6 個月</div>
           </div>
-        </div><!-- /overview-side -->
+          <div class="ov2-pl-chart" id="monthly-wrap">
+            <canvas id="monthly-chart"></canvas>
+          </div>
+        </div>
+        <div class="ov2-stat-pair">
+          <div class="ov2-stat-half" id="card-growth">
+            <div class="ov2-stat-label">本年收益</div>
+            <div class="ov2-stat-num skel" id="kv-growth">—</div>
+            <div class="ov2-stat-meta" id="ks-growth">淨資產 − 2025/12/31 基準</div>
+          </div>
+          <div class="ov2-stat-half" id="card-survival">
+            <div class="ov2-stat-label">財務存活</div>
+            <div class="ov2-stat-num skel" id="kv-survival">—</div>
+            <div class="ov2-stat-meta" id="ks-survival">含未來預計收入模擬</div>
+          </div>
+        </div>
+      </section>
 
-      </div><!-- /overview-grid -->
+      <!-- 持倉 Top Movers — 近 14 天領漲（漲幅 / 賺額）+ 領跌 -->
+      <section class="ov2-movers">
+        <div class="ov2-movers-head">
+          <div class="ov2-movers-title">持倉 Top Movers</div>
+          <div class="ov2-movers-period">
+            <span class="ov2-movers-window" id="movers-window"></span>
+            <div class="chart-filter ov2-movers-filter">
+              <button class="filter-btn" data-d="7"  onclick="setMoversWindow(this, 7)">7D</button>
+              <button class="filter-btn active" data-d="15" onclick="setMoversWindow(this, 15)">15D</button>
+              <button class="filter-btn" data-d="30" onclick="setMoversWindow(this, 30)">30D</button>
+            </div>
+          </div>
+        </div>
+        <div class="ov2-movers-grid">
+          <div class="ov2-movers-col ov2-movers-up">
+            <div class="ov2-movers-col-head">領漲 ▲ <span class="ov2-movers-sub">漲幅</span></div>
+            <div class="ov2-movers-list" id="movers-up-pct"></div>
+          </div>
+          <div class="ov2-movers-col ov2-movers-up">
+            <div class="ov2-movers-col-head">領漲 ▲ <span class="ov2-movers-sub">賺額</span></div>
+            <div class="ov2-movers-list" id="movers-up-amt"></div>
+          </div>
+          <div class="ov2-movers-col ov2-movers-down">
+            <div class="ov2-movers-col-head">領跌 ▼</div>
+            <div class="ov2-movers-list" id="movers-down"></div>
+          </div>
+        </div>
+      </section>
+
     </div><!-- /tab-overview -->
 
     <!-- ══ 管理 Tab ══ -->
@@ -335,46 +354,77 @@
           </div>
         </section>
 
-      <div class="mgmt-grid">
-        <!-- 隱形容器：這些 id 仍被部分 JS 讀取（cnt/tot/gain），但畫面顯示由 holding-card 接管 -->
-        <span id="cnt-cash" hidden>0</span><span id="tot-cash" hidden>—</span>
-        <span id="cnt-tw" hidden>0</span><span id="tot-tw" hidden>—</span><span id="gain-tw" hidden></span>
-        <span id="cnt-us" hidden>0</span><span id="tot-us" hidden>—</span><span id="gain-us" hidden></span>
-        <span id="cnt-crypto" hidden>0</span><span id="tot-crypto" hidden>—</span><span id="gain-crypto" hidden></span>
-        <span id="tot-other" hidden>—</span>
-        <span id="tot-rewards-month" hidden>—</span>
-        <div id="other-items" hidden></div>
+      <!-- 隱形 ID 容器（其他 JS 讀取用） -->
+      <div style="display:none">
+        <span id="cnt-cash">0</span><span id="tot-cash">—</span>
+        <span id="cnt-tw">0</span><span id="tot-tw">—</span><span id="gain-tw"></span>
+        <span id="cnt-us">0</span><span id="tot-us">—</span><span id="gain-us"></span>
+        <span id="cnt-crypto">0</span><span id="tot-crypto">—</span><span id="gain-crypto"></span>
+        <span id="tot-other">—</span>
+        <span id="tot-rewards-month">—</span>
+        <div id="other-items"></div>
+      </div>
 
-        <!-- Row 6: 生活支出預算 全寬 -->
-        <div class="section-card collapsed" id="section-budget" style="grid-column: 1 / -1">
-          <h3 class="section-header" onclick="toggleSection('budget')"><span>生活支出預算 <span class="badge" id="cnt-budget">0</span></span><span class="section-header-right"><span class="budget-total-label">月支出：</span><span class="section-total" id="tot-budget">—</span><span class="section-chevron">▾</span></span></h3>
-          <div class="budget-ratio-bar" id="budget-ratio-bar"></div>
-          <div class="section-body">
-            <div class="budget-cats" id="budget-cats"></div>
-            <button class="btn-add budget-add-btn" onclick="addBudgetItem()">+ 新增支出項目</button>
+      <!-- 支出 & 收入 — 卡片式（與 holdings-hero 同層） -->
+      <section class="holdings-hero expenses-hero">
+        <h3 class="holdings-hero-title">支出 &amp; 收入</h3>
+        <div class="holdings-grid">
+
+          <div class="holding-block" id="hb-budget">
+            <button class="holding-card hc-budget" onclick="toggleHolding('budget')" type="button">
+              <span class="hc-deco hc-deco-stripes" aria-hidden="true"></span>
+              <div class="hc-top">
+                <span class="hc-label">生活支出預算<span class="hc-label-en"> / MONTHLY BUDGET</span></span>
+                <span class="hc-count"><span id="cnt-budget">0</span> 項</span>
+              </div>
+              <div class="hc-amount"><span id="tot-budget">—</span></div>
+              <div class="hc-symbols" id="hc-symbols-budget">月支出總額</div>
+              <span class="hc-arrow" aria-hidden="true">▾</span>
+            </button>
+            <div class="holding-detail">
+              <div class="budget-ratio-bar" id="budget-ratio-bar"></div>
+              <div class="budget-cats" id="budget-cats"></div>
+              <button class="btn-add budget-add-btn" onclick="addBudgetItem()">+ 新增支出項目</button>
+            </div>
           </div>
-        </div>
 
-        <!-- Row 7: 重大體驗支出規劃 全寬 -->
-        <div class="section-card collapsed" id="section-exp-plan" style="grid-column: 1 / -1">
-          <h3 class="section-header" onclick="toggleSection('exp-plan')"><span>重大體驗支出規劃 <span class="badge" id="cnt-exp-plan">0</span></span><span class="section-header-right"><span class="section-total" id="tot-exp-plan">—</span><span class="section-chevron">▾</span></span></h3>
-          <div class="section-body">
-            <div class="exp-plan-list" id="exp-plan-list"></div>
-            <button class="btn-add" onclick="addExpPlanItem()">+ 新增體驗支出</button>
+          <div class="holding-block" id="hb-exp-plan">
+            <button class="holding-card hc-exp-plan" onclick="toggleHolding('exp-plan')" type="button">
+              <span class="hc-deco hc-deco-rings" aria-hidden="true"></span>
+              <div class="hc-top">
+                <span class="hc-label">重大體驗支出規劃<span class="hc-label-en"> / EXPERIENCE PLAN</span></span>
+                <span class="hc-count"><span id="cnt-exp-plan">0</span> 項</span>
+              </div>
+              <div class="hc-amount"><span id="tot-exp-plan">—</span></div>
+              <div class="hc-symbols" id="hc-symbols-exp-plan">規劃中</div>
+              <span class="hc-arrow" aria-hidden="true">▾</span>
+            </button>
+            <div class="holding-detail">
+              <div class="exp-plan-list" id="exp-plan-list"></div>
+              <button class="btn-add" onclick="addExpPlanItem()">+ 新增體驗支出</button>
+            </div>
           </div>
-        </div>
 
-        <!-- Row 8: 主動收入管理 全寬 -->
-        <div class="section-card collapsed" id="section-income" style="grid-column: 1 / -1">
-          <h3 class="section-header" onclick="toggleSection('income')"><span>主動收入管理 <span class="badge" id="cnt-income">0</span></span><span class="section-header-right"><span class="income-header-label">本月已入帳：</span><span class="section-total" id="tot-income">—</span><span class="section-chevron">▾</span></span></h3>
-          <div class="section-body">
-            <div id="income-accordion"></div>
-            <div class="income-forecast" id="income-month-forecast" style="display:none"></div>
-            <button class="btn-add" onclick="addIncomeItem()">+ 新增收入</button>
+          <div class="holding-block holding-block-full" id="hb-income">
+            <button class="holding-card hc-income" onclick="toggleHolding('income')" type="button">
+              <span class="hc-deco hc-deco-stars" aria-hidden="true"></span>
+              <div class="hc-top">
+                <span class="hc-label">主動收入管理<span class="hc-label-en"> / ACTIVE INCOME</span></span>
+                <span class="hc-count"><span id="cnt-income">0</span> 項</span>
+              </div>
+              <div class="hc-amount"><span id="tot-income">—</span></div>
+              <div class="hc-symbols" id="hc-symbols-income">本月已入帳</div>
+              <span class="hc-arrow" aria-hidden="true">▾</span>
+            </button>
+            <div class="holding-detail">
+              <div id="income-accordion"></div>
+              <div class="income-forecast" id="income-month-forecast" style="display:none"></div>
+              <button class="btn-add" onclick="addIncomeItem()">+ 新增收入</button>
+            </div>
           </div>
-        </div>
 
-      </div><!-- /mgmt-grid -->
+        </div>
+      </section>
 
     </div><!-- /tab-management -->
 
@@ -627,6 +677,6 @@
 <!-- ── Toast ── -->
 <div class="toast" id="toast"></div>
 
-<script src="app.js?v=202605052030"></script>
+<script src="app.js?v=202605131721"></script>
 </body>
 </html>

@@ -32,7 +32,7 @@
 
 /* ── 淺色主題 ── */
 :root[data-theme="light"] {
-  --bg:             #fafaf8;
+  --bg:             #f6f4ef;
   --bg-card:        #ffffff;
   --bg-hover:       #f9f9fb;
   --bg-input:       #ffffff;
@@ -65,6 +65,33 @@
   --green:         var(--success);
   --red:           var(--danger);
   --accent-light:  var(--accent);
+}
+
+/* ── v2 Redesign — 資產品牌色（Wallet 風格卡片） ── */
+:root {
+  /* 資產品牌色（Donut / 圖例 / accent） */
+  --asset-crypto:    #d97757;  /* 起司橘 */
+  --asset-us:        #5b8def;  /* soft blue */
+  --asset-tw:        #6fae7e;  /* sage green */
+  --asset-cash:      #c9a96e;  /* warm gold */
+  --asset-realty:    #a8a29e;  /* warm taupe */
+  --asset-insurance: #9b7eb8;  /* dusty plum */
+  --asset-staking:   #c0392b;  /* deep red — yield */
+
+  /* Wallet 卡片 gradient（管理頁主動資產卡） */
+  --card-crypto-bg:    linear-gradient(135deg, #18181b 0%, #050505 100%);
+  --card-us-bg:        linear-gradient(135deg, #15315a 0%, #060f24 100%);
+  --card-tw-bg:        linear-gradient(135deg, #faf5eb 0%, #ebe2d2 100%);
+  --card-cash-bg:      linear-gradient(135deg, #2f5946 0%, #15291f 100%);
+  --card-realty-bg:    linear-gradient(135deg, #5a4636 0%, #2a1f18 100%);
+  --card-insurance-bg: linear-gradient(135deg, #5a4862 0%, #28202c 100%);
+  --card-staking-bg:   linear-gradient(135deg, #4a1f1f 0%, #1f0a0a 100%);
+
+  /* v2 動畫 */
+  --ease-out:        cubic-bezier(.2, .8, .2, 1);
+  --duration-fast:   180ms;
+  --duration-base:   240ms;
+  --duration-slow:   320ms;
 }
 
 /* ── Typography tokens ── */
@@ -597,9 +624,10 @@ canvas { background: transparent !important; }
 .nav-brand {
   display: flex;
   align-items: center;
-  gap: 10px;
-  font-weight: 600;
-  font-size: 15px;
+  gap: 14px;
+  font-weight: 700;
+  font-size: 18px;
+  letter-spacing: -0.01em;
   color: var(--text-primary);
 }
 .nav-logo {
@@ -610,21 +638,21 @@ canvas { background: transparent !important; }
   place-items: center;
   color: var(--accent-fg);
   font-weight: 700;
-  font-size: 16px;
+  font-size: 18px;
   font-family: var(--font-num);
 }
 
-/* 中間導覽 — 膠囊外框 */
+/* v2 — 獨立 pill tabs，無外框容器 */
 #app-header .tab-nav {
   display: flex !important;
-  gap: 2px !important;
-  border: 1px solid var(--border-strong) !important;
-  border-radius: 999px !important;
-  padding: 4px !important;
-  background: var(--bg-card) !important;
+  gap: 4px !important;
+  border: none !important;
+  border-radius: 0 !important;
+  padding: 0 !important;
+  background: transparent !important;
 }
 #app-header .tab-btn {
-  padding: 6px 16px !important;
+  padding: 8px 14px !important;
   border-radius: 999px !important;
   font-size: 13px !important;
   font-weight: 500 !important;
@@ -633,7 +661,7 @@ canvas { background: transparent !important; }
   border: none !important;
   text-transform: none !important;
   letter-spacing: 0 !important;
-  transition: all .15s !important;
+  transition: all var(--duration-fast) !important;
 }
 #app-header .tab-btn:hover {
   background: var(--pill-bg) !important;
@@ -1554,3 +1582,405 @@ canvas { background: transparent !important; }
 }
 
 
+
+/* ═══════════════════════════════════════════════════════════════
+   v2 Redesign — 總覽頁 (Wallet inspired) — 一頁式 A 版型
+   ═══════════════════════════════════════════════════════════════ */
+#tab-overview {
+  padding: 18px 24px 24px !important;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  max-width: 1440px;
+  margin: 0 auto;
+}
+
+/* Top row — Hero (1.5fr) + Donut (1fr) 同高並排 */
+.ov2-top-row {
+  display: grid;
+  grid-template-columns: 1.5fr 1fr;
+  gap: 14px;
+  min-height: 0;
+}
+
+/* Hero — 主卡：可用資產 (primary) + 淨資產 (secondary) + 趨勢圖 */
+.ov2-hero {
+  background: var(--bg-card);
+  border-radius: 18px;
+  padding: 18px 22px 16px;
+  box-shadow: var(--card-shadow);
+  border: 1px solid var(--border);
+  display: flex; flex-direction: column;
+}
+.ov2-hero-head {
+  display: flex;
+  align-items: flex-end;
+  gap: 24px;
+  margin-bottom: 12px;
+  flex-wrap: wrap;
+}
+.ov2-hero-primary { min-width: 0; flex: 0 0 auto; }
+.ov2-hero-label {
+  font-size: 11px; font-weight: 500;
+  letter-spacing: 0.06em; text-transform: uppercase;
+  color: var(--text-secondary);
+  margin-bottom: 6px;
+}
+.ov2-hero-num {
+  font-family: var(--font-num);
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: 'tnum' 1, 'cv11' 1;
+  font-weight: 700;
+  font-size: clamp(36px, 3.6vw, 52px);
+  letter-spacing: -0.03em;
+  line-height: 0.95;
+  color: var(--text-primary);
+}
+.ov2-hero-meta {
+  font-family: var(--font-num);
+  font-variant-numeric: tabular-nums;
+  font-size: 12px;
+  color: var(--text-secondary);
+  margin-top: 8px;
+  display: flex; gap: 10px; flex-wrap: wrap; align-items: baseline;
+}
+.ov2-hero-meta .delta-pos { color: var(--success); font-weight: 600; }
+.ov2-hero-meta .delta-neg { color: var(--danger);  font-weight: 600; }
+
+.ov2-hero-secondary {
+  border-left: 1px solid var(--border);
+  padding-left: 20px;
+  align-self: stretch;
+  display: flex; flex-direction: column; justify-content: flex-end;
+  padding-bottom: 2px;
+}
+.ov2-hero-sub-label {
+  font-size: 10px; font-weight: 500;
+  letter-spacing: 0.06em; text-transform: uppercase;
+  color: var(--text-muted);
+  margin-bottom: 4px;
+}
+.ov2-hero-sub-num {
+  font-family: var(--font-num);
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+  font-size: 22px;
+  letter-spacing: -0.02em;
+  line-height: 1;
+  color: var(--text-secondary);
+}
+.ov2-hero-sub-meta {
+  font-family: var(--font-num);
+  font-size: 10px;
+  color: var(--text-muted);
+  margin-top: 4px;
+}
+
+.ov2-trend-filter {
+  margin-left: auto !important;
+  margin-bottom: 0 !important;
+  display: flex !important;
+  gap: 4px !important;
+}
+.ov2-hero-trend {
+  position: relative;
+  flex: 1;
+  min-height: 140px;
+  width: 100%;
+}
+
+/* Mid row — 本日 (大) / 本月 (大) / 雙併卡 */
+.ov2-mid-row {
+  display: grid;
+  grid-template-columns: 1.4fr 1.4fr 1fr;
+  gap: 14px;
+}
+.ov2-pl-card {
+  background: var(--bg-card);
+  border-radius: 16px;
+  padding: 16px 18px 14px;
+  box-shadow: var(--card-shadow);
+  border: 1px solid var(--border);
+  display: flex; flex-direction: column;
+}
+.ov2-pl-head {
+  display: flex; justify-content: space-between; align-items: flex-start;
+  gap: 8px; margin-bottom: 8px;
+}
+.ov2-pl-label {
+  font-size: 10px; font-weight: 500;
+  letter-spacing: 0.05em; text-transform: uppercase;
+  color: var(--text-secondary);
+  margin-bottom: 4px;
+}
+.ov2-pl-num {
+  font-family: var(--font-num);
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+  font-size: 26px;
+  letter-spacing: -0.02em;
+  line-height: 1;
+}
+.ov2-pl-meta {
+  font-family: var(--font-num);
+  font-size: 11px;
+  color: var(--text-muted);
+  margin-top: 4px;
+}
+.ov2-pl-period {
+  font-family: var(--font-num);
+  font-size: 10px;
+  color: var(--text-muted);
+}
+.ov2-pl-chart {
+  position: relative;
+  flex: 1;
+  min-height: 56px;
+}
+
+/* Stat pair — 本年收益 + 財務存活 上下併在同一張卡 */
+.ov2-stat-pair {
+  background: var(--bg-card);
+  border-radius: 16px;
+  box-shadow: var(--card-shadow);
+  border: 1px solid var(--border);
+  display: flex; flex-direction: column;
+  overflow: hidden;
+}
+.ov2-stat-half {
+  flex: 1;
+  padding: 14px 18px;
+  display: flex; flex-direction: column; justify-content: center;
+}
+.ov2-stat-half + .ov2-stat-half {
+  border-top: 1px solid var(--border);
+}
+.ov2-stat-label {
+  font-size: 10px; font-weight: 500;
+  letter-spacing: 0.05em; text-transform: uppercase;
+  color: var(--text-secondary);
+  margin-bottom: 4px;
+}
+.ov2-stat-num {
+  font-family: var(--font-num);
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+  font-size: 24px;
+  letter-spacing: -0.02em;
+  line-height: 1;
+  color: var(--text-primary);
+}
+.ov2-stat-meta {
+  font-family: var(--font-num);
+  font-size: 10px;
+  color: var(--text-muted);
+  margin-top: 4px;
+}
+
+/* Allocation 卡（top row 右側） */
+.ov2-alloc-card {
+  background: var(--bg-card);
+  border-radius: 18px;
+  padding: 16px 20px;
+  box-shadow: var(--card-shadow);
+  border: 1px solid var(--border);
+  display: flex; flex-direction: column;
+  min-height: 0;
+}
+.ov2-alloc-head {
+  display: flex; align-items: baseline; gap: 10px;
+  margin-bottom: 8px;
+}
+.ov2-alloc-head h3 {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+.ov2-alloc-sub {
+  font-size: 10px;
+  color: var(--text-muted);
+}
+
+/* 持倉 Top Movers — 雙欄全寬 section */
+.ov2-movers {
+  background: var(--bg-card);
+  border-radius: 16px;
+  padding: 16px 20px;
+  box-shadow: var(--card-shadow);
+  border: 1px solid var(--border);
+}
+.ov2-movers-head {
+  display: flex; justify-content: space-between; align-items: baseline;
+  margin-bottom: 12px;
+}
+.ov2-movers-title {
+  font-size: 13px; font-weight: 600;
+  color: var(--text-primary);
+}
+.ov2-movers-period {
+  display: flex; align-items: center; gap: 10px;
+}
+.ov2-movers-window {
+  font-family: var(--font-num);
+  font-variant-numeric: tabular-nums;
+  font-size: 11px;
+  color: var(--text-muted);
+}
+.ov2-movers-filter { display: flex; gap: 0; }
+.ov2-movers-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 24px;
+}
+.ov2-movers-col-head {
+  font-size: 11px; font-weight: 600; letter-spacing: 0.5px;
+  margin-bottom: 6px;
+  color: var(--text-muted);
+}
+.ov2-movers-sub {
+  font-weight: 500;
+  font-size: 10px;
+  color: var(--text-muted);
+  margin-left: 4px;
+  opacity: 0.75;
+}
+.ov2-movers-up   .ov2-movers-col-head { color: var(--success); }
+.ov2-movers-down .ov2-movers-col-head { color: var(--danger); }
+.ov2-mover-row {
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  gap: 12px;
+  padding: 7px 0;
+  align-items: baseline;
+  border-bottom: 1px solid var(--border);
+}
+.ov2-mover-row:last-child { border-bottom: none; }
+.ov2-mover-sym {
+  font-weight: 600; font-size: 13px;
+  color: var(--text-primary);
+}
+.ov2-mover-pct {
+  font-family: var(--font-num);
+  font-variant-numeric: tabular-nums;
+  font-weight: 600; font-size: 12px;
+}
+.ov2-mover-pct.pos { color: var(--success); }
+.ov2-mover-pct.neg { color: var(--danger); }
+.ov2-mover-delta {
+  font-family: var(--font-num);
+  font-variant-numeric: tabular-nums;
+  font-size: 12px;
+  color: var(--text-muted);
+  min-width: 70px; text-align: right;
+}
+.ov2-mover-empty {
+  color: var(--text-muted);
+  font-size: 12px;
+  padding: 8px 0;
+}
+
+/* KPI value 著色（ov2 各 num 共用） */
+.ov2-pl-num.pos, .ov2-stat-num.pos, .kpi-value.pos { color: var(--success); }
+.ov2-pl-num.neg, .ov2-stat-num.neg, .kpi-value.neg { color: var(--danger);  }
+.ov2-pl-num.neutral, .ov2-stat-num.neutral, .kpi-value.neutral { color: var(--text-secondary); }
+
+/* Desktop fix — Hero 與 Alloc 同高、donut 內部尺寸 */
+@media (min-width: 769px) {
+  .ov2-top-row { min-height: 280px; }
+  .ov2-alloc-card .pie-wrap { flex: 1; min-height: 200px !important; }
+}
+
+/* Mobile (<= 768px) — 全部 stack */
+@media (max-width: 768px) {
+  #tab-overview { padding: 14px 12px 28px !important; gap: 12px; }
+  .ov2-top-row { grid-template-columns: 1fr; min-height: 0; }
+  .ov2-mid-row { grid-template-columns: 1fr 1fr; }
+  .ov2-hero { padding: 16px 16px 12px; border-radius: 14px; }
+  .ov2-hero-head { gap: 12px; flex-direction: column; align-items: stretch; }
+  .ov2-hero-num { font-size: 36px; letter-spacing: -0.025em; }
+  .ov2-hero-secondary {
+    border-left: none; padding-left: 0;
+    border-top: 1px solid var(--border);
+    padding-top: 10px;
+  }
+  .ov2-hero-sub-num { font-size: 20px; }
+  .ov2-trend-filter { margin-left: 0 !important; }
+  .ov2-hero-trend { min-height: 120px; }
+  .ov2-pl-card, .ov2-alloc-card, .ov2-movers {
+    padding: 14px 16px; border-radius: 12px;
+  }
+  .ov2-stat-pair { border-radius: 12px; }
+  .ov2-stat-half { padding: 12px 16px; }
+  .ov2-pl-num, .ov2-stat-num { font-size: 22px; }
+  .ov2-pl-chart { min-height: 60px; }
+  .ov2-movers-grid { grid-template-columns: 1fr; gap: 14px; }
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   v2 Mgmt — 支出 & 收入 卡片化（生活預算 / 重大體驗 / 主動收入）
+   ═══════════════════════════════════════════════════════════════ */
+.expenses-hero { margin-top: 8px; }
+.holding-card.hc-budget   { background: linear-gradient(135deg, #a8552c 0%, #4a1d10 100%) !important; color:#fff !important; }
+.holding-card.hc-exp-plan { background: linear-gradient(135deg, #2c5a6f 0%, #0f2330 100%) !important; color:#fff !important; }
+.holding-card.hc-income   { background: linear-gradient(135deg, #3c5c3a 0%, #15291f 100%) !important; color:#fff !important; }
+/* 展開後 detail 內的 + 新增 按鈕：間距更緊 */
+#hb-budget .btn-add,
+#hb-exp-plan .btn-add,
+#hb-income .btn-add { margin-top: 8px !important; padding: 6px 0 !important; }
+/* 收入 accordion 在 detail 內不需要外框（外面已有 detail card 邊框） */
+#hb-income #income-accordion { border: none; max-height: 360px; }
+/* 收入清單：用 fr 比例分配欄位，跨列對齊且整列均勻分散 */
+#hb-income .income-item {
+  display: grid !important;
+  grid-template-columns: 22px 2.2fr 1fr 1fr auto !important;
+  gap: 16px !important;
+  padding: 6px 14px !important;
+  align-items: center;
+}
+#hb-income .income-item-info {
+  display: grid !important;
+  grid-template-columns: 1.6fr 1fr 0.8fr;
+  gap: 12px;
+  align-items: center;
+}
+#hb-income .income-item-info .income-item-name {
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+#hb-income .income-item-info .income-badges {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  justify-content: flex-end;
+  min-width: 0;
+}
+#hb-income .income-item-info .income-payer {
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+#hb-income .income-item-date,
+#hb-income .income-item-amt {
+  text-align: right !important;
+  white-space: nowrap;
+}
+#hb-income .income-item-actions {
+  grid-column: 5 !important;
+  justify-self: end !important;
+  display: flex;
+  gap: 4px;
+}
+/* 收入卡內按鈕縮成桌面密度（原 .btn-icon min 44×44 是 mobile touch target） */
+#hb-income .btn-icon {
+  min-width: 32px !important;
+  min-height: 32px !important;
+  padding: 4px 6px !important;
+  font-size: 0.85rem;
+}
+#hb-income .income-status-btn {
+  width: 22px; height: 22px;
+}
