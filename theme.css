@@ -1826,13 +1826,20 @@ canvas { background: transparent !important; }
 }
 .ov2-movers-grid {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: 1fr 1fr 1fr;
   gap: 24px;
 }
 .ov2-movers-col-head {
   font-size: 11px; font-weight: 600; letter-spacing: 0.5px;
   margin-bottom: 6px;
   color: var(--text-muted);
+}
+.ov2-movers-sub {
+  font-weight: 500;
+  font-size: 10px;
+  color: var(--text-muted);
+  margin-left: 4px;
+  opacity: 0.75;
 }
 .ov2-movers-up   .ov2-movers-col-head { color: var(--success); }
 .ov2-movers-down .ov2-movers-col-head { color: var(--danger); }

@@ -2,7 +2,7 @@
 // CONFIG
 // ══════════════════════════════════════════════════════════════
 // Build 時間：每次修改 code 後手動更新此時間（UTC+8 台北時間）
-const BUILD_DATE = '2026/05/13 17:05';
+const BUILD_DATE = '2026/05/13 17:13';
 
 const SPREADSHEET_ID = '1lpRpxVzWaYUqL-jVPOAJCtjsJUIedPYYyOx4gg4PPFU';
 const CLIENT_ID = '149884248440-85f8dhc6ub9up10sv0f89e3e0itrnooj.apps.googleusercontent.com';
@@ -3405,13 +3405,15 @@ function setTrendFilter(btn) {
 
 // v2 redesign — 持倉 Top Movers section（近 N 天領漲/領跌 Top 3）
 function renderTopMovers(windowDays = 14) {
-  const upEl = document.getElementById('movers-up');
-  const dnEl = document.getElementById('movers-down');
-  const winEl = document.getElementById('movers-window');
-  if (!upEl || !dnEl) return;
+  const upPctEl = document.getElementById('movers-up-pct');
+  const upAmtEl = document.getElementById('movers-up-amt');
+  const dnEl    = document.getElementById('movers-down');
+  const winEl   = document.getElementById('movers-window');
+  if (!upPctEl || !upAmtEl || !dnEl) return;
 
   const empty = (msg) => {
-    upEl.innerHTML = `<div class="ov2-mover-empty">${esc(msg)}</div>`;
+    upPctEl.innerHTML = `<div class="ov2-mover-empty">${esc(msg)}</div>`;
+    upAmtEl.innerHTML = '';
     dnEl.innerHTML = '';
   };
 
@@ -3458,8 +3460,9 @@ function renderTopMovers(windowDays = 14) {
 
   // 3. 過濾持平、排序、取 Top 3
   const sig = movers.filter(m => Math.abs(m.pct) >= 0.1);
-  const ups = sig.filter(m => m.pct > 0).sort((a, b) => b.pct - a.pct).slice(0, 3);
-  const dns = sig.filter(m => m.pct < 0).sort((a, b) => a.pct - b.pct).slice(0, 3);
+  const upsPct = sig.filter(m => m.pct > 0).sort((a, b) => b.pct - a.pct).slice(0, 3);
+  const upsAmt = sig.filter(m => m.deltaTWD > 0).sort((a, b) => b.deltaTWD - a.deltaTWD).slice(0, 3);
+  const dns    = sig.filter(m => m.pct < 0).sort((a, b) => a.pct - b.pct).slice(0, 3);
 
   // 4. 渲染
   const row = m => `<div class="ov2-mover-row">
@@ -3467,8 +3470,9 @@ function renderTopMovers(windowDays = 14) {
     <span class="ov2-mover-pct ${m.pct >= 0 ? 'pos' : 'neg'}">${m.pct >= 0 ? '+' : ''}${m.pct.toFixed(2)}%</span>
     <span class="ov2-mover-delta">${m.deltaTWD >= 0 ? '+' : ''}${fmtWan(m.deltaTWD)}</span>
   </div>`;
-  upEl.innerHTML = ups.length ? ups.map(row).join('') : '<div class="ov2-mover-empty">無顯著上漲</div>';
-  dnEl.innerHTML = dns.length ? dns.map(row).join('') : '<div class="ov2-mover-empty">無顯著下跌</div>';
+  upPctEl.innerHTML = upsPct.length ? upsPct.map(row).join('') : '<div class="ov2-mover-empty">無顯著上漲</div>';
+  upAmtEl.innerHTML = upsAmt.length ? upsAmt.map(row).join('') : '<div class="ov2-mover-empty">無顯著上漲</div>';
+  dnEl.innerHTML    = dns.length    ? dns.map(row).join('')    : '<div class="ov2-mover-empty">無顯著下跌</div>';
 }
 
 // ══════════════════════════════════════════════════════════════
