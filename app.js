@@ -2,7 +2,7 @@
 // CONFIG
 // ══════════════════════════════════════════════════════════════
 // Build 時間：每次修改 code 後手動更新此時間（UTC+8 台北時間）
-const BUILD_DATE = '2026/05/20 14:15';
+const BUILD_DATE = '2026/05/20 14:26';
 
 const SPREADSHEET_ID = '1lpRpxVzWaYUqL-jVPOAJCtjsJUIedPYYyOx4gg4PPFU';
 const CLIENT_ID = '149884248440-85f8dhc6ub9up10sv0f89e3e0itrnooj.apps.googleusercontent.com';
@@ -2907,6 +2907,15 @@ function renderCharts() {
   renderTopMovers();
   renderRewardsSummary();
   renderMonthly();
+  // 防呆：圖表建立瞬間若容器尺寸還沒到最終值（grid 拉伸、字型晚載），
+  // 在下一幀 + fonts.ready 各觸發一次 resize 取最終尺寸，避免「圖表很小、重整才正常」
+  const _resizeAllCharts = () => {
+    Object.values(S.charts).forEach(c => { try { c && c.resize(); } catch (_) {} });
+  };
+  requestAnimationFrame(_resizeAllCharts);
+  if (document.fonts && document.fonts.ready) {
+    document.fonts.ready.then(_resizeAllCharts).catch(() => {});
+  }
 }
 
 function renderDailyTrend() {
