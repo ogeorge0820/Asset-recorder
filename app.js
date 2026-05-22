@@ -2,7 +2,7 @@
 // CONFIG
 // ══════════════════════════════════════════════════════════════
 // Build 時間：每次修改 code 後手動更新此時間（UTC+8 台北時間）
-const BUILD_DATE = '2026/05/22 22:31';
+const BUILD_DATE = '2026/05/22 22:38';
 
 const SPREADSHEET_ID = '1lpRpxVzWaYUqL-jVPOAJCtjsJUIedPYYyOx4gg4PPFU';
 const CLIENT_ID = '149884248440-85f8dhc6ub9up10sv0f89e3e0itrnooj.apps.googleusercontent.com';
@@ -2939,6 +2939,9 @@ function renderDailyTrend() {
   const snaps = S.data.daily_snapshots;
   const ctx = $('daily-trend-chart').getContext('2d');
   if (S.charts.dailyTrend) S.charts.dailyTrend.destroy();
+  // 清空色帶 — 後續成功路徑會重新填入，失敗路徑直接保持空
+  const _stripEl = $('daily-trend-strip');
+  if (_stripEl) _stripEl.innerHTML = '';
 
   const nodata = $('daily-trend-nodata');
   if (snaps.length < 1) {
@@ -3094,6 +3097,33 @@ function renderDailyTrend() {
     },
   };
 
+  // 方向色帶對齊 plugin — 每次 chart 繪製後同步色帶 padding，
+  // 讓 cell 中心對齊 bar chart 的實際 X tick 位置（跨 resize/字型載入皆生效）。
+  // 原因：Y 軸刻度標籤（如 "61.1萬"）會推擠 chartArea 起始位置，
+  //      若色帶用固定 padding 無法跟上會看起來左右對不齊。
+  const stripAlignPlugin = {
+    id: 'dtStripAlign',
+    afterDraw(chart) {
+      try {
+        const stripEl = $('daily-trend-strip');
+        const xSc = chart.scales?.x;
+        if (!stripEl || !xSc) return;
+        const n = plData.length;
+        if (n < 2) return;
+        const L = xSc.getPixelForIndex(0);
+        const R = xSc.getPixelForIndex(n - 1);
+        const W = chart.canvas?.clientWidth || chart.width;
+        if (!isFinite(L) || !isFinite(R) || !W) return;
+        // 從 bar 中心反推 strip cell 中心對齊所需的 padding
+        const halfStep = (R - L) / (2 * (n - 1));
+        const padL = Math.max(0, L - halfStep);
+        const padR = Math.max(0, W - R - halfStep);
+        stripEl.style.paddingLeft = padL + 'px';
+        stripEl.style.paddingRight = padR + 'px';
+      } catch (e) { /* 對齊失敗不影響主圖表 */ }
+    },
+  };
+
   // 長條顏色：正綠負紅
   const barBg = plData.map(v => v === null ? 'transparent' : v >= 0 ? cc.barPos : cc.barNeg);
 
@@ -3172,7 +3202,7 @@ function renderDailyTrend() {
         },
       },
     },
-    plugins: [annotPlugin],
+    plugins: [annotPlugin, stripAlignPlugin],
   });
 }
 

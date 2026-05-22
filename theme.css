@@ -1744,7 +1744,7 @@ canvas { background: transparent !important; }
   display: grid;
   gap: 2px;
   margin-top: 6px;
-  padding: 0 6px 0 4px; /* 對齊 Chart.js layout.padding */
+  padding: 0; /* JS 動態設定 padding-left / padding-right 對齊 chart 的 X tick */
   height: 5px;
 }
 .dts-cell {
