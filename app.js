@@ -3708,7 +3708,7 @@ function computeMayer() {
 
 function computeTwoYearMA() {
   const h = S.btcMarket?.history;
-  if (!h || h.length < 700) return null;
+  if (!h || h.length < 730) return null;
   const last = h.slice(-730).map(r => r[1]);
   const ma = last.reduce((s, x) => s + x, 0) / last.length;
   const cur = h[h.length - 1][1];
@@ -3719,6 +3719,7 @@ function computeDominance() {
   return S.btcMarket?.dominance ?? null;
 }
 
+// 注意：rainbow 回字串（色帶名），其他 8 個指標回 number | null。下游做數值運算前先判型。
 function getIndicatorValue(id) {
   if (id === 'mayer') return computeMayer();
   if (id === 'two_year_ma') return computeTwoYearMA();
@@ -3746,6 +3747,7 @@ function scoreToSignal(score) {
 // 等權平均 9 個 score → 0-100；手動指標 last_updated > 30 天權重減半；null 跳過
 function aggregateThermometer() {
   const today = getNowTW8().slice(0, 10);
+  // today 與 lu 都是 getNowTW8() 寫出的 'YYYY/MM/DD' → 雙方都以 UTC 解析，差值正確；勿改成 toLocaleDateString
   const todayMs = new Date(today.replace(/\//g, '-')).getTime();
   let sum = 0, w = 0;
   const breakdown = { top: 0, mid: 0, bottom: 0, unknown: 0 };
