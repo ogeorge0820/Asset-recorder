@@ -3773,6 +3773,11 @@ function aggregateThermometer() {
   return { temp, breakdown };
 }
 
+function renderIndicators() {
+  // 完整實作在 Task 6
+  console.log('[indicators] render placeholder');
+}
+
 // ══════════════════════════════════════════════════════════════
 // SNAPSHOT
 // ══════════════════════════════════════════════════════════════
@@ -5621,20 +5626,23 @@ async function _confirmBucketItem(editId) {
 }
 
 function switchTab(tab) {
-  $('tab-overview').style.display   = tab==='overview'   ? 'block' : 'none';
-  $('tab-management').style.display = tab==='management' ? 'block' : 'none';
-  $('tab-dwz').style.display        = tab==='dwz'        ? 'block' : 'none';
+  $('tab-overview').style.display    = tab==='overview'    ? 'block' : 'none';
+  $('tab-management').style.display  = tab==='management'  ? 'block' : 'none';
+  $('tab-dwz').style.display         = tab==='dwz'         ? 'block' : 'none';
+  $('tab-indicators').style.display  = tab==='indicators'  ? 'block' : 'none';
   document.querySelectorAll('.tab-btn').forEach((b,i) => {
     b.classList.toggle('active',
-      (i===0&&tab==='overview')||(i===1&&tab==='management')||(i===2&&tab==='dwz'));
+      (i===0&&tab==='overview')||(i===1&&tab==='management')||(i===2&&tab==='dwz')||(i===3&&tab==='indicators'));
   });
   // Sidebar nav
-  const sO = $('snav-overview'), sM = $('snav-management'), sD = $('snav-dwz');
+  const sO = $('snav-overview'), sM = $('snav-management'), sD = $('snav-dwz'), sI = $('snav-indicators');
   if (sO) sO.classList.toggle('active', tab === 'overview');
   if (sM) sM.classList.toggle('active', tab === 'management');
   if (sD) sD.classList.toggle('active', tab === 'dwz');
+  if (sI) sI.classList.toggle('active', tab === 'indicators');
   if (tab === 'management') renderManagement();
   if (tab === 'dwz') initDWZ();
+  if (tab === 'indicators') renderIndicators();
 }
 
 // ── Mobile Menu Sheet ──
