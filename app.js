@@ -2,7 +2,7 @@
 // CONFIG
 // ══════════════════════════════════════════════════════════════
 // Build 時間：每次修改 code 後手動更新此時間（UTC+8 台北時間）
-const BUILD_DATE = '2026/05/22 18:44';
+const BUILD_DATE = '2026/05/22 18:53';
 
 const SPREADSHEET_ID = '1lpRpxVzWaYUqL-jVPOAJCtjsJUIedPYYyOx4gg4PPFU';
 const CLIENT_ID = '149884248440-85f8dhc6ub9up10sv0f89e3e0itrnooj.apps.googleusercontent.com';
@@ -3749,8 +3749,9 @@ function getIndicatorLastUpdated(id) {
 
 function scoreToSignal(score) {
   if (score == null) return 'unknown';
-  if (score >= 0.4) return 'top';
-  if (score <= -0.4) return 'bottom';
+  // ±0.3 為「偏頂 / 偏底」訊號閾值；許多 INDICATOR_DEFS 用 ±0.3 表示「靠近端點但未完全到底/頂」
+  if (score >= 0.3) return 'top';
+  if (score <= -0.3) return 'bottom';
   return 'mid';
 }
 
