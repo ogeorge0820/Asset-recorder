@@ -196,6 +196,7 @@ const S = {
   },
 
   charts: { pie: null, trend: null, monthly: null, dailyTrend: null },
+  btcMarket: { history: null, dominance: null },
   trendFilter: 'all',
   moversWindow: 15,
   lastUpdate: null,
@@ -3611,6 +3612,53 @@ async function persistAndRefresh(type) {
 }
 
 // ══════════════════════════════════════════════════════════════
+// MARKET INDICATORS — 自動抓取（BTC 歷史價 + Dominance）
+// ══════════════════════════════════════════════════════════════
+const BTC_CACHE_KEY = 'bm_btc_history_v1';
+const DOM_CACHE_KEY = 'bm_btc_dominance_v1';
+const ONE_DAY_MS = 86400000;
+
+async function loadBtcMarketData(force = false) {
+  // BTC 730d daily
+  let history = null;
+  try {
+    const cached = JSON.parse(localStorage.getItem(BTC_CACHE_KEY) || 'null');
+    if (!force && cached && (Date.now() - cached.fetched_at) < ONE_DAY_MS) {
+      history = cached.prices;
+    } else {
+      const r = await fetch(`${PROXY}${encodeURIComponent('https://api.coingecko.com/api/v3/coins/bitcoin/market_chart?vs_currency=usd&days=730&interval=daily')}`);
+      if (!r.ok) throw new Error('coingecko market_chart ' + r.status);
+      const j = await r.json();
+      history = (j.prices || []).map(([ts, p]) => [ts, p]);
+      localStorage.setItem(BTC_CACHE_KEY, JSON.stringify({ fetched_at: Date.now(), prices: history }));
+    }
+  } catch (e) {
+    console.warn('[indicators] BTC history fetch failed', e);
+  }
+
+  // BTC dominance（全市場）
+  let dominance = null;
+  try {
+    const cached = JSON.parse(localStorage.getItem(DOM_CACHE_KEY) || 'null');
+    if (!force && cached && (Date.now() - cached.fetched_at) < ONE_DAY_MS) {
+      dominance = cached.value;
+    } else {
+      const r = await fetch(`${PROXY}${encodeURIComponent('https://api.coingecko.com/api/v3/global')}`);
+      if (!r.ok) throw new Error('coingecko global ' + r.status);
+      const j = await r.json();
+      dominance = j.data?.market_cap_percentage?.btc ?? null;
+      if (dominance != null) {
+        localStorage.setItem(DOM_CACHE_KEY, JSON.stringify({ fetched_at: Date.now(), value: dominance }));
+      }
+    }
+  } catch (e) {
+    console.warn('[indicators] BTC dominance fetch failed', e);
+  }
+
+  S.btcMarket = { history, dominance };
+}
+
+// ══════════════════════════════════════════════════════════════
 // SNAPSHOT
 // ══════════════════════════════════════════════════════════════
 async function doSaveDailySnapshot(silent = false) {
@@ -5581,6 +5629,7 @@ async function initApp() {
     showToast('抓取即時價格…');
     localStorage.removeItem(PRICE_CACHE_KEY); // 啟動時強制清快取
     await fetchAllPrices(true); // 並強制抓新報價，確保跨裝置數據一致
+    try { await loadBtcMarketData(); } catch (e) { console.warn('loadBtcMarketData:', e); }
 
     const marchCount = await batchSeedMarchRewards();
     if (marchCount > 0) showToast(`已新增 ${marchCount} 筆 3 月份質押收益`, 'ok');
