@@ -2,7 +2,7 @@
 // CONFIG
 // ══════════════════════════════════════════════════════════════
 // Build 時間：每次修改 code 後手動更新此時間（UTC+8 台北時間）
-const BUILD_DATE = '2026/05/22 18:20';
+const BUILD_DATE = '2026/05/22 18:36';
 
 const SPREADSHEET_ID = '1lpRpxVzWaYUqL-jVPOAJCtjsJUIedPYYyOx4gg4PPFU';
 const CLIENT_ID = '149884248440-85f8dhc6ub9up10sv0f89e3e0itrnooj.apps.googleusercontent.com';
@@ -3614,24 +3614,25 @@ async function persistAndRefresh(type) {
 // ══════════════════════════════════════════════════════════════
 // MARKET INDICATORS — 自動抓取（BTC 歷史價 + Dominance）
 // ══════════════════════════════════════════════════════════════
-const BTC_CACHE_KEY = 'bm_btc_history_v1';
+const BTC_CACHE_KEY = 'bm_btc_history_v2';
 const DOM_CACHE_KEY = 'bm_btc_dominance_v1';
 const ONE_DAY_MS = 86400000;
 
 async function loadBtcMarketData(force = false) {
-  // BTC 730d daily
+  // BTC 730d daily — 用 Binance klines（CoinGecko 免費 tier 不再支援 days>365 + interval=daily）
   let history = null;
   try {
     let cached = null;
     try { cached = JSON.parse(localStorage.getItem(BTC_CACHE_KEY) || 'null'); }
     catch { localStorage.removeItem(BTC_CACHE_KEY); }
-    if (!force && cached && (Date.now() - cached.fetched_at) < ONE_DAY_MS) {
+    if (!force && cached && (Date.now() - cached.fetched_at) < ONE_DAY_MS && Array.isArray(cached.prices) && cached.prices.length >= 200) {
       history = cached.prices;
     } else {
-      const r = await proxyFetch('https://api.coingecko.com/api/v3/coins/bitcoin/market_chart?vs_currency=usd&days=730&interval=daily');
-      if (!r.ok) throw new Error('coingecko market_chart ' + r.status);
+      const r = await proxyFetch('https://api.binance.com/api/v3/klines?symbol=BTCUSDT&interval=1d&limit=730');
+      if (!r.ok) throw new Error('binance klines ' + r.status);
       const j = await r.json();
-      history = (j.prices || []).map(([ts, p]) => [ts, p]);
+      if (!Array.isArray(j) || j.length < 200) throw new Error('binance klines payload too short: ' + (Array.isArray(j) ? j.length : typeof j));
+      history = j.map(k => [k[0], parseFloat(k[4])]);
       localStorage.setItem(BTC_CACHE_KEY, JSON.stringify({ fetched_at: Date.now(), prices: history }));
     }
   } catch (e) {
