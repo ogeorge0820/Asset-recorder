@@ -2,7 +2,7 @@
 // CONFIG
 // ══════════════════════════════════════════════════════════════
 // Build 時間：每次修改 code 後手動更新此時間（UTC+8 台北時間）
-const BUILD_DATE = '2026/05/22 18:36';
+const BUILD_DATE = '2026/05/22 18:41';
 
 const SPREADSHEET_ID = '1lpRpxVzWaYUqL-jVPOAJCtjsJUIedPYYyOx4gg4PPFU';
 const CLIENT_ID = '149884248440-85f8dhc6ub9up10sv0f89e3e0itrnooj.apps.googleusercontent.com';
@@ -3668,30 +3668,39 @@ async function loadBtcMarketData(force = false) {
 // ══════════════════════════════════════════════════════════════
 const INDICATOR_DEFS = {
   coinbase_rank:  { label: 'Coinbase APP Ranking', input: 'number', range: [1, 100], src: 'https://www.similarweb.com/app/google-play/com.coinbase.android/statistics/', manual: true,
+    thresholds: '頂 ≤5 · 中 21–50 · 底 >50',
     score: v => v == null ? null : v <= 5 ? 1 : v <= 20 ? 0.5 : v <= 50 ? 0 : -0.3,
     fmt:   v => v == null ? '—' : '#' + v },
   google_trends:  { label: 'Bitcoin Google Trends', input: 'number', range: [0, 100], src: 'https://trends.google.com.tw/trends/explore?q=bitcoin', manual: true,
+    thresholds: '底 <25 · 中 25–74 · 頂 ≥75',
     score: v => v == null ? null : v >= 75 ? 1 : v >= 50 ? 0.5 : v >= 25 ? 0 : -0.5,
     fmt:   v => v == null ? '—' : String(v) },
   nupl:           { label: 'NUPL', input: 'number', range: [-1, 1], step: 0.01, src: 'https://www.bitcoinmagazinepro.com/charts/relative-unrealized-profit--loss/', manual: true,
+    thresholds: '底 <0 · 中 0.25–0.5 · 頂 ≥0.75',
     score: v => v == null ? null : v >= 0.75 ? 1 : v >= 0.5 ? 0.5 : v >= 0.25 ? 0 : v >= 0 ? -0.3 : -1,
     fmt:   v => v == null ? '—' : v.toFixed(2) },
   rainbow:        { label: 'Rainbow Chart 色帶', input: 'select', options: ['深藍','藍','綠','黃','橘','紅','深紅'], src: 'https://www.coinglass.com/zh-TW/pro/i/bitcoin-rainbow-chart', manual: true,
+    thresholds: '底 深藍 · 中 黃 · 頂 深紅',
     score: v => v == null ? null : ({'深紅':1,'紅':0.7,'橘':0.3,'黃':0,'綠':-0.3,'藍':-0.7,'深藍':-1}[v] ?? null),
     fmt:   v => v ?? '—' },
   hodl_1y_under:  { label: 'HODL Waves（1Y 以下持有 %）', input: 'number', range: [0, 100], src: 'https://www.lookintobitcoin.com/charts/realized-cap-hodl-waves/', manual: true,
+    thresholds: '底 <30% · 中 30–50% · 頂 ≥50%',
     score: v => v == null ? null : v >= 50 ? 0.5 : v >= 30 ? 0 : -0.3,
     fmt:   v => v == null ? '—' : v + '%' },
   mvrv_z:         { label: 'MVRV Z-Score', input: 'number', range: [-2, 15], step: 0.1, src: 'https://www.bitcoinmagazinepro.com/charts/mvrv-zscore/', manual: true,
+    thresholds: '底 <0 · 中 2–4 · 頂 ≥7',
     score: v => v == null ? null : v >= 7 ? 1 : v >= 4 ? 0.5 : v >= 2 ? 0 : v >= 0 ? -0.3 : -1,
     fmt:   v => v == null ? '—' : v.toFixed(2) },
   mayer:          { label: 'Mayer Multiple', src: 'https://studio.glassnode.com/charts/btc-mayer-multiple', manual: false,
+    thresholds: '底 <0.8 · 中 1–1.5 · 頂 ≥2.4',
     score: v => v == null ? null : v >= 2.4 ? 1 : v >= 1.5 ? 0.3 : v >= 1 ? 0 : v >= 0.8 ? -0.3 : -1,
     fmt:   v => v == null ? '—' : v.toFixed(2) },
   two_year_ma:    { label: '2-Year MA Multiple', src: 'https://www.bitcoinmagazinepro.com/charts/bitcoin-investor-tool/', manual: false,
+    thresholds: '底 <1× · 中 1.5–3× · 頂 ≥5×',
     score: v => v == null ? null : v >= 5 ? 1 : v >= 3 ? 0.5 : v >= 1.5 ? 0 : v >= 1 ? -0.3 : -1,
     fmt:   v => v == null ? '—' : v.toFixed(2) + '×' },
   dominance:      { label: 'BTC Dominance', src: 'https://coinstats.app/btc-dominance/', manual: false,
+    thresholds: '頂 <40% · 中 50–60% · 底 >70%',
     score: v => v == null ? null : v < 40 ? 1 : v < 50 ? 0.3 : v < 60 ? 0 : v < 70 ? -0.3 : -0.7,
     fmt:   v => v == null ? '—' : v.toFixed(1) + '%' },
 };
@@ -3816,6 +3825,7 @@ function renderIndicatorCard(id) {
       </div>
       <div class="ind-card-value">${esc(def.fmt(v))}</div>
       <div class="ind-gauge"><div class="ind-gauge-fill ${sig === 'unknown' ? '' : sig}" style="width:${fillPct}%"></div></div>
+      ${def.thresholds ? `<div class="ind-card-thresh">${esc(def.thresholds)}</div>` : ''}
       <div class="ind-card-foot">
         <span class="ind-card-signal ${sig}">${sigText}</span>
         <span>
