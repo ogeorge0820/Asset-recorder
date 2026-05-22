@@ -3848,7 +3848,47 @@ function renderThermometer() {
 }
 
 function openIndicatorBatchEdit() { showToast('批次填寫即將實作', ''); }
-function openIndicatorEdit(_id) { showToast('編輯即將實作', ''); }
+function openIndicatorEdit(id) {
+  const def = INDICATOR_DEFS[id];
+  if (!def || !def.manual) return;
+  const row = (S.data.indicators || []).find(r => r[0] === id);
+  const curVal = row?.[1] || '';
+  const curNote = row?.[3] || '';
+  const today = getNowTW8().slice(0, 10);
+  let valField;
+  if (def.input === 'select') {
+    valField = { id: 'value', label: def.label, type: 'select', options: def.options, val: curVal || def.options[3] };
+  } else {
+    valField = {
+      id: 'value', label: def.label, type: 'number',
+      val: curVal, ph: '0',
+      min: def.range?.[0], max: def.range?.[1], step: def.step || 'any',
+    };
+  }
+  openModal(`更新 ${def.label}`, [
+    valField,
+    { id: 'last_updated', label: '讀取日期', val: today },
+    { id: 'note', label: '備註（選填）', val: curNote },
+  ], async vals => {
+    const val = String(vals.value ?? '').trim();
+    const lu  = String(vals.last_updated ?? today).trim();
+    const note = String(vals.note ?? '').trim();
+    if (val === '') { showToast('請填數值', 'err'); return false; }
+    await saveIndicator(id, val, lu, note);
+    showToast('已更新', 'ok');
+    renderIndicators();
+    return true;
+  });
+}
+
+async function saveIndicator(id, value, lastUpdated, note) {
+  if (!Array.isArray(S.data.indicators)) S.data.indicators = [];
+  const idx = S.data.indicators.findIndex(r => r[0] === id);
+  if (idx >= 0) S.data.indicators[idx] = [id, value, lastUpdated, note || ''];
+  else S.data.indicators.push([id, value, lastUpdated, note || '']);
+  S.data.indicators.sort((a, b) => INDICATOR_ORDER.indexOf(a[0]) - INDICATOR_ORDER.indexOf(b[0]));
+  await saveSheet('market_indicators', S.data.indicators);
+}
 
 // ══════════════════════════════════════════════════════════════
 // SNAPSHOT
