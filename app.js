@@ -152,6 +152,7 @@ const HEADERS = {
   experience_plan: ['name','year','month','amount_twd','paid'],
   income_records: ['id','name','category','amount_twd','expected_date','status','linked_account','settled_date','payer'],
   bucket_list: ['id','name','category','age','budget_wan','status','date','paid','notes'],
+  market_indicators: ['indicator_id','current_value','last_updated','note'],
 };
 
 // Bucket List 列舉
@@ -488,6 +489,18 @@ async function initSheets() {
     if (needed.includes('settings')) {
       await sheetPut('settings!A1', [HEADERS.settings, ['insurance_total','0'], ['realestate_total','0'], ['debt','0']]);
     }
+    if (needed.includes('market_indicators')) {
+      const seedRows = [
+        HEADERS.market_indicators,
+        ['coinbase_rank',  '', '', ''],
+        ['google_trends',  '', '', ''],
+        ['nupl',           '', '', ''],
+        ['rainbow',        '', '', ''],
+        ['hodl_1y_under',  '', '', ''],
+        ['mvrv_z',         '', '', ''],
+      ];
+      await sheetPut('market_indicators!A1', seedRows);
+    }
   }
 }
 
@@ -495,7 +508,7 @@ async function initSheets() {
 // DATA LOAD / SAVE
 // ══════════════════════════════════════════════════════════════
 async function loadAll() {
-  const [cash, tw, us, crypto, snap, daily, sett, rw, hist, twHist, usHist, cashHist, otherHist, expBudget, expPlan, incomeRec, bucketList] = await Promise.allSettled([
+  const [cash, tw, us, crypto, snap, daily, sett, rw, hist, twHist, usHist, cashHist, otherHist, expBudget, expPlan, incomeRec, bucketList, indicators] = await Promise.allSettled([
     sheetGet('cash_accounts!A:C'),
     sheetGet('holdings_tw!A:B'),
     sheetGet('holdings_us!A:B'),
@@ -513,6 +526,7 @@ async function loadAll() {
     sheetGet('experience_plan!A:E'),
     sheetGet('income_records!A:I'),
     sheetGet('bucket_list!A:I'),
+    sheetGet('market_indicators!A:D'),
   ]);
 
   S.data.cash            = rows(cash, 'cash_accounts');
@@ -562,6 +576,7 @@ async function loadAll() {
   S.data.experience_plan = rows(expPlan, 'experience_plan');
   S.data.income_records  = rows(incomeRec, 'income_records');
   S.data.bucket_list     = rows(bucketList, 'bucket_list');
+  S.data.indicators      = rows(indicators, 'market_indicators');
   console.log('[bucket_list] raw from Sheet (' + S.data.bucket_list.length + ' rows):',
     JSON.parse(JSON.stringify(S.data.bucket_list)));
   await _migrateBucketListIfNeeded();
@@ -599,6 +614,7 @@ async function loadAll() {
   _track('experience_plan', S.data.experience_plan);
   _track('income_records', S.data.income_records);
   _track('bucket_list', S.data.bucket_list);
+  _track('market_indicators', S.data.indicators);
 }
 
 // rejected → 標記為失敗（保留 _failed 旗標讓上層判斷），不再靜默回空
