@@ -3622,11 +3622,13 @@ async function loadBtcMarketData(force = false) {
   // BTC 730d daily
   let history = null;
   try {
-    const cached = JSON.parse(localStorage.getItem(BTC_CACHE_KEY) || 'null');
+    let cached = null;
+    try { cached = JSON.parse(localStorage.getItem(BTC_CACHE_KEY) || 'null'); }
+    catch { localStorage.removeItem(BTC_CACHE_KEY); }
     if (!force && cached && (Date.now() - cached.fetched_at) < ONE_DAY_MS) {
       history = cached.prices;
     } else {
-      const r = await fetch(`${PROXY}${encodeURIComponent('https://api.coingecko.com/api/v3/coins/bitcoin/market_chart?vs_currency=usd&days=730&interval=daily')}`);
+      const r = await proxyFetch('https://api.coingecko.com/api/v3/coins/bitcoin/market_chart?vs_currency=usd&days=730&interval=daily');
       if (!r.ok) throw new Error('coingecko market_chart ' + r.status);
       const j = await r.json();
       history = (j.prices || []).map(([ts, p]) => [ts, p]);
@@ -3639,11 +3641,13 @@ async function loadBtcMarketData(force = false) {
   // BTC dominance（全市場）
   let dominance = null;
   try {
-    const cached = JSON.parse(localStorage.getItem(DOM_CACHE_KEY) || 'null');
+    let cached = null;
+    try { cached = JSON.parse(localStorage.getItem(DOM_CACHE_KEY) || 'null'); }
+    catch { localStorage.removeItem(DOM_CACHE_KEY); }
     if (!force && cached && (Date.now() - cached.fetched_at) < ONE_DAY_MS) {
       dominance = cached.value;
     } else {
-      const r = await fetch(`${PROXY}${encodeURIComponent('https://api.coingecko.com/api/v3/global')}`);
+      const r = await proxyFetch('https://api.coingecko.com/api/v3/global');
       if (!r.ok) throw new Error('coingecko global ' + r.status);
       const j = await r.json();
       dominance = j.data?.market_cap_percentage?.btc ?? null;
