@@ -2025,15 +2025,16 @@ canvas { background: transparent !important; }
   box-shadow: 0 0 0 2px var(--bg-card);
   transition: left 400ms ease;
   left: 50%;
+  transform: translateX(-50%);
 }
 .ind-thermo-labels {
-  position: absolute; top: 32px; left: 0; right: 0;
+  margin-top: 6px;
   display: flex; justify-content: space-between;
   font-size: 10px; color: var(--text-muted);
   font-family: var(--font-num);
 }
 .ind-thermo-num {
-  margin-top: 28px;
+  margin-top: 14px;
   font-family: var(--font-num);
   font-variant-numeric: tabular-nums;
   font-weight: 700;
