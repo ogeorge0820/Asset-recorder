@@ -3847,7 +3847,42 @@ function renderThermometer() {
   ptrEl.style.left = `${temp}%`;
 }
 
-function openIndicatorBatchEdit() { showToast('批次填寫即將實作', ''); }
+function openIndicatorBatchEdit() {
+  const today = getNowTW8().slice(0, 10);
+  const fields = [];
+  for (const id of INDICATOR_ORDER) {
+    const def = INDICATOR_DEFS[id];
+    if (!def.manual) continue;
+    const row = (S.data.indicators || []).find(r => r[0] === id);
+    const cur = row?.[1] || '';
+    if (def.input === 'select') {
+      fields.push({ id, label: def.label, type: 'select', options: def.options, val: cur || def.options[3] });
+    } else {
+      fields.push({
+        id, label: def.label, type: 'number', val: cur, ph: '0',
+        min: def.range?.[0], max: def.range?.[1], step: def.step || 'any',
+      });
+    }
+  }
+  openModal('批次更新指標', fields, async vals => {
+    let changed = 0;
+    for (const id of INDICATOR_ORDER) {
+      if (!INDICATOR_DEFS[id].manual) continue;
+      const v = String(vals[id] ?? '').trim();
+      if (v === '') continue;
+      const idx = S.data.indicators.findIndex(r => r[0] === id);
+      if (idx >= 0) S.data.indicators[idx] = [id, v, today, ''];
+      else S.data.indicators.push([id, v, today, '']);
+      changed++;
+    }
+    if (changed === 0) { showToast('沒有填入任何指標', ''); return false; }
+    S.data.indicators.sort((a, b) => INDICATOR_ORDER.indexOf(a[0]) - INDICATOR_ORDER.indexOf(b[0]));
+    await saveSheet('market_indicators', S.data.indicators);
+    showToast(`已更新 ${changed} 個指標`, 'ok');
+    renderIndicators();
+    return true;
+  });
+}
 function openIndicatorEdit(id) {
   const def = INDICATOR_DEFS[id];
   if (!def || !def.manual) return;
@@ -5898,8 +5933,10 @@ async function initApp() {
     // Auto-refresh every 10 minutes（force=true 繞過快取，確保定時刷新）
     setInterval(async () => {
       await fetchAllPrices(true);
+      try { await loadBtcMarketData(); } catch (_) {}
       renderKPIs(); renderCharts();
       if ($('tab-management').style.display !== 'none') renderManagement();
+      if ($('tab-indicators').style.display !== 'none') renderIndicators();
       // 每次刷新後同步更新今日快照（upsert），讓 reload 後資料仍一致
       try { await doSaveDailySnapshot(true); } catch(e) { console.warn('Auto snapshot update failed:', e); }
     }, 10 * 60 * 1000);
