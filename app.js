@@ -3663,6 +3663,115 @@ async function loadBtcMarketData(force = false) {
 }
 
 // ══════════════════════════════════════════════════════════════
+// MARKET INDICATORS — 閾值、評分、聚合
+// ══════════════════════════════════════════════════════════════
+const INDICATOR_DEFS = {
+  coinbase_rank:  { label: 'Coinbase APP Ranking', input: 'number', range: [1, 100], src: 'https://www.similarweb.com/app/google-play/com.coinbase.android/statistics/', manual: true,
+    score: v => v == null ? null : v <= 5 ? 1 : v <= 20 ? 0.5 : v <= 50 ? 0 : -0.3,
+    fmt:   v => v == null ? '—' : '#' + v },
+  google_trends:  { label: 'Bitcoin Google Trends', input: 'number', range: [0, 100], src: 'https://trends.google.com.tw/trends/explore?q=bitcoin', manual: true,
+    score: v => v == null ? null : v >= 75 ? 1 : v >= 50 ? 0.5 : v >= 25 ? 0 : -0.5,
+    fmt:   v => v == null ? '—' : String(v) },
+  nupl:           { label: 'NUPL', input: 'number', range: [-1, 1], step: 0.01, src: 'https://www.bitcoinmagazinepro.com/charts/relative-unrealized-profit--loss/', manual: true,
+    score: v => v == null ? null : v >= 0.75 ? 1 : v >= 0.5 ? 0.5 : v >= 0.25 ? 0 : v >= 0 ? -0.3 : -1,
+    fmt:   v => v == null ? '—' : v.toFixed(2) },
+  rainbow:        { label: 'Rainbow Chart 色帶', input: 'select', options: ['深藍','藍','綠','黃','橘','紅','深紅'], src: 'https://www.coinglass.com/zh-TW/pro/i/bitcoin-rainbow-chart', manual: true,
+    score: v => v == null ? null : ({'深紅':1,'紅':0.7,'橘':0.3,'黃':0,'綠':-0.3,'藍':-0.7,'深藍':-1}[v] ?? null),
+    fmt:   v => v ?? '—' },
+  hodl_1y_under:  { label: 'HODL Waves（1Y 以下持有 %）', input: 'number', range: [0, 100], src: 'https://www.lookintobitcoin.com/charts/realized-cap-hodl-waves/', manual: true,
+    score: v => v == null ? null : v >= 50 ? 0.5 : v >= 30 ? 0 : -0.3,
+    fmt:   v => v == null ? '—' : v + '%' },
+  mvrv_z:         { label: 'MVRV Z-Score', input: 'number', range: [-2, 15], step: 0.1, src: 'https://www.bitcoinmagazinepro.com/charts/mvrv-zscore/', manual: true,
+    score: v => v == null ? null : v >= 7 ? 1 : v >= 4 ? 0.5 : v >= 2 ? 0 : v >= 0 ? -0.3 : -1,
+    fmt:   v => v == null ? '—' : v.toFixed(2) },
+  mayer:          { label: 'Mayer Multiple', src: 'https://studio.glassnode.com/charts/btc-mayer-multiple', manual: false,
+    score: v => v == null ? null : v >= 2.4 ? 1 : v >= 1.5 ? 0.3 : v >= 1 ? 0 : v >= 0.8 ? -0.3 : -1,
+    fmt:   v => v == null ? '—' : v.toFixed(2) },
+  two_year_ma:    { label: '2-Year MA Multiple', src: 'https://www.bitcoinmagazinepro.com/charts/bitcoin-investor-tool/', manual: false,
+    score: v => v == null ? null : v >= 5 ? 1 : v >= 3 ? 0.5 : v >= 1.5 ? 0 : v >= 1 ? -0.3 : -1,
+    fmt:   v => v == null ? '—' : v.toFixed(2) + '×' },
+  dominance:      { label: 'BTC Dominance', src: 'https://coinstats.app/btc-dominance/', manual: false,
+    score: v => v == null ? null : v < 40 ? 1 : v < 50 ? 0.3 : v < 60 ? 0 : v < 70 ? -0.3 : -0.7,
+    fmt:   v => v == null ? '—' : v.toFixed(1) + '%' },
+};
+
+const INDICATOR_ORDER = ['coinbase_rank','google_trends','nupl','rainbow','hodl_1y_under','mvrv_z','mayer','two_year_ma','dominance'];
+
+function computeMayer() {
+  const h = S.btcMarket?.history;
+  if (!h || h.length < 200) return null;
+  const last200 = h.slice(-200).map(r => r[1]);
+  const ma = last200.reduce((s, x) => s + x, 0) / 200;
+  const cur = h[h.length - 1][1];
+  return cur / ma;
+}
+
+function computeTwoYearMA() {
+  const h = S.btcMarket?.history;
+  if (!h || h.length < 700) return null;
+  const last = h.slice(-730).map(r => r[1]);
+  const ma = last.reduce((s, x) => s + x, 0) / last.length;
+  const cur = h[h.length - 1][1];
+  return cur / ma;
+}
+
+function computeDominance() {
+  return S.btcMarket?.dominance ?? null;
+}
+
+function getIndicatorValue(id) {
+  if (id === 'mayer') return computeMayer();
+  if (id === 'two_year_ma') return computeTwoYearMA();
+  if (id === 'dominance') return computeDominance();
+  const row = (S.data.indicators || []).find(r => r[0] === id);
+  if (!row || row[1] === '' || row[1] == null) return null;
+  if (id === 'rainbow') return row[1];
+  const n = parseFloat(row[1]);
+  return isNaN(n) ? null : n;
+}
+
+function getIndicatorLastUpdated(id) {
+  if (!INDICATOR_DEFS[id]?.manual) return null;
+  const row = (S.data.indicators || []).find(r => r[0] === id);
+  return row?.[2] || null;
+}
+
+function scoreToSignal(score) {
+  if (score == null) return 'unknown';
+  if (score >= 0.4) return 'top';
+  if (score <= -0.4) return 'bottom';
+  return 'mid';
+}
+
+// 等權平均 9 個 score → 0-100；手動指標 last_updated > 30 天權重減半；null 跳過
+function aggregateThermometer() {
+  const today = getNowTW8().slice(0, 10);
+  const todayMs = new Date(today.replace(/\//g, '-')).getTime();
+  let sum = 0, w = 0;
+  const breakdown = { top: 0, mid: 0, bottom: 0, unknown: 0 };
+  for (const id of INDICATOR_ORDER) {
+    const v = getIndicatorValue(id);
+    const s = INDICATOR_DEFS[id].score(v);
+    if (s == null) { breakdown.unknown++; continue; }
+    let weight = 1;
+    if (INDICATOR_DEFS[id].manual) {
+      const lu = getIndicatorLastUpdated(id);
+      if (lu) {
+        const days = (todayMs - new Date(lu.replace(/\//g, '-')).getTime()) / ONE_DAY_MS;
+        if (days > 30) weight = 0.5;
+      }
+    }
+    sum += s * weight;
+    w += weight;
+    breakdown[scoreToSignal(s)]++;
+  }
+  if (w === 0) return { temp: null, breakdown };
+  const avg = sum / w;
+  const temp = Math.round((avg + 1) * 50);
+  return { temp, breakdown };
+}
+
+// ══════════════════════════════════════════════════════════════
 // SNAPSHOT
 // ══════════════════════════════════════════════════════════════
 async function doSaveDailySnapshot(silent = false) {
