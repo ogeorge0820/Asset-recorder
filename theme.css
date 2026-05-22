@@ -1738,6 +1738,25 @@ canvas { background: transparent !important; }
   min-height: 56px;
 }
 
+/* 方向色帶 — 14 格細長方塊置於 bar chart 下方，純色顯示每日漲跌方向。
+   小金額在共用 Y 軸下看不見時，色帶能補強方向資訊（綠/紅一目了然） */
+.ov2-pl-strip {
+  display: grid;
+  gap: 2px;
+  margin-top: 6px;
+  padding: 0 6px 0 4px; /* 對齊 Chart.js layout.padding */
+  height: 5px;
+}
+.dts-cell {
+  height: 100%;
+  min-width: 0;
+  border-radius: 2px;
+}
+.dts-cell.dts-gap {
+  background: var(--border);
+  opacity: 0.35;
+}
+
 /* Stat pair — 本年收益 + 財務存活 上下併在同一張卡 */
 .ov2-stat-pair {
   background: var(--bg-card);

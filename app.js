@@ -2,7 +2,7 @@
 // CONFIG
 // ══════════════════════════════════════════════════════════════
 // Build 時間：每次修改 code 後手動更新此時間（UTC+8 台北時間）
-const BUILD_DATE = '2026/05/22 19:10';
+const BUILD_DATE = '2026/05/22 22:31';
 
 const SPREADSHEET_ID = '1lpRpxVzWaYUqL-jVPOAJCtjsJUIedPYYyOx4gg4PPFU';
 const CLIENT_ID = '149884248440-85f8dhc6ub9up10sv0f89e3e0itrnooj.apps.googleusercontent.com';
@@ -3096,6 +3096,30 @@ function renderDailyTrend() {
 
   // 長條顏色：正綠負紅
   const barBg = plData.map(v => v === null ? 'transparent' : v >= 0 ? cc.barPos : cc.barNeg);
+
+  // 方向色帶（dts = daily-trend strip）：在 bar chart 下方加 14 格細長方塊，
+  // 顏色 = 當日漲跌方向、不透明度 = 相對幅度。
+  // 用途：當某天損益相對峰值很小時，bar 在共用 Y 軸下幾乎看不見，
+  //      色帶能補強「方向」這個關鍵資訊，不用 tap tooltip。
+  const stripEl = $('daily-trend-strip');
+  if (stripEl) {
+    const validAbs = plData.filter(v => v !== null && Number.isFinite(v)).map(Math.abs);
+    const maxAbsStrip = validAbs.length ? Math.max(...validAbs, 1) : 1;
+    stripEl.style.gridTemplateColumns = `repeat(${plData.length}, 1fr)`;
+    stripEl.innerHTML = plData.map((v, i) => {
+      if (v === null || !Number.isFinite(v)) {
+        return '<div class="dts-cell dts-gap"></div>';
+      }
+      const isPos = v >= 0;
+      const t = Math.min(1, Math.abs(v) / maxAbsStrip);
+      // 不透明度 0.45 → 1.0：小天也清楚可辨色，大天最飽和
+      const opacity = (0.45 + 0.55 * t).toFixed(2);
+      const bg = isPos ? cc.barPos : cc.barNeg;
+      const sign = isPos ? '+' : '';
+      const lbl = labels[i] || '';
+      return `<div class="dts-cell" style="background:${bg};opacity:${opacity}" title="${lbl} ${sign}${fmtWan(v)}"></div>`;
+    }).join('');
+  }
 
   S.charts.dailyTrend = new Chart(ctx, {
     type: 'bar',
