@@ -2,7 +2,7 @@
 // CONFIG
 // ══════════════════════════════════════════════════════════════
 // Build 時間：每次修改 code 後手動更新此時間（UTC+8 台北時間）
-const BUILD_DATE = '2026/05/22 18:53';
+const BUILD_DATE = '2026/05/22 19:02';
 
 const SPREADSHEET_ID = '1lpRpxVzWaYUqL-jVPOAJCtjsJUIedPYYyOx4gg4PPFU';
 const CLIENT_ID = '149884248440-85f8dhc6ub9up10sv0f89e3e0itrnooj.apps.googleusercontent.com';
@@ -3683,10 +3683,6 @@ const INDICATOR_DEFS = {
     thresholds: '底 深藍 · 中 黃 · 頂 深紅',
     score: v => v == null ? null : ({'深紅':1,'紅':0.7,'橘':0.3,'黃':0,'綠':-0.3,'藍':-0.7,'深藍':-1}[v] ?? null),
     fmt:   v => v ?? '—' },
-  hodl_1y_under:  { label: 'HODL Waves（1Y 以下持有 %）', input: 'number', range: [0, 100], src: 'https://www.lookintobitcoin.com/charts/realized-cap-hodl-waves/', manual: true,
-    thresholds: '底 <30% · 中 30–50% · 頂 ≥50%',
-    score: v => v == null ? null : v >= 50 ? 0.5 : v >= 30 ? 0 : -0.3,
-    fmt:   v => v == null ? '—' : v + '%' },
   mvrv_z:         { label: 'MVRV Z-Score', input: 'number', range: [-2, 15], step: 0.1, src: 'https://www.bitcoinmagazinepro.com/charts/mvrv-zscore/', manual: true,
     thresholds: '底 <0 · 中 2–4 · 頂 ≥7',
     score: v => v == null ? null : v >= 7 ? 1 : v >= 4 ? 0.5 : v >= 2 ? 0 : v >= 0 ? -0.3 : -1,
@@ -3699,13 +3695,21 @@ const INDICATOR_DEFS = {
     thresholds: '底 <1× · 中 1.5–3× · 頂 ≥5×',
     score: v => v == null ? null : v >= 5 ? 1 : v >= 3 ? 0.5 : v >= 1.5 ? 0 : v >= 1 ? -0.3 : -1,
     fmt:   v => v == null ? '—' : v.toFixed(2) + '×' },
+  pi_cycle:       { label: 'Pi Cycle Top', src: 'https://www.coinglass.com/zh-TW/bull-market-peak-signals', manual: false,
+    thresholds: '底 <0.5× · 中 0.7–0.95× · 頂 ≥1.0×',
+    score: v => v == null ? null : v >= 1.05 ? 1 : v >= 0.95 ? 0.5 : v >= 0.7 ? 0 : v >= 0.5 ? -0.3 : -0.7,
+    fmt:   v => v == null ? '—' : v.toFixed(2) + '×' },
+  ahr999:         { label: 'AHR999', src: 'https://www.coinglass.com/zh-TW/bull-market-peak-signals', manual: false,
+    thresholds: '底 <0.45 · 中 0.45–1.2 · 頂 ≥1.2',
+    score: v => v == null ? null : v >= 1.2 ? 1 : v >= 0.85 ? 0.3 : v >= 0.45 ? 0 : -1,
+    fmt:   v => v == null ? '—' : v.toFixed(2) },
   dominance:      { label: 'BTC Dominance', src: 'https://coinstats.app/btc-dominance/', manual: false,
     thresholds: '頂 <40% · 中 50–60% · 底 >70%',
     score: v => v == null ? null : v < 40 ? 1 : v < 50 ? 0.3 : v < 60 ? 0 : v < 70 ? -0.3 : -0.7,
     fmt:   v => v == null ? '—' : v.toFixed(1) + '%' },
 };
 
-const INDICATOR_ORDER = ['coinbase_rank','google_trends','nupl','rainbow','hodl_1y_under','mvrv_z','mayer','two_year_ma','dominance'];
+const INDICATOR_ORDER = ['coinbase_rank','google_trends','nupl','rainbow','mvrv_z','mayer','two_year_ma','pi_cycle','ahr999','dominance'];
 
 function computeMayer() {
   const h = S.btcMarket?.history;
@@ -3729,10 +3733,40 @@ function computeDominance() {
   return S.btcMarket?.dominance ?? null;
 }
 
-// 注意：rainbow 回字串（色帶名），其他 8 個指標回 number | null。下游做數值運算前先判型。
+// Pi Cycle Top：111D MA / (2 × 350D MA)。比值 ≥ 1 代表 111D 上穿 2×350D（頂部訊號觸發）
+function computePiCycle() {
+  const h = S.btcMarket?.history;
+  if (!h || h.length < 350) return null;
+  const last111 = h.slice(-111).map(r => r[1]);
+  const last350 = h.slice(-350).map(r => r[1]);
+  const ma111 = last111.reduce((s, x) => s + x, 0) / 111;
+  const ma350 = last350.reduce((s, x) => s + x, 0) / 350;
+  return ma111 / (2 * ma350);
+}
+
+// AHR999 = (P / 200D 幾何平均) × (P / 公允價值)；公允價值 = 10^(5.84 × log10(age_days) − 17.01)
+const BTC_GENESIS_MS = Date.UTC(2009, 0, 3);
+function computeAhr999() {
+  const h = S.btcMarket?.history;
+  if (!h || h.length < 200) return null;
+  const cur = h[h.length - 1][1];
+  const last200 = h.slice(-200).map(r => r[1]).filter(p => p > 0);
+  if (last200.length < 200) return null;
+  const logSum = last200.reduce((s, p) => s + Math.log(p), 0);
+  const gm200 = Math.exp(logSum / last200.length);
+  const ageDays = (h[h.length - 1][0] - BTC_GENESIS_MS) / ONE_DAY_MS;
+  if (ageDays <= 1) return null;
+  const fairValue = Math.pow(10, 5.84 * Math.log10(ageDays) - 17.01);
+  if (!isFinite(fairValue) || fairValue <= 0) return null;
+  return (cur / gm200) * (cur / fairValue);
+}
+
+// 注意：rainbow 回字串（色帶名），其他指標回 number | null。下游做數值運算前先判型。
 function getIndicatorValue(id) {
   if (id === 'mayer') return computeMayer();
   if (id === 'two_year_ma') return computeTwoYearMA();
+  if (id === 'pi_cycle') return computePiCycle();
+  if (id === 'ahr999') return computeAhr999();
   if (id === 'dominance') return computeDominance();
   const row = (S.data.indicators || []).find(r => r[0] === id);
   if (!row || row[1] === '' || row[1] == null) return null;
