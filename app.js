@@ -3774,9 +3774,74 @@ function aggregateThermometer() {
 }
 
 function renderIndicators() {
-  // 完整實作在 Task 6
-  console.log('[indicators] render placeholder');
+  renderThermometer();
+  const grid = $('ind-grid');
+  if (!grid) return;
+  grid.innerHTML = INDICATOR_ORDER.map(id => renderIndicatorCard(id)).join('');
 }
+
+function renderIndicatorCard(id) {
+  const def = INDICATOR_DEFS[id];
+  const v = getIndicatorValue(id);
+  const s = def.score(v);
+  const sig = scoreToSignal(s);
+  const today = getNowTW8().slice(0, 10);
+  const lu = getIndicatorLastUpdated(id);
+  let staleDays = 0;
+  if (def.manual && lu) {
+    staleDays = Math.floor((new Date(today.replace(/\//g, '-')) - new Date(lu.replace(/\//g, '-'))) / ONE_DAY_MS);
+  }
+  const stale = def.manual && (!lu || staleDays > 14);
+  const sigText = { top: '偏頂', mid: '中性', bottom: '偏底', unknown: '—' }[sig];
+  const fillPct = s == null ? 0 : Math.round((s + 1) * 50);
+  const updatedText = def.manual
+    ? (lu ? `${staleDays} 天前` : '尚未更新')
+    : '即時';
+  return `
+    <div class="ind-card ind-${sig}">
+      <div class="ind-card-head">
+        <span class="ind-card-label">${esc(def.label)}</span>
+        <span class="ind-card-actions">
+          ${stale ? '<span class="ind-stale-badge" title="超過 14 天未更新">⚠</span>' : ''}
+          ${def.manual ? `<button class="ind-card-edit" title="更新" onclick="openIndicatorEdit('${id}')">✏︎</button>` : ''}
+        </span>
+      </div>
+      <div class="ind-card-value">${esc(def.fmt(v))}</div>
+      <div class="ind-gauge"><div class="ind-gauge-fill ${sig === 'unknown' ? '' : sig}" style="width:${fillPct}%"></div></div>
+      <div class="ind-card-foot">
+        <span class="ind-card-signal ${sig}">${sigText}</span>
+        <span>
+          <span>${updatedText}</span> · <a class="ind-card-src" href="${def.src}" target="_blank" rel="noopener">原圖↗</a>
+        </span>
+      </div>
+    </div>
+  `;
+}
+
+function renderThermometer() {
+  const { temp, breakdown } = aggregateThermometer();
+  const numEl = $('ind-thermo-num');
+  const subEl = $('ind-thermo-sub');
+  const ptrEl = $('ind-thermo-pointer');
+  if (!numEl || !subEl || !ptrEl) return;
+  if (temp == null) {
+    numEl.innerHTML = `
+      <div class="ind-thermo-empty">
+        資料不足，請更新 6 個手動指標<br>
+        <button onclick="openIndicatorBatchEdit()">立即批次填寫</button>
+      </div>`;
+    subEl.textContent = '';
+    ptrEl.style.left = '50%';
+    return;
+  }
+  numEl.textContent = temp;
+  const tag = temp <= 25 ? '抄底區' : temp <= 45 ? '偏底' : temp <= 55 ? '中性' : temp <= 75 ? '偏頂' : '出清區';
+  subEl.textContent = `${tag} · 頂 ${breakdown.top} · 中 ${breakdown.mid} · 底 ${breakdown.bottom}${breakdown.unknown ? ' · 缺 ' + breakdown.unknown : ''}`;
+  ptrEl.style.left = `${temp}%`;
+}
+
+function openIndicatorBatchEdit() { showToast('批次填寫即將實作', ''); }
+function openIndicatorEdit(_id) { showToast('編輯即將實作', ''); }
 
 // ══════════════════════════════════════════════════════════════
 // SNAPSHOT
