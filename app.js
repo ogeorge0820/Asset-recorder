@@ -2,7 +2,7 @@
 // CONFIG
 // ══════════════════════════════════════════════════════════════
 // Build 時間：每次修改 code 後手動更新此時間（UTC+8 台北時間）
-const BUILD_DATE = '2026/05/22 19:02';
+const BUILD_DATE = '2026/05/22 19:10';
 
 const SPREADSHEET_ID = '1lpRpxVzWaYUqL-jVPOAJCtjsJUIedPYYyOx4gg4PPFU';
 const CLIENT_ID = '149884248440-85f8dhc6ub9up10sv0f89e3e0itrnooj.apps.googleusercontent.com';
@@ -3877,10 +3877,12 @@ function renderThermometer() {
   const subEl = $('ind-thermo-sub');
   const ptrEl = $('ind-thermo-pointer');
   if (!numEl || !subEl || !ptrEl) return;
+  const manualCount = INDICATOR_ORDER.filter(id => INDICATOR_DEFS[id].manual).length;
+  const total = breakdown.top + breakdown.mid + breakdown.bottom + breakdown.unknown;
   if (temp == null) {
     numEl.innerHTML = `
       <div class="ind-thermo-empty">
-        資料不足，請更新 6 個手動指標<br>
+        資料不足，請更新 ${manualCount} 個手動指標<br>
         <button onclick="openIndicatorBatchEdit()">立即批次填寫</button>
       </div>`;
     subEl.textContent = '';
@@ -3888,8 +3890,7 @@ function renderThermometer() {
     return;
   }
   numEl.textContent = temp;
-  const tag = temp <= 25 ? '抄底區' : temp <= 45 ? '偏底' : temp <= 55 ? '中性' : temp <= 75 ? '偏頂' : '出清區';
-  subEl.textContent = `${tag} · 頂 ${breakdown.top} · 中 ${breakdown.mid} · 底 ${breakdown.bottom}${breakdown.unknown ? ' · 缺 ' + breakdown.unknown : ''}`;
+  subEl.textContent = `${total} 指標 · 偏頂 ${breakdown.top} · 中性 ${breakdown.mid} · 偏底 ${breakdown.bottom}${breakdown.unknown ? ' · 缺 ' + breakdown.unknown : ''}`;
   ptrEl.style.left = `${temp}%`;
 }
 
