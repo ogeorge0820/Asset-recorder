@@ -3759,7 +3759,9 @@ function aggregateThermometer() {
     if (INDICATOR_DEFS[id].manual) {
       const lu = getIndicatorLastUpdated(id);
       if (lu) {
-        const days = (todayMs - new Date(lu.replace(/\//g, '-')).getTime()) / ONE_DAY_MS;
+        const luMs = new Date(lu.replace(/\//g, '-')).getTime();
+        // lu 無法解析 → 視為「資料不可信」直接半權，與 renderIndicatorCard 的過期邏輯一致
+        const days = Number.isFinite(luMs) ? (todayMs - luMs) / ONE_DAY_MS : Infinity;
         if (days > 30) weight = 0.5;
       }
     }
@@ -3782,20 +3784,25 @@ function renderIndicators() {
 
 function renderIndicatorCard(id) {
   const def = INDICATOR_DEFS[id];
+  if (!def) return '';
   const v = getIndicatorValue(id);
   const s = def.score(v);
   const sig = scoreToSignal(s);
   const today = getNowTW8().slice(0, 10);
   const lu = getIndicatorLastUpdated(id);
-  let staleDays = 0;
+  // lu 解析失敗時 staleDays = null（視為「無有效讀取日期」），上層判定為過期
+  let staleDays = null;
   if (def.manual && lu) {
-    staleDays = Math.floor((new Date(today.replace(/\//g, '-')) - new Date(lu.replace(/\//g, '-'))) / ONE_DAY_MS);
+    const luMs = new Date(lu.replace(/\//g, '-')).getTime();
+    if (Number.isFinite(luMs)) {
+      staleDays = Math.floor((new Date(today.replace(/\//g, '-')).getTime() - luMs) / ONE_DAY_MS);
+    }
   }
-  const stale = def.manual && (!lu || staleDays > 14);
+  const stale = def.manual && (!lu || staleDays == null || staleDays > 14);
   const sigText = { top: '偏頂', mid: '中性', bottom: '偏底', unknown: '—' }[sig];
   const fillPct = s == null ? 0 : Math.round((s + 1) * 50);
   const updatedText = def.manual
-    ? (lu ? `${staleDays} 天前` : '尚未更新')
+    ? (lu && staleDays != null ? `${staleDays} 天前` : '尚未更新')
     : '即時';
   return `
     <div class="ind-card ind-${sig}">
