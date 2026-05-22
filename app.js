@@ -2,7 +2,7 @@
 // CONFIG
 // ══════════════════════════════════════════════════════════════
 // Build 時間：每次修改 code 後手動更新此時間（UTC+8 台北時間）
-const BUILD_DATE = '2026/05/22 18:41';
+const BUILD_DATE = '2026/05/22 18:44';
 
 const SPREADSHEET_ID = '1lpRpxVzWaYUqL-jVPOAJCtjsJUIedPYYyOx4gg4PPFU';
 const CLIENT_ID = '149884248440-85f8dhc6ub9up10sv0f89e3e0itrnooj.apps.googleusercontent.com';
@@ -3915,8 +3915,8 @@ function openIndicatorEdit(id) {
   }
   openModal(`更新 ${def.label}`, [
     valField,
-    { id: 'last_updated', label: '讀取日期', val: today },
-    { id: 'note', label: '備註（選填）', val: curNote },
+    { id: 'last_updated', label: '讀取日期', val: today, opt: true },
+    { id: 'note', label: '備註（選填）', val: curNote, opt: true },
   ], async vals => {
     const val = String(vals.value ?? '').trim();
     const lu  = String(vals.last_updated ?? today).trim();
