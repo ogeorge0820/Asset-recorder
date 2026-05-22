@@ -3871,7 +3871,9 @@ function openIndicatorBatchEdit() {
       const v = String(vals[id] ?? '').trim();
       if (v === '') continue;
       const idx = S.data.indicators.findIndex(r => r[0] === id);
-      if (idx >= 0) S.data.indicators[idx] = [id, v, today, ''];
+      // 保留先前透過單一編輯設定的 note，避免 batch 模式覆蓋
+      const existingNote = idx >= 0 ? (S.data.indicators[idx][3] || '') : '';
+      if (idx >= 0) S.data.indicators[idx] = [id, v, today, existingNote];
       else S.data.indicators.push([id, v, today, '']);
       changed++;
     }
