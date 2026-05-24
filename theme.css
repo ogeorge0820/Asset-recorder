@@ -1738,18 +1738,20 @@ canvas { background: transparent !important; }
   min-height: 56px;
 }
 
-/* 方向色帶 — 14 格細長方塊置於 bar chart 下方，純色顯示每日漲跌方向。
-   小金額在共用 Y 軸下看不見時，色帶能補強方向資訊（綠/紅一目了然） */
+/* 方向色帶 — 細長方塊置於 bar chart 下方，純色顯示每日漲跌方向。
+   小金額在共用 Y 軸下看不見時，色帶能補強方向資訊（綠/紅一目了然）。
+   每格 cell 由 stripAlignPlugin 用 absolute 定位，左/寬完全照 chart bar 走。 */
 .ov2-pl-strip {
-  display: grid;
-  gap: 2px;
+  position: relative;
   margin-top: 6px;
-  padding: 0; /* JS 動態設定 padding-left / padding-right 對齊 chart 的 X tick */
+  padding: 0;
   height: 5px;
 }
 .dts-cell {
-  height: 100%;
-  min-width: 0;
+  position: absolute;
+  top: 0; bottom: 0;
+  /* left & width 由 JS 設定，預設 0 避免首幀爆框 */
+  left: 0; width: 0;
   border-radius: 2px;
 }
 .dts-cell.dts-gap {

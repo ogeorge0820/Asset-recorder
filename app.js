@@ -2,7 +2,7 @@
 // CONFIG
 // ══════════════════════════════════════════════════════════════
 // Build 時間：每次修改 code 後手動更新此時間（UTC+8 台北時間）
-const BUILD_DATE = '2026/05/22 22:38';
+const BUILD_DATE = '2026/05/24 15:14';
 
 const SPREADSHEET_ID = '1lpRpxVzWaYUqL-jVPOAJCtjsJUIedPYYyOx4gg4PPFU';
 const CLIENT_ID = '149884248440-85f8dhc6ub9up10sv0f89e3e0itrnooj.apps.googleusercontent.com';
@@ -3097,29 +3097,27 @@ function renderDailyTrend() {
     },
   };
 
-  // 方向色帶對齊 plugin — 每次 chart 繪製後同步色帶 padding，
-  // 讓 cell 中心對齊 bar chart 的實際 X tick 位置（跨 resize/字型載入皆生效）。
-  // 原因：Y 軸刻度標籤（如 "61.1萬"）會推擠 chartArea 起始位置，
-  //      若色帶用固定 padding 無法跟上會看起來左右對不齊。
+  // 方向色帶對齊 plugin — 每次 chart 繪製後讀取 chart.getDatasetMeta(0).data[i]
+  // 的實際 bar pixel 位置與寬度，把對應 strip cell 絕對定位到完全一致的範圍。
+  // 不用 grid 推算（會比 bar 寬，cell 邊緣超出 bar 範圍導致視覺對不齊），
+  // 直接借 Chart.js 自己算好的座標，精度到 sub-pixel。
   const stripAlignPlugin = {
     id: 'dtStripAlign',
     afterDraw(chart) {
       try {
         const stripEl = $('daily-trend-strip');
-        const xSc = chart.scales?.x;
-        if (!stripEl || !xSc) return;
-        const n = plData.length;
-        if (n < 2) return;
-        const L = xSc.getPixelForIndex(0);
-        const R = xSc.getPixelForIndex(n - 1);
-        const W = chart.canvas?.clientWidth || chart.width;
-        if (!isFinite(L) || !isFinite(R) || !W) return;
-        // 從 bar 中心反推 strip cell 中心對齊所需的 padding
-        const halfStep = (R - L) / (2 * (n - 1));
-        const padL = Math.max(0, L - halfStep);
-        const padR = Math.max(0, W - R - halfStep);
-        stripEl.style.paddingLeft = padL + 'px';
-        stripEl.style.paddingRight = padR + 'px';
+        if (!stripEl) return;
+        const cells = stripEl.children;
+        if (!cells.length) return;
+        const meta = chart.getDatasetMeta(0);
+        if (!meta || !meta.data || meta.data.length !== cells.length) return;
+        for (let i = 0; i < cells.length; i++) {
+          const bar = meta.data[i];
+          if (!bar || !isFinite(bar.x) || !isFinite(bar.width)) continue;
+          const cell = cells[i];
+          cell.style.left = (bar.x - bar.width / 2) + 'px';
+          cell.style.width = bar.width + 'px';
+        }
       } catch (e) { /* 對齊失敗不影響主圖表 */ }
     },
   };
@@ -3131,11 +3129,11 @@ function renderDailyTrend() {
   // 顏色 = 當日漲跌方向、不透明度 = 相對幅度。
   // 用途：當某天損益相對峰值很小時，bar 在共用 Y 軸下幾乎看不見，
   //      色帶能補強「方向」這個關鍵資訊，不用 tap tooltip。
+  // cell 用絕對定位，實際位置與寬度由 stripAlignPlugin 從 chart bar 抄過來。
   const stripEl = $('daily-trend-strip');
   if (stripEl) {
     const validAbs = plData.filter(v => v !== null && Number.isFinite(v)).map(Math.abs);
     const maxAbsStrip = validAbs.length ? Math.max(...validAbs, 1) : 1;
-    stripEl.style.gridTemplateColumns = `repeat(${plData.length}, 1fr)`;
     stripEl.innerHTML = plData.map((v, i) => {
       if (v === null || !Number.isFinite(v)) {
         return '<div class="dts-cell dts-gap"></div>';
