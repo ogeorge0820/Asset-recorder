@@ -2,7 +2,7 @@
 // CONFIG
 // ══════════════════════════════════════════════════════════════
 // Build 時間：每次修改 code 後手動更新此時間（UTC+8 台北時間）
-const BUILD_DATE = '2026/05/24 15:14';
+const BUILD_DATE = '2026/05/25 15:11';
 
 const SPREADSHEET_ID = '1lpRpxVzWaYUqL-jVPOAJCtjsJUIedPYYyOx4gg4PPFU';
 const CLIENT_ID = '149884248440-85f8dhc6ub9up10sv0f89e3e0itrnooj.apps.googleusercontent.com';
@@ -2924,14 +2924,29 @@ function renderCharts() {
   renderTopMovers();
   renderRewardsSummary();
   renderMonthly();
-  // 防呆：圖表建立瞬間若容器尺寸還沒到最終值（grid 拉伸、字型晚載），
-  // 在下一幀 + fonts.ready 各觸發一次 resize 取最終尺寸，避免「圖表很小、重整才正常」
+  // 防呆：圖表建立瞬間若容器尺寸還沒到最終值（grid 拉伸、字型晚載、其他卡片資料
+  // 異步載入觸發 grid row 重新計算高度），Chart.js 內建 ResizeObserver 不一定能
+  // 及時偵測，所以疊多重保險：RAF + fonts.ready + 階梯式 setTimeout + 自訂 RO。
   const _resizeAllCharts = () => {
     Object.values(S.charts).forEach(c => { try { c && c.resize(); } catch (_) {} });
   };
   requestAnimationFrame(_resizeAllCharts);
+  // 階梯式延遲（100ms/500ms/1500ms）：cover 各種異步資料載入造成的延後 layout
+  setTimeout(_resizeAllCharts, 100);
+  setTimeout(_resizeAllCharts, 500);
+  setTimeout(_resizeAllCharts, 1500);
   if (document.fonts && document.fonts.ready) {
     document.fonts.ready.then(_resizeAllCharts).catch(() => {});
+  }
+  // 終極保險：對每個 chart wrapper 掛 ResizeObserver，任何尺寸變化都觸發 resize。
+  // 只在第一次 renderCharts 時掛，後續呼叫不重複註冊。
+  if (typeof ResizeObserver !== 'undefined' && !S._chartsROAttached) {
+    S._chartsROAttached = true;
+    ['daily-trend-wrap', 'monthly-wrap', 'trend-wrap', 'pie-wrap'].forEach(id => {
+      const el = document.getElementById(id);
+      if (!el) return;
+      try { new ResizeObserver(_resizeAllCharts).observe(el); } catch (_) {}
+    });
   }
 }
 
