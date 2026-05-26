@@ -1344,6 +1344,13 @@ canvas { background: transparent !important; }
   text-overflow: clip !important;
   line-height: 1.4;
 }
+/* 單價（幣價/股價）強調樣式 — 加粗 + 主色 + 略大字
+   讓持有列表掃一眼就能看清楚 unit price，不用瞇眼看灰色小字 */
+.asset-card-sub .asset-card-price {
+  font-weight: 600;
+  color: var(--text-primary);
+  font-size: 13px;
+}
 .asset-card-right {
   flex: 0 0 auto !important;
   text-align: right;

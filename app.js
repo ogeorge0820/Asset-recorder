@@ -2,7 +2,7 @@
 // CONFIG
 // ══════════════════════════════════════════════════════════════
 // Build 時間：每次修改 code 後手動更新此時間（UTC+8 台北時間）
-const BUILD_DATE = '2026/05/25 15:11';
+const BUILD_DATE = '2026/05/26 16:04';
 
 const SPREADSHEET_ID = '1lpRpxVzWaYUqL-jVPOAJCtjsJUIedPYYyOx4gg4PPFU';
 const CLIENT_ID = '149884248440-85f8dhc6ub9up10sv0f89e3e0itrnooj.apps.googleusercontent.com';
@@ -1689,7 +1689,7 @@ function renderTW() {
       const chgStr = err ? '' : renderChangePctCell(symDailyChangePct('tw', r[0], p));
       const subStr = err
         ? `持有 ${qty.toLocaleString()} 股`
-        : `持有 ${qty.toLocaleString()} 股 · ${p !== undefined ? p.toLocaleString('zh-TW', {minimumFractionDigits:2,maximumFractionDigits:2}) + ' TWD' : '—'}`;
+        : `持有 ${qty.toLocaleString()} 股 · <span class="asset-card-price">${p !== undefined ? p.toLocaleString('zh-TW', {minimumFractionDigits:2,maximumFractionDigits:2}) + ' TWD' : '—'}</span>`;
       return `<div class="asset-card${err ? ' err' : ''}" onclick="openAssetDetail('tw',${i})" role="button" tabindex="0">
         <div class="asset-card-pct">${pctStr}</div>
         <div class="asset-card-info">
@@ -1749,7 +1749,7 @@ function renderUS() {
       const chgStr = err ? '' : renderChangePctCell(symDailyChangePct('us', r[0], p));
       const subStr = err
         ? `持有 ${qty.toLocaleString(undefined,{maximumFractionDigits:4})} 股`
-        : `持有 ${qty.toLocaleString(undefined,{maximumFractionDigits:4})} 股 · ${p !== undefined ? fmtUSD(p) + ' USD' : '—'}`;
+        : `持有 ${qty.toLocaleString(undefined,{maximumFractionDigits:4})} 股 · <span class="asset-card-price">${p !== undefined ? fmtUSD(p) + ' USD' : '—'}</span>`;
       return `<div class="asset-card${err ? ' err' : ''}" onclick="openAssetDetail('us',${i})" role="button" tabindex="0">
         <div class="asset-card-pct">${pctStr}</div>
         <div class="asset-card-info">
@@ -1828,7 +1828,7 @@ function renderCrypto() {
       const chgStr = err ? '' : renderChangePctCell(symDailyChangePct('crypto', sym, p));
       const subStr = err
         ? `持有 ${qty.toFixed(3)}`
-        : `持有 ${qty.toFixed(3)} · ${p !== undefined ? fmtFloor3(p) : '—'}`;
+        : `持有 ${qty.toFixed(3)} · <span class="asset-card-price">${p !== undefined ? fmtFloor3(p) : '—'}</span>`;
       return `<div class="asset-card${err ? ' err' : ''}" onclick="openAssetDetail('crypto',${i})" role="button" tabindex="0">
         <div class="asset-card-pct">${pctStr}</div>
         <div class="asset-card-info">
