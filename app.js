@@ -4,7 +4,7 @@
 // 應用版本號 — 重大功能變更才升版（小修補只更新 BUILD_DATE）
 const APP_VERSION = 'v1.0';
 // Build 時間：每次修改 code 後手動更新此時間（UTC+8 台北時間）
-const BUILD_DATE = '2026/05/27 14:53';
+const BUILD_DATE = '2026/05/27 15:01';
 
 const SPREADSHEET_ID = '1lpRpxVzWaYUqL-jVPOAJCtjsJUIedPYYyOx4gg4PPFU';
 const CLIENT_ID = '149884248440-85f8dhc6ub9up10sv0f89e3e0itrnooj.apps.googleusercontent.com';
@@ -5221,19 +5221,43 @@ function _calcStratLabInflow() {
   const c2 = $('strat-rewards');
   const on2 = !!c2?.checked;
 
-  // 質押收益（本月台幣總和）— 真實 yield 入帳
+  // 質押收益：用近 3 個月（不含本月）的平均當預估值。
+  // 月初本月還沒入帳時用上月單值會嚴重低估，跨多月平均較穩定。
   let monthly = 0;
+  let avgFromN = 0;
   if (on2) {
     const now = new Date();
-    const cur = `${now.getFullYear()}/${String(now.getMonth()+1).padStart(2,'0')}`;
-    monthly = S.data.rewards.filter(r => r[0] === cur).reduce((s, r) => s + rewardTWD(r), 0);
+    const curMonth = `${now.getFullYear()}/${String(now.getMonth()+1).padStart(2,'0')}`;
+    // 依 YYYY/MM 分組（排除本月、排除未來月份）
+    const byMonth = {};
+    S.data.rewards.forEach(r => {
+      const m = r[0];
+      if (!m || m >= curMonth) return;
+      byMonth[m] = (byMonth[m] || 0) + rewardTWD(r);
+    });
+    const months = Object.keys(byMonth).sort();
+    const recent = months.slice(-3);
+    if (recent.length > 0) {
+      const sum = recent.reduce((s, m) => s + byMonth[m], 0);
+      monthly = sum / recent.length;
+      avgFromN = recent.length;
+    }
   }
 
   // 更新 UI（row.on / 估算數字）
   const row2 = $('strat-row-rewards');
   if (row2) row2.classList.toggle('on', on2);
   const est2 = $('strat-rewards-est');
-  if (est2) est2.textContent = on2 ? `每月約 +${monthly.toLocaleString('zh-TW',{maximumFractionDigits:0})}` : '';
+  if (est2) {
+    if (!on2) {
+      est2.textContent = '';
+    } else if (avgFromN === 0) {
+      est2.textContent = '尚無歷史資料可估算';
+    } else {
+      const monthLabel = avgFromN === 1 ? '近 1 個月' : `近 ${avgFromN} 個月平均`;
+      est2.textContent = `${monthLabel}約 +${monthly.toLocaleString('zh-TW',{maximumFractionDigits:0})}`;
+    }
+  }
 
   return monthly;
 }
