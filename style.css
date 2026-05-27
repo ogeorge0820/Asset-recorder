@@ -1606,6 +1606,20 @@ h3.section-header {
   font-size: 0.66rem; font-weight: 400; color: var(--muted);
   margin-left: 2px; flex-shrink: 0;
 }
+/* 參數說明圖示（點擊跳出 alert 解釋此參數） */
+.dwz-param-info {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 18px; height: 18px;
+  margin-left: 4px; padding: 0;
+  border: none; background: transparent;
+  color: var(--muted); font-size: 0.85rem; line-height: 1;
+  cursor: pointer; border-radius: 50%;
+  flex-shrink: 0;
+}
+.dwz-param-info:hover, .dwz-param-info:focus-visible {
+  color: var(--accent); background: rgba(120,120,128,0.14);
+  outline: none;
+}
 
 /* 現代輸入框：軟灰底、無邊框、focus 時出現細藍環 */
 .dwz-param-input {

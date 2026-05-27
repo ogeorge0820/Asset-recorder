@@ -16,8 +16,8 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=DM+Sans:wght@300;400;500;600;700&display=swap">
-<link rel="stylesheet" href="theme.css?v=202605271507">
-<link rel="stylesheet" href="style.css?v=202605271507">
+<link rel="stylesheet" href="theme.css?v=202605271525">
+<link rel="stylesheet" href="style.css?v=202605271525">
 </head>
 <body>
 
@@ -471,7 +471,7 @@
             <h4 class="dwz-block-title">生活支出</h4>
             <div class="dwz-row"><label>退休初期倍率 <span class="dwz-param-unit">%</span></label><input id="dwz-mult-early" class="dwz-param-input" type="number" min="50" max="300" step="5" value="120" oninput="dwzAutoCalc()"></div>
             <div class="dwz-row"><label>晚年倍率 <span class="dwz-param-unit">%</span></label><input id="dwz-mult-late" class="dwz-param-input" type="number" min="20" max="200" step="5" value="80" oninput="dwzAutoCalc()"></div>
-            <div class="dwz-row"><label>保底金 <span class="dwz-param-unit">萬</span></label><input id="dwz-safe-floor" class="dwz-param-input" type="number" min="0" step="50" value="500" oninput="dwzAutoCalc()"></div>
+            <div class="dwz-row"><label>保底金 <span class="dwz-param-unit">萬</span><button type="button" class="dwz-param-info" onclick="alert('保底金（萬）\n\n用途：你希望臨終時至少保留的金額（喪葬、應急、小額遺產）。\n\n效果：\n• 圖上會畫一條綠色虛線基準\n• NW 跌破此線時曲線變紅色警示\n• 90 歲時 NW 超過保底金的部分會列為「終局浪費」徽章\n\n注意：此參數純為視覺與終局浪費計算用，不會影響模擬本身的數學（不會強制省錢、不會觸發警告）。')" title="點擊查看保底金說明" aria-label="保底金說明">ⓘ</button></label><input id="dwz-safe-floor" class="dwz-param-input" type="number" min="0" step="50" value="500" oninput="dwzAutoCalc()"></div>
           </section>
 
           <section class="dwz-param-block">
@@ -702,6 +702,6 @@
 <!-- ── Toast ── -->
 <div class="toast" id="toast"></div>
 
-<script src="app.js?v=202605271507"></script>
+<script src="app.js?v=202605271525"></script>
 </body>
 </html>
