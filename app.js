@@ -4,7 +4,7 @@
 // 應用版本號 — 重大功能變更才升版（小修補只更新 BUILD_DATE）
 const APP_VERSION = 'v1.0';
 // Build 時間：每次修改 code 後手動更新此時間（UTC+8 台北時間）
-const BUILD_DATE = '2026/05/27 14:29';
+const BUILD_DATE = '2026/05/27 14:45';
 
 const SPREADSHEET_ID = '1lpRpxVzWaYUqL-jVPOAJCtjsJUIedPYYyOx4gg4PPFU';
 const CLIENT_ID = '149884248440-85f8dhc6ub9up10sv0f89e3e0itrnooj.apps.googleusercontent.com';
@@ -5250,7 +5250,7 @@ function _calcStratLabInflow() {
   if (row1) row1.classList.toggle('on', on1);
   if (row2) row2.classList.toggle('on', on2);
   const est1 = $('strat-4pct-est'), est2 = $('strat-rewards-est');
-  if (est1) est1.textContent = on1 ? `每月約 +${fmtWan(m1)}` : '';
+  if (est1) est1.textContent = on1 ? `每月貼補生活費約 ${fmtWan(m1)}` : '';
   if (est2) est2.textContent = on2 ? `每月約 +${m2.toLocaleString('zh-TW',{maximumFractionDigits:0})}` : '';
 
   return monthly;
