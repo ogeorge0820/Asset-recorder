@@ -2,7 +2,7 @@
 // CONFIG
 // ══════════════════════════════════════════════════════════════
 // Build 時間：每次修改 code 後手動更新此時間（UTC+8 台北時間）
-const BUILD_DATE = '2026/05/26 16:04';
+const BUILD_DATE = '2026/05/27 14:21';
 
 const SPREADSHEET_ID = '1lpRpxVzWaYUqL-jVPOAJCtjsJUIedPYYyOx4gg4PPFU';
 const CLIENT_ID = '149884248440-85f8dhc6ub9up10sv0f89e3e0itrnooj.apps.googleusercontent.com';
@@ -3456,21 +3456,23 @@ function renderMonthly() {
     return;
   }
 
-  // 跟「本月收益」KPI 與趨勢圖一致 — 用 net (col 8) 月度 diff
-  const labels=[], vals=[];
-  for (let i=1;i<snaps.length;i++) {
-    labels.push(snaps[i][0]);
-    vals.push((parseFloat(snaps[i][8])||0) - (parseFloat(snaps[i-1][8])||0));
-  }
-
-  // 加入當月即時數據（若最後一筆快照不是本月）
+  // 跟「本月收益」KPI 同源 — 本月那根 bar 一律用即時 net，不用本月初存下來的快照
+  // 否則本月初存的 snapshot 凍結在當下值，會與 KPI（用 calcTotals 即時值）顯示
+  // 相反方向（例如月初 +9.1萬、現在 -9.6萬，使用者看到圖綠 KPI 紅）。
   const nowM = new Date();
   const todayM2 = `${nowM.getFullYear()}/${String(nowM.getMonth()+1).padStart(2,'0')}`;
-  if (snaps.length && snaps[snaps.length-1][0] < todayM2) {
-    const lastNet = parseFloat(snaps[snaps.length-1][8]) || 0;
+  const histSnaps = snaps.filter(s => s[0] && s[0] < todayM2); // 排除本月已存 snapshot
+  const labels = [], vals = [];
+  for (let i = 1; i < histSnaps.length; i++) {
+    labels.push(histSnaps[i][0]);
+    vals.push((parseFloat(histSnaps[i][8]) || 0) - (parseFloat(histSnaps[i-1][8]) || 0));
+  }
+  // 本月即時 bar：與 KPI「本月收益」=「即時 net − 上月底 snapshot net」完全一致
+  if (histSnaps.length) {
+    const lastHistNet = parseFloat(histSnaps[histSnaps.length - 1][8]) || 0;
     const { net: curNet } = calcTotals();
     labels.push(todayM2 + ' ▸');
-    vals.push(curNet - lastNet);
+    vals.push(curNet - lastHistNet);
   }
 
   S.charts.monthly = new Chart(ctx, {
