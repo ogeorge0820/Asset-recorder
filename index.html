@@ -16,8 +16,8 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=DM+Sans:wght@300;400;500;600;700&display=swap">
-<link rel="stylesheet" href="theme.css?v=202605271501">
-<link rel="stylesheet" href="style.css?v=202605271501">
+<link rel="stylesheet" href="theme.css?v=202605271507">
+<link rel="stylesheet" href="style.css?v=202605271507">
 </head>
 <body>
 
@@ -498,6 +498,23 @@
                   <span class="dwz-toggle-track"></span>
                 </label>
               </div>
+              <div class="dwz-strat-row" id="strat-row-active">
+                <div class="dwz-strat-text">
+                  <span class="dwz-strat-label">主動收入</span>
+                  <span class="dwz-strat-sub">接案／副業等持續性月收入，至設定年齡截止</span>
+                  <div class="dwz-strat-inputs">
+                    <input id="strat-active-amt" class="dwz-strat-input" type="number" min="0" step="0.1" value="2" oninput="dwzAutoCalc()" inputmode="decimal">
+                    <span class="dwz-strat-inputs-sep">萬／月，至</span>
+                    <input id="strat-active-age" class="dwz-strat-input" type="number" min="20" max="100" value="50" oninput="dwzAutoCalc()" inputmode="numeric">
+                    <span class="dwz-strat-inputs-sep">歲止</span>
+                  </div>
+                  <span class="dwz-strat-estimate" id="strat-active-est"></span>
+                </div>
+                <label class="dwz-toggle" title="開啟後每月加入設定金額，到截止年齡停止">
+                  <input type="checkbox" id="strat-active" onchange="dwzAutoCalc()">
+                  <span class="dwz-toggle-track"></span>
+                </label>
+              </div>
             </div>
           </section>
         </div>
@@ -685,6 +702,6 @@
 <!-- ── Toast ── -->
 <div class="toast" id="toast"></div>
 
-<script src="app.js?v=202605271501"></script>
+<script src="app.js?v=202605271507"></script>
 </body>
 </html>

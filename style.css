@@ -1504,6 +1504,34 @@ h3.section-header {
   display: none;
 }
 .dwz-strat-row.on .dwz-strat-estimate { display: inline-block; }
+/* 主動收入 inline inputs（amount + end age） */
+.dwz-strat-inputs {
+  display: flex; align-items: center; gap: 6px;
+  margin-top: 6px;
+  font-size: 0.72rem; color: var(--muted);
+}
+.dwz-strat-input {
+  width: 52px;
+  padding: 3px 6px;
+  font-family: var(--font-num);
+  font-variant-numeric: tabular-nums;
+  font-size: 0.82rem;
+  font-weight: 600;
+  text-align: center;
+  color: var(--text);
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+}
+.dwz-strat-input:focus {
+  outline: 2px solid var(--accent);
+  outline-offset: -1px;
+  border-color: transparent;
+}
+.dwz-strat-input::-webkit-outer-spin-button,
+.dwz-strat-input::-webkit-inner-spin-button {
+  -webkit-appearance: none; margin: 0;
+}
 
 /* ── Toggle switch ── */
 .dwz-toggle {

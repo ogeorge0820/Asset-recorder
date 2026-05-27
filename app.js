@@ -4,7 +4,7 @@
 // 應用版本號 — 重大功能變更才升版（小修補只更新 BUILD_DATE）
 const APP_VERSION = 'v1.0';
 // Build 時間：每次修改 code 後手動更新此時間（UTC+8 台北時間）
-const BUILD_DATE = '2026/05/27 15:01';
+const BUILD_DATE = '2026/05/27 15:07';
 
 const SPREADSHEET_ID = '1lpRpxVzWaYUqL-jVPOAJCtjsJUIedPYYyOx4gg4PPFU';
 const CLIENT_ID = '149884248440-85f8dhc6ub9up10sv0f89e3e0itrnooj.apps.googleusercontent.com';
@@ -5214,21 +5214,42 @@ function _initStratLab() {
     c2.checked = localStorage.getItem('dwz_strat_rewards') === '1';
     c2.addEventListener('change', () => localStorage.setItem('dwz_strat_rewards', c2.checked ? '1' : '0'));
   }
+  // 主動收入：toggle + 金額 + 截止年齡 三個欄位皆要持久化
+  const cActive = $('strat-active');
+  const amtEl = $('strat-active-amt');
+  const ageEl = $('strat-active-age');
+  if (cActive) {
+    cActive.checked = localStorage.getItem('dwz_strat_active') === '1';
+    cActive.addEventListener('change', () => localStorage.setItem('dwz_strat_active', cActive.checked ? '1' : '0'));
+  }
+  if (amtEl) {
+    const saved = localStorage.getItem('dwz_strat_active_amt');
+    if (saved !== null) amtEl.value = saved;
+    amtEl.addEventListener('input', () => localStorage.setItem('dwz_strat_active_amt', amtEl.value));
+  }
+  if (ageEl) {
+    const saved = localStorage.getItem('dwz_strat_active_age');
+    if (saved !== null) ageEl.value = saved;
+    ageEl.addEventListener('input', () => localStorage.setItem('dwz_strat_active_age', ageEl.value));
+  }
 }
 
-// 計算策略實驗室的每月外部現金流入（TWD），同步更新 UI 估算文字
+// 計算策略實驗室的每月外部現金流入（TWD），同步更新 UI 估算文字。
+// 回傳：
+//   constantMonthly  — 不分齡持續貢獻（質押收益）
+//   activeMonthly    — 有截止齡的主動收入
+//   activeUntilAge   — 主動收入截止年齡（含）
+//   anyOn            — 任一策略開啟（影子曲線觸發條件）
 function _calcStratLabInflow() {
-  const c2 = $('strat-rewards');
-  const on2 = !!c2?.checked;
+  const onRewards = !!$('strat-rewards')?.checked;
+  const onActive  = !!$('strat-active')?.checked;
 
-  // 質押收益：用近 3 個月（不含本月）的平均當預估值。
-  // 月初本月還沒入帳時用上月單值會嚴重低估，跨多月平均較穩定。
-  let monthly = 0;
+  // ── 質押收益：近 3 個月（不含本月）平均，較穩定不受本月未入帳影響
+  let rewardsMonthly = 0;
   let avgFromN = 0;
-  if (on2) {
+  if (onRewards) {
     const now = new Date();
     const curMonth = `${now.getFullYear()}/${String(now.getMonth()+1).padStart(2,'0')}`;
-    // 依 YYYY/MM 分組（排除本月、排除未來月份）
     const byMonth = {};
     S.data.rewards.forEach(r => {
       const m = r[0];
@@ -5238,28 +5259,42 @@ function _calcStratLabInflow() {
     const months = Object.keys(byMonth).sort();
     const recent = months.slice(-3);
     if (recent.length > 0) {
-      const sum = recent.reduce((s, m) => s + byMonth[m], 0);
-      monthly = sum / recent.length;
+      rewardsMonthly = recent.reduce((s, m) => s + byMonth[m], 0) / recent.length;
       avgFromN = recent.length;
     }
   }
 
-  // 更新 UI（row.on / 估算數字）
-  const row2 = $('strat-row-rewards');
-  if (row2) row2.classList.toggle('on', on2);
-  const est2 = $('strat-rewards-est');
-  if (est2) {
-    if (!on2) {
-      est2.textContent = '';
-    } else if (avgFromN === 0) {
-      est2.textContent = '尚無歷史資料可估算';
-    } else {
-      const monthLabel = avgFromN === 1 ? '近 1 個月' : `近 ${avgFromN} 個月平均`;
-      est2.textContent = `${monthLabel}約 +${monthly.toLocaleString('zh-TW',{maximumFractionDigits:0})}`;
+  // ── 主動收入：固定月額直到截止年齡（含）
+  const activeAmtWan = parseFloat($('strat-active-amt')?.value) || 0;
+  const activeUntilAge = parseInt($('strat-active-age')?.value, 10) || 0;
+  const activeMonthly = onActive ? activeAmtWan * 10000 : 0;
+
+  // ── UI 更新
+  const rowR = $('strat-row-rewards'), rowA = $('strat-row-active');
+  if (rowR) rowR.classList.toggle('on', onRewards);
+  if (rowA) rowA.classList.toggle('on', onActive);
+  const estR = $('strat-rewards-est');
+  if (estR) {
+    if (!onRewards) estR.textContent = '';
+    else if (avgFromN === 0) estR.textContent = '尚無歷史資料可估算';
+    else {
+      const label = avgFromN === 1 ? '近 1 個月' : `近 ${avgFromN} 個月平均`;
+      estR.textContent = `${label}約 +${rewardsMonthly.toLocaleString('zh-TW',{maximumFractionDigits:0})}`;
     }
   }
+  const estA = $('strat-active-est');
+  if (estA) {
+    estA.textContent = onActive && activeMonthly > 0 && activeUntilAge > 0
+      ? `每月 +${activeMonthly.toLocaleString('zh-TW',{maximumFractionDigits:0})}，至 ${activeUntilAge} 歲止`
+      : '';
+  }
 
-  return monthly;
+  return {
+    constantMonthly: rewardsMonthly,
+    activeMonthly,
+    activeUntilAge,
+    anyOn: rewardsMonthly > 0 || activeMonthly > 0,
+  };
 }
 
 function renderDWZ() {
@@ -5287,9 +5322,13 @@ function renderDWZ() {
   const year0GiftTotal = (giftAge === currentAge && legacyTWD > 0) ? legacyTWD : 0;
   const annualBase = budget * 12;
 
-  // 策略實驗室：每月外部現金流入 → 年度化後每年加回 NW
-  const stratMonthlyInflow = _calcStratLabInflow();
-  const stratAnnualInflow = stratMonthlyInflow * 12;
+  // 策略實驗室：取得每月外部現金流入結構（含 age-dependent 主動收入）
+  const strat = _calcStratLabInflow();
+  // 每齡的年度策略流入：constant (rewards) 全程適用、active 在 age <= activeUntilAge 時加上
+  const stratAnnualInflowAt = (age) => {
+    const m = strat.constantMonthly + (age <= strat.activeUntilAge ? strat.activeMonthly : 0);
+    return m * 12;
+  };
 
   // KPI 小標籤：起始可用資產（與首頁同步）+ 年支出基準
   const snwEl = $('dwz-start-nw'), sbuEl = $('dwz-start-budget');
@@ -5302,8 +5341,8 @@ function renderDWZ() {
   const totalYears = lifeAge - currentAge || 1;
   let nw = startNW;
   let peakNW = startNW, peakAge = currentAge;
-  // 影子曲線：策略實驗室「未啟用」基準（僅當 stratAnnualInflow > 0 時才有意義）
-  const trackBaseline = stratAnnualInflow > 0;
+  // 影子曲線：策略實驗室「未啟用」基準（任何策略開啟皆觸發）
+  const trackBaseline = strat.anyOn;
   let nwBaseline = startNW;
   const wealthBaseline = [Math.round(startNW)];
 
@@ -5324,7 +5363,8 @@ function renderDWZ() {
     const annualExpense = annualBase * (n === 1 ? 1 : Math.pow(1 + inf, n - 1)) * mult;
 
     // End-of-year model: compound then spend；策略實驗室現金流為定額名目年金（不通膨）
-    nw = nw * (1 + r) - annualExpense + stratAnnualInflow;
+    // 主動收入會在 age > activeUntilAge 後自動歸零（per-age 計算）
+    nw = nw * (1 + r) - annualExpense + stratAnnualInflowAt(age);
     if (trackBaseline) nwBaseline = nwBaseline * (1 + r) - annualExpense;
 
     // 40–65 歲年度體驗預算
