@@ -4,7 +4,7 @@
 // 應用版本號 — 重大功能變更才升版（小修補只更新 BUILD_DATE）
 const APP_VERSION = 'v1.0';
 // Build 時間：每次修改 code 後手動更新此時間（UTC+8 台北時間）
-const BUILD_DATE = '2026/05/27 15:25';
+const BUILD_DATE = '2026/05/27 16:20';
 
 const SPREADSHEET_ID = '1lpRpxVzWaYUqL-jVPOAJCtjsJUIedPYYyOx4gg4PPFU';
 const CLIENT_ID = '149884248440-85f8dhc6ub9up10sv0f89e3e0itrnooj.apps.googleusercontent.com';
@@ -5417,6 +5417,65 @@ function renderDWZ() {
 
   // ── Waste indicator: unspent surplus above safety floor at end of life ──
   const wastedWealth = Math.max(0, finalWealth - safeFloor);
+
+  // ── 歸零臨界（Breakeven Start NW）─────────────────────────────
+  // 用 binary search 找出：在所有其他參數固定的情況下，起始資金最低降到多少
+  // 還能撐到 lifeAge 不歸零。給使用者一個「資產跌到多少之前都不用怕」的安全閾值。
+  // 為避免每次迭代都重複跑 _allDWZExpenses().filter，先預編 age → totalTWD 表
+  const _expByAge = {};
+  _allDWZExpenses().forEach(e => {
+    _expByAge[e.age] = (_expByAge[e.age] || 0) + e.amount * 10000;
+  });
+  const simulateFinalNW = (startNW0) => {
+    let nw0 = startNW0;
+    for (let age = currentAge + 1; age <= lifeAge; age++) {
+      const n = age - currentAge;
+      let mult = 1;
+      if (age >= retireAge) {
+        const yearsRetired = age - retireAge;
+        mult = yearsRetired < 15 ? multEarly : multLate;
+      }
+      const annualExpense = annualBase * (n === 1 ? 1 : Math.pow(1 + inf, n - 1)) * mult;
+      nw0 = nw0 * (1 + r) - annualExpense + stratAnnualInflowAt(age);
+      if (expBudgetTWD > 0 && age >= 40 && age <= 65) nw0 -= expBudgetTWD;
+      nw0 -= _expByAge[age] || 0;
+      if (age === giftAge && legacyTWD > 0) nw0 -= legacyTWD;
+      if (age === currentAge + 1) nw0 -= year0ManualTotal + year0GiftTotal;
+    }
+    return nw0;
+  };
+  let breakevenStart = null;
+  if (simulateFinalNW(0) >= 0) {
+    breakevenStart = 0;  // 起始 0 也能撐到 lifeAge（外部現金流入 ≥ 支出）
+  } else if (simulateFinalNW(startNW) >= 0) {
+    // 起始夠用，binary search 在 [0, startNW] 範圍找臨界值
+    let lo = 0, hi = startNW;
+    for (let i = 0; i < 40; i++) {
+      const mid = (lo + hi) / 2;
+      if (simulateFinalNW(mid) >= 0) hi = mid;
+      else lo = mid;
+    }
+    breakevenStart = hi;
+  }
+  // breakevenStart === null：目前起始資金本身就不夠用（已破產情境），不顯示 pill
+
+  // ── Safety pill ──
+  const safetyEl = $('dwz-safety-info');
+  if (safetyEl) {
+    if (breakevenStart === null) {
+      safetyEl.style.display = 'none';
+    } else if (breakevenStart === 0) {
+      safetyEl.style.display = 'inline-flex';
+      safetyEl.innerHTML = `<em>歸零臨界</em> <b>0</b>`;
+      safetyEl.title = `按目前設定，外部現金流入足以支付支出，起始 0 元都能撐到 ${lifeAge} 歲`;
+    } else {
+      const buffer = startNW - breakevenStart;
+      const ratio = breakevenStart > 0 ? (startNW / breakevenStart).toFixed(1) : '∞';
+      safetyEl.style.display = 'inline-flex';
+      safetyEl.innerHTML = `<em>歸零臨界</em> <b>${fmtWan(breakevenStart)}</b>`;
+      safetyEl.title = `起始資金降到 ${fmtWan(breakevenStart)} 之前都還能撐到 ${lifeAge} 歲不歸零\n目前 ${fmtWan(startNW)}，緩衝 ${fmtWan(buffer)}（${ratio}×）`;
+    }
+  }
 
   // ── Warning pill ──
   const warnEl = $('dwz-warning');

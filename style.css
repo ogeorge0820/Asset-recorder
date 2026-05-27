@@ -1684,6 +1684,8 @@ h3.section-header {
 .dwz-pill-warn b { color: #f59e0b; }
 .dwz-pill-waste  { background: rgba(239,68,68,.08); border-color: rgba(239,68,68,.2); }
 .dwz-pill-waste b { color: #ef4444; }
+.dwz-pill-safety { background: rgba(34,197,94,.12); border-color: rgba(34,197,94,.3); }
+.dwz-pill-safety b { color: #16a34a; }
 
 /* 圖表卡 — 明確不透明背景，避免 sticky 元件穿透 */
 .dwz-chart-card {
