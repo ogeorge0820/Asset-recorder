@@ -4,7 +4,7 @@
 
 **線上預覽**：[https://ogeorge0820.github.io/Asset-recorder](https://ogeorge0820.github.io/Asset-recorder)
 
-**目前穩定版**：`v0.7`（tag 已保留在 GitHub，對應 commit `e79e929`）
+**目前穩定版**：`v1.0`（tag 已保留在 GitHub，2026/05/27 發布）
 
 **開發協作**：本專案原由 Claude Code 建立，目前改為 Claude Code 與 Codex 共用維護。所有 agent 動工前需遵守 [AGENTS.md](AGENTS.md) 的工作守則，尤其是 `BUILD_DATE`、cache-buster、commit/push 與資料寫入防呆規範。
 
@@ -118,6 +118,51 @@ asset-recorder/
 ---
 
 ## 版本歷史
+
+### v1.0 (2026/05/27)
+
+第一個正式 release。從 v0.7 起累積 66 個 commit，重心是「總覽 / 管理頁 redesign」、「BTC 指標頁」、「Die With Zero 模擬器強化」三大塊。
+
+#### ✨ 新功能
+
+- **指標 Tab — BTC 市場底/頂指標總覽**
+  - 10 個指標卡片：Coinbase App Ranking、Google Trends、NUPL、Rainbow、MVRV Z-Score、Mayer Multiple、2-Year MA Multiplier、Pi Cycle Top、AHR999、BTC Dominance
+  - 每張卡顯示當前值、訊號（偏頂/中性/偏底）、低/中/頂閾值、來源連結、stale 警示
+  - 0–100 市場溫度計：等權聚合所有指標訊號（手動指標 stale > 30 天時權重 0.5）
+  - 手動指標支援單一編輯 modal 與批次填寫流程
+  - 自動指標每 10 分鐘隨 app refresh 重抓
+- **DWZ 策略實驗室「主動收入」toggle**
+  - 設定每月固定主動收入 + 截止年齡（接案、副業到 N 歲為止）
+  - per-age 模擬：截止齡之後自動歸零，後續年份只剩其他持續策略
+- **DWZ「歸零臨界」pill**
+  - Binary search（40 iter）找出「起始資金最低降到多少還能撐到 lifeAge」
+  - 給使用者一個「資產跌到 X 萬之前都不用慌」的安全閾值
+  - Hover/tap 顯示緩衝倍數與絕對緩衝額
+- **本日損益 bar chart 方向色帶**
+  - bar 下方 14 格細長方塊，cell 寬度與位置完全對齊 Chart.js bar
+  - 顏色標方向（綠/紅）、不透明度標相對幅度
+  - 解決「小金額天 bar 看不見」的判讀痛點
+
+#### 🎨 UI / UX
+
+- **v2 總覽 + 管理頁完整 redesign**：mid-row 三併、持倉 Top Movers section、領跌改用虧損 TWD 額度排序
+- 可用資產 hero 副標改顯示「本日投資損益」（取代 YTD）
+- 持有列表單價（幣價/股價）加粗加深色，掃過去就能看清楚
+- DWZ 參數加 ⓘ 說明按鈕（保底金、退休初期倍率、晚年倍率）
+- 策略實驗室「質押收益計入現金流」改用近 3 個月平均估算（本月未入帳也能合理預估）
+- 版本資訊加入 `APP_VERSION` 常數，獨立於 `BUILD_DATE` 管理
+
+#### 🐛 Bug Fix
+
+- **本月收益圖與 KPI 數字方向相反**：圖表 2026/05 bar 用月初凍結 snapshot、KPI 用即時值，導致顯示方向相反。修正為兩邊都用即時 net
+- **圖表首載被擠壓**：加多重 resize 保險（RAF + fonts.ready + 階梯 setTimeout + ResizeObserver）
+- **指標頁多項修正**：CoinGecko 401 改用 Binance klines、訊號閾值放寬到 ±0.3、選填欄位不再跳紅框
+
+#### 🔧 系統優化
+
+- **移除策略實驗室「4% 年化提領」toggle**：在單一 r 模型下會雙重計算（資產內部搬移卻當外部現金流入），50 年複利後造成 NW 虛漲至數十億。整個 toggle 移除避免誤導
+- BTC 歷史價快取 key 升版 `_v2`，處理舊資料污染
+- 圖表 X 軸對齊改讀 Chart.js `meta.data[i].x/.width`，pixel-perfect
 
 ### v0.7 (2026/05/05)
 
