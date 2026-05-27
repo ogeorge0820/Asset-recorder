@@ -1,8 +1,10 @@
 // ══════════════════════════════════════════════════════════════
 // CONFIG
 // ══════════════════════════════════════════════════════════════
+// 應用版本號 — 重大功能變更才升版（小修補只更新 BUILD_DATE）
+const APP_VERSION = 'v1.0';
 // Build 時間：每次修改 code 後手動更新此時間（UTC+8 台北時間）
-const BUILD_DATE = '2026/05/27 14:21';
+const BUILD_DATE = '2026/05/27 14:29';
 
 const SPREADSHEET_ID = '1lpRpxVzWaYUqL-jVPOAJCtjsJUIedPYYyOx4gg4PPFU';
 const CLIENT_ID = '149884248440-85f8dhc6ub9up10sv0f89e3e0itrnooj.apps.googleusercontent.com';
@@ -1163,7 +1165,7 @@ function renderKPIs() {
   }
 
   ['build-badge', 'sidebar-build-badge'].forEach(id => {
-    const el = $(id); if (el) el.textContent = `版本 ${BUILD_DATE}`;
+    const el = $(id); if (el) el.textContent = `版本 ${APP_VERSION} ${BUILD_DATE}`;
   });
 
 }
@@ -4679,10 +4681,10 @@ function toggleTheme() {
 function updateMobileBuildBar() {
   // 舊的頂部 bar（已隱藏，保留相容）
   const el = $('mobile-build-bar');
-  if (el) el.textContent = `版本 ${BUILD_DATE}`;
+  if (el) el.textContent = `版本 ${APP_VERSION} ${BUILD_DATE}`;
   // 新的底部 footer
   const fb = $('mobile-footer-build');
-  if (fb) fb.textContent = `版本 ${BUILD_DATE}`;
+  if (fb) fb.textContent = `版本 ${APP_VERSION} ${BUILD_DATE}`;
 }
 
 function updateThemeBtn() {
