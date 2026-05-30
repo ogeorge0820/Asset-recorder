@@ -28,6 +28,14 @@
   --overlay:        rgba(0,0,0,0.7);
   --card-shadow:    none;
   --card-shadow-hover: 0 4px 12px rgba(0,0,0,0.4);
+  /* N26 風 v1.1：軟陰影取代硬邊框、大圓角、薰衣草紫品牌色 */
+  --card-shadow-soft:    0 6px 20px rgba(0,0,0,0.45), 0 2px 6px rgba(0,0,0,0.35);
+  --card-radius-lg:      20px;
+  --card-radius-md:      16px;
+  --brand-lavender:      #a78bfa;             /* dark theme 略亮一階，避免吃光 */
+  --brand-lavender-soft: rgba(167,139,250,0.12);
+  --brand-lavender-border: rgba(167,139,250,0.28);
+  --brand-lavender-fg:   #f5f3ff;
 }
 
 /* ── 淺色主題 ── */
@@ -53,6 +61,14 @@
   --overlay:        rgba(0,0,0,0.4);
   --card-shadow:    0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
   --card-shadow-hover: 0 4px 12px rgba(0,0,0,0.08);
+  /* N26 風 v1.1：軟陰影取代硬邊框、大圓角、薰衣草紫品牌色 */
+  --card-shadow-soft:    0 6px 20px rgba(20,20,40,0.06), 0 1px 3px rgba(20,20,40,0.04);
+  --card-radius-lg:      20px;
+  --card-radius-md:      16px;
+  --brand-lavender:      #8b5cf6;
+  --brand-lavender-soft: rgba(139,92,246,0.10);
+  --brand-lavender-border: rgba(139,92,246,0.22);
+  --brand-lavender-fg:   #4c1d95;
 }
 
 /* ── 相容別名（舊 style.css 用的變數名） ── */
@@ -1613,10 +1629,10 @@ canvas { background: transparent !important; }
 /* Hero — 主卡：可用資產 (primary) + 淨資產 (secondary) + 趨勢圖 */
 .ov2-hero {
   background: var(--bg-card);
-  border-radius: 18px;
-  padding: 18px 22px 16px;
-  box-shadow: var(--card-shadow);
-  border: 1px solid var(--border);
+  border-radius: var(--card-radius-lg);
+  padding: 22px 26px 18px;
+  box-shadow: var(--card-shadow-soft);
+  border: none;
   display: flex; flex-direction: column;
 }
 .ov2-hero-head {
@@ -1700,14 +1716,14 @@ canvas { background: transparent !important; }
 .ov2-mid-row {
   display: grid;
   grid-template-columns: 1.4fr 1.4fr 1fr;
-  gap: 14px;
+  gap: 18px;
 }
 .ov2-pl-card {
   background: var(--bg-card);
-  border-radius: 16px;
-  padding: 16px 18px 14px;
-  box-shadow: var(--card-shadow);
-  border: 1px solid var(--border);
+  border-radius: var(--card-radius-lg);
+  padding: 20px 22px 18px;
+  box-shadow: var(--card-shadow-soft);
+  border: none;
   display: flex; flex-direction: column;
 }
 .ov2-pl-head {
@@ -1769,9 +1785,9 @@ canvas { background: transparent !important; }
 /* Stat pair — 本年收益 + 財務存活 上下併在同一張卡 */
 .ov2-stat-pair {
   background: var(--bg-card);
-  border-radius: 16px;
-  box-shadow: var(--card-shadow);
-  border: 1px solid var(--border);
+  border-radius: var(--card-radius-lg);
+  box-shadow: var(--card-shadow-soft);
+  border: none;
   display: flex; flex-direction: column;
   overflow: hidden;
 }
@@ -1808,10 +1824,10 @@ canvas { background: transparent !important; }
 /* Allocation 卡（top row 右側） */
 .ov2-alloc-card {
   background: var(--bg-card);
-  border-radius: 18px;
-  padding: 16px 20px;
-  box-shadow: var(--card-shadow);
-  border: 1px solid var(--border);
+  border-radius: var(--card-radius-lg);
+  padding: 20px 22px;
+  box-shadow: var(--card-shadow-soft);
+  border: none;
   display: flex; flex-direction: column;
   min-height: 0;
 }
@@ -1833,10 +1849,10 @@ canvas { background: transparent !important; }
 /* 持倉 Top Movers — 雙欄全寬 section */
 .ov2-movers {
   background: var(--bg-card);
-  border-radius: 16px;
-  padding: 16px 20px;
-  box-shadow: var(--card-shadow);
-  border: 1px solid var(--border);
+  border-radius: var(--card-radius-lg);
+  padding: 20px 22px;
+  box-shadow: var(--card-shadow-soft);
+  border: none;
 }
 .ov2-movers-head {
   display: flex; justify-content: space-between; align-items: baseline;
