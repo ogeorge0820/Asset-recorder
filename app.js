@@ -4,7 +4,7 @@
 // 應用版本號 — 重大功能變更才升版（小修補只更新 BUILD_DATE）
 const APP_VERSION = 'v1.0';
 // Build 時間：每次修改 code 後手動更新此時間（UTC+8 台北時間）
-const BUILD_DATE = '2026/05/30 21:17';
+const BUILD_DATE = '2026/05/30 21:34';
 
 const SPREADSHEET_ID = '1lpRpxVzWaYUqL-jVPOAJCtjsJUIedPYYyOx4gg4PPFU';
 const CLIENT_ID = '149884248440-85f8dhc6ub9up10sv0f89e3e0itrnooj.apps.googleusercontent.com';
@@ -1254,7 +1254,7 @@ function renderHoldingCards() {
       } else {
         const pSign = change.pct >= 0 ? '+' : '';
         const dSign = change.delta >= 0 ? '+' : '';
-        const win = change.win || (cat === 'crypto' ? '24h' : '今日');
+        const win = change.win || getDailyChangeWindow(cat);
         const deltaStr = (change.delta >= 0 ? dSign : '') + fmtWan(change.delta);
         dEl.textContent = `${pSign}${change.pct.toFixed(2)}% · ${deltaStr} · ${win}`;
         dEl.className = 'hc-change ' + (change.pct >= 0 ? 'pos' : 'neg');
@@ -1601,17 +1601,46 @@ function getDailySnapYesterday(colIdx) {
 // 讀取最近一筆「今日之前」的 per-symbol 價格快照（原幣別）
 // 回傳 {tw:{}, us:{}, crypto:{}} 或 null
 let _cachedYestPrices = null, _cachedYestPricesAt = 0;
+let _cachedYestSnapDate = null;   // 對應 snap 的 YYYY/MM/DD（給動態標籤判斷用）
 function getYesterdayPriceSnap() {
   // 同一次 render pass 內多次呼叫不重複 parse（便宜的 cache，資料變動時 invalidate）
   if (_cachedYestPrices && Date.now() - _cachedYestPricesAt < 1000) return _cachedYestPrices;
   const n = new Date();
   const todayStr = `${n.getFullYear()}/${String(n.getMonth()+1).padStart(2,'0')}/${String(n.getDate()).padStart(2,'0')}`;
   const prev = [...S.data.daily_snapshots].reverse().find(s => s[0] < todayStr && s[9]);
-  if (!prev) { _cachedYestPrices = null; _cachedYestPricesAt = Date.now(); return null; }
+  if (!prev) {
+    _cachedYestPrices = null;
+    _cachedYestSnapDate = null;
+    _cachedYestPricesAt = Date.now();
+    return null;
+  }
   try { _cachedYestPrices = JSON.parse(prev[9]); }
   catch { _cachedYestPrices = null; }
+  _cachedYestSnapDate = prev[0];
   _cachedYestPricesAt = Date.now();
   return _cachedYestPrices;
+}
+// 取得 snap 的日期（'YYYY/MM/DD'）— 觸發 cache refresh 後讀
+function getYesterdayPriceSnapDate() {
+  getYesterdayPriceSnap();
+  return _cachedYestSnapDate;
+}
+// 動態日漲跌標籤：crypto 24/7、台股美股看是否週末或 snap 過老
+// • 平日 + snap 是昨天 → 「今日」
+// • 週末（dow=0/6）→ 「上個交易日」（市場沒開，這個 delta 是上個交易日的）
+// • 平日但 snap > 1 天前（連假後第一日開盤前等）→ 「自 M/D」標明起算日
+function getDailyChangeWindow(type) {
+  if (type === 'crypto') return '24h';
+  const n = new Date();
+  const dow = n.getDay();
+  if (dow === 0 || dow === 6) return '上個交易日';
+  const snapDate = getYesterdayPriceSnapDate();
+  if (!snapDate) return '今日';
+  const today = new Date(n.getFullYear(), n.getMonth(), n.getDate());
+  const [y, m, d] = snapDate.split('/').map(Number);
+  const snap = new Date(y, m - 1, d);
+  const daysDiff = Math.round((today - snap) / 86400000);
+  return daysDiff <= 1 ? '今日' : `自 ${m}/${d}`;
 }
 
 // 計算單一 symbol 相對昨日快照的漲跌 %（curPrice 為當下即時價，原幣別）
