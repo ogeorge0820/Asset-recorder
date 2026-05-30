@@ -1626,9 +1626,12 @@ canvas { background: transparent !important; }
   min-height: 0;
 }
 
-/* Hero — 主卡：可用資產 (primary) + 淨資產 (secondary) + 趨勢圖 */
+/* Hero — 主卡：可用資產 (primary) + 淨資產 (secondary) + 趨勢圖
+   v1.1 N26 風：lavender 漸層背景 + 加大字級 + 品牌色標籤 */
 .ov2-hero {
-  background: var(--bg-card);
+  background:
+    linear-gradient(135deg, var(--brand-lavender-soft) 0%, transparent 55%),
+    var(--bg-card);
   border-radius: var(--card-radius-lg);
   padding: 22px 26px 18px;
   box-shadow: var(--card-shadow-soft);
@@ -1644,17 +1647,25 @@ canvas { background: transparent !important; }
 }
 .ov2-hero-primary { min-width: 0; flex: 0 0 auto; }
 .ov2-hero-label {
-  font-size: 11px; font-weight: 500;
+  font-size: 11px; font-weight: 600;
   letter-spacing: 0.06em; text-transform: uppercase;
-  color: var(--text-secondary);
+  color: var(--brand-lavender);          /* v1.1：標籤改用品牌色強調 hero 身分 */
   margin-bottom: 6px;
+  display: inline-flex; align-items: center; gap: 6px;
+}
+.ov2-hero-label-icon {
+  font-size: 14px;
+  text-transform: none;
+  letter-spacing: 0;
+  line-height: 1;
 }
 .ov2-hero-num {
   font-family: var(--font-num);
   font-variant-numeric: tabular-nums;
   font-feature-settings: 'tnum' 1, 'cv11' 1;
   font-weight: 700;
-  font-size: clamp(36px, 3.6vw, 52px);
+  /* v1.1：1280px viewport 下 4vw = 51.2px，確保 ≥ 48px 滿足 criterion #1 */
+  font-size: clamp(40px, 4vw, 56px);
   letter-spacing: -0.03em;
   line-height: 0.95;
   color: var(--text-primary);
