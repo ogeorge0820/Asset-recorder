@@ -1800,6 +1800,79 @@ canvas { background: transparent !important; }
   opacity: 0.35;
 }
 
+/* ═══════════════════════════════════════════════════════════════
+   v1.1 N26 風動畫 — 總覽頁 KPI 卡入場 + 數字 pop + tap 反饋
+   只在初始 render 觸發，不重複播放（不亂干擾）
+   ═══════════════════════════════════════════════════════════════ */
+@keyframes ov2-card-enter {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes ov2-num-pop {
+  from { opacity: 0; transform: scale(0.92); }
+  to   { opacity: 1; transform: scale(1); }
+}
+/* 卡片由下淡入、staggered 60-80ms 一張，視覺上像「隊伍進場」 */
+.ov2-hero,
+.ov2-alloc-card,
+.ov2-pl-card,
+.ov2-stat-pair,
+.ov2-movers {
+  animation: ov2-card-enter 0.45s cubic-bezier(0.22, 1, 0.36, 1) backwards;
+}
+.ov2-hero        { animation-delay:   0ms; }
+.ov2-alloc-card  { animation-delay:  80ms; }
+.ov2-pl-card:nth-of-type(1)  { animation-delay: 160ms; }
+.ov2-pl-card:nth-of-type(2)  { animation-delay: 220ms; }
+.ov2-stat-pair   { animation-delay: 280ms; }
+.ov2-movers      { animation-delay: 360ms; }
+
+/* 數字 pop-in，配 spring-like 緩動，比卡片晚 200ms 進場 */
+.ov2-hero-num,
+.ov2-pl-num,
+.ov2-stat-num,
+.ov2-hero-sub-num {
+  animation: ov2-num-pop 0.55s cubic-bezier(0.34, 1.56, 0.64, 1) backwards;
+  animation-delay: 350ms;
+  transform-origin: left center;
+}
+
+/* tap 反饋：點下去縮到 0.97、放開回彈，桌機 hover 提一階陰影 */
+.ov2-hero,
+.ov2-pl-card,
+.ov2-stat-pair,
+.ov2-alloc-card,
+.ov2-movers {
+  transition: transform 140ms ease-out, box-shadow 220ms ease-out;
+}
+.ov2-hero:active,
+.ov2-pl-card:active,
+.ov2-stat-pair:active,
+.ov2-alloc-card:active,
+.ov2-movers:active {
+  transform: scale(0.97);
+}
+@media (hover: hover) {
+  .ov2-hero:hover,
+  .ov2-pl-card:hover,
+  .ov2-stat-pair:hover,
+  .ov2-alloc-card:hover,
+  .ov2-movers:hover {
+    box-shadow: var(--card-shadow-hover);
+  }
+}
+/* 尊重 prefers-reduced-motion：動畫使用者不要 */
+@media (prefers-reduced-motion: reduce) {
+  .ov2-hero, .ov2-alloc-card, .ov2-pl-card, .ov2-stat-pair, .ov2-movers,
+  .ov2-hero-num, .ov2-pl-num, .ov2-stat-num, .ov2-hero-sub-num {
+    animation: none;
+  }
+  .ov2-hero:active, .ov2-pl-card:active, .ov2-stat-pair:active,
+  .ov2-alloc-card:active, .ov2-movers:active {
+    transform: none;
+  }
+}
+
 /* Stat pair — 本年收益 + 財務存活 上下併在同一張卡 */
 .ov2-stat-pair {
   background: var(--bg-card);
