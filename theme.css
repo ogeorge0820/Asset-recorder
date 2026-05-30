@@ -28,14 +28,25 @@
   --overlay:        rgba(0,0,0,0.7);
   --card-shadow:    none;
   --card-shadow-hover: 0 4px 12px rgba(0,0,0,0.4);
-  /* N26 風 v1.1：軟陰影取代硬邊框、大圓角、薰衣草紫品牌色 */
-  --card-shadow-soft:    0 6px 20px rgba(0,0,0,0.45), 0 2px 6px rgba(0,0,0,0.35);
+  /* N26 風 v1.1.1：多層陰影 + 大圓角 + 薰衣草紫品牌色 + 卡片色塊背景 */
+  --card-shadow-soft:
+    0 1px 2px rgba(0,0,0,0.30),
+    0 6px 12px rgba(0,0,0,0.35),
+    0 18px 32px rgba(0,0,0,0.30);
   --card-radius-lg:      20px;
   --card-radius-md:      16px;
-  --brand-lavender:      #a78bfa;             /* dark theme 略亮一階，避免吃光 */
-  --brand-lavender-soft: rgba(167,139,250,0.12);
+  --brand-lavender:      #c4b5fd;             /* dark theme 用亮紫，pill 內可讀 */
+  --brand-lavender-soft: rgba(167,139,250,0.20);
+  --brand-lavender-tint: rgba(167,139,250,0.10);
   --brand-lavender-border: rgba(167,139,250,0.28);
   --brand-lavender-fg:   #f5f3ff;
+  --tint-gain:           rgba(34,197,94,0.14);
+  --tint-loss:           rgba(239,68,68,0.12);
+  --tint-warm:           rgba(251,191,36,0.10);
+  --tint-blue:           rgba(91,141,239,0.12);
+  --tint-peach:          rgba(217,119,87,0.10);
+  --pill-neutral-bg:     rgba(255,255,255,0.06);
+  --pill-neutral-fg:     #d4d4d8;
 }
 
 /* ── 淺色主題 ── */
@@ -61,14 +72,25 @@
   --overlay:        rgba(0,0,0,0.4);
   --card-shadow:    0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
   --card-shadow-hover: 0 4px 12px rgba(0,0,0,0.08);
-  /* N26 風 v1.1：軟陰影取代硬邊框、大圓角、薰衣草紫品牌色 */
-  --card-shadow-soft:    0 6px 20px rgba(20,20,40,0.06), 0 1px 3px rgba(20,20,40,0.04);
+  /* N26 風 v1.1.1：多層陰影 + 大圓角 + 薰衣草紫品牌色 + 卡片色塊背景 */
+  --card-shadow-soft:
+    0 1px 2px rgba(15,23,42,0.04),
+    0 6px 12px rgba(15,23,42,0.05),
+    0 18px 32px rgba(15,23,42,0.07);
   --card-radius-lg:      20px;
   --card-radius-md:      16px;
-  --brand-lavender:      #8b5cf6;
-  --brand-lavender-soft: rgba(139,92,246,0.10);
-  --brand-lavender-border: rgba(139,92,246,0.22);
+  --brand-lavender:      #7c3aed;
+  --brand-lavender-soft: rgba(139,92,246,0.22);
+  --brand-lavender-tint: rgba(139,92,246,0.08);
+  --brand-lavender-border: rgba(139,92,246,0.30);
   --brand-lavender-fg:   #4c1d95;
+  --tint-gain:           rgba(22,163,74,0.14);
+  --tint-loss:           rgba(220,38,38,0.12);
+  --tint-warm:           rgba(245,158,11,0.14);
+  --tint-blue:           rgba(91,141,239,0.14);
+  --tint-peach:          rgba(217,119,87,0.14);
+  --pill-neutral-bg:     rgba(0,0,0,0.05);
+  --pill-neutral-fg:     #4b5563;
 }
 
 /* ── 相容別名（舊 style.css 用的變數名） ── */
@@ -1627,10 +1649,11 @@ canvas { background: transparent !important; }
 }
 
 /* Hero — 主卡：可用資產 (primary) + 淨資產 (secondary) + 趨勢圖
-   v1.1 N26 風：lavender 漸層背景 + 加大字級 + 品牌色標籤 */
+   v1.1.1 N26 風：強紫色塊背景 + pill 標籤 + 加大字級 */
 .ov2-hero {
   background:
-    linear-gradient(135deg, var(--brand-lavender-soft) 0%, transparent 55%),
+    radial-gradient(ellipse at top left, var(--brand-lavender-soft) 0%, transparent 60%),
+    radial-gradient(ellipse at bottom right, var(--tint-warm) 0%, transparent 65%),
     var(--bg-card);
   border-radius: var(--card-radius-lg);
   padding: 22px 26px 18px;
@@ -1646,15 +1669,20 @@ canvas { background: transparent !important; }
   flex-wrap: wrap;
 }
 .ov2-hero-primary { min-width: 0; flex: 0 0 auto; }
+/* v1.1.1：標籤改 pill chip 樣式，有底色 + 圓角，視覺上像 N26 的 status badge */
 .ov2-hero-label {
-  font-size: 11px; font-weight: 600;
+  font-size: 10.5px; font-weight: 700;
   letter-spacing: 0.06em; text-transform: uppercase;
-  color: var(--brand-lavender);          /* v1.1：標籤改用品牌色強調 hero 身分 */
-  margin-bottom: 6px;
+  color: var(--brand-lavender);
+  background: var(--brand-lavender-soft);
+  padding: 5px 11px;
+  border-radius: 999px;
+  margin-bottom: 12px;
   display: inline-flex; align-items: center; gap: 6px;
+  width: fit-content;
 }
 .ov2-hero-label-icon {
-  font-size: 14px;
+  font-size: 16px;
   text-transform: none;
   letter-spacing: 0;
   line-height: 1;
@@ -1737,19 +1765,44 @@ canvas { background: transparent !important; }
   border: none;
   display: flex; flex-direction: column;
 }
+/* v1.1.1：本日損益／本月收益 動態色塊背景，跟著 kpi-gain/loss class */
+.ov2-pl-card.kpi-gain {
+  background:
+    radial-gradient(ellipse at top left, var(--tint-gain) 0%, transparent 60%),
+    var(--bg-card);
+}
+.ov2-pl-card.kpi-loss {
+  background:
+    radial-gradient(ellipse at top left, var(--tint-loss) 0%, transparent 60%),
+    var(--bg-card);
+}
 .ov2-pl-head {
   display: flex; justify-content: space-between; align-items: flex-start;
   gap: 8px; margin-bottom: 8px;
 }
+/* v1.1.1：pl-label 變 pill chip，跟著 kpi-gain/loss 色 */
 .ov2-pl-label {
-  font-size: 11px; font-weight: 600;
+  font-size: 10px; font-weight: 700;
   letter-spacing: 0.05em; text-transform: uppercase;
-  color: var(--text-secondary);
-  margin-bottom: 6px;
+  color: var(--pill-neutral-fg);
+  background: var(--pill-neutral-bg);
+  padding: 5px 10px;
+  border-radius: 999px;
+  margin-bottom: 10px;
   display: inline-flex; align-items: center; gap: 6px;
+  width: fit-content;
+  transition: background-color 280ms ease, color 280ms ease;
+}
+.ov2-pl-card.kpi-gain .ov2-pl-label {
+  color: var(--success);
+  background: var(--tint-gain);
+}
+.ov2-pl-card.kpi-loss .ov2-pl-label {
+  color: var(--danger);
+  background: var(--tint-loss);
 }
 .ov2-pl-label-icon, .ov2-stat-label-icon {
-  font-size: 13px;
+  font-size: 15px;
   text-transform: none;
   letter-spacing: 0;
   line-height: 1;
@@ -1857,13 +1910,15 @@ canvas { background: transparent !important; }
 .ov2-movers:active {
   transform: scale(0.97);
 }
+/* hover 用 :not(:active) 確保 click 中 :active scale(0.97) 不被 hover translateY 蓋 */
 @media (hover: hover) {
-  .ov2-hero:hover,
-  .ov2-pl-card:hover,
-  .ov2-stat-pair:hover,
-  .ov2-alloc-card:hover,
-  .ov2-movers:hover {
+  .ov2-hero:hover:not(:active),
+  .ov2-pl-card:hover:not(:active),
+  .ov2-stat-pair:hover:not(:active),
+  .ov2-alloc-card:hover:not(:active),
+  .ov2-movers:hover:not(:active) {
     box-shadow: var(--card-shadow-hover);
+    transform: translateY(-3px);
   }
 }
 /* 尊重 prefers-reduced-motion：動畫使用者不要 */
@@ -1878,9 +1933,12 @@ canvas { background: transparent !important; }
   }
 }
 
-/* Stat pair — 本年收益 + 財務存活 上下併在同一張卡 */
+/* Stat pair — 本年收益 + 財務存活 上下併在同一張卡
+   v1.1.1：暖色塊背景（cream/amber），與 hero lavender 互補 */
 .ov2-stat-pair {
-  background: var(--bg-card);
+  background:
+    radial-gradient(ellipse at top right, var(--tint-warm) 0%, transparent 65%),
+    var(--bg-card);
   border-radius: var(--card-radius-lg);
   box-shadow: var(--card-shadow-soft);
   border: none;
@@ -1895,12 +1953,26 @@ canvas { background: transparent !important; }
 .ov2-stat-half + .ov2-stat-half {
   border-top: 1px solid var(--border);
 }
+/* v1.1.1：stat-label 也用 pill chip 樣式 */
 .ov2-stat-label {
-  font-size: 10px; font-weight: 600;
+  font-size: 9.5px; font-weight: 700;
   letter-spacing: 0.05em; text-transform: uppercase;
-  color: var(--text-muted);                  /* v1.1：secondary 區更 muted、跟主 KPI 拉開層次 */
-  margin-bottom: 4px;
+  color: var(--pill-neutral-fg);
+  background: var(--pill-neutral-bg);
+  padding: 4px 9px;
+  border-radius: 999px;
+  margin-bottom: 8px;
   display: inline-flex; align-items: center; gap: 5px;
+  width: fit-content;
+  transition: background-color 280ms ease, color 280ms ease;
+}
+.ov2-stat-half.kpi-gain .ov2-stat-label {
+  color: var(--success);
+  background: var(--tint-gain);
+}
+.ov2-stat-half.kpi-loss .ov2-stat-label {
+  color: var(--danger);
+  background: var(--tint-loss);
 }
 .ov2-stat-num {
   font-family: var(--font-num);
@@ -1918,9 +1990,11 @@ canvas { background: transparent !important; }
   margin-top: 4px;
 }
 
-/* Allocation 卡（top row 右側） */
+/* Allocation 卡（top row 右側）— v1.1.1：藍色塊背景 */
 .ov2-alloc-card {
-  background: var(--bg-card);
+  background:
+    radial-gradient(ellipse at top right, var(--tint-blue) 0%, transparent 65%),
+    var(--bg-card);
   border-radius: var(--card-radius-lg);
   padding: 20px 22px;
   box-shadow: var(--card-shadow-soft);
@@ -1943,9 +2017,12 @@ canvas { background: transparent !important; }
   color: var(--text-muted);
 }
 
-/* 持倉 Top Movers — 雙欄全寬 section */
+/* 持倉 Top Movers — 雙欄全寬 section
+   v1.1.1：peach 暖色塊背景 */
 .ov2-movers {
-  background: var(--bg-card);
+  background:
+    radial-gradient(ellipse at top right, var(--tint-peach) 0%, transparent 60%),
+    var(--bg-card);
   border-radius: var(--card-radius-lg);
   padding: 20px 22px;
   box-shadow: var(--card-shadow-soft);
