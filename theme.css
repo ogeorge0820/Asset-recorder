@@ -2347,3 +2347,176 @@ canvas { background: transparent !important; }
   text-align: center; color: var(--text-muted);
   font-size: 11px; margin: 18px 0 6px;
 }
+
+/* ═══════════════════════════════════════════════════════════════
+   v1.3 新聞 Tab — 比特幣近 12 小時 · 三區塊（英 / 中 / X）
+   緊湊清單風：標題 + 來源 + 相對時間，無縮圖
+   ═══════════════════════════════════════════════════════════════ */
+#tab-news { padding: 18px 22px 32px; }
+
+.news-card {
+  background: var(--bg-card);
+  border-radius: var(--card-radius-lg);
+  padding: 22px 24px 18px;
+  box-shadow: var(--card-shadow-soft);
+  border: none;
+}
+.news-head {
+  display: flex; justify-content: space-between; align-items: baseline;
+  gap: 12px;
+  margin-bottom: 4px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid var(--border);
+}
+.news-head-left { display: flex; flex-direction: column; gap: 2px; }
+.news-title-main {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--text-primary);
+  letter-spacing: -0.01em;
+}
+.news-subtitle {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+.news-head-right {
+  display: flex; align-items: center; gap: 10px;
+}
+.news-updated {
+  font-family: var(--font-num);
+  font-size: 11px;
+  color: var(--text-muted);
+}
+.news-refresh-btn {
+  background: var(--pill-neutral-bg, rgba(127,127,127,0.12));
+  color: var(--text-secondary);
+  border: none;
+  width: 30px; height: 30px;
+  border-radius: 999px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background-color 180ms ease, transform 400ms ease;
+}
+.news-refresh-btn:hover { background: var(--pill-neutral-hover, rgba(127,127,127,0.22)); }
+.news-refresh-btn:active { transform: scale(0.94); }
+.news-refresh-btn.spinning {
+  animation: news-spin 0.9s linear infinite;
+}
+@keyframes news-spin {
+  to { transform: rotate(360deg); }
+}
+
+.news-zone {
+  margin-top: 18px;
+}
+.news-zone-head {
+  display: flex; justify-content: space-between; align-items: baseline;
+  margin-bottom: 8px;
+}
+.news-zone-label {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+}
+.news-zone-count {
+  font-family: var(--font-num);
+  font-size: 10px;
+  color: var(--text-muted);
+}
+.news-list {
+  list-style: none;
+  margin: 0; padding: 0;
+}
+.news-item {
+  padding: 10px 0;
+  border-bottom: 1px solid var(--border);
+}
+.news-item:last-child { border-bottom: none; }
+.news-link {
+  display: block;
+  text-decoration: none;
+  color: inherit;
+  outline: none;
+}
+.news-link:hover .news-item-title,
+.news-link:focus-visible .news-item-title {
+  color: var(--brand-lavender, #7c3aed);
+}
+.news-item-title {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-primary);
+  line-height: 1.45;
+  margin-bottom: 4px;
+  /* 最多兩行，超過省略 */
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  transition: color 160ms ease;
+}
+.news-item-meta {
+  display: flex; align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  color: var(--text-muted);
+  font-family: var(--font-num);
+}
+.news-item-source {
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+.news-item-dot { opacity: 0.5; }
+.news-item-stat {
+  /* X 區塊互動數 / 英文區票數 */
+  color: var(--text-muted);
+}
+
+.news-empty,
+.news-error,
+.news-skeleton {
+  padding: 14px 0;
+  font-size: 12px;
+  color: var(--text-muted);
+  text-align: center;
+}
+.news-error {
+  color: var(--danger, #FF3B30);
+}
+.news-error-retry {
+  background: none; border: 1px solid currentColor;
+  color: inherit;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 11px;
+  margin-left: 8px;
+  cursor: pointer;
+}
+.news-stale-banner {
+  margin: 8px 0 12px;
+  padding: 8px 12px;
+  background: var(--tint-warm, rgba(255,180,80,0.14));
+  color: var(--text-secondary);
+  border-radius: 8px;
+  font-size: 12px;
+  text-align: center;
+}
+
+.news-disclaimer {
+  margin: 18px 0 0;
+  text-align: center;
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+/* Mobile (≤ 768px) */
+@media (max-width: 768px) {
+  #tab-news { padding: 14px 12px 28px; }
+  .news-card { padding: 18px 16px 14px; border-radius: 16px; }
+  .news-head { flex-direction: column; align-items: flex-start; gap: 8px; }
+  .news-head-right { width: 100%; justify-content: space-between; }
+  .news-item-title { font-size: 13.5px; }
+}

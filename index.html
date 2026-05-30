@@ -16,8 +16,8 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=DM+Sans:wght@300;400;500;600;700&display=swap">
-<link rel="stylesheet" href="theme.css?v=202605302216">
-<link rel="stylesheet" href="style.css?v=202605302216">
+<link rel="stylesheet" href="theme.css?v=202605302325">
+<link rel="stylesheet" href="style.css?v=202605302325">
 </head>
 <body>
 
@@ -43,6 +43,7 @@
       <button class="tab-btn" onclick="switchTab('management')">管理</button>
       <button class="tab-btn" onclick="switchTab('dwz')"><span class="tab-full">Die With Zero</span><span class="tab-short">DWZ</span></button>
       <button class="tab-btn" onclick="switchTab('indicators')">指標</button>
+      <button class="tab-btn" onclick="switchTab('news')">新聞</button>
     </nav>
     <div class="header-right">
       <div class="update-badge" id="update-badge">
@@ -584,6 +585,44 @@
       <p class="ind-disclaimer">指標僅供參考，不構成投資建議。請多點驗證，並搭配技術分析。</p>
     </div><!-- /tab-indicators -->
 
+    <!-- ══ 新聞 Tab ══ -->
+    <div id="tab-news" style="display:none">
+      <section class="news-card">
+        <div class="news-head">
+          <div class="news-head-left">
+            <h3 class="news-title-main">比特幣新聞</h3>
+            <span class="news-subtitle">近 12 小時 · 共 10 則</span>
+          </div>
+          <div class="news-head-right">
+            <span class="news-updated" id="news-updated">—</span>
+            <button class="news-refresh-btn" id="news-refresh-btn" onclick="refreshNews()" aria-label="重新整理新聞">↻</button>
+          </div>
+        </div>
+        <section class="news-zone">
+          <div class="news-zone-head">
+            <span class="news-zone-label">英文媒體</span>
+            <span class="news-zone-count" id="news-count-en">—</span>
+          </div>
+          <ul class="news-list" id="news-list-en"></ul>
+        </section>
+        <section class="news-zone">
+          <div class="news-zone-head">
+            <span class="news-zone-label">繁中媒體</span>
+            <span class="news-zone-count" id="news-count-zh">—</span>
+          </div>
+          <ul class="news-list" id="news-list-zh"></ul>
+        </section>
+        <section class="news-zone">
+          <div class="news-zone-head">
+            <span class="news-zone-label">X 熱議</span>
+            <span class="news-zone-count" id="news-count-x">—</span>
+          </div>
+          <ul class="news-list" id="news-list-x"></ul>
+        </section>
+        <p class="news-disclaimer">資料來源：CryptoCompare · 動區 / 區塊客 RSS · CryptoPanic / Lunarcrush。點擊標題開啟原文。</p>
+      </section>
+    </div><!-- /tab-news -->
+
     <!-- Page footer: version (desktop + mobile) -->
     <footer class="page-footer">
       <span class="page-footer-build" id="build-badge"></span>
@@ -689,6 +728,6 @@
 <!-- ── Toast ── -->
 <div class="toast" id="toast"></div>
 
-<script src="app.js?v=202605302216"></script>
+<script src="app.js?v=202605302325"></script>
 </body>
 </html>

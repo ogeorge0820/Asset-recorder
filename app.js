@@ -4,7 +4,7 @@
 // 應用版本號 — 重大功能變更才升版（小修補只更新 BUILD_DATE）
 const APP_VERSION = 'v1.0';
 // Build 時間：每次修改 code 後手動更新此時間（UTC+8 台北時間）
-const BUILD_DATE = '2026/05/30 22:16';
+const BUILD_DATE = '2026/05/30 23:25';
 
 const SPREADSHEET_ID = '1lpRpxVzWaYUqL-jVPOAJCtjsJUIedPYYyOx4gg4PPFU';
 const CLIENT_ID = '149884248440-85f8dhc6ub9up10sv0f89e3e0itrnooj.apps.googleusercontent.com';
@@ -5863,19 +5863,23 @@ function switchTab(tab) {
   $('tab-management').style.display  = tab==='management'  ? 'block' : 'none';
   $('tab-dwz').style.display         = tab==='dwz'         ? 'block' : 'none';
   $('tab-indicators').style.display  = tab==='indicators'  ? 'block' : 'none';
+  const elNews = $('tab-news');
+  if (elNews) elNews.style.display    = tab==='news'        ? 'block' : 'none';
   document.querySelectorAll('.tab-btn').forEach((b,i) => {
     b.classList.toggle('active',
-      (i===0&&tab==='overview')||(i===1&&tab==='management')||(i===2&&tab==='dwz')||(i===3&&tab==='indicators'));
+      (i===0&&tab==='overview')||(i===1&&tab==='management')||(i===2&&tab==='dwz')||(i===3&&tab==='indicators')||(i===4&&tab==='news'));
   });
   // Sidebar nav
-  const sO = $('snav-overview'), sM = $('snav-management'), sD = $('snav-dwz'), sI = $('snav-indicators');
+  const sO = $('snav-overview'), sM = $('snav-management'), sD = $('snav-dwz'), sI = $('snav-indicators'), sN = $('snav-news');
   if (sO) sO.classList.toggle('active', tab === 'overview');
   if (sM) sM.classList.toggle('active', tab === 'management');
   if (sD) sD.classList.toggle('active', tab === 'dwz');
   if (sI) sI.classList.toggle('active', tab === 'indicators');
+  if (sN) sN.classList.toggle('active', tab === 'news');
   if (tab === 'management') renderManagement();
   if (tab === 'dwz') initDWZ();
   if (tab === 'indicators') renderIndicators();
+  if (tab === 'news') renderNewsTab();
 }
 
 // ── Mobile Menu Sheet ──
@@ -6031,6 +6035,274 @@ async function initApp() {
     if (e.message !== 'auth') showToast('載入失敗：' + e.message, 'err');
     console.error('initApp:', e);
   }
+}
+
+// ═══════════════════════════════════════════════════════════════
+// 新聞 Tab — 比特幣近 12 小時 · 三區塊（英文 / 繁中 / X）
+// 進入 tab 時 lazy fetch、結果存 localStorage 快取 30 分鐘
+// 三區並行 Promise.allSettled，任一區失敗不影響其他
+// ═══════════════════════════════════════════════════════════════
+
+// API tokens — 註冊免費，貼到下面兩個常數即可啟用 X 區。
+// CryptoPanic: https://cryptopanic.com/developers/api/
+// Lunarcrush:  https://lunarcrush.com/developers/api
+const CRYPTOPANIC_TOKEN = ''; // TODO: 貼入 CryptoPanic API token
+const LUNARCRUSH_KEY    = ''; // TODO: 貼入 Lunarcrush API key
+
+const NEWS_CACHE_KEY    = 'news_cache_v1';
+const NEWS_CACHE_TTL_MS = 30 * 60 * 1000;        // 30 分鐘
+const NEWS_WINDOW_MS    = 12 * 60 * 60 * 1000;   // 12 小時
+const NEWS_COUNT        = { en: 4, zh: 3, x: 3 };
+
+// 英文媒體信任度白名單（高分優先）
+const EN_SOURCE_TIER = {
+  coindesk: 5, cointelegraph: 5, theblock: 5, bloomberg: 5, reuters: 5,
+  decrypt: 4, thedefiant: 4, cryptoslate: 4, forbes: 4,
+  cnbc: 4, wsj: 4, ft: 4,
+  bitcoinmagazine: 3, 'bitcoin.com': 3, cryptobriefing: 3,
+};
+
+// BTC 關鍵字（過濾標題以排除其他幣相關的雜訊）
+const BTC_KW = /bitcoin|btc|比特幣|中本聰|satoshi|sats\b/i;
+
+function renderNewsTab() {
+  if (!S.news) S.news = _loadNewsCache();
+  const now = Date.now();
+  const fresh = S.news && (now - S.news.fetchedAt < NEWS_CACHE_TTL_MS);
+  if (S.news) {
+    _renderNewsUI(S.news, !fresh);
+    if (!fresh) _fetchNewsAll();    // 過期：背景重抓，先顯示舊資料
+  } else {
+    _renderNewsLoading();
+    _fetchNewsAll();
+  }
+}
+
+function refreshNews() {
+  S.news = null;
+  try { localStorage.removeItem(NEWS_CACHE_KEY); } catch (_) {}
+  const btn = $('news-refresh-btn');
+  if (btn) btn.classList.add('spinning');
+  _renderNewsLoading();
+  _fetchNewsAll();
+}
+
+async function _fetchNewsAll() {
+  const cutoff = Date.now() - NEWS_WINDOW_MS;
+  const settled = await Promise.allSettled([
+    _fetchNewsEN(cutoff),
+    _fetchNewsZH(cutoff),
+    _fetchNewsX(cutoff),
+  ]);
+  const errors = {};
+  const pick = (i, k) => {
+    if (settled[i].status === 'fulfilled') return settled[i].value;
+    errors[k] = (settled[i].reason && settled[i].reason.message) || '錯誤';
+    return [];
+  };
+  S.news = {
+    fetchedAt: Date.now(),
+    en: pick(0, 'en'),
+    zh: pick(1, 'zh'),
+    x:  pick(2, 'x'),
+    errors,
+  };
+  _saveNewsCache(S.news);
+  _renderNewsUI(S.news, false);
+  const btn = $('news-refresh-btn');
+  if (btn) btn.classList.remove('spinning');
+}
+
+function _loadNewsCache() {
+  try {
+    const raw = localStorage.getItem(NEWS_CACHE_KEY);
+    if (!raw) return null;
+    const j = JSON.parse(raw);
+    return (j && j.fetchedAt) ? j : null;
+  } catch (_) { return null; }
+}
+function _saveNewsCache(data) {
+  try { localStorage.setItem(NEWS_CACHE_KEY, JSON.stringify(data)); } catch (_) {}
+}
+
+// ── 英文：CryptoCompare News API（免費、無需 key）──
+async function _fetchNewsEN(cutoffMs) {
+  const url = 'https://min-api.cryptocompare.com/data/v2/news/?categories=BTC&lang=EN&excludeCategories=Sponsored';
+  const r = await proxyFetch(url);
+  const j = await r.json();
+  if (!j || !Array.isArray(j.Data)) throw new Error('英文來源回應異常');
+  const items = j.Data
+    .filter(n => (n.published_on * 1000) >= cutoffMs)
+    .filter(n => BTC_KW.test(n.title || ''))
+    .map(n => {
+      const srcRaw = (n.source || (n.source_info && n.source_info.name) || '').toLowerCase().replace(/[\s\-_]/g, '');
+      const tier = EN_SOURCE_TIER[srcRaw] || 1;
+      return {
+        title: n.title,
+        url: n.url || n.guid,
+        source: (n.source_info && n.source_info.name) || n.source || '—',
+        ts: n.published_on * 1000,
+        stat: '',
+        score: tier * 100 + Math.max(0, 12 - (Date.now() - n.published_on * 1000) / 3600000),
+      };
+    })
+    .sort((a, b) => b.score - a.score);
+  return _dedupTitles(items).slice(0, NEWS_COUNT.en);
+}
+
+// ── 繁中：動區 + 區塊客 RSS（經 rss2json 轉 JSON）──
+async function _fetchNewsZH(cutoffMs) {
+  const feeds = [
+    { url: 'https://www.blocktempo.com/feed/', source: '動區 BlockTempo' },
+    { url: 'https://blockcast.it/feed/',       source: '區塊客' },
+  ];
+  // rss2json 免費 tier：10000 calls/day、8 calls/min — 一次刷新只用 2 calls
+  const settled = await Promise.allSettled(feeds.map(async f => {
+    const api = `https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(f.url)}&count=25`;
+    const r = await proxyFetch(api);
+    const j = await r.json();
+    if (!j || j.status !== 'ok' || !Array.isArray(j.items)) return [];
+    return j.items
+      .map(it => ({
+        title: it.title,
+        url: it.link,
+        source: f.source,
+        ts: new Date(it.pubDate).getTime(),
+        stat: '',
+      }))
+      .filter(it => Number.isFinite(it.ts) && it.ts >= cutoffMs)
+      .filter(it => BTC_KW.test(it.title || ''));
+  }));
+  const all = settled.flatMap(s => s.status === 'fulfilled' ? s.value : []);
+  if (settled.every(s => s.status === 'rejected')) throw new Error('繁中 RSS 全失敗');
+  all.sort((a, b) => b.ts - a.ts);
+  return _dedupTitles(all).slice(0, NEWS_COUNT.zh);
+}
+
+// ── X：CryptoPanic media + Lunarcrush（任一可用即可）──
+async function _fetchNewsX(cutoffMs) {
+  if (!CRYPTOPANIC_TOKEN && !LUNARCRUSH_KEY) {
+    throw new Error('未設定 CryptoPanic / Lunarcrush token');
+  }
+  const items = [];
+  if (CRYPTOPANIC_TOKEN) {
+    try {
+      const url = `https://cryptopanic.com/api/v1/posts/?auth_token=${encodeURIComponent(CRYPTOPANIC_TOKEN)}&currencies=BTC&filter=hot&kind=media&public=true`;
+      const r = await proxyFetch(url);
+      const j = await r.json();
+      (j.results || []).forEach(p => {
+        const ts = new Date(p.created_at).getTime();
+        if (!Number.isFinite(ts) || ts < cutoffMs) return;
+        const v = p.votes || {};
+        items.push({
+          title: p.title,
+          url: p.url,
+          source: (p.source && p.source.title) || p.domain || 'X',
+          ts,
+          stat: (v.important || v.positive) ? `${v.important || 0}❗ ${v.positive || 0}🟢` : '',
+          score: (v.important || 0) * 5 + (v.liked || 0) + ts / 1e11,
+        });
+      });
+    } catch (_) { /* 不致命，由 Lunarcrush 補上 */ }
+  }
+  if (LUNARCRUSH_KEY) {
+    try {
+      const url = 'https://lunarcrush.com/api4/public/topic/bitcoin/posts/v1';
+      const r = await proxyFetch(url, { headers: { Authorization: `Bearer ${LUNARCRUSH_KEY}` } });
+      const j = await r.json();
+      (j.data || []).forEach(p => {
+        const ts = (p.post_created || p.created || 0) * 1000;
+        if (!Number.isFinite(ts) || ts < cutoffMs) return;
+        items.push({
+          title: p.post_title || p.post_link_text || '(無標題)',
+          url: p.post_link,
+          source: '@' + (p.creator_name || p.creator_id || 'X'),
+          ts,
+          stat: p.interactions_24h ? `${_fmtCount(p.interactions_24h)} 互動` : '',
+          score: (p.interactions_24h || 0) + ts / 1e11,
+        });
+      });
+    } catch (_) { /* 不致命 */ }
+  }
+  if (!items.length) throw new Error('X 區無資料（可能 token 失效或來源故障）');
+  items.sort((a, b) => b.score - a.score);
+  return _dedupTitles(items).slice(0, NEWS_COUNT.x);
+}
+
+function _dedupTitles(items) {
+  const seen = new Set();
+  return items.filter(it => {
+    const k = (it.title || '').slice(0, 40).toLowerCase().replace(/\s/g, '');
+    if (!k || seen.has(k)) return false;
+    seen.add(k); return true;
+  });
+}
+function _fmtCount(n) {
+  if (!n) return '0';
+  if (n >= 1e6) return (n / 1e6).toFixed(1) + 'M';
+  if (n >= 1e3) return (n / 1e3).toFixed(1) + 'k';
+  return String(Math.round(n));
+}
+function _fmtRelTime(ts) {
+  const diff = Date.now() - ts;
+  const m = Math.round(diff / 60000);
+  if (m < 1) return '剛剛';
+  if (m < 60) return m + ' 分鐘前';
+  const h = Math.round(m / 60);
+  if (h < 24) return h + ' 小時前';
+  const d = Math.round(h / 24);
+  return d + ' 天前';
+}
+
+function _renderNewsLoading() {
+  ['en', 'zh', 'x'].forEach(z => {
+    const el = $('news-list-' + z);
+    if (el) el.innerHTML = '<li class="news-skeleton">載入中⋯</li>';
+    const c = $('news-count-' + z);
+    if (c) c.textContent = '';
+  });
+  const upd = $('news-updated');
+  if (upd) upd.textContent = '抓取中⋯';
+}
+
+function _renderNewsUI(data, isStale) {
+  _renderNewsZone('en', data.en, data.errors && data.errors.en);
+  _renderNewsZone('zh', data.zh, data.errors && data.errors.zh);
+  _renderNewsZone('x',  data.x,  data.errors && data.errors.x);
+  const upd = $('news-updated');
+  if (upd) {
+    upd.textContent = (isStale ? '⚠ ' : '') + _fmtRelTime(data.fetchedAt) + '更新';
+  }
+}
+
+function _renderNewsZone(zone, items, error) {
+  const list = $('news-list-' + zone);
+  const cEl = $('news-count-' + zone);
+  if (!list) return;
+  if (error) {
+    list.innerHTML = `<li class="news-error">📡 ${esc(error)} <button class="news-error-retry" onclick="refreshNews()">重試</button></li>`;
+    if (cEl) cEl.textContent = '錯誤';
+    return;
+  }
+  if (!items || items.length === 0) {
+    list.innerHTML = '<li class="news-empty">近 12 小時無相關報導</li>';
+    if (cEl) cEl.textContent = '0 則';
+    return;
+  }
+  list.innerHTML = items.map(it => `
+    <li class="news-item">
+      <a class="news-link" href="${esc(it.url || '#')}" target="_blank" rel="noopener noreferrer">
+        <div class="news-item-title">${esc(it.title || '(無標題)')}</div>
+        <div class="news-item-meta">
+          <span class="news-item-source">${esc(it.source || '—')}</span>
+          <span class="news-item-dot">·</span>
+          <span>${_fmtRelTime(it.ts)}</span>
+          ${it.stat ? `<span class="news-item-dot">·</span><span class="news-item-stat">${esc(it.stat)}</span>` : ''}
+        </div>
+      </a>
+    </li>
+  `).join('');
+  if (cEl) cEl.textContent = items.length + ' 則';
 }
 
 document.addEventListener('DOMContentLoaded', () => {
