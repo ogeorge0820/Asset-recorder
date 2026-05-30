@@ -1837,13 +1837,18 @@ canvas { background: transparent !important; }
   transform-origin: left center;
 }
 
-/* tap 反饋：點下去縮到 0.97、放開回彈，桌機 hover 提一階陰影 */
+/* tap 反饋：點下去縮到 0.97、放開回彈，桌機 hover 提一階陰影
+   加上 background-color 過渡，讓 Light↔Dark 切換不閃跳（criterion #12） */
 .ov2-hero,
 .ov2-pl-card,
 .ov2-stat-pair,
 .ov2-alloc-card,
 .ov2-movers {
-  transition: transform 140ms ease-out, box-shadow 220ms ease-out;
+  transition:
+    transform 140ms ease-out,
+    box-shadow 220ms ease-out,
+    background-color 280ms ease,
+    color 280ms ease;
 }
 .ov2-hero:active,
 .ov2-pl-card:active,
@@ -2027,14 +2032,17 @@ canvas { background: transparent !important; }
   .ov2-alloc-card .pie-wrap { flex: 1; min-height: 200px !important; }
 }
 
-/* Mobile (<= 768px) — 全部 stack */
+/* Mobile (<= 768px) — hero 全寬、本日+本月 並列第二排、stat-pair 第三排全寬 */
 @media (max-width: 768px) {
-  #tab-overview { padding: 14px 12px 28px !important; gap: 12px; }
-  .ov2-top-row { grid-template-columns: 1fr; min-height: 0; }
-  .ov2-mid-row { grid-template-columns: 1fr; }
-  .ov2-hero { padding: 16px 16px 12px; border-radius: 14px; }
+  #tab-overview { padding: 14px 12px 28px !important; gap: 14px; }
+  .ov2-top-row { grid-template-columns: 1fr; min-height: 0; gap: 14px; }
+  /* v1.1：本日+本月 兩欄並列、stat-pair 第二行全寬（criterion #2） */
+  .ov2-mid-row { grid-template-columns: 1fr 1fr; gap: 12px; }
+  .ov2-stat-pair { grid-column: 1 / -1; }      /* 跨兩欄變獨立一行 */
+  /* 圓角 mobile 也保持 ≥ 16（criterion #4） */
+  .ov2-hero { padding: 20px 20px 16px; border-radius: 18px; }
   .ov2-hero-head { gap: 12px; flex-direction: column; align-items: stretch; }
-  .ov2-hero-num { font-size: 36px; letter-spacing: -0.025em; }
+  .ov2-hero-num { font-size: 38px; letter-spacing: -0.025em; }
   .ov2-hero-secondary {
     border-left: none; padding-left: 0;
     border-top: 1px solid var(--border);
@@ -2043,11 +2051,12 @@ canvas { background: transparent !important; }
   .ov2-hero-sub-num { font-size: 20px; }
   .ov2-trend-filter { margin-left: 0 !important; }
   .ov2-hero-trend { min-height: 120px; }
+  /* padding ≥ 18（criterion #6）、radius 16（criterion #4） */
   .ov2-pl-card, .ov2-alloc-card, .ov2-movers {
-    padding: 14px 16px; border-radius: 12px;
+    padding: 18px 18px; border-radius: 16px;
   }
-  .ov2-stat-pair { border-radius: 12px; }
-  .ov2-stat-half { padding: 12px 16px; }
+  .ov2-stat-pair { border-radius: 16px; }
+  .ov2-stat-half { padding: 14px 18px; }
   .ov2-pl-num, .ov2-stat-num { font-size: 22px; }
   .ov2-pl-chart { min-height: 60px; }
   .ov2-movers-grid { grid-template-columns: 1fr; gap: 14px; }
