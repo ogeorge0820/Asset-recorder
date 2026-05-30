@@ -4,7 +4,7 @@
 // 應用版本號 — 重大功能變更才升版（小修補只更新 BUILD_DATE）
 const APP_VERSION = 'v1.0';
 // Build 時間：每次修改 code 後手動更新此時間（UTC+8 台北時間）
-const BUILD_DATE = '2026/05/30 23:34';
+const BUILD_DATE = '2026/05/30 23:48';
 
 const SPREADSHEET_ID = '1lpRpxVzWaYUqL-jVPOAJCtjsJUIedPYYyOx4gg4PPFU';
 const CLIENT_ID = '149884248440-85f8dhc6ub9up10sv0f89e3e0itrnooj.apps.googleusercontent.com';
@@ -6153,10 +6153,12 @@ function _saveNewsCache(data) {
 
 // ── 英文：Google News RSS（"bitcoin when:1d"）via rss2json ──
 // CryptoCompare 已於 2026 年起需付費 key，改走 Google News 聚合
+// rss2json 本身回 CORS *，直接呼叫不過代理（代理層的雙層 URL 編碼會破壞 query）
 async function _fetchNewsEN(cutoffMs) {
   const gnews = 'https://news.google.com/rss/search?q=bitcoin+when:1d&hl=en-US&gl=US&ceid=US:en';
   const api = `https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(gnews)}`;
-  const r = await _newsProxyFetch(api);
+  const r = await fetch(api, { signal: AbortSignal.timeout(12000) });
+  if (!r.ok) throw new Error(`英文 rss2json HTTP ${r.status}`);
   const j = await r.json();
   if (!j || j.status !== 'ok' || !Array.isArray(j.items)) {
     throw new Error('英文來源回應異常（' + ((j && j.message) || 'no items') + '）');
@@ -6189,9 +6191,11 @@ async function _fetchNewsZH(cutoffMs) {
     { url: 'https://blockcast.it/feed/',       source: '區塊客' },
   ];
   // rss2json 免費 tier：count 參數需付費 key，拿掉用預設（10 筆/feed 已足夠）
+  // rss2json 本身回 CORS *，直接呼叫不過代理
   const settled = await Promise.allSettled(feeds.map(async f => {
     const api = `https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(f.url)}`;
-    const r = await _newsProxyFetch(api);
+    const r = await fetch(api, { signal: AbortSignal.timeout(12000) });
+    if (!r.ok) throw new Error(`HTTP ${r.status}`);
     const j = await r.json();
     if (!j || j.status !== 'ok' || !Array.isArray(j.items)) return [];
     return j.items
