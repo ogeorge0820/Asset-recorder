@@ -4,7 +4,7 @@
 // 應用版本號 — 重大功能變更才升版（小修補只更新 BUILD_DATE）
 const APP_VERSION = 'v1.0';
 // Build 時間：每次修改 code 後手動更新此時間（UTC+8 台北時間）
-const BUILD_DATE = '2026/05/30 23:25';
+const BUILD_DATE = '2026/05/30 23:34';
 
 const SPREADSHEET_ID = '1lpRpxVzWaYUqL-jVPOAJCtjsJUIedPYYyOx4gg4PPFU';
 const CLIENT_ID = '149884248440-85f8dhc6ub9up10sv0f89e3e0itrnooj.apps.googleusercontent.com';
@@ -6054,16 +6054,42 @@ const NEWS_CACHE_TTL_MS = 30 * 60 * 1000;        // 30 分鐘
 const NEWS_WINDOW_MS    = 12 * 60 * 60 * 1000;   // 12 小時
 const NEWS_COUNT        = { en: 4, zh: 3, x: 3 };
 
-// 英文媒體信任度白名單（高分優先）
+// 英文媒體信任度白名單（高分優先）— key 為來源名稱小寫去掉空格/底線/點/連字
 const EN_SOURCE_TIER = {
   coindesk: 5, cointelegraph: 5, theblock: 5, bloomberg: 5, reuters: 5,
   decrypt: 4, thedefiant: 4, cryptoslate: 4, forbes: 4,
-  cnbc: 4, wsj: 4, ft: 4,
-  bitcoinmagazine: 3, 'bitcoin.com': 3, cryptobriefing: 3,
+  cnbc: 4, wsj: 4, ft: 4, financialtimes: 4, theguardian: 4, ap: 4,
+  bitcoinmagazine: 3, bitcoincom: 3, cryptobriefing: 3, bitcoinist: 3,
+  newsbtc: 3, ambcrypto: 3, beincrypto: 3, u_today: 3, utoday: 3,
 };
 
 // BTC 關鍵字（過濾標題以排除其他幣相關的雜訊）
 const BTC_KW = /bitcoin|btc|比特幣|中本聰|satoshi|sats\b/i;
+
+// 新聞用代理：corsproxy.io 已轉付費（2026/05 起），改走 allorigins → codetabs 鏈
+// 不動全域 proxyFetch（保留給 binance/coingecko，避免影響價格抓取）
+async function _newsProxyFetch(url, opts = {}) {
+  const builders = [
+    u => `https://api.allorigins.win/raw?url=${encodeURIComponent(u)}`,
+    u => `https://api.codetabs.com/v1/proxy/?quest=${u}`,
+  ];
+  let lastErr;
+  for (const build of builders) {
+    try {
+      const r = await fetch(build(url), { ...opts, signal: AbortSignal.timeout(12000) });
+      if (!r.ok) { lastErr = new Error(`HTTP ${r.status}`); continue; }
+      return r;
+    } catch (e) { lastErr = e; }
+  }
+  throw lastErr || new Error('代理鏈全失敗');
+}
+
+// Google News 標題形如「Some Title - Source Name」，拆出來源
+function _splitGNewsTitle(t) {
+  if (!t) return { title: '', source: 'Google News' };
+  const m = t.match(/^(.+?)\s+[-–—]\s+([^-–—]+)$/);
+  return m ? { title: m[1].trim(), source: m[2].trim() } : { title: t, source: 'Google News' };
+}
 
 function renderNewsTab() {
   if (!S.news) S.news = _loadNewsCache();
@@ -6125,27 +6151,33 @@ function _saveNewsCache(data) {
   try { localStorage.setItem(NEWS_CACHE_KEY, JSON.stringify(data)); } catch (_) {}
 }
 
-// ── 英文：CryptoCompare News API（免費、無需 key）──
+// ── 英文：Google News RSS（"bitcoin when:1d"）via rss2json ──
+// CryptoCompare 已於 2026 年起需付費 key，改走 Google News 聚合
 async function _fetchNewsEN(cutoffMs) {
-  const url = 'https://min-api.cryptocompare.com/data/v2/news/?categories=BTC&lang=EN&excludeCategories=Sponsored';
-  const r = await proxyFetch(url);
+  const gnews = 'https://news.google.com/rss/search?q=bitcoin+when:1d&hl=en-US&gl=US&ceid=US:en';
+  const api = `https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(gnews)}`;
+  const r = await _newsProxyFetch(api);
   const j = await r.json();
-  if (!j || !Array.isArray(j.Data)) throw new Error('英文來源回應異常');
-  const items = j.Data
-    .filter(n => (n.published_on * 1000) >= cutoffMs)
-    .filter(n => BTC_KW.test(n.title || ''))
-    .map(n => {
-      const srcRaw = (n.source || (n.source_info && n.source_info.name) || '').toLowerCase().replace(/[\s\-_]/g, '');
+  if (!j || j.status !== 'ok' || !Array.isArray(j.items)) {
+    throw new Error('英文來源回應異常（' + ((j && j.message) || 'no items') + '）');
+  }
+  const items = j.items
+    .map(it => {
+      const sp = _splitGNewsTitle(it.title);
+      const srcRaw = sp.source.toLowerCase().replace(/[\s\-_.]/g, '');
       const tier = EN_SOURCE_TIER[srcRaw] || 1;
+      const ts = new Date(it.pubDate).getTime();
       return {
-        title: n.title,
-        url: n.url || n.guid,
-        source: (n.source_info && n.source_info.name) || n.source || '—',
-        ts: n.published_on * 1000,
+        title: sp.title,
+        url: it.link,
+        source: sp.source,
+        ts,
         stat: '',
-        score: tier * 100 + Math.max(0, 12 - (Date.now() - n.published_on * 1000) / 3600000),
+        score: tier * 100 + Math.max(0, 12 - (Date.now() - ts) / 3600000),
       };
     })
+    .filter(it => Number.isFinite(it.ts) && it.ts >= cutoffMs)
+    .filter(it => BTC_KW.test(it.title || ''))
     .sort((a, b) => b.score - a.score);
   return _dedupTitles(items).slice(0, NEWS_COUNT.en);
 }
@@ -6156,10 +6188,10 @@ async function _fetchNewsZH(cutoffMs) {
     { url: 'https://www.blocktempo.com/feed/', source: '動區 BlockTempo' },
     { url: 'https://blockcast.it/feed/',       source: '區塊客' },
   ];
-  // rss2json 免費 tier：10000 calls/day、8 calls/min — 一次刷新只用 2 calls
+  // rss2json 免費 tier：count 參數需付費 key，拿掉用預設（10 筆/feed 已足夠）
   const settled = await Promise.allSettled(feeds.map(async f => {
-    const api = `https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(f.url)}&count=25`;
-    const r = await proxyFetch(api);
+    const api = `https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(f.url)}`;
+    const r = await _newsProxyFetch(api);
     const j = await r.json();
     if (!j || j.status !== 'ok' || !Array.isArray(j.items)) return [];
     return j.items
@@ -6188,7 +6220,7 @@ async function _fetchNewsX(cutoffMs) {
   if (CRYPTOPANIC_TOKEN) {
     try {
       const url = `https://cryptopanic.com/api/v1/posts/?auth_token=${encodeURIComponent(CRYPTOPANIC_TOKEN)}&currencies=BTC&filter=hot&kind=media&public=true`;
-      const r = await proxyFetch(url);
+      const r = await _newsProxyFetch(url);
       const j = await r.json();
       (j.results || []).forEach(p => {
         const ts = new Date(p.created_at).getTime();
@@ -6208,7 +6240,7 @@ async function _fetchNewsX(cutoffMs) {
   if (LUNARCRUSH_KEY) {
     try {
       const url = 'https://lunarcrush.com/api4/public/topic/bitcoin/posts/v1';
-      const r = await proxyFetch(url, { headers: { Authorization: `Bearer ${LUNARCRUSH_KEY}` } });
+      const r = await _newsProxyFetch(url, { headers: { Authorization: `Bearer ${LUNARCRUSH_KEY}` } });
       const j = await r.json();
       (j.data || []).forEach(p => {
         const ts = (p.post_created || p.created || 0) * 1000;
