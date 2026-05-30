@@ -1760,97 +1760,76 @@ canvas { background: transparent !important; }
 .ov2-pl-card {
   background: var(--bg-card);
   border-radius: var(--card-radius-lg);
-  padding: 20px 22px 18px;
+  padding: 18px 20px 16px;
   box-shadow: var(--card-shadow-soft);
   border: none;
   display: flex; flex-direction: column;
+  min-height: 138px;
 }
-/* v1.1.1：本日損益／本月收益 動態色塊背景，跟著 kpi-gain/loss class */
-.ov2-pl-card.kpi-gain {
-  background:
-    radial-gradient(ellipse at top left, var(--tint-gain) 0%, transparent 60%),
-    var(--bg-card);
-}
-.ov2-pl-card.kpi-loss {
-  background:
-    radial-gradient(ellipse at top left, var(--tint-loss) 0%, transparent 60%),
-    var(--bg-card);
-}
+/* v1.2：拿掉 kpi-gain/loss 的色塊背景，回歸極簡白卡（數字本身已是色彩主角） */
 .ov2-pl-head {
-  display: flex; justify-content: space-between; align-items: flex-start;
-  gap: 8px; margin-bottom: 8px;
+  display: flex; justify-content: space-between; align-items: baseline;
+  gap: 8px;
+  margin-bottom: 6px;
 }
-/* v1.1.1：pl-label 變 pill chip，跟著 kpi-gain/loss 色 */
+/* v1.2：pl-label 改回極簡灰色小字，無 pill、無 uppercase */
 .ov2-pl-label {
-  font-size: 10px; font-weight: 700;
-  letter-spacing: 0.05em; text-transform: uppercase;
-  color: var(--pill-neutral-fg);
-  background: var(--pill-neutral-bg);
-  padding: 5px 10px;
-  border-radius: 999px;
-  margin-bottom: 10px;
-  display: inline-flex; align-items: center; gap: 6px;
-  width: fit-content;
-  transition: background-color 280ms ease, color 280ms ease;
-}
-.ov2-pl-card.kpi-gain .ov2-pl-label {
-  color: var(--success);
-  background: var(--tint-gain);
-}
-.ov2-pl-card.kpi-loss .ov2-pl-label {
-  color: var(--danger);
-  background: var(--tint-loss);
-}
-.ov2-pl-label-icon, .ov2-stat-label-icon {
-  font-size: 15px;
-  text-transform: none;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-muted);
   letter-spacing: 0;
-  line-height: 1;
+  text-transform: none;
 }
 .ov2-pl-num {
   font-family: var(--font-num);
   font-variant-numeric: tabular-nums;
   font-weight: 700;
-  font-size: 26px;
-  letter-spacing: -0.02em;
-  line-height: 1;
-}
-.ov2-pl-meta {
-  font-family: var(--font-num);
-  font-size: 11px;
-  color: var(--text-muted);
-  margin-top: 4px;
+  font-size: 38px;
+  letter-spacing: -0.025em;
+  line-height: 1.05;
+  margin-bottom: 14px;
 }
 .ov2-pl-period {
   font-family: var(--font-num);
-  font-size: 10px;
+  font-size: 12px;
   color: var(--text-muted);
 }
-.ov2-pl-chart {
-  position: relative;
-  flex: 1;
-  min-height: 56px;
-}
 
-/* 方向色帶 — 細長方塊置於 bar chart 下方，純色顯示每日漲跌方向。
-   小金額在共用 Y 軸下看不見時，色帶能補強方向資訊（綠/紅一目了然）。
-   每格 cell 由 stripAlignPlugin 用 absolute 定位，左/寬完全照 chart bar 走。 */
-.ov2-pl-strip {
+/* v1.2：mini bar chart — 純 HTML/CSS，每格 div 高度＝magnitude，色＝方向 */
+.ov2-mini-bars {
+  display: flex;
+  align-items: flex-end;     /* 從底部長上來 */
+  justify-content: space-between;
+  gap: 3px;
+  height: 38px;
+  margin-top: auto;          /* 永遠貼底 */
+}
+.ov2-mini-bar {
+  flex: 1 1 0;
+  min-width: 0;
+  height: 10%;
+  border-radius: 2px 2px 0 0;
+  transition: opacity 220ms ease, height 280ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+/* 月度卡只有 6 根，bar 寬一點看起來更穩重 */
+.ov2-mini-bar-wide {
+  border-radius: 3px 3px 0 0;
+}
+/* 即時點（最後一根）加底線標記，視覺上點出「現在進行式」 */
+.ov2-mini-bar-live {
   position: relative;
-  margin-top: 6px;
-  padding: 0;
-  height: 5px;
 }
-.dts-cell {
-  position: absolute;
-  top: 0; bottom: 0;
-  /* left & width 由 JS 設定，預設 0 避免首幀爆框 */
-  left: 0; width: 0;
-  border-radius: 2px;
+.ov2-mini-bar-gap {
+  background: var(--border) !important;
+  opacity: 0.35 !important;
+  height: 8% !important;
 }
-.dts-cell.dts-gap {
-  background: var(--border);
-  opacity: 0.35;
+.ov2-mini-empty {
+  flex: 1;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 12px;
+  color: var(--text-muted);
+  opacity: 0.7;
 }
 
 /* ═══════════════════════════════════════════════════════════════
@@ -2134,8 +2113,11 @@ canvas { background: transparent !important; }
   }
   .ov2-stat-pair { border-radius: 16px; }
   .ov2-stat-half { padding: 14px 18px; }
-  .ov2-pl-num, .ov2-stat-num { font-size: 22px; }
-  .ov2-pl-chart { min-height: 60px; }
+  .ov2-pl-num { font-size: 30px; margin-bottom: 12px; }
+  .ov2-stat-num { font-size: 22px; }
+  .ov2-pl-card { min-height: 124px; }
+  .ov2-mini-bars { height: 32px; gap: 2px; }
+  .ov2-pl-label { font-size: 12px; }
   .ov2-movers-grid { grid-template-columns: 1fr; gap: 14px; }
 }
 

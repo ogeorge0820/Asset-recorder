@@ -16,8 +16,8 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=DM+Sans:wght@300;400;500;600;700&display=swap">
-<link rel="stylesheet" href="theme.css?v=202605302134">
-<link rel="stylesheet" href="style.css?v=202605302134">
+<link rel="stylesheet" href="theme.css?v=202605302216">
+<link rel="stylesheet" href="style.css?v=202605302216">
 </head>
 <body>
 
@@ -103,33 +103,19 @@
       <section class="ov2-mid-row">
         <div class="ov2-pl-card" id="card-invest-gain">
           <div class="ov2-pl-head">
-            <div>
-              <div class="ov2-pl-label"><span class="ov2-pl-label-icon" aria-hidden="true">📈</span>本日投資損益</div>
-              <div class="ov2-pl-num skel" id="kv-invest-gain">—</div>
-              <div class="ov2-pl-meta" id="ks-invest-gain">僅含台美股與加密貨幣</div>
-            </div>
+            <div class="ov2-pl-label">本日投資損益</div>
             <div class="ov2-pl-period">近 14 天</div>
           </div>
-          <div class="ov2-pl-chart" id="daily-trend-wrap">
-            <canvas id="daily-trend-chart"></canvas>
-            <div id="daily-trend-nodata" class="chart-nodata" style="display:none">
-              <div style="color:var(--muted);font-size:0.85rem">尚無每日資料</div>
-            </div>
-          </div>
-          <div class="ov2-pl-strip" id="daily-trend-strip" aria-label="每日漲跌方向色帶"></div>
+          <div class="ov2-pl-num skel" id="kv-invest-gain">—</div>
+          <div class="ov2-mini-bars" id="daily-mini-bars" aria-label="近 14 天每日損益迷你長條圖"></div>
         </div>
         <div class="ov2-pl-card" id="card-monthly">
           <div class="ov2-pl-head">
-            <div>
-              <div class="ov2-pl-label"><span class="ov2-pl-label-icon" aria-hidden="true">📅</span>本月收益</div>
-              <div class="ov2-pl-num skel" id="kv-monthly">—</div>
-              <div class="ov2-pl-meta" id="ks-monthly">與上月快照比較</div>
-            </div>
+            <div class="ov2-pl-label">本月收益</div>
             <div class="ov2-pl-period">近 6 個月</div>
           </div>
-          <div class="ov2-pl-chart" id="monthly-wrap">
-            <canvas id="monthly-chart"></canvas>
-          </div>
+          <div class="ov2-pl-num skel" id="kv-monthly">—</div>
+          <div class="ov2-mini-bars" id="monthly-mini-bars" aria-label="近 6 個月收益迷你長條圖"></div>
         </div>
         <div class="ov2-stat-pair">
           <div class="ov2-stat-half" id="card-growth">
@@ -703,6 +689,6 @@
 <!-- ── Toast ── -->
 <div class="toast" id="toast"></div>
 
-<script src="app.js?v=202605302134"></script>
+<script src="app.js?v=202605302216"></script>
 </body>
 </html>

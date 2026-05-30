@@ -4,7 +4,7 @@
 // 應用版本號 — 重大功能變更才升版（小修補只更新 BUILD_DATE）
 const APP_VERSION = 'v1.0';
 // Build 時間：每次修改 code 後手動更新此時間（UTC+8 台北時間）
-const BUILD_DATE = '2026/05/30 21:34';
+const BUILD_DATE = '2026/05/30 22:16';
 
 const SPREADSHEET_ID = '1lpRpxVzWaYUqL-jVPOAJCtjsJUIedPYYyOx4gg4PPFU';
 const CLIENT_ID = '149884248440-85f8dhc6ub9up10sv0f89e3e0itrnooj.apps.googleusercontent.com';
@@ -2973,7 +2973,7 @@ function renderCharts() {
   // 只在第一次 renderCharts 時掛，後續呼叫不重複註冊。
   if (typeof ResizeObserver !== 'undefined' && !S._chartsROAttached) {
     S._chartsROAttached = true;
-    ['daily-trend-wrap', 'monthly-wrap', 'trend-wrap', 'pie-wrap'].forEach(id => {
+    ['trend-wrap', 'pie-wrap'].forEach(id => {
       const el = document.getElementById(id);
       if (!el) return;
       try { new ResizeObserver(_resizeAllCharts).observe(el); } catch (_) {}
@@ -2983,19 +2983,13 @@ function renderCharts() {
 
 function renderDailyTrend() {
   const snaps = S.data.daily_snapshots;
-  const ctx = $('daily-trend-chart').getContext('2d');
-  if (S.charts.dailyTrend) S.charts.dailyTrend.destroy();
-  // 清空色帶 — 後續成功路徑會重新填入，失敗路徑直接保持空
-  const _stripEl = $('daily-trend-strip');
-  if (_stripEl) _stripEl.innerHTML = '';
-
-  const nodata = $('daily-trend-nodata');
+  const wrap = $('daily-mini-bars');
+  if (!wrap) return;
+  wrap.innerHTML = '';
   if (snaps.length < 1) {
-    ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
-    if (nodata) nodata.style.display = 'flex';
+    wrap.innerHTML = '<div class="ov2-mini-empty">尚無每日資料</div>';
     return;
   }
-  if (nodata) nodata.style.display = 'none';
 
   // ── Step 1：取最近 15 筆快照，做缺日補全 ──
   // ⚠ 關鍵修正：排除今日的快照（若有），避免晨間存下的舊值覆蓋即時值，
@@ -3045,8 +3039,7 @@ function renderDailyTrend() {
   // ── Step 3：取最後 15 個節點計算損益差值 ──
   const win = filled.slice(-15);
   if (win.length < 2) {
-    ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
-    if (nodata) nodata.style.display = 'flex';
+    wrap.innerHTML = '<div class="ov2-mini-empty">尚無每日資料</div>';
     return;
   }
   const labels = [], plData = [], netData = [], isLiveArr = [];
@@ -3085,169 +3078,28 @@ function renderDailyTrend() {
     isLiveArr.push(win[i].isLive);
   }
 
-  const maxAbs = Math.max(...plData.map(Math.abs), 1);
-  const yPad   = maxAbs * 1.38;
+  // ── Step 4：渲染 mini-bars（純 HTML，無 Chart.js）──
+  // 高度依 |delta| 相對最大值縮放；色彩依正負；最後一根（即時）滿不透明
+  const validAbs = plData.filter(v => v !== null && Number.isFinite(v)).map(Math.abs);
+  const maxAbs = validAbs.length ? Math.max(...validAbs, 1) : 1;
   const cc = chartColors();
-  const isDark = document.documentElement.dataset.theme !== 'light';
-  const zeroLine = isDark ? 'rgba(255,255,255,0.20)' : 'rgba(0,0,0,0.13)';
-
-  // Inline plugin：繪製旗標標註（防禦性寫法，任何例外均靜默處理）
-  const annotPlugin = {
-    id: 'plFlags',
-    afterDatasetsDraw(chart) {
-      try {
-        const xSc = chart.scales?.x;
-        const ySc = chart.scales?.y;
-        if (!xSc || !ySc) return;
-        const c = chart.ctx;
-        const poleLen = 30, flagW = 64, flagH = 16, flagR = 3;
-
-        function drawFlag(idx, value, color, text) {
-          const px = xSc.getPixelForIndex(idx);
-          const py = ySc.getPixelForValue(value);
-          if (!isFinite(px) || !isFinite(py)) return;
-          const isUp = value >= 0;
-          c.save();
-          c.strokeStyle = color; c.lineWidth = 1.5; c.setLineDash([]);
-          c.beginPath(); c.moveTo(px, py); c.lineTo(px, isUp ? py - poleLen : py + poleLen); c.stroke();
-          const fy = isUp ? py - poleLen - flagH : py + poleLen;
-          const fx = Math.min(Math.max(px - flagW / 2, 2), (chart.width || 300) - flagW - 6);
-          c.fillStyle = color;
-          c.beginPath();
-          c.moveTo(fx + flagR, fy);
-          c.lineTo(fx + flagW - flagR, fy);
-          c.arcTo(fx + flagW, fy, fx + flagW, fy + flagR, flagR);
-          c.lineTo(fx + flagW, fy + flagH - flagR);
-          c.arcTo(fx + flagW, fy + flagH, fx + flagW - flagR, fy + flagH, flagR);
-          c.lineTo(fx + flagR, fy + flagH);
-          c.arcTo(fx, fy + flagH, fx, fy + flagH - flagR, flagR);
-          c.lineTo(fx, fy + flagR);
-          c.arcTo(fx, fy, fx + flagR, fy, flagR);
-          c.closePath(); c.fill();
-          c.fillStyle = '#fff';
-          c.font = '700 10px -apple-system, BlinkMacSystemFont, sans-serif';
-          c.textAlign = 'center'; c.textBaseline = 'middle';
-          c.fillText(text, fx + flagW / 2, fy + flagH / 2);
-          c.restore();
-        }
-
-        // 旗標只標歷史最高/最低（不標即時點、不標 null gap）
-        const histPlData = plData.filter((v, i) => !isLiveArr[i] && v !== null);
-        const histMaxPl = histPlData.length ? Math.max(...histPlData) : -Infinity;
-        const histMinPl = histPlData.length ? Math.min(...histPlData) : Infinity;
-        const histMaxIdx = plData.findIndex((v, i) => !isLiveArr[i] && v !== null && v === histMaxPl);
-        const histMinIdx = plData.findIndex((v, i) => !isLiveArr[i] && v !== null && v === histMinPl);
-        if (histMaxPl > 1000)  drawFlag(histMaxIdx, histMaxPl, '#34C759', '+' + fmtWan(histMaxPl));
-        if (histMinPl < -1000) drawFlag(histMinIdx, histMinPl, '#FF3B30', fmtWan(histMinPl));
-      } catch (e) { /* 旗標繪製失敗不影響主圖表 */ }
-    },
-  };
-
-  // 方向色帶對齊 plugin — 每次 chart 繪製後讀取 chart.getDatasetMeta(0).data[i]
-  // 的實際 bar pixel 位置與寬度，把對應 strip cell 絕對定位到完全一致的範圍。
-  // 不用 grid 推算（會比 bar 寬，cell 邊緣超出 bar 範圍導致視覺對不齊），
-  // 直接借 Chart.js 自己算好的座標，精度到 sub-pixel。
-  const stripAlignPlugin = {
-    id: 'dtStripAlign',
-    afterDraw(chart) {
-      try {
-        const stripEl = $('daily-trend-strip');
-        if (!stripEl) return;
-        const cells = stripEl.children;
-        if (!cells.length) return;
-        const meta = chart.getDatasetMeta(0);
-        if (!meta || !meta.data || meta.data.length !== cells.length) return;
-        for (let i = 0; i < cells.length; i++) {
-          const bar = meta.data[i];
-          if (!bar || !isFinite(bar.x) || !isFinite(bar.width)) continue;
-          const cell = cells[i];
-          cell.style.left = (bar.x - bar.width / 2) + 'px';
-          cell.style.width = bar.width + 'px';
-        }
-      } catch (e) { /* 對齊失敗不影響主圖表 */ }
-    },
-  };
-
-  // 長條顏色：正綠負紅
-  const barBg = plData.map(v => v === null ? 'transparent' : v >= 0 ? cc.barPos : cc.barNeg);
-
-  // 方向色帶（dts = daily-trend strip）：在 bar chart 下方加 14 格細長方塊，
-  // 顏色 = 當日漲跌方向、不透明度 = 相對幅度。
-  // 用途：當某天損益相對峰值很小時，bar 在共用 Y 軸下幾乎看不見，
-  //      色帶能補強「方向」這個關鍵資訊，不用 tap tooltip。
-  // cell 用絕對定位，實際位置與寬度由 stripAlignPlugin 從 chart bar 抄過來。
-  const stripEl = $('daily-trend-strip');
-  if (stripEl) {
-    const validAbs = plData.filter(v => v !== null && Number.isFinite(v)).map(Math.abs);
-    const maxAbsStrip = validAbs.length ? Math.max(...validAbs, 1) : 1;
-    stripEl.innerHTML = plData.map((v, i) => {
-      if (v === null || !Number.isFinite(v)) {
-        return '<div class="dts-cell dts-gap"></div>';
-      }
-      const isPos = v >= 0;
-      const t = Math.min(1, Math.abs(v) / maxAbsStrip);
-      // 不透明度 0.45 → 1.0：小天也清楚可辨色，大天最飽和
-      const opacity = (0.45 + 0.55 * t).toFixed(2);
-      const bg = isPos ? cc.barPos : cc.barNeg;
-      const sign = isPos ? '+' : '';
-      const lbl = labels[i] || '';
-      return `<div class="dts-cell" style="background:${bg};opacity:${opacity}" title="${lbl} ${sign}${fmtWan(v)}"></div>`;
-    }).join('');
-  }
-
-  S.charts.dailyTrend = new Chart(ctx, {
-    type: 'bar',
-    data: {
-      labels,
-      datasets: [{
-        label: '每日投資損益',
-        data: plData,
-        backgroundColor: barBg,
-        borderWidth: 0,
-        borderRadius: 4,
-      }],
-    },
-    options: {
-      responsive: true, maintainAspectRatio: false,
-      layout: { padding: { top: 0, right: 6, bottom: 0, left: 4 } },
-      plugins: {
-        legend: { display: false },
-        tooltip: {
-          callbacks: {
-            title(items) {
-              const i = items[0].dataIndex;
-              const fullDate = win[i + 1]?.date || labels[i];
-              return isLiveArr[i] ? `${fullDate}  ▸ 即時` : fullDate;
-            },
-            label(c) {
-              const pl  = c.parsed.y;
-              const net = netData[c.dataIndex];
-              const sign = pl >= 0 ? '+' : '';
-              return [` 投資損益：${sign}${fmt(pl)}`, ` 投資總值：${fmt(net)}`];
-            },
-          },
-        },
-      },
-      scales: {
-        x: {
-          grid: { display: false },
-          ticks: { color: cc.tick, font: { size: 9 }, maxRotation: 0, autoSkip: true, maxTicksLimit: 14 },
-          border: { display: false },
-        },
-        y: {
-          beginAtZero: true,
-          min: -yPad, max: yPad,
-          grid: {
-            color(ctx2) { return ctx2.tick.value === 0 ? zeroLine : 'transparent'; },
-            lineWidth(ctx2) { return ctx2.tick.value === 0 ? 1.5 : 0; },
-          },
-          ticks: { color: cc.tick, font: { size: 9 }, maxTicksLimit: 5, callback(v) { return fmtWan(v); } },
-          border: { display: false },
-        },
-      },
-    },
-    plugins: [annotPlugin, stripAlignPlugin],
-  });
+  wrap.innerHTML = plData.map((v, i) => {
+    const isLive = isLiveArr[i];
+    const lbl = labels[i] || '';
+    if (v === null || !Number.isFinite(v)) {
+      return `<div class="ov2-mini-bar ov2-mini-bar-gap" title="${lbl} · 無資料"></div>`;
+    }
+    const isPos = v >= 0;
+    const t = Math.min(1, Math.abs(v) / maxAbs);
+    // 高度 8% → 100%：小天也保留底，大天頂滿
+    const hPct = (8 + 92 * t).toFixed(1);
+    // 不透明度：歷史 0.45→0.85；即時點固定 1.0（最深、視覺定錨）
+    const opacity = isLive ? '1' : (0.45 + 0.4 * t).toFixed(2);
+    const bg = isPos ? cc.barPos : cc.barNeg;
+    const sign = isPos ? '+' : '';
+    const liveCls = isLive ? ' ov2-mini-bar-live' : '';
+    return `<div class="ov2-mini-bar${liveCls}" style="height:${hPct}%;background:${bg};opacity:${opacity}" title="${lbl}${isLive ? ' ▸ 即時' : ''}：${sign}${fmtWan(v)}"></div>`;
+  }).join('');
 }
 
 function renderPie() {
@@ -3476,14 +3328,12 @@ function renderTrend() {
 
 function renderMonthly() {
   const snaps = S.data.snapshots;
-  const ctx = $('monthly-chart').getContext('2d');
-  if (S.charts.monthly) S.charts.monthly.destroy();
+  const wrap = $('monthly-mini-bars');
+  if (!wrap) return;
+  wrap.innerHTML = '';
 
-  const cc = chartColors();
   if (snaps.length < 2) {
-    ctx.clearRect(0,0,ctx.canvas.width,ctx.canvas.height);
-    ctx.fillStyle=cc.nodata; ctx.font='13px sans-serif'; ctx.textAlign='center';
-    ctx.fillText('需至少兩筆快照', ctx.canvas.width/2, ctx.canvas.height/2);
+    wrap.innerHTML = '<div class="ov2-mini-empty">需至少兩筆快照</div>';
     return;
   }
 
@@ -3493,42 +3343,39 @@ function renderMonthly() {
   const nowM = new Date();
   const todayM2 = `${nowM.getFullYear()}/${String(nowM.getMonth()+1).padStart(2,'0')}`;
   const histSnaps = snaps.filter(s => s[0] && s[0] < todayM2); // 排除本月已存 snapshot
-  const labels = [], vals = [];
+  const labels = [], vals = [], isLiveArr = [];
   for (let i = 1; i < histSnaps.length; i++) {
     labels.push(histSnaps[i][0]);
     vals.push((parseFloat(histSnaps[i][8]) || 0) - (parseFloat(histSnaps[i-1][8]) || 0));
+    isLiveArr.push(false);
   }
   // 本月即時 bar：與 KPI「本月收益」=「即時 net − 上月底 snapshot net」完全一致
   if (histSnaps.length) {
     const lastHistNet = parseFloat(histSnaps[histSnaps.length - 1][8]) || 0;
     const { net: curNet } = calcTotals();
-    labels.push(todayM2 + ' ▸');
+    labels.push(todayM2);
     vals.push(curNet - lastHistNet);
+    isLiveArr.push(true);
   }
 
-  S.charts.monthly = new Chart(ctx, {
-    type:'bar',
-    data: {
-      labels,
-      datasets: [{
-        label:'月收益', data:vals,
-        backgroundColor: vals.map(v=>v>=0 ? cc.barPos : cc.barNeg),
-        borderColor: vals.map(v=>v>=0 ? (cc.line2) : '#FF3B30'),
-        borderWidth:0, borderRadius:6,
-      }],
-    },
-    options: {
-      responsive:true, maintainAspectRatio:false,
-      plugins: {
-        legend:{display:false},
-        tooltip:{ callbacks:{ label(c){ return ` ${c.parsed.y>=0?'+':''}${fmt(c.parsed.y)}`; } } },
-      },
-      scales: {
-        x:{ grid:{display:false}, ticks:{color:cc.tick,font:{size:10}}, border:{display:false} },
-        y:{ display:false },
-      },
-    },
-  });
+  // 只顯示最近 6 個月（含本月即時）
+  const sliceFrom = Math.max(0, vals.length - 6);
+  const showVals = vals.slice(sliceFrom);
+  const showLbls = labels.slice(sliceFrom);
+  const showLive = isLiveArr.slice(sliceFrom);
+
+  const maxAbs = Math.max(...showVals.map(v => Math.abs(v)), 1);
+  const cc = chartColors();
+  wrap.innerHTML = showVals.map((v, i) => {
+    const isPos = v >= 0;
+    const t = Math.min(1, Math.abs(v) / maxAbs);
+    const hPct = (10 + 90 * t).toFixed(1);
+    const opacity = showLive[i] ? '1' : (0.5 + 0.35 * t).toFixed(2);
+    const bg = isPos ? cc.barPos : cc.barNeg;
+    const sign = isPos ? '+' : '';
+    const liveCls = showLive[i] ? ' ov2-mini-bar-live' : '';
+    return `<div class="ov2-mini-bar ov2-mini-bar-wide${liveCls}" style="height:${hPct}%;background:${bg};opacity:${opacity}" title="${showLbls[i]}${showLive[i] ? ' ▸ 即時' : ''}：${sign}${fmtWan(v)}"></div>`;
+  }).join('');
 }
 
 function setTrendFilter(btn) {
