@@ -1747,7 +1747,7 @@ canvas { background: transparent !important; }
 .ov2-hero-trend {
   position: relative;
   flex: 1;
-  min-height: 140px;
+  min-height: 220px;   /* v1.2.2：固定下限避免 tab 切換時 Chart.js 量測縮水 */
   width: 100%;
 }
 
@@ -2131,7 +2131,7 @@ canvas { background: transparent !important; }
 
 /* Desktop fix — Hero 與 Alloc 同高、donut 內部尺寸 */
 @media (min-width: 769px) {
-  .ov2-top-row { min-height: 280px; }
+  .ov2-top-row { min-height: 380px; }   /* v1.2.2：拉高 row 下限避免 tab 切回後縮水 */
   .ov2-alloc-card .pie-wrap { flex: 1; min-height: 200px !important; }
 }
 
