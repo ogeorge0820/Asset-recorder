@@ -4,7 +4,7 @@
 // 應用版本號 — 重大功能變更才升版（小修補只更新 BUILD_DATE）
 const APP_VERSION = 'v1.0';
 // Build 時間：每次修改 code 後手動更新此時間（UTC+8 台北時間）
-const BUILD_DATE = '2026/06/01 22:19';
+const BUILD_DATE = '2026/06/01 22:38';
 
 const SPREADSHEET_ID = '1lpRpxVzWaYUqL-jVPOAJCtjsJUIedPYYyOx4gg4PPFU';
 const CLIENT_ID = '149884248440-85f8dhc6ub9up10sv0f89e3e0itrnooj.apps.googleusercontent.com';
@@ -6026,6 +6026,10 @@ async function initApp() {
         }
       }
     }
+
+    // v1.2.3：入場動畫只在首次載入播放（避免 tab 切回時動畫重跑干擾 Chart.js 量測）
+    document.body.classList.add('ov2-animated');
+    setTimeout(() => document.body.classList.remove('ov2-animated'), 1200);
 
     renderCharts();
     showToast('載入完成', 'ok');

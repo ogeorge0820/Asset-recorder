@@ -1892,25 +1892,28 @@ canvas { background: transparent !important; }
   to   { opacity: 1; transform: scale(1); }
 }
 /* 卡片由下淡入、staggered 60-80ms 一張，視覺上像「隊伍進場」 */
-.ov2-hero,
-.ov2-alloc-card,
-.ov2-pl-card,
-.ov2-stat-pair,
-.ov2-movers {
+/* v1.2.3：入場動畫加 .ov2-animated 守門 — 只在 body 標記首次載入時播放
+   原本每次 tab 切回都重跑 0.45s 動畫，期間 backwards 模式讓卡片有 translateY(10px)
+   雖然 transform 不影響 layout，但 Chart.js 在動畫期間量到的 container 可能不穩 */
+body.ov2-animated .ov2-hero,
+body.ov2-animated .ov2-alloc-card,
+body.ov2-animated .ov2-pl-card,
+body.ov2-animated .ov2-stat-pair,
+body.ov2-animated .ov2-movers {
   animation: ov2-card-enter 0.45s cubic-bezier(0.22, 1, 0.36, 1) backwards;
 }
-.ov2-hero        { animation-delay:   0ms; }
-.ov2-alloc-card  { animation-delay:  80ms; }
-.ov2-pl-card:nth-of-type(1)  { animation-delay: 160ms; }
-.ov2-pl-card:nth-of-type(2)  { animation-delay: 220ms; }
-.ov2-stat-pair   { animation-delay: 280ms; }
-.ov2-movers      { animation-delay: 360ms; }
+body.ov2-animated .ov2-hero        { animation-delay:   0ms; }
+body.ov2-animated .ov2-alloc-card  { animation-delay:  80ms; }
+body.ov2-animated .ov2-pl-card:nth-of-type(1)  { animation-delay: 160ms; }
+body.ov2-animated .ov2-pl-card:nth-of-type(2)  { animation-delay: 220ms; }
+body.ov2-animated .ov2-stat-pair   { animation-delay: 280ms; }
+body.ov2-animated .ov2-movers      { animation-delay: 360ms; }
 
-/* 數字 pop-in，配 spring-like 緩動，比卡片晚 200ms 進場 */
-.ov2-hero-num,
-.ov2-pl-num,
-.ov2-stat-num,
-.ov2-hero-sub-num {
+/* 數字 pop-in — 同樣只首次載入播 */
+body.ov2-animated .ov2-hero-num,
+body.ov2-animated .ov2-pl-num,
+body.ov2-animated .ov2-stat-num,
+body.ov2-animated .ov2-hero-sub-num {
   animation: ov2-num-pop 0.55s cubic-bezier(0.34, 1.56, 0.64, 1) backwards;
   animation-delay: 350ms;
   transform-origin: left center;
