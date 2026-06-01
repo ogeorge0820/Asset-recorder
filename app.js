@@ -4,7 +4,7 @@
 // 應用版本號 — 重大功能變更才升版（小修補只更新 BUILD_DATE）
 const APP_VERSION = 'v1.0';
 // Build 時間：每次修改 code 後手動更新此時間（UTC+8 台北時間）
-const BUILD_DATE = '2026/06/01 23:30';
+const BUILD_DATE = '2026/06/02 07:33';
 
 const SPREADSHEET_ID = '1lpRpxVzWaYUqL-jVPOAJCtjsJUIedPYYyOx4gg4PPFU';
 const CLIENT_ID = '149884248440-85f8dhc6ub9up10sv0f89e3e0itrnooj.apps.googleusercontent.com';
@@ -5861,12 +5861,15 @@ async function _confirmBucketItem(editId) {
 }
 
 function switchTab(tab) {
-  $('tab-overview').style.display    = tab==='overview'    ? 'block' : 'none';
-  $('tab-management').style.display  = tab==='management'  ? 'block' : 'none';
-  $('tab-dwz').style.display         = tab==='dwz'         ? 'block' : 'none';
-  $('tab-indicators').style.display  = tab==='indicators'  ? 'block' : 'none';
+  // ⚠ 用空字串而非 'block' — 讓 CSS 的 display 規則生效
+  // tab-overview 在 CSS 是 display:flex（column + gap:14px）
+  // 寫死 'block' 會蓋過 flex → gap 失效 → 卡片列之間間距消失
+  $('tab-overview').style.display    = tab==='overview'    ? '' : 'none';
+  $('tab-management').style.display  = tab==='management'  ? '' : 'none';
+  $('tab-dwz').style.display         = tab==='dwz'         ? '' : 'none';
+  $('tab-indicators').style.display  = tab==='indicators'  ? '' : 'none';
   const elNews = $('tab-news');
-  if (elNews) elNews.style.display    = tab==='news'        ? 'block' : 'none';
+  if (elNews) elNews.style.display    = tab==='news'        ? '' : 'none';
   document.querySelectorAll('.tab-btn').forEach((b,i) => {
     b.classList.toggle('active',
       (i===0&&tab==='overview')||(i===1&&tab==='management')||(i===2&&tab==='dwz')||(i===3&&tab==='indicators')||(i===4&&tab==='news'));
