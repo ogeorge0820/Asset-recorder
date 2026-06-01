@@ -4,7 +4,7 @@
 // 應用版本號 — 重大功能變更才升版（小修補只更新 BUILD_DATE）
 const APP_VERSION = 'v1.0';
 // Build 時間：每次修改 code 後手動更新此時間（UTC+8 台北時間）
-const BUILD_DATE = '2026/05/30 23:48';
+const BUILD_DATE = '2026/06/01 21:35';
 
 const SPREADSHEET_ID = '1lpRpxVzWaYUqL-jVPOAJCtjsJUIedPYYyOx4gg4PPFU';
 const CLIENT_ID = '149884248440-85f8dhc6ub9up10sv0f89e3e0itrnooj.apps.googleusercontent.com';
@@ -3087,7 +3087,7 @@ function renderDailyTrend() {
     const isLive = isLiveArr[i];
     const lbl = labels[i] || '';
     if (v === null || !Number.isFinite(v)) {
-      return `<div class="ov2-mini-bar ov2-mini-bar-gap" title="${lbl} · 無資料"></div>`;
+      return `<div class="ov2-mini-bar ov2-mini-bar-gap" data-tip="${lbl} · 無資料"></div>`;
     }
     const isPos = v >= 0;
     const t = Math.min(1, Math.abs(v) / maxAbs);
@@ -3098,7 +3098,8 @@ function renderDailyTrend() {
     const bg = isPos ? cc.barPos : cc.barNeg;
     const sign = isPos ? '+' : '';
     const liveCls = isLive ? ' ov2-mini-bar-live' : '';
-    return `<div class="ov2-mini-bar${liveCls}" style="height:${hPct}%;background:${bg};opacity:${opacity}" title="${lbl}${isLive ? ' ▸ 即時' : ''}：${sign}${fmtWan(v)}"></div>`;
+    const tip = `${lbl}${isLive ? ' ▸ 即時' : ''}：${sign}${fmtWan(v)}`;
+    return `<div class="ov2-mini-bar${liveCls}" style="height:${hPct}%;background:${bg};opacity:${opacity}" data-tip="${tip}"></div>`;
   }).join('');
 }
 
@@ -3374,7 +3375,8 @@ function renderMonthly() {
     const bg = isPos ? cc.barPos : cc.barNeg;
     const sign = isPos ? '+' : '';
     const liveCls = showLive[i] ? ' ov2-mini-bar-live' : '';
-    return `<div class="ov2-mini-bar ov2-mini-bar-wide${liveCls}" style="height:${hPct}%;background:${bg};opacity:${opacity}" title="${showLbls[i]}${showLive[i] ? ' ▸ 即時' : ''}：${sign}${fmtWan(v)}"></div>`;
+    const tip = `${showLbls[i]}${showLive[i] ? ' ▸ 即時' : ''}：${sign}${fmtWan(v)}`;
+    return `<div class="ov2-mini-bar ov2-mini-bar-wide${liveCls}" style="height:${hPct}%;background:${bg};opacity:${opacity}" data-tip="${tip}"></div>`;
   }).join('');
 }
 

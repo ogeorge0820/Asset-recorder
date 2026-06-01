@@ -1760,11 +1760,11 @@ canvas { background: transparent !important; }
 .ov2-pl-card {
   background: var(--bg-card);
   border-radius: var(--card-radius-lg);
-  padding: 18px 20px 16px;
+  padding: 22px 24px 20px;
   box-shadow: var(--card-shadow-soft);
   border: none;
   display: flex; flex-direction: column;
-  min-height: 138px;
+  min-height: 200px;
 }
 /* v1.2：拿掉 kpi-gain/loss 的色塊背景，回歸極簡白卡（數字本身已是色彩主角） */
 .ov2-pl-head {
@@ -1784,10 +1784,10 @@ canvas { background: transparent !important; }
   font-family: var(--font-num);
   font-variant-numeric: tabular-nums;
   font-weight: 700;
-  font-size: 38px;
+  font-size: 42px;
   letter-spacing: -0.025em;
   line-height: 1.05;
-  margin-bottom: 14px;
+  margin-bottom: 18px;
 }
 .ov2-pl-period {
   font-family: var(--font-num);
@@ -1801,7 +1801,7 @@ canvas { background: transparent !important; }
   align-items: flex-end;     /* 從底部長上來 */
   justify-content: space-between;
   gap: 3px;
-  height: 38px;
+  height: 56px;
   margin-top: auto;          /* 永遠貼底 */
 }
 .ov2-mini-bar {
@@ -1809,7 +1809,54 @@ canvas { background: transparent !important; }
   min-width: 0;
   height: 10%;
   border-radius: 2px 2px 0 0;
-  transition: opacity 220ms ease, height 280ms cubic-bezier(0.22, 1, 0.36, 1);
+  position: relative;        /* tooltip ::after 用 */
+  cursor: pointer;
+  transition: opacity 220ms ease, height 280ms cubic-bezier(0.22, 1, 0.36, 1), transform 120ms ease;
+}
+/* v1.2.1：自訂 CSS tooltip — 取代瀏覽器原生 title（後者有 500-700ms 延遲）
+   data-tip 屬性由 JS 設定；hover 即顯示，無延遲，比 Chart.js tooltip 還快 */
+.ov2-mini-bar::after {
+  content: attr(data-tip);
+  position: absolute;
+  bottom: calc(100% + 6px);
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 4px 9px;
+  background: var(--text-primary);
+  color: var(--bg-card);
+  font-family: var(--font-num);
+  font-size: 11px;
+  font-weight: 600;
+  white-space: nowrap;
+  border-radius: 5px;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 90ms ease;
+  z-index: 20;
+  /* Light theme tooltip arrow ↓ */
+}
+.ov2-mini-bar::before {
+  content: '';
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  border: 4px solid transparent;
+  border-top-color: var(--text-primary);
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 90ms ease;
+  z-index: 20;
+}
+@media (hover: hover) {
+  .ov2-mini-bar:hover {
+    transform: scaleY(1.04);
+    transform-origin: bottom;
+  }
+  .ov2-mini-bar:hover::after,
+  .ov2-mini-bar:hover::before {
+    opacity: 1;
+  }
 }
 /* 月度卡只有 6 根，bar 寬一點看起來更穩重 */
 .ov2-mini-bar-wide {
@@ -1817,7 +1864,7 @@ canvas { background: transparent !important; }
 }
 /* 即時點（最後一根）加底線標記，視覺上點出「現在進行式」 */
 .ov2-mini-bar-live {
-  position: relative;
+  /* position: relative 已在 .ov2-mini-bar 設定 */
 }
 .ov2-mini-bar-gap {
   background: var(--border) !important;
@@ -2113,11 +2160,11 @@ canvas { background: transparent !important; }
   }
   .ov2-stat-pair { border-radius: 16px; }
   .ov2-stat-half { padding: 14px 18px; }
-  .ov2-pl-num { font-size: 30px; margin-bottom: 12px; }
+  .ov2-pl-num { font-size: 34px; margin-bottom: 16px; }
   .ov2-stat-num { font-size: 22px; }
-  .ov2-pl-card { min-height: 124px; }
-  .ov2-mini-bars { height: 32px; gap: 2px; }
-  .ov2-pl-label { font-size: 12px; }
+  .ov2-pl-card { min-height: 168px; padding: 18px 18px 16px; }
+  .ov2-mini-bars { height: 44px; gap: 2px; }
+  .ov2-pl-label { font-size: 12.5px; }
   .ov2-movers-grid { grid-template-columns: 1fr; gap: 14px; }
 }
 
