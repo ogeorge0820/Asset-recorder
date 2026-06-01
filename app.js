@@ -4,7 +4,7 @@
 // 應用版本號 — 重大功能變更才升版（小修補只更新 BUILD_DATE）
 const APP_VERSION = 'v1.0';
 // Build 時間：每次修改 code 後手動更新此時間（UTC+8 台北時間）
-const BUILD_DATE = '2026/06/01 22:38';
+const BUILD_DATE = '2026/06/01 23:30';
 
 const SPREADSHEET_ID = '1lpRpxVzWaYUqL-jVPOAJCtjsJUIedPYYyOx4gg4PPFU';
 const CLIENT_ID = '149884248440-85f8dhc6ub9up10sv0f89e3e0itrnooj.apps.googleusercontent.com';
@@ -5882,15 +5882,12 @@ function switchTab(tab) {
   if (tab === 'dwz') initDWZ();
   if (tab === 'indicators') renderIndicators();
   if (tab === 'news') renderNewsTab();
-  // Chart.js 在 display:none 期間 canvas 會被內部 ResizeObserver 量到容器當下尺寸
-  // 切回時 canvas 仍卡在縮水狀態。光叫 resize() 不夠—容器尺寸變了 Chart.js 才會重繪。
-  // 改成完整 destroy + 重建，徹底避開量測時序問題。
+  // v1.2.4：切回 overview 只做輕量 resize（不再 destroy+recreate）
+  // CSS min-height 已保證容器尺寸穩定，resize 讓 Chart.js 更新內部 viewport
+  // 之前的完整 destroy+new 會觸發新的入場動畫，使切回後的 chart 視覺上與首次載入有差
   if (tab === 'overview') {
-    const _rebuild = () => {
-      try { if (S.data && S.data.snapshots) { renderPie(); renderTrend(); } } catch (_) {}
-    };
-    requestAnimationFrame(_rebuild);
-    setTimeout(_rebuild, 250);
+    const _resize = () => { try { Object.values(S.charts || {}).forEach(c => c && c.resize()); } catch (_) {} };
+    requestAnimationFrame(_resize);
   }
 }
 
