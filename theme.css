@@ -1784,10 +1784,10 @@ canvas { background: transparent !important; }
   font-family: var(--font-num);
   font-variant-numeric: tabular-nums;
   font-weight: 700;
-  font-size: 42px;
-  letter-spacing: -0.025em;
-  line-height: 1.05;
-  margin-bottom: 18px;
+  font-size: 30px;        /* v1.2.5：從 42 縮到 30，讓位給 Hero 的 40-56px */
+  letter-spacing: -0.02em;
+  line-height: 1.1;
+  margin-bottom: 14px;
 }
 .ov2-pl-period {
   font-family: var(--font-num);
@@ -2163,7 +2163,7 @@ body.ov2-animated .ov2-hero-sub-num {
   }
   .ov2-stat-pair { border-radius: 16px; }
   .ov2-stat-half { padding: 14px 18px; }
-  .ov2-pl-num { font-size: 34px; margin-bottom: 16px; }
+  .ov2-pl-num { font-size: 26px; margin-bottom: 12px; }   /* v1.2.5：跟 desktop 同步縮 */
   .ov2-stat-num { font-size: 22px; }
   .ov2-pl-card { min-height: 168px; padding: 18px 18px 16px; }
   .ov2-mini-bars { height: 44px; gap: 2px; }
