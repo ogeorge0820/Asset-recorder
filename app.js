@@ -4,7 +4,7 @@
 // 應用版本號 — 重大功能變更才升版（小修補只更新 BUILD_DATE）
 const APP_VERSION = 'v1.0';
 // Build 時間：每次修改 code 後手動更新此時間（UTC+8 台北時間）
-const BUILD_DATE = '2026/06/08 13:57';
+const BUILD_DATE = '2026/06/08 14:19';
 
 const SPREADSHEET_ID = '1lpRpxVzWaYUqL-jVPOAJCtjsJUIedPYYyOx4gg4PPFU';
 const CLIENT_ID = '149884248440-85f8dhc6ub9up10sv0f89e3e0itrnooj.apps.googleusercontent.com';
@@ -2557,6 +2557,9 @@ function _todayYM() {
   return `${now.getUTCFullYear()}-${String(now.getUTCMonth() + 1).padStart(2, '0')}`;
 }
 
+// 顯示用：YYYY-MM → YYYY/MM（內部仍存 ISO 格式，僅 UI 轉斜線）
+function _fmtYM(ym) { return (ym || '').replace('-', '/'); }
+
 // 計算「YYYY-MM 距今多少」相對文字 — UI 顯示用（「3年後」「4個月後」等）
 function _relMonthText(targetYM, todayYM) {
   if (!targetYM || !todayYM) return '';
@@ -2592,7 +2595,7 @@ function addPlannedExpense() {
     await saveSheet('expense_planned', S.data.expense_planned);
     renderBudget();
     renderKPIs();
-    showToast(`已新增未來支出（${vals.start} 起）`, 'ok');
+    showToast(`已新增未來支出（${_fmtYM(vals.start)} 起）`, 'ok');
   });
 }
 
@@ -2626,7 +2629,7 @@ function editPlannedExpense(idx) {
 function deletePlannedExpense(idx) {
   const r = S.data.expense_planned[idx];
   if (!r) return;
-  openConfirm('確認刪除', `刪除未來支出「${r[1]}」（${r[5]} 起）？`, async () => {
+  openConfirm('確認刪除', `刪除未來支出「${r[1]}」（${_fmtYM(r[5])} 起）？`, async () => {
     S.data.expense_planned.splice(idx, 1);
     await saveSheet('expense_planned', S.data.expense_planned);
     renderBudget();
@@ -2675,8 +2678,8 @@ function renderPlannedSection() {
       const relText = _relMonthText(start, todayYM);
       const metaParts = [esc(cat || ''), esc(source || '')].filter(Boolean).join(' · ');
       const dateText = isPast
-        ? `<span class="past">${esc(start)} · 待活化</span>`
-        : `${esc(start)} 起${relText ? ` · ${relText}` : ''}`;
+        ? `<span class="past">${esc(_fmtYM(start))} · 待活化</span>`
+        : `${esc(_fmtYM(start))} 起${relText ? ` · ${relText}` : ''}`;
       return `
         <div class="budget-planned-item">
           <div class="budget-planned-item-name">${esc(name || '—')}</div>
