@@ -4,7 +4,7 @@
 // 應用版本號 — 重大功能變更才升版（小修補只更新 BUILD_DATE）
 const APP_VERSION = 'v1.0';
 // Build 時間：每次修改 code 後手動更新此時間（UTC+8 台北時間）
-const BUILD_DATE = '2026/06/08 14:35';
+const BUILD_DATE = '2026/06/08 14:49';
 
 const SPREADSHEET_ID = '1lpRpxVzWaYUqL-jVPOAJCtjsJUIedPYYyOx4gg4PPFU';
 const CLIENT_ID = '149884248440-85f8dhc6ub9up10sv0f89e3e0itrnooj.apps.googleusercontent.com';
@@ -977,7 +977,10 @@ function simulateMonthly({
 
   // 未來支出規劃：逐月查表（從 start_date 那月起算進每月 budget）
   // 對應 design doc: docs/superpowers/specs/2026-06-08-future-expense-planning-design.md § DWZ
+  // 過濾 DWZ tab 設定為「忽略」的項目（per-item localStorage，預設全部考量）
+  const _ignored = _getDwzPlannedIgnored();
   const sortedPlanned = [...(S.data.expense_planned || [])]
+    .filter(r => !_ignored.has(r[0]))
     .sort((a, b) => (a[5] || '').localeCompare(b[5] || ''));
   const budgetAtYM = (ym) => {
     let total = monthlyBudget;
@@ -2654,6 +2657,82 @@ function deletePlannedExpense(idx) {
 function togglePlanned() {
   const wrap = $('budget-planned-section');
   if (wrap) wrap.classList.toggle('expanded');
+}
+
+// ── DWZ tab 「未來支出規劃」區塊（per-item toggle，預設全部考量）──
+// 設計：用 localStorage 存「忽略的 id 集合」(default empty = 全部考量)
+//      不動 Google Sheets，純前端設定。重新整理保留。
+function _getDwzPlannedIgnored() {
+  try {
+    const arr = JSON.parse(localStorage.getItem('dwz_planned_ignored') || '[]');
+    return new Set(Array.isArray(arr) ? arr : []);
+  } catch (_) { return new Set(); }
+}
+function _saveDwzPlannedIgnored(set) {
+  localStorage.setItem('dwz_planned_ignored', JSON.stringify([...set]));
+}
+function toggleDwzPlannedItem(id) {
+  const ignored = _getDwzPlannedIgnored();
+  if (ignored.has(id)) ignored.delete(id);
+  else ignored.add(id);
+  _saveDwzPlannedIgnored(ignored);
+  dwzAutoCalc();           // 重算曲線
+  _renderDwzPlannedList(); // 重繪本區塊 row state
+}
+function toggleDwzPlanned() {
+  const body = $('dwz-planned-body');
+  const btn  = body?.previousElementSibling;
+  if (!body) return;
+  const isHidden = body.hasAttribute('hidden');
+  if (isHidden) body.removeAttribute('hidden');
+  else body.setAttribute('hidden', '');
+  if (btn) btn.setAttribute('aria-expanded', String(isHidden));
+}
+
+function _renderDwzPlannedList() {
+  const listEl = $('dwz-planned-list');
+  const cntEl  = $('dwz-planned-count');
+  if (!listEl) return;
+
+  const items = (S.data.expense_planned || []).slice()
+    .sort((a, b) => (a[5] || '').localeCompare(b[5] || ''));
+  const ignored = _getDwzPlannedIgnored();
+  const activeCount = items.filter(r => !ignored.has(r[0])).length;
+
+  if (cntEl) cntEl.textContent = items.length ? `${activeCount}/${items.length}` : '';
+
+  if (!items.length) {
+    listEl.innerHTML = `<div class="dwz-planned-empty">尚無未來規劃。可在<a href="#" onclick="switchTab('overview'); return false;">總覽</a>「生活支出預算」內新增。</div>`;
+    return;
+  }
+
+  // 取得當前年（Asia/Taipei）以推算啟動年齡
+  const _nowD = new Date(Date.now() + 8 * 3600 * 1000);
+  const currentYear = _nowD.getUTCFullYear();
+  const currentAge = _dwzParam('dwz-age') || 0;
+
+  listEl.innerHTML = items.map(r => {
+    const [id, name, amount, cat, source, start, notes] = r;
+    const monthly = parseFloat(amount) || 0;
+    const startYear = parseInt(String(start || '').slice(0, 4)) || 0;
+    const activeAge = startYear && currentAge ? (currentAge + (startYear - currentYear)) : null;
+    const ignoredNow = ignored.has(id);
+    const ageStr = activeAge !== null ? `${activeAge}歲(${startYear})起` : `${_fmtYM(start)} 起`;
+    const annual = monthly * 12;
+    const meta = `${ageStr} · +${fmt(annual)}/年`;
+    return `
+      <div class="dwz-strat-row dwz-planned-row ${ignoredNow ? 'off' : 'on'}">
+        <div class="dwz-strat-text">
+          <span class="dwz-strat-label">${esc(name || '—')}</span>
+          <span class="dwz-strat-sub">${esc(cat || '')}${cat ? ' · ' : ''}${fmt(monthly)}/月</span>
+          <span class="dwz-strat-meta">${meta}</span>
+        </div>
+        <label class="dwz-toggle" title="關閉後此項不會納入 DWZ 模擬">
+          <input type="checkbox" ${ignoredNow ? '' : 'checked'} onchange="toggleDwzPlannedItem('${esc(id)}')">
+          <span class="dwz-toggle-track"></span>
+        </label>
+      </div>`;
+  }).join('');
 }
 
 function renderPlannedSection() {
@@ -5382,16 +5461,20 @@ function renderDWZ() {
   // 對應 design doc: docs/superpowers/specs/2026-06-08-future-expense-planning-design.md § DWZ
   // 將 expense_planned 各項從其「啟動年齡」起加入年度支出，與 annualBase 一起套通膨/晚年倍率
   // 啟動年齡 = currentAge + (start_year - currentCalendarYear)，月份不細分（年度模擬精度）
+  // 過濾 DWZ tab 設定為「忽略」的項目（per-item localStorage，預設全部考量）
   const _nowD = new Date(Date.now() + 8 * 3600 * 1000);
   const currentYear = _nowD.getUTCFullYear();
-  const plannedActivations = (S.data.expense_planned || []).map(r => {
-    const startYear = parseInt(String(r[5] || '').slice(0, 4)) || 9999;
-    const monthlyAmount = parseFloat(r[2]) || 0;
-    return {
-      activeAtAge: currentAge + (startYear - currentYear),
-      annualAmount: monthlyAmount * 12,
-    };
-  }).filter(p => p.annualAmount > 0);
+  const _ignoredPlanned = _getDwzPlannedIgnored();
+  const plannedActivations = (S.data.expense_planned || [])
+    .filter(r => !_ignoredPlanned.has(r[0]))
+    .map(r => {
+      const startYear = parseInt(String(r[5] || '').slice(0, 4)) || 9999;
+      const monthlyAmount = parseFloat(r[2]) || 0;
+      return {
+        activeAtAge: currentAge + (startYear - currentYear),
+        annualAmount: monthlyAmount * 12,
+      };
+    }).filter(p => p.annualAmount > 0);
   const extraPlannedAnnualAtAge = (age) => plannedActivations
     .filter(p => age >= p.activeAtAge)
     .reduce((s, p) => s + p.annualAmount, 0);
@@ -5761,6 +5844,7 @@ function renderDWZ() {
 
   _renderDWZBestWindow(goldenStart, goldenEnd, currentAge);
   _renderDWZExpensesList();
+  _renderDwzPlannedList(); // Phase 1: 同步 DWZ「未來支出規劃」區塊顯示
 }
 
 function _renderDWZBestWindow(start, end, currentAge) {

@@ -16,8 +16,8 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=DM+Sans:wght@300;400;500;600;700&display=swap">
-<link rel="stylesheet" href="theme.css?v=202606081435">
-<link rel="stylesheet" href="style.css?v=202606081435">
+<link rel="stylesheet" href="theme.css?v=202606081449">
+<link rel="stylesheet" href="style.css?v=202606081449">
 </head>
 <body>
 
@@ -471,6 +471,18 @@
             <div class="dwz-row"><label>40–65 體驗 <span class="dwz-param-unit">萬/年</span></label><input id="dwz-exp-budget" class="dwz-param-input" type="number" min="0" step="5" value="0" oninput="dwzAutoCalc()"></div>
           </section>
 
+          <section class="dwz-param-block dwz-planned-block">
+            <button class="dwz-strat-lab-head" type="button" onclick="toggleDwzPlanned()" aria-expanded="false">
+              <h4 class="dwz-block-title">未來支出規劃 <span class="dwz-planned-count" id="dwz-planned-count"></span></h4>
+              <span class="dwz-strat-lab-arrow">▾</span>
+            </button>
+            <div class="dwz-strat-lab-body" id="dwz-planned-body" hidden>
+              <div id="dwz-planned-list">
+                <!-- 由 _renderDwzPlannedList() 動態填入 -->
+              </div>
+            </div>
+          </section>
+
           <section class="dwz-param-block dwz-strat-lab">
             <button class="dwz-strat-lab-head" type="button" onclick="toggleStratLab()" aria-expanded="false">
               <h4 class="dwz-block-title">策略實驗室 <span class="dwz-strat-lab-en">Strategy Lab</span></h4>
@@ -731,6 +743,6 @@
 <!-- ── Toast ── -->
 <div class="toast" id="toast"></div>
 
-<script src="app.js?v=202606081435"></script>
+<script src="app.js?v=202606081449"></script>
 </body>
 </html>

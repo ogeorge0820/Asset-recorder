@@ -1631,6 +1631,32 @@ h3.section-header {
   margin: 0 0 4px; padding-left: 1px;
 }
 
+/* ── 未來支出規劃 (DWZ block) ── */
+.dwz-planned-count {
+  display: inline-block;
+  font-size: 0.68rem; font-weight: 600;
+  background: rgba(99,102,241,.16); color: var(--accent-light);
+  padding: 1px 7px; border-radius: 999px;
+  margin-left: 6px;
+}
+.dwz-planned-empty {
+  font-size: 0.78rem; color: var(--muted);
+  padding: 8px 4px;
+}
+.dwz-planned-empty a {
+  color: var(--accent-light);
+  text-decoration: underline;
+}
+.dwz-strat-row.dwz-planned-row.off {
+  opacity: 0.55;
+}
+.dwz-strat-row.dwz-planned-row .dwz-strat-meta {
+  font-size: 0.72rem; color: var(--muted);
+  margin-top: 2px;
+  font-family: var(--font-num);
+  font-variant-numeric: tabular-nums;
+}
+
 /* ── Row：label 左（含引導點延伸）+ input 右 ── */
 .dwz-row {
   display: grid;
