@@ -4,7 +4,7 @@
 // 應用版本號 — 重大功能變更才升版（小修補只更新 BUILD_DATE）
 const APP_VERSION = 'v1.0';
 // Build 時間：每次修改 code 後手動更新此時間（UTC+8 台北時間）
-const BUILD_DATE = '2026/06/08 14:19';
+const BUILD_DATE = '2026/06/08 14:35';
 
 const SPREADSHEET_ID = '1lpRpxVzWaYUqL-jVPOAJCtjsJUIedPYYyOx4gg4PPFU';
 const CLIENT_ID = '149884248440-85f8dhc6ub9up10sv0f89e3e0itrnooj.apps.googleusercontent.com';
@@ -975,11 +975,24 @@ function simulateMonthly({
     });
   }
 
+  // 未來支出規劃：逐月查表（從 start_date 那月起算進每月 budget）
+  // 對應 design doc: docs/superpowers/specs/2026-06-08-future-expense-planning-design.md § DWZ
+  const sortedPlanned = [...(S.data.expense_planned || [])]
+    .sort((a, b) => (a[5] || '').localeCompare(b[5] || ''));
+  const budgetAtYM = (ym) => {
+    let total = monthlyBudget;
+    for (const r of sortedPlanned) {
+      if ((r[5] || '') <= ym) total += parseFloat(r[2]) || 0;
+      else break; // sorted asc，後面更晚的不會再加
+    }
+    return total;
+  };
+
   const balances = [];
   let balance = startBalance;
   for (let i = 0; i < maxMonths; i++) {
     const ym = addMonths(startYM + '-01', i).slice(0, 7);
-    const netChange = (incomeByYM.get(ym) || 0) - monthlyBudget - (expByYM.get(ym) || 0);
+    const netChange = (incomeByYM.get(ym) || 0) - budgetAtYM(ym) - (expByYM.get(ym) || 0);
     const prevBalance = balance;
     balance += netChange;
     if (balance < 0) {
@@ -5365,6 +5378,24 @@ function renderDWZ() {
   const year0GiftTotal = (giftAge === currentAge && legacyTWD > 0) ? legacyTWD : 0;
   const annualBase = budget * 12;
 
+  // ── 未來支出規劃整合 ──
+  // 對應 design doc: docs/superpowers/specs/2026-06-08-future-expense-planning-design.md § DWZ
+  // 將 expense_planned 各項從其「啟動年齡」起加入年度支出，與 annualBase 一起套通膨/晚年倍率
+  // 啟動年齡 = currentAge + (start_year - currentCalendarYear)，月份不細分（年度模擬精度）
+  const _nowD = new Date(Date.now() + 8 * 3600 * 1000);
+  const currentYear = _nowD.getUTCFullYear();
+  const plannedActivations = (S.data.expense_planned || []).map(r => {
+    const startYear = parseInt(String(r[5] || '').slice(0, 4)) || 9999;
+    const monthlyAmount = parseFloat(r[2]) || 0;
+    return {
+      activeAtAge: currentAge + (startYear - currentYear),
+      annualAmount: monthlyAmount * 12,
+    };
+  }).filter(p => p.annualAmount > 0);
+  const extraPlannedAnnualAtAge = (age) => plannedActivations
+    .filter(p => age >= p.activeAtAge)
+    .reduce((s, p) => s + p.annualAmount, 0);
+
   // 策略實驗室：取得每月外部現金流入結構（含 age-dependent 主動收入）
   const strat = _calcStratLabInflow();
   // 每齡的年度策略流入：constant (rewards) 全程適用、active 在 age <= activeUntilAge 時加上
@@ -5403,7 +5434,8 @@ function renderDWZ() {
       mult = yearsRetired < 15 ? multEarly : multLate;
     }
     // 第一年（n=1）不套通膨（首年支出即為當前年度預算）
-    const annualExpense = annualBase * (n === 1 ? 1 : Math.pow(1 + inf, n - 1)) * mult;
+    // 未來支出規劃：annualBase + extraPlannedAnnualAtAge 一起套通膨與晚年倍率
+    const annualExpense = (annualBase + extraPlannedAnnualAtAge(age)) * (n === 1 ? 1 : Math.pow(1 + inf, n - 1)) * mult;
 
     // End-of-year model: compound then spend；策略實驗室現金流為定額名目年金（不通膨）
     // 主動收入會在 age > activeUntilAge 後自動歸零（per-age 計算）
@@ -5478,7 +5510,7 @@ function renderDWZ() {
         const yearsRetired = age - retireAge;
         mult = yearsRetired < 15 ? multEarly : multLate;
       }
-      const annualExpense = annualBase * (n === 1 ? 1 : Math.pow(1 + inf, n - 1)) * mult;
+      const annualExpense = (annualBase + extraPlannedAnnualAtAge(age)) * (n === 1 ? 1 : Math.pow(1 + inf, n - 1)) * mult;
       nw0 = nw0 * (1 + r) - annualExpense + stratAnnualInflowAt(age);
       if (expBudgetTWD > 0 && age >= 40 && age <= 65) nw0 -= expBudgetTWD;
       nw0 -= _expByAge[age] || 0;
