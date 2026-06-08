@@ -4,7 +4,7 @@
 // 應用版本號 — 重大功能變更才升版（小修補只更新 BUILD_DATE）
 const APP_VERSION = 'v1.0';
 // Build 時間：每次修改 code 後手動更新此時間（UTC+8 台北時間）
-const BUILD_DATE = '2026/06/08 14:49';
+const BUILD_DATE = '2026/06/08 15:35';
 
 const SPREADSHEET_ID = '1lpRpxVzWaYUqL-jVPOAJCtjsJUIedPYYyOx4gg4PPFU';
 const CLIENT_ID = '149884248440-85f8dhc6ub9up10sv0f89e3e0itrnooj.apps.googleusercontent.com';
@@ -2733,6 +2733,42 @@ function _renderDwzPlannedList() {
         </label>
       </div>`;
   }).join('');
+}
+
+// 自動活化：APP 啟動時把到期的未來規劃（start_date <= 當月）寫進 expense_budget
+// 順序：先 push 進 budget → 從 planned 過濾掉 → reset high-water guard → save 兩張表 → toast
+async function _checkAndActivatePlanned() {
+  if (!S.data.expense_planned || !S.data.expense_planned.length) return;
+
+  const todayYM = _todayYM();
+  const due = S.data.expense_planned.filter(r => (r[5] || '') <= todayYM);
+  if (!due.length) return;
+
+  // 1. 寫進 expense_budget（追加，不覆寫既有）
+  due.forEach(([id, name, amount, cat, source, start, notes]) => {
+    S.data.expense_budget.push([cat, name, amount, source]);
+  });
+
+  // 2. 從 expense_planned 移除已活化項目
+  S.data.expense_planned = S.data.expense_planned.filter(r => (r[5] || '') > todayYM);
+
+  // 3. 重設 expense_planned high-water，避免 saveSheet 的 size guard 誤擋大量活化
+  //    （_track 只用 Math.max 增高水位；這裡需要主動降下來）
+  _SHEET_HIGH_WATER['expense_planned'] = S.data.expense_planned.length;
+
+  // 4. 兩張表都存（順序：先存目標表、再存來源表 — 若 step 5 失敗會殘留 planned 重複，比資料丟失安全）
+  try {
+    await saveSheet('expense_budget', S.data.expense_budget);
+    await saveSheet('expense_planned', S.data.expense_planned);
+  } catch (e) {
+    console.error('[planned activate] save failed:', e);
+    showToast('未來規劃自動活化儲存失敗，請手動檢查', 'err');
+    return;
+  }
+
+  // 5. Toast 通知
+  const names = due.map(r => `${r[1]} (${fmt(parseFloat(r[2]) || 0)})`).join('、');
+  showToast(`已啟用 ${due.length} 筆未來規劃：${names}`, 'ok');
 }
 
 function renderPlannedSection() {
@@ -6277,6 +6313,7 @@ async function initApp() {
 
     showToast('載入資料…');
     await loadAll();
+    await _checkAndActivatePlanned(); // Phase 1: 未來支出規劃自動活化（到期項目寫進 expense_budget）
     await seedBaselineHistory();
 
     showToast('抓取即時價格…');
