@@ -1210,17 +1210,16 @@ h3.section-header {
   transition: transform .25s ease;
 }
 .budget-cat.collapsed .budget-cat-chevron { transform: rotate(-90deg); }
-/* ⚠ 這是「固定 / 浮動 Accordion 的內容容器」— 13 項目必須能捲動 */
+/* 「固定 / 浮動」Accordion 內容容器
+ * 設計決策：展開時全部項目一次顯示、不內部捲動
+ * 理由：內部捲動容易讓使用者忽略下面還有項目；外層頁面捲動體驗較自然
+ * max-height: 2000px 是給 accordion 折疊動畫用的「上限佔位」，
+ * 實際高度由內容決定，不會顯示為 2000px 空白 */
 .budget-cat-items {
-  display: block !important;          /* 明確 block：不是 flex，避免部分引擎吃掉捲軸 */
+  display: block !important;          /* 明確 block：不是 flex，避免部分引擎吃掉內部排版 */
   padding: 6px 8px;
-  max-height: 400px !important;
-  overflow-y: auto !important;
-  overflow-x: hidden;
-  overscroll-behavior: contain;
-  -webkit-overflow-scrolling: touch;
-  scrollbar-width: thin;
-  scrollbar-color: rgba(148,163,184,.45) rgba(148,163,184,.1);
+  max-height: 2000px !important;      /* 給 accordion 動畫用的大上限，不限制實際內容高 */
+  overflow: visible !important;
   transition: max-height .3s ease, padding .3s ease, opacity .2s ease;
   opacity: 1;
 }
