@@ -1316,6 +1316,66 @@ h3.section-header {
 }
 
 
+/* ══ 未來支出規劃 (Phase 1 MVP) ══ */
+/* 在「生活支出預算」hero card 內、+ 新增支出項目 按鈕之後的折疊區塊 */
+.budget-planned-wrap {
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px dashed var(--border);
+}
+.budget-planned-header {
+  display: flex; align-items: center; justify-content: space-between;
+  cursor: pointer; user-select: none;
+  padding: 6px 4px;
+  border-radius: 8px;
+  transition: background .15s ease;
+}
+.budget-planned-header:hover { background: rgba(99,102,241,.04); }
+.budget-planned-title {
+  font-size: 0.85rem; font-weight: 600; color: var(--text);
+  display: inline-flex; align-items: center; gap: 4px;
+}
+.budget-planned-title .count {
+  font-size: 0.72rem; font-weight: 500; color: var(--muted);
+  margin-left: 2px;
+}
+.budget-planned-preview {
+  font-size: 0.78rem; font-weight: 600; color: var(--accent-light);
+}
+.budget-planned-list {
+  display: none;
+  margin-top: 8px;
+  flex-direction: column; gap: 6px;
+}
+.budget-planned-wrap.expanded .budget-planned-list { display: flex; }
+.budget-planned-empty {
+  font-size: 0.85rem; color: var(--muted);
+  text-align: center; padding: 12px 0;
+}
+.budget-planned-item {
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  grid-template-rows: auto auto;
+  grid-template-areas:
+    "name amt actions"
+    "meta meta actions";
+  gap: 2px 12px;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: rgba(255,255,255,.02);
+}
+.budget-planned-item-name { grid-area: name; font-size: 0.88rem; font-weight: 600; color: var(--text); }
+.budget-planned-item-amt  { grid-area: amt;  font-size: 0.9rem;  font-weight: 700; color: var(--accent-light); }
+.budget-planned-item-meta { grid-area: meta; font-size: 0.72rem; color: var(--muted); line-height: 1.4; }
+.budget-planned-item-meta .past { color: #ef4444; font-weight: 600; }
+.budget-planned-item-actions {
+  grid-area: actions;
+  display: flex; gap: 4px; align-items: center;
+}
+.btn-add.budget-planned-add { margin-top: 4px; }
+
+
 /* ══ 主動收入管理 ══ */
 .income-empty { color: var(--muted); font-size: 0.9rem; text-align: center; padding: 20px 0; }
 /* 主動收入：扁平清單（取消月份分組）。>5 筆時內部捲動避免撐長頁面 */

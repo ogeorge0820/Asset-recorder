@@ -4,7 +4,7 @@
 // 應用版本號 — 重大功能變更才升版（小修補只更新 BUILD_DATE）
 const APP_VERSION = 'v1.0';
 // Build 時間：每次修改 code 後手動更新此時間（UTC+8 台北時間）
-const BUILD_DATE = '2026/06/02 07:39';
+const BUILD_DATE = '2026/06/08 13:57';
 
 const SPREADSHEET_ID = '1lpRpxVzWaYUqL-jVPOAJCtjsJUIedPYYyOx4gg4PPFU';
 const CLIENT_ID = '149884248440-85f8dhc6ub9up10sv0f89e3e0itrnooj.apps.googleusercontent.com';
@@ -2437,6 +2437,7 @@ function renderBudget() {
 
   if (!items.length) {
     catsEl.innerHTML = '<div class="budget-empty">尚無支出項目</div>';
+    renderPlannedSection(); // Phase 1: 即使主預算空，未來規劃區塊仍要渲染
     return;
   }
 
@@ -2488,6 +2489,9 @@ function renderBudget() {
         <div class="budget-cat-items">${normalList.map(renderItem).join('')}${digitalBlock}</div>
       </div>`;
   }).join('');
+
+  // Phase 1: 未來支出規劃 — 在主預算清單之後渲染折疊區塊
+  renderPlannedSection();
 }
 
 function toggleBudgetCat(cat) {
@@ -2539,6 +2543,159 @@ function deleteBudgetItem(idx) {
     renderBudget(); renderKPIs(); renderCash();
     showToast('已刪除支出項目', 'ok');
   });
+}
+
+// ══════════════════════════════════════════════════════════════
+// 未來支出規劃 (Phase 1 MVP) — CRUD + render
+// 設計文件：docs/superpowers/specs/2026-06-08-future-expense-planning-design.md
+// 資料表 expense_planned: [id, item_name, amount, category, payment_source, start_date, notes]
+// ══════════════════════════════════════════════════════════════
+
+// 取得今天的 YYYY-MM（Asia/Taipei）— 給 modal 驗證、活化判斷、相對時間計算共用
+function _todayYM() {
+  const now = new Date(Date.now() + 8 * 3600 * 1000);
+  return `${now.getUTCFullYear()}-${String(now.getUTCMonth() + 1).padStart(2, '0')}`;
+}
+
+// 計算「YYYY-MM 距今多少」相對文字 — UI 顯示用（「3年後」「4個月後」等）
+function _relMonthText(targetYM, todayYM) {
+  if (!targetYM || !todayYM) return '';
+  const [ty, tm] = targetYM.split('-').map(Number);
+  const [cy, cm] = todayYM.split('-').map(Number);
+  if (!ty || !tm || !cy || !cm) return '';
+  const monthsDiff = (ty - cy) * 12 + (tm - cm);
+  if (monthsDiff <= 0) return '';
+  if (monthsDiff < 12) return `${monthsDiff}個月後`;
+  const years = Math.floor(monthsDiff / 12);
+  const remMonths = monthsDiff % 12;
+  return remMonths ? `${years}年${remMonths}個月後` : `${years}年後`;
+}
+
+function addPlannedExpense() {
+  const todayYM = _todayYM();
+  openModal('新增未來支出', [
+    { id: 'name',   label: '項目名稱', type: 'text',   ph: '例：新房租、健身房' },
+    { id: 'amount', label: '金額 (TWD)', type: 'number', step: '1', min: 1, ph: '0' },
+    { id: 'cat',    label: '類別',    type: 'select', options: ['固定','浮動'] },
+    { id: 'source', label: '扣款帳戶（選填）', type: 'text', ph: '對應流動現金帳戶名稱', opt: true },
+    { id: 'start',  label: '開始月份', type: 'month',  ph: 'YYYY-MM' },
+    { id: 'notes',  label: '備註（選填）', type: 'text', opt: true },
+  ], async (vals) => {
+    const amount = parseFloat(vals.amount) || 0;
+    if (amount <= 0) { showToast('金額需大於 0', 'err'); return false; }
+    if (!vals.start || vals.start <= todayYM) {
+      showToast('開始月份需為未來月份（不含當月）', 'err');
+      return false;
+    }
+    const id = 'p_' + Date.now();
+    S.data.expense_planned.push([id, vals.name, String(amount), vals.cat, vals.source || '', vals.start, vals.notes || '']);
+    await saveSheet('expense_planned', S.data.expense_planned);
+    renderBudget();
+    renderKPIs();
+    showToast(`已新增未來支出（${vals.start} 起）`, 'ok');
+  });
+}
+
+function editPlannedExpense(idx) {
+  const r = S.data.expense_planned[idx];
+  if (!r) return;
+  const todayYM = _todayYM();
+  openModal('編輯未來支出', [
+    { id: 'name',   label: '項目名稱', type: 'text',   val: r[1] || '' },
+    { id: 'amount', label: '金額 (TWD)', type: 'number', step: '1', min: 1, val: r[2] || '0' },
+    { id: 'cat',    label: '類別',    type: 'select', options: ['固定','浮動'], val: r[3] || '固定' },
+    { id: 'source', label: '扣款帳戶（選填）', type: 'text', val: r[4] || '', opt: true },
+    { id: 'start',  label: '開始月份', type: 'month',  val: r[5] || '' },
+    { id: 'notes',  label: '備註（選填）', type: 'text', val: r[6] || '', opt: true },
+  ], async (vals) => {
+    const amount = parseFloat(vals.amount) || 0;
+    if (amount <= 0) { showToast('金額需大於 0', 'err'); return false; }
+    if (!vals.start || vals.start <= todayYM) {
+      showToast('開始月份需為未來月份（不含當月）', 'err');
+      return false;
+    }
+    // 保留原 id（不重新生成）
+    S.data.expense_planned[idx] = [r[0], vals.name, String(amount), vals.cat, vals.source || '', vals.start, vals.notes || ''];
+    await saveSheet('expense_planned', S.data.expense_planned);
+    renderBudget();
+    renderKPIs();
+    showToast('已更新未來支出', 'ok');
+  });
+}
+
+function deletePlannedExpense(idx) {
+  const r = S.data.expense_planned[idx];
+  if (!r) return;
+  openConfirm('確認刪除', `刪除未來支出「${r[1]}」（${r[5]} 起）？`, async () => {
+    S.data.expense_planned.splice(idx, 1);
+    await saveSheet('expense_planned', S.data.expense_planned);
+    renderBudget();
+    renderKPIs();
+    showToast('已刪除未來支出', 'ok');
+  });
+}
+
+function togglePlanned() {
+  const wrap = $('budget-planned-section');
+  if (wrap) wrap.classList.toggle('expanded');
+}
+
+function renderPlannedSection() {
+  const wrap = $('budget-planned-section');
+  if (!wrap) return;
+
+  const items = (S.data.expense_planned || []).slice();
+  // 排序：start_date 由近到遠
+  items.sort((a, b) => (a[5] || '').localeCompare(b[5] || ''));
+
+  // 預告：所有未來項目活化後月支出會增加的總額（不含待活化的，但 todayYM 之後已 auto-activate）
+  const previewSum = items.reduce((s, r) => s + (parseFloat(r[2]) || 0), 0);
+
+  // 標頭
+  const headerHTML = `
+    <div class="budget-planned-header" onclick="togglePlanned()">
+      <span class="budget-planned-title">▾ 未來規劃<span class="count"> (${items.length})</span></span>
+      <span class="budget-planned-preview">${items.length ? '+' + fmt(previewSum) + '/月' : ''}</span>
+    </div>`;
+
+  // 清單
+  let listHTML;
+  if (!items.length) {
+    listHTML = `
+      <div class="budget-planned-list">
+        <div class="budget-planned-empty">尚無未來規劃</div>
+        <button class="btn-add budget-planned-add" onclick="addPlannedExpense()">+ 新增未來支出</button>
+      </div>`;
+  } else {
+    const todayYM = _todayYM();
+    const rowsHTML = items.map((r, i) => {
+      const [id, name, amount, cat, source, start, notes] = r;
+      const amt = parseFloat(amount) || 0;
+      const isPast = (start || '') <= todayYM;
+      const relText = _relMonthText(start, todayYM);
+      const metaParts = [esc(cat || ''), esc(source || '')].filter(Boolean).join(' · ');
+      const dateText = isPast
+        ? `<span class="past">${esc(start)} · 待活化</span>`
+        : `${esc(start)} 起${relText ? ` · ${relText}` : ''}`;
+      return `
+        <div class="budget-planned-item">
+          <div class="budget-planned-item-name">${esc(name || '—')}</div>
+          <div class="budget-planned-item-amt">${fmt(amt)}</div>
+          <div class="budget-planned-item-meta">${metaParts}${metaParts ? '<br>' : ''}${dateText}</div>
+          <div class="budget-planned-item-actions">
+            <button class="btn-icon edit" onclick="editPlannedExpense(${i})">✏</button>
+            <button class="btn-icon del" onclick="deletePlannedExpense(${i})">✕</button>
+          </div>
+        </div>`;
+    }).join('');
+    listHTML = `
+      <div class="budget-planned-list">
+        ${rowsHTML}
+        <button class="btn-add budget-planned-add" onclick="addPlannedExpense()">+ 新增未來支出</button>
+      </div>`;
+  }
+
+  wrap.innerHTML = headerHTML + listHTML;
 }
 
 // ══════════════════════════════════════════════════════════════

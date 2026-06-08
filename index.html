@@ -16,8 +16,8 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=DM+Sans:wght@300;400;500;600;700&display=swap">
-<link rel="stylesheet" href="theme.css?v=202606020739">
-<link rel="stylesheet" href="style.css?v=202606020739">
+<link rel="stylesheet" href="theme.css?v=202606081357">
+<link rel="stylesheet" href="style.css?v=202606081357">
 </head>
 <body>
 
@@ -374,6 +374,9 @@
               <div class="budget-ratio-bar" id="budget-ratio-bar"></div>
               <div class="budget-cats" id="budget-cats"></div>
               <button class="btn-add budget-add-btn" onclick="addBudgetItem()">+ 新增支出項目</button>
+              <div class="budget-planned-wrap" id="budget-planned-section">
+                <!-- 由 renderPlannedSection() 動態填入 -->
+              </div>
             </div>
           </div>
 
@@ -728,6 +731,6 @@
 <!-- ── Toast ── -->
 <div class="toast" id="toast"></div>
 
-<script src="app.js?v=202606020739"></script>
+<script src="app.js?v=202606081357"></script>
 </body>
 </html>
