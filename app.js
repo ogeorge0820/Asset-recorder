@@ -151,6 +151,7 @@ const HEADERS = {
   cash_history: ['date','account','amount_before','amount_after','delta','currency','value_twd'],
   other_history: ['date','key','value_before','value_after','delta','note'],
   expense_budget: ['category','item_name','amount','payment_source'],
+  expense_planned: ['id','item_name','amount','category','payment_source','start_date','notes'],
   experience_plan: ['name','year','month','amount_twd','paid'],
   income_records: ['id','name','category','amount_twd','expected_date','status','linked_account','settled_date','payer'],
   bucket_list: ['id','name','category','age','budget_wan','status','date','paid','notes'],
@@ -184,6 +185,7 @@ const S = {
     cash_history: [],   // [date, account, amount_before, amount_after, delta, currency, value_twd]
     other_history: [],  // [date, key, value_before, value_after, delta, note]
     expense_budget: [], // [category, item_name, amount, payment_source]
+    expense_planned: [], // [id, item_name, amount, category, payment_source, start_date, notes]
     experience_plan: [], // [name, year, month, amount_twd, paid]
     income_records: [],  // [id, name, category, amount_twd, expected_date, status, linked_account, settled_date, payer]
     bucket_list: [],     // [age, name, budget_wan, status, category, note]
@@ -511,7 +513,7 @@ async function initSheets() {
 // DATA LOAD / SAVE
 // ══════════════════════════════════════════════════════════════
 async function loadAll() {
-  const [cash, tw, us, crypto, snap, daily, sett, rw, hist, twHist, usHist, cashHist, otherHist, expBudget, expPlan, incomeRec, bucketList, indicators] = await Promise.allSettled([
+  const [cash, tw, us, crypto, snap, daily, sett, rw, hist, twHist, usHist, cashHist, otherHist, expBudget, expPlanned, expPlan, incomeRec, bucketList, indicators] = await Promise.allSettled([
     sheetGet('cash_accounts!A:C'),
     sheetGet('holdings_tw!A:B'),
     sheetGet('holdings_us!A:B'),
@@ -526,6 +528,7 @@ async function loadAll() {
     sheetGet('cash_history!A:G'),
     sheetGet('other_history!A:F'),
     sheetGet('expense_budget!A:D'),
+    sheetGet('expense_planned!A:G'),
     sheetGet('experience_plan!A:E'),
     sheetGet('income_records!A:I'),
     sheetGet('bucket_list!A:I'),
@@ -576,6 +579,7 @@ async function loadAll() {
   S.data.cash_history    = rows(cashHist, 'cash_history');
   S.data.other_history   = rows(otherHist, 'other_history');
   S.data.expense_budget  = rows(expBudget, 'expense_budget');
+  S.data.expense_planned = rows(expPlanned, 'expense_planned');
   S.data.experience_plan = rows(expPlan, 'experience_plan');
   S.data.income_records  = rows(incomeRec, 'income_records');
   S.data.bucket_list     = rows(bucketList, 'bucket_list');
@@ -614,6 +618,7 @@ async function loadAll() {
   _track('cash_history', S.data.cash_history);
   _track('other_history', S.data.other_history);
   _track('expense_budget', S.data.expense_budget);
+  _track('expense_planned', S.data.expense_planned);
   _track('experience_plan', S.data.experience_plan);
   _track('income_records', S.data.income_records);
   _track('bucket_list', S.data.bucket_list);
