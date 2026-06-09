@@ -4,7 +4,7 @@
 // 應用版本號 — 重大功能變更才升版（小修補只更新 BUILD_DATE）
 const APP_VERSION = 'v1.0';
 // Build 時間：每次修改 code 後手動更新此時間（UTC+8 台北時間）
-const BUILD_DATE = '2026/06/08 15:55';
+const BUILD_DATE = '2026/06/09 10:44';
 
 const SPREADSHEET_ID = '1lpRpxVzWaYUqL-jVPOAJCtjsJUIedPYYyOx4gg4PPFU';
 const CLIENT_ID = '149884248440-85f8dhc6ub9up10sv0f89e3e0itrnooj.apps.googleusercontent.com';
@@ -150,8 +150,8 @@ const HEADERS = {
   us_history: ['date','symbol','qty_before','qty_after','delta','price_usd','value_twd'],
   cash_history: ['date','account','amount_before','amount_after','delta','currency','value_twd'],
   other_history: ['date','key','value_before','value_after','delta','note'],
-  expense_budget: ['category','item_name','amount','payment_source'],
-  expense_planned: ['id','item_name','amount','category','payment_source','start_date','notes'],
+  expense_budget: ['category','item_name','amount','payment_source','end_date'],
+  expense_planned: ['id','item_name','amount','category','payment_source','start_date','notes','kind','end_date'],
   experience_plan: ['name','year','month','amount_twd','paid'],
   income_records: ['id','name','category','amount_twd','expected_date','status','linked_account','settled_date','payer'],
   bucket_list: ['id','name','category','age','budget_wan','status','date','paid','notes'],
@@ -184,8 +184,8 @@ const S = {
     us_history: [],     // [date, symbol, qty_before, qty_after, delta, price_usd, value_twd]
     cash_history: [],   // [date, account, amount_before, amount_after, delta, currency, value_twd]
     other_history: [],  // [date, key, value_before, value_after, delta, note]
-    expense_budget: [], // [category, item_name, amount, payment_source]
-    expense_planned: [], // [id, item_name, amount, category, payment_source, start_date, notes]
+    expense_budget: [], // [category, item_name, amount, payment_source, end_date(Phase 2)]
+    expense_planned: [], // [id, item_name, amount, category, payment_source, start_date, notes, kind(P2), end_date(P2)]
     experience_plan: [], // [name, year, month, amount_twd, paid]
     income_records: [],  // [id, name, category, amount_twd, expected_date, status, linked_account, settled_date, payer]
     bucket_list: [],     // [age, name, budget_wan, status, category, note]
@@ -527,8 +527,8 @@ async function loadAll() {
     sheetGet('us_history!A:G'),
     sheetGet('cash_history!A:G'),
     sheetGet('other_history!A:F'),
-    sheetGet('expense_budget!A:D'),
-    sheetGet('expense_planned!A:G'),
+    sheetGet('expense_budget!A:E'),
+    sheetGet('expense_planned!A:I'),
     sheetGet('experience_plan!A:E'),
     sheetGet('income_records!A:I'),
     sheetGet('bucket_list!A:I'),
@@ -2590,51 +2590,85 @@ function _relMonthText(targetYM, todayYM) {
   return remMonths ? `${years}年${remMonths}個月後` : `${years}年後`;
 }
 
-function addPlannedExpense() {
+// Phase 2: 共用 modal 欄位定義（add / edit 都用）
+// kind 是第一個欄位 — 控制 cat / end 的顯隱（hideWhen）
+function _plannedExpenseModalFields(values = {}) {
+  return [
+    { id: 'kind',   label: '類型',     type: 'select', options: ['月固定','一次性'], val: values.kind === 'onetime' ? '一次性' : '月固定' },
+    { id: 'name',   label: '項目名稱', type: 'text',   val: values.name || '', ph: '例：新房租、換車、健身房' },
+    { id: 'amount', label: '金額 (TWD)', type: 'number', step: '1', min: 1, val: values.amount || '', ph: '0' },
+    { id: 'cat',    label: '類別',    type: 'select', options: ['固定','浮動'], val: values.cat || '固定', hideWhen: { field: 'kind', value: '一次性' } },
+    { id: 'source', label: '扣款帳戶（選填）', type: 'text', val: values.source || '', ph: '對應流動現金帳戶名稱', opt: true },
+    { id: 'start',  label: '開始月份', type: 'month',  val: values.start || '' },
+    { id: 'end',    label: '結束月份（選填）', type: 'month', val: values.end || '', opt: true, hideWhen: { field: 'kind', value: '一次性' } },
+    { id: 'notes',  label: '備註（選填）', type: 'text', val: values.notes || '', opt: true },
+  ];
+}
+
+function _validatePlannedExpense(vals, opts) {
   const todayYM = _todayYM();
-  openModal('新增未來支出', [
-    { id: 'name',   label: '項目名稱', type: 'text',   ph: '例：新房租、健身房' },
-    { id: 'amount', label: '金額 (TWD)', type: 'number', step: '1', min: 1, ph: '0' },
-    { id: 'cat',    label: '類別',    type: 'select', options: ['固定','浮動'] },
-    { id: 'source', label: '扣款帳戶（選填）', type: 'text', ph: '對應流動現金帳戶名稱', opt: true },
-    { id: 'start',  label: '開始月份', type: 'month',  ph: 'YYYY-MM' },
-    { id: 'notes',  label: '備註（選填）', type: 'text', opt: true },
-  ], async (vals) => {
-    const amount = parseFloat(vals.amount) || 0;
-    if (amount <= 0) { showToast('金額需大於 0', 'err'); return false; }
+  const amount = parseFloat(vals.amount) || 0;
+  if (amount <= 0) { showToast('金額需大於 0', 'err'); return null; }
+  if (!vals.name) { showToast('項目名稱必填', 'err'); return null; }
+
+  const kind = vals.kind === '一次性' ? 'onetime' : 'monthly';
+  // Onetime 允許過去日期（紀錄已發生）；Monthly 必須未來
+  if (kind === 'monthly') {
     if (!vals.start || vals.start <= todayYM) {
-      showToast('開始月份需為未來月份（不含當月）', 'err');
-      return false;
+      showToast('月固定的開始月份需為未來月份（不含當月）', 'err');
+      return null;
     }
+    if (vals.end && vals.end <= vals.start) {
+      showToast('結束月份需晚於開始月份', 'err');
+      return null;
+    }
+  } else {
+    // onetime 必須有 start_date
+    if (!vals.start) {
+      showToast('一次性支出的發生月份必填', 'err');
+      return null;
+    }
+  }
+  return { amount, kind };
+}
+
+function addPlannedExpense() {
+  openModal('新增未來支出', _plannedExpenseModalFields(), async (vals) => {
+    const v = _validatePlannedExpense(vals);
+    if (!v) return false;
+    const { amount, kind } = v;
     const id = 'p_' + Date.now();
-    S.data.expense_planned.push([id, vals.name, String(amount), vals.cat, vals.source || '', vals.start, vals.notes || '']);
+    // schema: [id, name, amount, cat, source, start, notes, kind, end]
+    S.data.expense_planned.push([
+      id, vals.name, String(amount), vals.cat || '', vals.source || '',
+      vals.start, vals.notes || '', kind, vals.end || ''
+    ]);
     await saveSheet('expense_planned', S.data.expense_planned);
     renderBudget();
     renderKPIs();
-    showToast(`已新增未來支出（${_fmtYM(vals.start)} 起）`, 'ok');
+    const tag = kind === 'onetime' ? '一次性' : '月固定';
+    showToast(`已新增未來支出（${tag} · ${_fmtYM(vals.start)}）`, 'ok');
   });
 }
 
 function editPlannedExpense(idx) {
   const r = S.data.expense_planned[idx];
   if (!r) return;
-  const todayYM = _todayYM();
-  openModal('編輯未來支出', [
-    { id: 'name',   label: '項目名稱', type: 'text',   val: r[1] || '' },
-    { id: 'amount', label: '金額 (TWD)', type: 'number', step: '1', min: 1, val: r[2] || '0' },
-    { id: 'cat',    label: '類別',    type: 'select', options: ['固定','浮動'], val: r[3] || '固定' },
-    { id: 'source', label: '扣款帳戶（選填）', type: 'text', val: r[4] || '', opt: true },
-    { id: 'start',  label: '開始月份', type: 'month',  val: r[5] || '' },
-    { id: 'notes',  label: '備註（選填）', type: 'text', val: r[6] || '', opt: true },
-  ], async (vals) => {
-    const amount = parseFloat(vals.amount) || 0;
-    if (amount <= 0) { showToast('金額需大於 0', 'err'); return false; }
-    if (!vals.start || vals.start <= todayYM) {
-      showToast('開始月份需為未來月份（不含當月）', 'err');
-      return false;
-    }
+  // 把 row 還原成 modal 預填值（kind 處理向後相容：Phase 1 既有 row 沒 r[7] → 視 monthly）
+  const initialKind = (r[7] || 'monthly') === 'onetime' ? 'onetime' : 'monthly';
+  const fields = _plannedExpenseModalFields({
+    kind: initialKind, name: r[1], amount: r[2], cat: r[3], source: r[4],
+    start: r[5], notes: r[6], end: r[8] || '',
+  });
+  openModal('編輯未來支出', fields, async (vals) => {
+    const v = _validatePlannedExpense(vals);
+    if (!v) return false;
+    const { amount, kind } = v;
     // 保留原 id（不重新生成）
-    S.data.expense_planned[idx] = [r[0], vals.name, String(amount), vals.cat, vals.source || '', vals.start, vals.notes || ''];
+    S.data.expense_planned[idx] = [
+      r[0], vals.name, String(amount), vals.cat || '', vals.source || '',
+      vals.start, vals.notes || '', kind, vals.end || ''
+    ];
     await saveSheet('expense_planned', S.data.expense_planned);
     renderBudget();
     renderKPIs();
@@ -2741,16 +2775,26 @@ async function _checkAndActivatePlanned() {
   if (!S.data.expense_planned || !S.data.expense_planned.length) return;
 
   const todayYM = _todayYM();
-  const due = S.data.expense_planned.filter(r => (r[5] || '') <= todayYM);
+  // Phase 2: 只活化 kind === 'monthly' 的（onetime 永遠留在 planned 並標 UI 已發生）
+  // Phase 1 既有 row 沒有 r[7] → 視為 'monthly'（向後相容）
+  const due = S.data.expense_planned.filter(r => {
+    const kind = r[7] || 'monthly';
+    return kind === 'monthly' && (r[5] || '') <= todayYM;
+  });
   if (!due.length) return;
 
   // 1. 寫進 expense_budget（追加，不覆寫既有）
-  due.forEach(([id, name, amount, cat, source, start, notes]) => {
-    S.data.expense_budget.push([cat, name, amount, source]);
+  //    Phase 2: 第 5 欄帶 end_date（從 planned 來的若有 end_date 一併帶過去）
+  due.forEach(([id, name, amount, cat, source, start, notes, kind, end_date]) => {
+    S.data.expense_budget.push([cat, name, amount, source, end_date || '']);
   });
 
-  // 2. 從 expense_planned 移除已活化項目
-  S.data.expense_planned = S.data.expense_planned.filter(r => (r[5] || '') > todayYM);
+  // 2. 從 expense_planned 移除已活化項目（onetime 一定保留、未到期 monthly 也保留）
+  S.data.expense_planned = S.data.expense_planned.filter(r => {
+    const kind = r[7] || 'monthly';
+    if (kind !== 'monthly') return true; // onetime 永遠保留
+    return (r[5] || '') > todayYM;       // 未到期 monthly 保留
+  });
 
   // 3. 重設 expense_planned high-water，避免 saveSheet 的 size guard 誤擋大量活化
   //    （_track 只用 Math.max 增高水位；這裡需要主動降下來）
@@ -2776,20 +2820,27 @@ function renderPlannedSection() {
   if (!wrap) return;
 
   const items = (S.data.expense_planned || []).slice();
-  // 排序：start_date 由近到遠
-  items.sort((a, b) => (a[5] || '').localeCompare(b[5] || ''));
+  // 排序：未活化（未來）→ 已發生（onetime past）→ 各自再按 start_date 由近到遠
+  // 用「是否已過 start_date」分組，再按日期排序
+  const todayYM = _todayYM();
+  items.sort((a, b) => {
+    const aPast = (a[5] || '') <= todayYM;
+    const bPast = (b[5] || '') <= todayYM;
+    if (aPast !== bPast) return aPast ? 1 : -1; // 已發生排後面
+    return (a[5] || '').localeCompare(b[5] || '');
+  });
 
-  // 預告：所有未來項目活化後月支出會增加的總額（不含待活化的，但 todayYM 之後已 auto-activate）
-  const previewSum = items.reduce((s, r) => s + (parseFloat(r[2]) || 0), 0);
+  // Phase 2: 預告只算 monthly（onetime 不影響月支出）；標頭計數仍是全部 N 項
+  const previewSum = items
+    .filter(r => (r[7] || 'monthly') === 'monthly')
+    .reduce((s, r) => s + (parseFloat(r[2]) || 0), 0);
 
-  // 標頭
   const headerHTML = `
     <div class="budget-planned-header" onclick="togglePlanned()">
       <span class="budget-planned-title">▾ 未來規劃<span class="count"> (${items.length})</span></span>
-      <span class="budget-planned-preview">${items.length ? '+' + fmt(previewSum) + '/月' : ''}</span>
+      <span class="budget-planned-preview">${previewSum > 0 ? '+' + fmt(previewSum) + '/月' : ''}</span>
     </div>`;
 
-  // 清單
   let listHTML;
   if (!items.length) {
     listHTML = `
@@ -2798,21 +2849,51 @@ function renderPlannedSection() {
         <button class="btn-add budget-planned-add" onclick="addPlannedExpense()">+ 新增未來支出</button>
       </div>`;
   } else {
-    const todayYM = _todayYM();
     const rowsHTML = items.map((r, i) => {
-      const [id, name, amount, cat, source, start, notes] = r;
+      const [id, name, amount, cat, source, start, notes, kindRaw, endRaw] = r;
       const amt = parseFloat(amount) || 0;
+      const kind = kindRaw || 'monthly';
+      const end = endRaw || '';
       const isPast = (start || '') <= todayYM;
       const relText = _relMonthText(start, todayYM);
-      const metaParts = [esc(cat || ''), esc(source || '')].filter(Boolean).join(' · ');
-      const dateText = isPast
-        ? `<span class="past">${esc(_fmtYM(start))} · 待活化</span>`
-        : `${esc(_fmtYM(start))} 起${relText ? ` · ${relText}` : ''}`;
+
+      // meta line 1：類型 + 類別/來源
+      let metaLine1;
+      if (kind === 'onetime') {
+        metaLine1 = ['一次性', esc(source || '')].filter(Boolean).join(' · ');
+      } else {
+        metaLine1 = [esc(cat || ''), esc(source || '')].filter(Boolean).join(' · ');
+      }
+
+      // meta line 2：日期 + 狀態，依 kind 與時間分支
+      let dateText;
+      if (kind === 'onetime') {
+        // 一次性：未到 / 已發生
+        if (isPast) {
+          dateText = `<span class="past">於 ${esc(_fmtYM(start))} · 已發生</span>`;
+        } else {
+          dateText = `於 ${esc(_fmtYM(start))}${relText ? ` · ${relText}` : ''}`;
+        }
+      } else {
+        // 月固定：含 end / 不含 end
+        if (isPast) {
+          // 理論上應已活化、不該出現；防呆顯示
+          dateText = `<span class="past">${esc(_fmtYM(start))} 起 · 待活化</span>`;
+        } else if (end) {
+          dateText = `${esc(_fmtYM(start))} 起 · 至 ${esc(_fmtYM(end))}`;
+        } else {
+          dateText = `${esc(_fmtYM(start))} 起${relText ? ` · ${relText}` : ''}`;
+        }
+      }
+
+      // 「已發生 onetime」與「待活化」row 加 dim class（在 .past CSS 之外整 row 變灰）
+      const dimClass = isPast ? ' is-past' : '';
+
       return `
-        <div class="budget-planned-item">
+        <div class="budget-planned-item${dimClass}">
           <div class="budget-planned-item-name">${esc(name || '—')}</div>
           <div class="budget-planned-item-amt">${fmt(amt)}</div>
-          <div class="budget-planned-item-meta">${metaParts}${metaParts ? '<br>' : ''}${dateText}</div>
+          <div class="budget-planned-item-meta">${metaLine1}${metaLine1 ? '<br>' : ''}${dateText}</div>
           <div class="budget-planned-item-actions">
             <button class="btn-icon edit" onclick="editPlannedExpense(${i})">✏</button>
             <button class="btn-icon del" onclick="deletePlannedExpense(${i})">✕</button>
@@ -4277,7 +4358,7 @@ function openModal(title, fields, onOK) {
   $('modal-body').innerHTML = `
     <div class="modal-form">
       ${fields.map(f => `
-        <div class="field">
+        <div class="field" data-field-id="${f.id}"${f.hideWhen ? ` data-hide-when="${f.hideWhen.field}=${f.hideWhen.value}"` : ''}>
           <label>${esc(f.label)}</label>
           ${f.type === 'select' ? `
           <select id="mf-${f.id}">
@@ -4302,11 +4383,28 @@ function openModal(title, fields, onOK) {
   $('modal').classList.add('open');
   setTimeout(() => { const f = $('modal-body').querySelector('input:not([readonly])'); if(f) f.focus(); }, 80);
 
+  // Phase 2: hideWhen 條件式欄位顯隱 — 監聽 controller field 的 change 自動 toggle
+  // 用法：欄位 spec 加 hideWhen: { field: 'controllerFieldId', value: 'hideWhenThisValue' }
+  fields.filter(f => f.hideWhen).forEach(f => {
+    const controller = $(`mf-${f.hideWhen.field}`);
+    const targetRow = document.querySelector(`.field[data-field-id="${f.id}"]`);
+    if (!controller || !targetRow) return;
+    const update = () => {
+      targetRow.style.display = controller.value === f.hideWhen.value ? 'none' : '';
+    };
+    controller.addEventListener('change', update);
+    update(); // initial state
+  });
+
   $('modal-ok').onclick = async () => {
     const vals = {};
     let ok = true;
     fields.forEach(f => {
       const el = $(`mf-${f.id}`);
+      // Phase 2: hidden field 不驗證、值忽略（避免「隱藏的必填欄」擋下送出）
+      const row = el?.closest('.field');
+      const isHidden = row && row.style.display === 'none';
+      if (isHidden) { el?.classList.remove('invalid'); vals[f.id] = ''; return; }
       const v = el?.value?.trim();
       if (!v && f.type !== 'number' && f.type !== 'select' && !f.opt) { el.classList.add('invalid'); ok = false; }
       else { el?.classList.remove('invalid'); vals[f.id] = v; }

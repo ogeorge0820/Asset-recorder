@@ -1368,6 +1368,10 @@ h3.section-header {
 .budget-planned-item-amt  { grid-area: amt;  font-size: 0.9rem;  font-weight: 700; color: var(--accent-light); }
 .budget-planned-item-meta { grid-area: meta; font-size: 0.72rem; color: var(--muted); line-height: 1.4; }
 .budget-planned-item-meta .past { color: #ef4444; font-weight: 600; }
+/* Phase 2: 一次性已發生 / 月固定待活化 → 整 row 灰調 */
+.budget-planned-item.is-past { opacity: 0.55; }
+.budget-planned-item.is-past .budget-planned-item-name,
+.budget-planned-item.is-past .budget-planned-item-amt { color: var(--muted); }
 .budget-planned-item-actions {
   grid-area: actions;
   display: flex; gap: 4px; align-items: center;
