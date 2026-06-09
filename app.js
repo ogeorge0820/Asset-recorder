@@ -4,7 +4,7 @@
 // 應用版本號 — 重大功能變更才升版（小修補只更新 BUILD_DATE）
 const APP_VERSION = 'v1.0';
 // Build 時間：每次修改 code 後手動更新此時間（UTC+8 台北時間）
-const BUILD_DATE = '2026/06/09 21:17';
+const BUILD_DATE = '2026/06/09 21:21';
 
 const SPREADSHEET_ID = '1lpRpxVzWaYUqL-jVPOAJCtjsJUIedPYYyOx4gg4PPFU';
 const CLIENT_ID = '149884248440-85f8dhc6ub9up10sv0f89e3e0itrnooj.apps.googleusercontent.com';
@@ -2804,6 +2804,116 @@ function _renderDwzPlannedList() {
         </label>
       </div>`;
   }).join('');
+}
+
+// ══════════════════════════════════════════════════════════════
+// Phase 3: 未來事件時間軸（DWZ tab，與財富曲線同為年齡軸）
+// 收集 退休 / 壽命 / 月固定起訖 / 一次性 / 體驗 / 生前贈與 事件，
+// 以 absolute 定位畫在橫向 track 上，hover 顯示 tooltip。
+// 被 DWZ「忽略」的 planned 項目不顯示（與曲線計算一致）。
+// ══════════════════════════════════════════════════════════════
+function _renderDwzTimeline() {
+  const track = $('dwz-timeline-track');
+  const axisEl = $('dwz-timeline-axis');
+  const legendEl = $('dwz-timeline-legend');
+  if (!track) return;
+
+  const currentAge = _dwzParam('dwz-age');
+  const lifeAge    = _dwzParam('dwz-life');
+  const retireAge  = _dwzParam('dwz-retire');
+  const giftAge    = _dwzParam('dwz-gift-age') || 0;
+  const legacyTWD  = _dwzParam('dwz-legacy') * 10000;
+  const span = lifeAge - currentAge;
+  if (!currentAge || !lifeAge || span <= 0) {
+    track.innerHTML = '<div class="dwz-timeline-empty">設定年齡後顯示時間軸</div>';
+    if (axisEl) axisEl.innerHTML = '';
+    if (legendEl) legendEl.innerHTML = '';
+    return;
+  }
+
+  const now = new Date(Date.now() + 8 * 3600 * 1000);
+  const currentYear = now.getUTCFullYear();
+  const ignored = _getDwzPlannedIgnored();
+  const pct = (age) => Math.max(0, Math.min(100, ((age - currentAge) / span) * 100));
+
+  // 收集事件
+  const events = [];
+  // 退休 / 壽命（垂直分界線）
+  if (retireAge > currentAge && retireAge < lifeAge) {
+    events.push({ age: retireAge, type: 'retire', divider: 'tl-retire-line', label: `${retireAge}歲 · 退休` });
+  }
+  events.push({ age: lifeAge, type: 'lifeend', divider: 'tl-lifeend-line', label: `${lifeAge}歲 · 預計壽命` });
+  // 生前贈與
+  if (legacyTWD > 0 && giftAge >= currentAge && giftAge <= lifeAge) {
+    events.push({ age: giftAge, type: 'gift', label: `${giftAge}歲 · 生前贈與 ${fmt(legacyTWD)}` });
+  }
+  // 未來支出規劃（排除 ignored）
+  (S.data.expense_planned || []).forEach(r => {
+    const [id, name, amount, cat, source, start, notes, kindRaw, endRaw] = r;
+    if (ignored.has(id)) return;
+    const kind = kindRaw || 'monthly';
+    const amt = parseFloat(amount) || 0;
+    const startYear = parseInt(String(start || '').slice(0, 4)) || 0;
+    if (!startYear) return;
+    const startAge = currentAge + (startYear - currentYear);
+    if (kind === 'onetime') {
+      events.push({ age: startAge, type: 'onetime', label: `${startAge}歲 · ${name} · 一次 ${fmt(amt)}` });
+    } else {
+      events.push({ age: startAge, type: 'mstart', label: `${startAge}歲 · ${name} 開始 · +${fmt(amt)}/月` });
+      const endYear = endRaw ? (parseInt(String(endRaw).slice(0, 4)) || 0) : 0;
+      if (endYear) {
+        const endAge = currentAge + (endYear - currentYear);
+        events.push({ age: endAge, type: 'mend', label: `${endAge}歲 · ${name} 結束` });
+      }
+    }
+  });
+  // Bucket List 體驗（未付、有年齡）
+  (typeof _activeBucketItems === 'function' ? _activeBucketItems() : [])
+    .filter(b => !b.paid && b.age >= currentAge && b.age <= lifeAge)
+    .forEach(b => {
+      events.push({ age: b.age, type: 'bucket', label: `${b.age}歲 · ${b.name} · ${fmt(b.amount * 10000)}` });
+    });
+
+  // 渲染 markers + dividers
+  const markersHTML = events.map(ev => {
+    const left = pct(ev.age);
+    const dividerHTML = ev.divider
+      ? `<div class="tl-divider ${ev.divider}" style="left:${left}%"></div>`
+      : '';
+    const markerHTML = `<div class="tl-marker tl-${ev.type}" style="left:${left}%" data-tip="${esc(ev.label)}"></div>`;
+    return dividerHTML + markerHTML;
+  }).join('');
+  track.innerHTML = events.length
+    ? markersHTML
+    : '<div class="dwz-timeline-empty">尚無未來事件</div>';
+
+  // 年齡刻度（currentAge → lifeAge，每 10 歲整數 + 兩端）
+  if (axisEl) {
+    const ticks = new Set([currentAge, lifeAge]);
+    let t = Math.ceil(currentAge / 10) * 10;
+    for (; t < lifeAge; t += 10) ticks.add(t);
+    axisEl.innerHTML = [...ticks].sort((a, b) => a - b)
+      .map(age => `<span class="tl-axis-tick" style="left:${pct(age)}%">${age}</span>`)
+      .join('');
+  }
+
+  // 圖例（只列出本次有出現的事件型態）
+  if (legendEl) {
+    const usedTypes = new Set(events.map(e => e.type));
+    const legendDefs = [
+      { type: 'retire',  color: '#ef4444', label: '退休' },
+      { type: 'lifeend', color: '#9ca3af', label: '壽命' },
+      { type: 'mstart',  color: '#6366f1', label: '月固定起' },
+      { type: 'mend',    color: '#a5b4fc', label: '月固定訖' },
+      { type: 'onetime', color: '#f59e0b', label: '一次性' },
+      { type: 'bucket',  color: '#a855f7', label: '體驗' },
+      { type: 'gift',    color: '#eab308', label: '贈與' },
+    ];
+    legendEl.innerHTML = legendDefs
+      .filter(d => usedTypes.has(d.type))
+      .map(d => `<span class="tl-leg"><span class="tl-leg-dot" style="background:${d.color}"></span>${d.label}</span>`)
+      .join('');
+  }
 }
 
 // Phase 3: 產生 budget item 唯一 id（供 expense_planned.replaces_id 穩定指向）
@@ -6169,6 +6279,7 @@ function renderDWZ() {
   _renderDWZBestWindow(goldenStart, goldenEnd, currentAge);
   _renderDWZExpensesList();
   _renderDwzPlannedList(); // Phase 1: 同步 DWZ「未來支出規劃」區塊顯示
+  _renderDwzTimeline();    // Phase 3: 同步未來事件時間軸
 }
 
 function _renderDWZBestWindow(start, end, currentAge) {

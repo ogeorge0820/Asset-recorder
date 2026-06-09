@@ -2053,6 +2053,109 @@ h3.section-header {
   border-radius: 2px; flex-shrink: 0;
 }
 
+/* ══ Phase 3: 未來事件時間軸 ══ */
+.dwz-timeline {
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px dashed var(--border);
+}
+.dwz-timeline:empty { display: none; }
+.dwz-timeline-title {
+  font-size: 0.78rem; font-weight: 700; color: var(--text);
+  margin-bottom: 14px;
+}
+.dwz-timeline-track {
+  position: relative;
+  height: 34px;
+  margin: 0 6px;
+}
+/* 基準橫線 */
+.dwz-timeline-track::before {
+  content: '';
+  position: absolute;
+  left: 0; right: 0; top: 50%;
+  height: 2px;
+  background: var(--border);
+  transform: translateY(-50%);
+}
+.dwz-timeline-empty {
+  font-size: 0.76rem; color: var(--muted);
+  text-align: center; line-height: 34px;
+}
+/* marker：圓點，垂直置中於基準線；hover 顯示 tooltip */
+.tl-marker {
+  position: absolute;
+  top: 50%;
+  width: 12px; height: 12px;
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  cursor: default;
+  border: 2px solid var(--card);
+  box-shadow: 0 0 0 1px rgba(0,0,0,.15);
+  z-index: 2;
+}
+.tl-marker:hover { z-index: 5; }
+/* 退休 / 壽命：垂直虛線（重要分界）*/
+.tl-divider {
+  position: absolute;
+  top: -2px; bottom: -2px;
+  width: 0;
+  border-left: 2px dashed;
+  transform: translateX(-50%);
+  z-index: 1;
+}
+/* 各事件型態顏色 */
+.tl-retire  { background: #ef4444; }                 /* 退休 dot（同時有 divider）*/
+.tl-divider.tl-retire-line  { border-color: #ef4444; }
+.tl-lifeend { background: #9ca3af; }
+.tl-divider.tl-lifeend-line { border-color: #9ca3af; }
+.tl-mstart  { background: #6366f1; }                 /* 月固定開始 */
+.tl-mend    { background: #a5b4fc; }                 /* 月固定結束 */
+.tl-onetime { background: #f59e0b; }                 /* 一次性 */
+.tl-bucket  { background: #a855f7; }                 /* 體驗 */
+.tl-gift    { background: #eab308; }                 /* 生前贈與 */
+/* tooltip（沿用 data-tip 機制，快速顯示）*/
+.tl-marker[data-tip]:hover::after {
+  content: attr(data-tip);
+  position: absolute;
+  bottom: 140%;
+  left: 50%;
+  transform: translateX(-50%);
+  white-space: nowrap;
+  background: var(--text-primary, #1a1a1a);
+  color: var(--bg-card, #fff);
+  font-size: 0.7rem;
+  font-weight: 500;
+  padding: 4px 8px;
+  border-radius: 6px;
+  pointer-events: none;
+  z-index: 10;
+  box-shadow: 0 2px 8px rgba(0,0,0,.2);
+}
+.dwz-timeline-axis {
+  position: relative;
+  height: 16px;
+  margin: 2px 6px 0;
+}
+.tl-axis-tick {
+  position: absolute;
+  transform: translateX(-50%);
+  font-size: 0.66rem;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+.dwz-timeline-legend {
+  display: flex; flex-wrap: wrap; gap: 4px 10px;
+  margin-top: 10px;
+  font-size: 0.68rem; color: var(--muted);
+}
+.dwz-timeline-legend .tl-leg {
+  display: inline-flex; align-items: center; gap: 4px;
+}
+.dwz-timeline-legend .tl-leg-dot {
+  width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0;
+}
+
 .dwz-expenses-card {
   background: var(--card); border: 1px solid var(--border);
   border-radius: var(--r); padding: 12px 14px;
