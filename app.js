@@ -4,7 +4,7 @@
 // 應用版本號 — 重大功能變更才升版（小修補只更新 BUILD_DATE）
 const APP_VERSION = 'v1.0';
 // Build 時間：每次修改 code 後手動更新此時間（UTC+8 台北時間）
-const BUILD_DATE = '2026/06/09 10:48';
+const BUILD_DATE = '2026/06/09 10:55';
 
 const SPREADSHEET_ID = '1lpRpxVzWaYUqL-jVPOAJCtjsJUIedPYYyOx4gg4PPFU';
 const CLIENT_ID = '149884248440-85f8dhc6ub9up10sv0f89e3e0itrnooj.apps.googleusercontent.com';
@@ -2891,18 +2891,21 @@ function renderPlannedSection() {
   const wrap = $('budget-planned-section');
   if (!wrap) return;
 
-  const items = (S.data.expense_planned || []).slice();
+  // 保留原始 index：sort 會打亂順序，但 edit/delete 必須以 S.data.expense_planned 的原始 idx 操作
+  // (Phase 1 潛在 bug；Phase 2 排序變複雜後露餡 — 點 A 編輯卻跑出 B 的內容)
+  const itemsWithIdx = (S.data.expense_planned || []).map((r, origIdx) => ({ r, origIdx }));
+
   // 排序：未活化（未來）→ 已發生（onetime past）→ 各自再按 start_date 由近到遠
-  // 用「是否已過 start_date」分組，再按日期排序
   const todayYM = _todayYM();
-  items.sort((a, b) => {
-    const aPast = (a[5] || '') <= todayYM;
-    const bPast = (b[5] || '') <= todayYM;
-    if (aPast !== bPast) return aPast ? 1 : -1; // 已發生排後面
-    return (a[5] || '').localeCompare(b[5] || '');
+  itemsWithIdx.sort((a, b) => {
+    const aPast = (a.r[5] || '') <= todayYM;
+    const bPast = (b.r[5] || '') <= todayYM;
+    if (aPast !== bPast) return aPast ? 1 : -1;
+    return (a.r[5] || '').localeCompare(b.r[5] || '');
   });
 
   // Phase 2: 預告只算 monthly（onetime 不影響月支出）；標頭計數仍是全部 N 項
+  const items = itemsWithIdx.map(x => x.r); // 給 length / preview 計算用
   const previewSum = items
     .filter(r => (r[7] || 'monthly') === 'monthly')
     .reduce((s, r) => s + (parseFloat(r[2]) || 0), 0);
@@ -2921,7 +2924,7 @@ function renderPlannedSection() {
         <button class="btn-add budget-planned-add" onclick="addPlannedExpense()">+ 新增未來支出</button>
       </div>`;
   } else {
-    const rowsHTML = items.map((r, i) => {
+    const rowsHTML = itemsWithIdx.map(({ r, origIdx }) => {
       const [id, name, amount, cat, source, start, notes, kindRaw, endRaw] = r;
       const amt = parseFloat(amount) || 0;
       const kind = kindRaw || 'monthly';
@@ -2940,16 +2943,13 @@ function renderPlannedSection() {
       // meta line 2：日期 + 狀態，依 kind 與時間分支
       let dateText;
       if (kind === 'onetime') {
-        // 一次性：未到 / 已發生
         if (isPast) {
           dateText = `<span class="past">於 ${esc(_fmtYM(start))} · 已發生</span>`;
         } else {
           dateText = `於 ${esc(_fmtYM(start))}${relText ? ` · ${relText}` : ''}`;
         }
       } else {
-        // 月固定：含 end / 不含 end
         if (isPast) {
-          // 理論上應已活化、不該出現；防呆顯示
           dateText = `<span class="past">${esc(_fmtYM(start))} 起 · 待活化</span>`;
         } else if (end) {
           dateText = `${esc(_fmtYM(start))} 起 · 至 ${esc(_fmtYM(end))}`;
@@ -2958,17 +2958,18 @@ function renderPlannedSection() {
         }
       }
 
-      // 「已發生 onetime」與「待活化」row 加 dim class（在 .past CSS 之外整 row 變灰）
       const dimClass = isPast ? ' is-past' : '';
 
+      // ⚠ 用 origIdx（S.data.expense_planned 的原始 index），不是 sorted 後的位置
+      // 否則排序變動時 → 點 A 編輯跑出 B 的 bug
       return `
         <div class="budget-planned-item${dimClass}">
           <div class="budget-planned-item-name">${esc(name || '—')}</div>
           <div class="budget-planned-item-amt">${fmt(amt)}</div>
           <div class="budget-planned-item-meta">${metaLine1}${metaLine1 ? '<br>' : ''}${dateText}</div>
           <div class="budget-planned-item-actions">
-            <button class="btn-icon edit" onclick="editPlannedExpense(${i})">✏</button>
-            <button class="btn-icon del" onclick="deletePlannedExpense(${i})">✕</button>
+            <button class="btn-icon edit" onclick="editPlannedExpense(${origIdx})">✏</button>
+            <button class="btn-icon del" onclick="deletePlannedExpense(${origIdx})">✕</button>
           </div>
         </div>`;
     }).join('');
