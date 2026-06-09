@@ -4,7 +4,7 @@
 // 應用版本號 — 重大功能變更才升版（小修補只更新 BUILD_DATE）
 const APP_VERSION = 'v1.0';
 // Build 時間：每次修改 code 後手動更新此時間（UTC+8 台北時間）
-const BUILD_DATE = '2026/06/09 10:44';
+const BUILD_DATE = '2026/06/09 10:46';
 
 const SPREADSHEET_ID = '1lpRpxVzWaYUqL-jVPOAJCtjsJUIedPYYyOx4gg4PPFU';
 const CLIENT_ID = '149884248440-85f8dhc6ub9up10sv0f89e3e0itrnooj.apps.googleusercontent.com';
@@ -977,16 +977,20 @@ function simulateMonthly({
 
   // 未來支出規劃：逐月查表（從 start_date 那月起算進每月 budget）
   // 對應 design doc: docs/superpowers/specs/2026-06-08-future-expense-planning-design.md § DWZ
+  // Phase 2: 只算 monthly（onetime 透過 _allDWZExpenses 進 DWZ 一次扣，不算月支出）
+  //          end_date 有設時，end_date 之後不再扣
   // 過濾 DWZ tab 設定為「忽略」的項目（per-item localStorage，預設全部考量）
   const _ignored = _getDwzPlannedIgnored();
-  const sortedPlanned = [...(S.data.expense_planned || [])]
-    .filter(r => !_ignored.has(r[0]))
-    .sort((a, b) => (a[5] || '').localeCompare(b[5] || ''));
+  const sortedPlanned = (S.data.expense_planned || [])
+    .filter(r => (r[7] || 'monthly') === 'monthly')
+    .filter(r => !_ignored.has(r[0]));
+  // 注意：因 end_date 區間判斷，不能簡單 sorted + break。改用每月線性掃過所有 candidate
   const budgetAtYM = (ym) => {
     let total = monthlyBudget;
     for (const r of sortedPlanned) {
-      if ((r[5] || '') <= ym) total += parseFloat(r[2]) || 0;
-      else break; // sorted asc，後面更晚的不會再加
+      const start = r[5] || '';
+      const end = r[8] || '';
+      if (start <= ym && (!end || end >= ym)) total += parseFloat(r[2]) || 0;
     }
     return total;
   };
@@ -2746,20 +2750,39 @@ function _renderDwzPlannedList() {
   const currentAge = _dwzParam('dwz-age') || 0;
 
   listEl.innerHTML = items.map(r => {
-    const [id, name, amount, cat, source, start, notes] = r;
-    const monthly = parseFloat(amount) || 0;
+    const [id, name, amount, cat, source, start, notes, kindRaw, endRaw] = r;
+    const amt = parseFloat(amount) || 0;
+    const kind = kindRaw || 'monthly';
+    const end = endRaw || '';
     const startYear = parseInt(String(start || '').slice(0, 4)) || 0;
+    const endYear = end ? (parseInt(String(end || '').slice(0, 4)) || null) : null;
     const activeAge = startYear && currentAge ? (currentAge + (startYear - currentYear)) : null;
+    const endAge = endYear !== null && currentAge ? (currentAge + (endYear - currentYear)) : null;
     const ignoredNow = ignored.has(id);
-    const ageStr = activeAge !== null ? `${activeAge}歲(${startYear})起` : `${_fmtYM(start)} 起`;
-    const annual = monthly * 12;
-    const meta = `${ageStr} · +${fmt(annual)}/年`;
+
+    // Phase 2: 依 kind 分支顯示 sub / meta
+    let subText, metaText;
+    if (kind === 'onetime') {
+      // 一次性：「N歲(YYYY) 一次」+「總額 X 萬」
+      subText = `一次性${source ? ' · ' + esc(source) : ''}`;
+      const ageStr = activeAge !== null ? `${activeAge}歲(${startYear})` : _fmtYM(start);
+      metaText = `於 ${ageStr} · 一次扣 ${fmt(amt)}`;
+    } else {
+      // 月固定：「N歲(YYYY)起 +Y/年」+（如有 end）「至 M歲(EEEE)」
+      subText = `${esc(cat || '')}${cat ? ' · ' : ''}${fmt(amt)}/月`;
+      const startStr = activeAge !== null ? `${activeAge}歲(${startYear})起` : `${_fmtYM(start)} 起`;
+      const annual = amt * 12;
+      let metaCore = `${startStr} · +${fmt(annual)}/年`;
+      if (endAge !== null) metaCore += ` · 至 ${endAge}歲(${endYear})`;
+      metaText = metaCore;
+    }
+
     return `
       <div class="dwz-strat-row dwz-planned-row ${ignoredNow ? 'off' : 'on'}">
         <div class="dwz-strat-text">
           <span class="dwz-strat-label">${esc(name || '—')}</span>
-          <span class="dwz-strat-sub">${esc(cat || '')}${cat ? ' · ' : ''}${fmt(monthly)}/月</span>
-          <span class="dwz-strat-meta">${meta}</span>
+          <span class="dwz-strat-sub">${subText}</span>
+          <span class="dwz-strat-meta">${metaText}</span>
         </div>
         <label class="dwz-toggle" title="關閉後此項不會納入 DWZ 模擬">
           <input type="checkbox" ${ignoredNow ? '' : 'checked'} onchange="toggleDwzPlannedItem('${esc(id)}')">
@@ -5148,7 +5171,37 @@ let _dwzDebounce = null;
 // DWZ 曲線扣除來源：bucket_list 中 status === '規劃中' 且未付的項目
 // （已合併原 experience_plan，所以唯一來源即為 bucket_list）
 function _allDWZExpenses() {
-  return _activeBucketItems().filter(b => !b.paid);
+  const bucketItems = _activeBucketItems().filter(b => !b.paid);
+
+  // Phase 2: 一次性未來規劃納入 DWZ（在 start_year 那年一次扣，與 bucket 體驗同視）
+  // 對應 design doc Phase 2: docs/superpowers/specs/2026-06-08-future-expense-planning-phase2-design.md § DWZ
+  // 過濾 DWZ tab 設定為「忽略」的項目
+  const now = new Date(Date.now() + 8 * 3600 * 1000);
+  const currentYear = now.getUTCFullYear();
+  const currentAge = _dwzParam('dwz-age');
+  if (!currentAge) return bucketItems;
+  const ignoredPlanned = _getDwzPlannedIgnored();
+  const onetimeItems = (S.data.expense_planned || [])
+    .filter(r => (r[7] || 'monthly') === 'onetime')
+    .filter(r => !ignoredPlanned.has(r[0]))
+    .map(r => {
+      const startYear = parseInt(String(r[5] || '').slice(0, 4)) || 9999;
+      const amountTWD = parseFloat(r[2]) || 0;
+      return {
+        id: r[0] || '',
+        name: r[1] || '',
+        category: '一次性',
+        age: currentAge + (startYear - currentYear),
+        amount: amountTWD / 10000, // 元 → 萬（_allDWZExpenses 慣例為萬）
+        status: '規劃中',
+        date: r[5] || '',
+        paid: false,
+        notes: r[6] || '',
+      };
+    })
+    .filter(item => item.amount > 0);
+
+  return [...bucketItems, ...onetimeItems];
 }
 
 function _dwzParam(id) { return parseFloat(document.getElementById(id)?.value) || 0; }
@@ -5595,22 +5648,27 @@ function renderDWZ() {
   // 對應 design doc: docs/superpowers/specs/2026-06-08-future-expense-planning-design.md § DWZ
   // 將 expense_planned 各項從其「啟動年齡」起加入年度支出，與 annualBase 一起套通膨/晚年倍率
   // 啟動年齡 = currentAge + (start_year - currentCalendarYear)，月份不細分（年度模擬精度）
+  // Phase 2: 只算 kind='monthly'（onetime 透過 _allDWZExpenses 一次扣）
+  //          有 end_date 時，endAtAge 之後不再算（區間結束）
   // 過濾 DWZ tab 設定為「忽略」的項目（per-item localStorage，預設全部考量）
   const _nowD = new Date(Date.now() + 8 * 3600 * 1000);
   const currentYear = _nowD.getUTCFullYear();
   const _ignoredPlanned = _getDwzPlannedIgnored();
   const plannedActivations = (S.data.expense_planned || [])
+    .filter(r => (r[7] || 'monthly') === 'monthly')
     .filter(r => !_ignoredPlanned.has(r[0]))
     .map(r => {
       const startYear = parseInt(String(r[5] || '').slice(0, 4)) || 9999;
+      const endYear = r[8] ? (parseInt(String(r[8] || '').slice(0, 4)) || null) : null;
       const monthlyAmount = parseFloat(r[2]) || 0;
       return {
         activeAtAge: currentAge + (startYear - currentYear),
+        endAtAge: endYear !== null ? currentAge + (endYear - currentYear) : null,
         annualAmount: monthlyAmount * 12,
       };
     }).filter(p => p.annualAmount > 0);
   const extraPlannedAnnualAtAge = (age) => plannedActivations
-    .filter(p => age >= p.activeAtAge)
+    .filter(p => age >= p.activeAtAge && (p.endAtAge === null || age <= p.endAtAge))
     .reduce((s, p) => s + p.annualAmount, 0);
 
   // 策略實驗室：取得每月外部現金流入結構（含 age-dependent 主動收入）
