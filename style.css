@@ -1427,6 +1427,13 @@ h3.section-header {
 .budget-planned-item.is-past { opacity: 0.55; }
 .budget-planned-item.is-past .budget-planned-item-name,
 .budget-planned-item.is-past .budget-planned-item-amt { color: var(--muted); }
+/* Phase 3: 取代關係標記 */
+.budget-planned-item-meta .replace-tag {
+  color: #6366f1; font-weight: 600;
+}
+.budget-planned-item-meta .replace-orphan {
+  color: var(--warn, #eab308);
+}
 .budget-planned-item-actions {
   grid-area: actions;
   display: flex; gap: 4px; align-items: center;

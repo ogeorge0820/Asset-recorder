@@ -4,7 +4,7 @@
 // 應用版本號 — 重大功能變更才升版（小修補只更新 BUILD_DATE）
 const APP_VERSION = 'v1.0';
 // Build 時間：每次修改 code 後手動更新此時間（UTC+8 台北時間）
-const BUILD_DATE = '2026/06/09 10:55';
+const BUILD_DATE = '2026/06/09 21:17';
 
 const SPREADSHEET_ID = '1lpRpxVzWaYUqL-jVPOAJCtjsJUIedPYYyOx4gg4PPFU';
 const CLIENT_ID = '149884248440-85f8dhc6ub9up10sv0f89e3e0itrnooj.apps.googleusercontent.com';
@@ -150,8 +150,8 @@ const HEADERS = {
   us_history: ['date','symbol','qty_before','qty_after','delta','price_usd','value_twd'],
   cash_history: ['date','account','amount_before','amount_after','delta','currency','value_twd'],
   other_history: ['date','key','value_before','value_after','delta','note'],
-  expense_budget: ['category','item_name','amount','payment_source','end_date'],
-  expense_planned: ['id','item_name','amount','category','payment_source','start_date','notes','kind','end_date'],
+  expense_budget: ['category','item_name','amount','payment_source','end_date','id'],
+  expense_planned: ['id','item_name','amount','category','payment_source','start_date','notes','kind','end_date','replaces_id'],
   experience_plan: ['name','year','month','amount_twd','paid'],
   income_records: ['id','name','category','amount_twd','expected_date','status','linked_account','settled_date','payer'],
   bucket_list: ['id','name','category','age','budget_wan','status','date','paid','notes'],
@@ -184,8 +184,8 @@ const S = {
     us_history: [],     // [date, symbol, qty_before, qty_after, delta, price_usd, value_twd]
     cash_history: [],   // [date, account, amount_before, amount_after, delta, currency, value_twd]
     other_history: [],  // [date, key, value_before, value_after, delta, note]
-    expense_budget: [], // [category, item_name, amount, payment_source, end_date(Phase 2)]
-    expense_planned: [], // [id, item_name, amount, category, payment_source, start_date, notes, kind(P2), end_date(P2)]
+    expense_budget: [], // [category, item_name, amount, payment_source, end_date(P2), id(P3)]
+    expense_planned: [], // [id, item_name, amount, category, payment_source, start_date, notes, kind(P2), end_date(P2), replaces_id(P3)]
     experience_plan: [], // [name, year, month, amount_twd, paid]
     income_records: [],  // [id, name, category, amount_twd, expected_date, status, linked_account, settled_date, payer]
     bucket_list: [],     // [age, name, budget_wan, status, category, note]
@@ -527,8 +527,8 @@ async function loadAll() {
     sheetGet('us_history!A:G'),
     sheetGet('cash_history!A:G'),
     sheetGet('other_history!A:F'),
-    sheetGet('expense_budget!A:E'),
-    sheetGet('expense_planned!A:I'),
+    sheetGet('expense_budget!A:F'),
+    sheetGet('expense_planned!A:J'),
     sheetGet('experience_plan!A:E'),
     sheetGet('income_records!A:I'),
     sheetGet('bucket_list!A:I'),
@@ -2532,7 +2532,8 @@ function addBudgetItem() {
     { id: 'source', label: '扣款帳戶（選填）', type: 'text', ph: '對應流動現金帳戶名稱', opt: true },
   ], async (vals) => {
     const amount = parseFloat(vals.amount) || 0;
-    S.data.expense_budget.push([vals.cat, vals.name, String(amount), vals.source || '']);
+    // schema: [cat, name, amount, source, end_date(P2 留空), id(P3)]
+    S.data.expense_budget.push([vals.cat, vals.name, String(amount), vals.source || '', '', _newBudgetId()]);
     await saveSheet('expense_budget', S.data.expense_budget);
     renderBudget(); renderKPIs(); renderCash();
     showToast('已新增支出項目', 'ok');
@@ -2549,7 +2550,8 @@ function editBudgetItem(idx) {
     { id: 'source', label: '扣款帳戶（選填）', type: 'text', val: r[3] || '', opt: true },
   ], async (vals) => {
     const amount = parseFloat(vals.amount) || 0;
-    S.data.expense_budget[idx] = [vals.cat, vals.name, String(amount), vals.source || ''];
+    // 保留原 end_date(P2) 與 id(P3)，只更新前 4 欄
+    S.data.expense_budget[idx] = [vals.cat, vals.name, String(amount), vals.source || '', r[4] || '', r[5] || _newBudgetId()];
     await saveSheet('expense_budget', S.data.expense_budget);
     renderBudget(); renderKPIs(); renderCash();
     showToast('已更新支出項目', 'ok');
@@ -2595,9 +2597,16 @@ function _relMonthText(targetYM, todayYM) {
   return remMonths ? `${years}年${remMonths}個月後` : `${years}年後`;
 }
 
-// Phase 2: 共用 modal 欄位定義（add / edit 都用）
-// kind 是第一個欄位 — 控制 cat / end 的顯隱（hideWhen）
+// Phase 2/3: 共用 modal 欄位定義（add / edit 都用）
+// kind 是第一個欄位 — 控制 cat / end / replaces 的顯隱（hideWhen，一次性時隱藏）
 function _plannedExpenseModalFields(values = {}) {
+  // Phase 3: 取代既有支出 picker — 列出所有 expense_budget 項目（value=id, label=名稱+金額）
+  const replaceOptions = [{ value: '', label: '無（純新增）' }].concat(
+    (S.data.expense_budget || []).map(b => ({
+      value: b[5] || '',                       // budget id（第 6 欄）
+      label: `${b[1] || '—'} · ${fmt(parseFloat(b[2]) || 0)}/月`,
+    })).filter(o => o.value)                     // 沒 id 的（理論上 backfill 後不存在）跳過
+  );
   return [
     { id: 'kind',   label: '類型',     type: 'select', options: ['月固定','一次性'], val: values.kind === 'onetime' ? '一次性' : '月固定' },
     { id: 'name',   label: '項目名稱', type: 'text',   val: values.name || '', ph: '例：新房租、換車、健身房' },
@@ -2606,6 +2615,7 @@ function _plannedExpenseModalFields(values = {}) {
     { id: 'source', label: '扣款帳戶（選填）', type: 'text', val: values.source || '', ph: '對應流動現金帳戶名稱', opt: true },
     { id: 'start',  label: '開始月份', type: 'month',  val: values.start || '' },
     { id: 'end',    label: '結束月份（選填）', type: 'month', val: values.end || '', opt: true, hideWhen: { field: 'kind', value: '一次性' } },
+    { id: 'replaces', label: '取代既有支出（選填）', type: 'select', options: replaceOptions, val: values.replaces || '', opt: true, hideWhen: { field: 'kind', value: '一次性' } },
     { id: 'notes',  label: '備註（選填）', type: 'text', val: values.notes || '', opt: true },
   ];
 }
@@ -2643,10 +2653,12 @@ function addPlannedExpense() {
     if (!v) return false;
     const { amount, kind } = v;
     const id = 'p_' + Date.now();
-    // schema: [id, name, amount, cat, source, start, notes, kind, end]
+    // onetime 不取代月支出（replaces 對它無意義）→ 一律存空
+    const replaces = kind === 'monthly' ? (vals.replaces || '') : '';
+    // schema: [id, name, amount, cat, source, start, notes, kind, end, replaces_id]
     S.data.expense_planned.push([
       id, vals.name, String(amount), vals.cat || '', vals.source || '',
-      vals.start, vals.notes || '', kind, vals.end || ''
+      vals.start, vals.notes || '', kind, vals.end || '', replaces
     ]);
     await saveSheet('expense_planned', S.data.expense_planned);
     renderBudget();
@@ -2663,16 +2675,17 @@ function editPlannedExpense(idx) {
   const initialKind = (r[7] || 'monthly') === 'onetime' ? 'onetime' : 'monthly';
   const fields = _plannedExpenseModalFields({
     kind: initialKind, name: r[1], amount: r[2], cat: r[3], source: r[4],
-    start: r[5], notes: r[6], end: r[8] || '',
+    start: r[5], notes: r[6], end: r[8] || '', replaces: r[9] || '',
   });
   openModal('編輯未來支出', fields, async (vals) => {
     const v = _validatePlannedExpense(vals);
     if (!v) return false;
     const { amount, kind } = v;
+    const replaces = kind === 'monthly' ? (vals.replaces || '') : '';
     // 保留原 id（不重新生成）
     S.data.expense_planned[idx] = [
       r[0], vals.name, String(amount), vals.cat || '', vals.source || '',
-      vals.start, vals.notes || '', kind, vals.end || ''
+      vals.start, vals.notes || '', kind, vals.end || '', replaces
     ];
     await saveSheet('expense_planned', S.data.expense_planned);
     renderBudget();
@@ -2793,6 +2806,43 @@ function _renderDwzPlannedList() {
   }).join('');
 }
 
+// Phase 3: 產生 budget item 唯一 id（供 expense_planned.replaces_id 穩定指向）
+function _newBudgetId() {
+  return 'b_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+}
+
+// Phase 3: 由 budget id 查項目顯示文字（給取代關係顯示用）；找不到回 null
+function _budgetLabelById(id) {
+  if (!id) return null;
+  const b = (S.data.expense_budget || []).find(r => r[5] === id);
+  if (!b) return null;
+  return `${b[1] || '—'} ${fmt(parseFloat(b[2]) || 0)}`;
+}
+
+// Phase 3: 為 expense_budget 既有 row 補 id（第 6 欄 index 5）
+// 時機：initApp loadAll 之後、活化之前。確保每筆 budget 都有穩定 id 可被 replaces_id 引用。
+// 只在「有 row 缺 id」時才寫回 Sheet（避免每次啟動都多寫一次）
+async function _backfillBudgetIds() {
+  const items = S.data.expense_budget || [];
+  let changed = false;
+  items.forEach(r => {
+    if (!r[5]) {
+      // 確保 row 長度足夠（end_date 在 index 4、id 在 index 5）
+      while (r.length < 5) r.push('');
+      r[5] = _newBudgetId();
+      changed = true;
+    }
+  });
+  if (changed) {
+    try {
+      await saveSheet('expense_budget', S.data.expense_budget);
+    } catch (e) {
+      console.error('[backfill budget ids] save failed:', e);
+      // 不阻斷啟動；下次再試
+    }
+  }
+}
+
 // Phase 2: 過期提示 Banner — 掃 expense_budget 找 end_date < 當月的項目
 // 已被自動活化進主預算、但到了 end_date 該由使用者手動處理
 // 設計：只顯示提示、不自動刪除（避免靜默改動使用者實際支出總額）
@@ -2856,9 +2906,20 @@ async function _checkAndActivatePlanned() {
   if (!due.length) return;
 
   // 1. 寫進 expense_budget（追加，不覆寫既有）
-  //    Phase 2: 第 5 欄帶 end_date（從 planned 來的若有 end_date 一併帶過去）
-  due.forEach(([id, name, amount, cat, source, start, notes, kind, end_date]) => {
-    S.data.expense_budget.push([cat, name, amount, source, end_date || '']);
+  //    Phase 2: 第 5 欄帶 end_date
+  //    Phase 3: replaces_id 有值 → 先移除被取代的 budget item（新項目接棒舊項目）
+  let replacedCount = 0;
+  due.forEach(([id, name, amount, cat, source, start, notes, kind, end_date, replaces_id]) => {
+    if (replaces_id) {
+      const oldIdx = S.data.expense_budget.findIndex(b => b[5] === replaces_id);
+      if (oldIdx >= 0) {
+        S.data.expense_budget.splice(oldIdx, 1);
+        replacedCount++;
+      }
+      // 找不到（已被手動刪）→ 不阻斷，純新增
+    }
+    // 新項目帶新 budget id（第 6 欄）
+    S.data.expense_budget.push([cat, name, amount, source, end_date || '', _newBudgetId()]);
   });
 
   // 2. 從 expense_planned 移除已活化項目（onetime 一定保留、未到期 monthly 也保留）
@@ -2882,9 +2943,10 @@ async function _checkAndActivatePlanned() {
     return;
   }
 
-  // 5. Toast 通知
+  // 5. Toast 通知（Phase 3: 若有取代，附註幾筆取代了既有）
   const names = due.map(r => `${r[1]} (${fmt(parseFloat(r[2]) || 0)})`).join('、');
-  showToast(`已啟用 ${due.length} 筆未來規劃：${names}`, 'ok');
+  const replaceNote = replacedCount > 0 ? `（${replacedCount} 筆取代既有）` : '';
+  showToast(`已啟用 ${due.length} 筆未來規劃${replaceNote}：${names}`, 'ok');
 }
 
 function renderPlannedSection() {
@@ -2960,13 +3022,23 @@ function renderPlannedSection() {
 
       const dimClass = isPast ? ' is-past' : '';
 
+      // Phase 3: 取代關係（僅 monthly 有 replaces_id）— 顯示第 3 行 meta
+      const replacesId = r[9] || '';
+      let replaceLine = '';
+      if (kind === 'monthly' && replacesId) {
+        const label = _budgetLabelById(replacesId);
+        replaceLine = label
+          ? `<br><span class="replace-tag">→ 取代「${esc(label)}」</span>`
+          : `<br><span class="replace-tag replace-orphan">→ 取代目標已刪除 · 將純新增</span>`;
+      }
+
       // ⚠ 用 origIdx（S.data.expense_planned 的原始 index），不是 sorted 後的位置
       // 否則排序變動時 → 點 A 編輯跑出 B 的 bug
       return `
         <div class="budget-planned-item${dimClass}">
           <div class="budget-planned-item-name">${esc(name || '—')}</div>
           <div class="budget-planned-item-amt">${fmt(amt)}</div>
-          <div class="budget-planned-item-meta">${metaLine1}${metaLine1 ? '<br>' : ''}${dateText}</div>
+          <div class="budget-planned-item-meta">${metaLine1}${metaLine1 ? '<br>' : ''}${dateText}${replaceLine}</div>
           <div class="budget-planned-item-actions">
             <button class="btn-icon edit" onclick="editPlannedExpense(${origIdx})">✏</button>
             <button class="btn-icon del" onclick="deletePlannedExpense(${origIdx})">✕</button>
@@ -4435,7 +4507,17 @@ function openModal(title, fields, onOK) {
           <label>${esc(f.label)}</label>
           ${f.type === 'select' ? `
           <select id="mf-${f.id}">
-            ${(f.options||[]).map(o => `<option value="${esc(o)}" ${o === (f.val||f.def||f.options[0]) ? 'selected' : ''}>${esc(o)}</option>`).join('')}
+            ${(() => {
+              // 選項支援字串 'x' 或物件 {value, label}（Phase 3: replaces picker 需 value≠label）
+              const opts = f.options || [];
+              const firstVal = opts.length ? (typeof opts[0] === 'object' ? opts[0].value : opts[0]) : '';
+              const selVal = f.val !== undefined ? f.val : (f.def !== undefined ? f.def : firstVal);
+              return opts.map(o => {
+                const val = typeof o === 'object' ? o.value : o;
+                const label = typeof o === 'object' ? o.label : o;
+                return `<option value="${esc(String(val))}" ${String(val) === String(selVal) ? 'selected' : ''}>${esc(String(label))}</option>`;
+              }).join('');
+            })()}
           </select>` : `
           <input
             id="mf-${f.id}"
@@ -6519,6 +6601,7 @@ async function initApp() {
 
     showToast('載入資料…');
     await loadAll();
+    await _backfillBudgetIds();        // Phase 3: 補 expense_budget 既有 row 的 id（供 replaces_id 引用）
     await _checkAndActivatePlanned(); // Phase 1: 未來支出規劃自動活化（到期項目寫進 expense_budget）
     _checkExpiredBudgetItems();       // Phase 2: 掃 expense_budget end_date 過期、顯示 reminder banner
     await seedBaselineHistory();
