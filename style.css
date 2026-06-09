@@ -1315,6 +1315,61 @@ h3.section-header {
 }
 
 
+/* ══ 過期 Reminder Banner (Phase 2) ══ */
+/* 月固定有 end_date 的項目，活化後到達結束日 → 提示使用者手動移除 */
+.expired-banner {
+  margin: 10px 0 14px;
+  padding: 12px 14px;
+  border-radius: 10px;
+  background: rgba(239, 68, 68, .08);   /* danger 軟色底 */
+  border: 1px solid rgba(239, 68, 68, .25);
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 10px;
+  align-items: center;
+  animation: expiredBannerFade .25s ease;
+}
+@keyframes expiredBannerFade {
+  from { opacity: 0; transform: translateY(-3px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.expired-banner-text {
+  font-size: 0.85rem; color: var(--text);
+  line-height: 1.4;
+}
+.expired-banner-title {
+  font-weight: 600; color: #ef4444;
+  margin-right: 4px;
+}
+.expired-banner-names {
+  color: var(--muted);
+}
+.expired-banner-actions {
+  display: flex; gap: 6px;
+  align-items: center;
+}
+.expired-banner-cta {
+  font-size: 0.78rem; font-weight: 600;
+  padding: 6px 12px;
+  border-radius: 999px;
+  background: #ef4444; color: #fff;
+  border: none; cursor: pointer;
+  transition: background .15s ease;
+}
+.expired-banner-cta:hover { background: #dc2626; }
+.expired-banner-close {
+  width: 24px; height: 24px;
+  display: flex; align-items: center; justify-content: center;
+  background: transparent;
+  color: var(--muted);
+  border: none; border-radius: 50%;
+  cursor: pointer;
+  font-size: 0.95rem;
+  transition: background .15s ease;
+}
+.expired-banner-close:hover { background: rgba(148,163,184,.15); color: var(--text); }
+
+
 /* ══ 未來支出規劃 (Phase 1 MVP) ══ */
 /* 在「生活支出預算」hero card 內、+ 新增支出項目 按鈕之後的折疊區塊 */
 .budget-planned-wrap {

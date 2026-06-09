@@ -4,7 +4,7 @@
 // 應用版本號 — 重大功能變更才升版（小修補只更新 BUILD_DATE）
 const APP_VERSION = 'v1.0';
 // Build 時間：每次修改 code 後手動更新此時間（UTC+8 台北時間）
-const BUILD_DATE = '2026/06/09 10:46';
+const BUILD_DATE = '2026/06/09 10:48';
 
 const SPREADSHEET_ID = '1lpRpxVzWaYUqL-jVPOAJCtjsJUIedPYYyOx4gg4PPFU';
 const CLIENT_ID = '149884248440-85f8dhc6ub9up10sv0f89e3e0itrnooj.apps.googleusercontent.com';
@@ -2561,6 +2561,7 @@ function deleteBudgetItem(idx) {
     S.data.expense_budget.splice(idx, 1);
     await saveSheet('expense_budget', S.data.expense_budget);
     renderBudget(); renderKPIs(); renderCash();
+    _checkExpiredBudgetItems(); // Phase 2: 同步刷新過期 banner（刪掉過期項時 banner 應消失）
     showToast('已刪除支出項目', 'ok');
   });
 }
@@ -2790,6 +2791,54 @@ function _renderDwzPlannedList() {
         </label>
       </div>`;
   }).join('');
+}
+
+// Phase 2: 過期提示 Banner — 掃 expense_budget 找 end_date < 當月的項目
+// 已被自動活化進主預算、但到了 end_date 該由使用者手動處理
+// 設計：只顯示提示、不自動刪除（避免靜默改動使用者實際支出總額）
+function _checkExpiredBudgetItems() {
+  const banner = $('budget-expired-banner');
+  if (!banner) return;
+
+  const todayYM = _todayYM();
+  const expired = (S.data.expense_budget || [])
+    .map((r, i) => ({ r, i }))
+    .filter(({ r }) => {
+      const endDate = r[4] || '';
+      return endDate && endDate < todayYM;
+    });
+
+  if (!expired.length) {
+    banner.style.display = 'none';
+    banner.innerHTML = '';
+    return;
+  }
+
+  const names = expired.map(({ r }) => esc(r[1] || '—')).join('、');
+  banner.innerHTML = `
+    <div class="expired-banner-text">
+      <span class="expired-banner-title">⚠ ${expired.length} 筆固定支出已過結束日</span>
+      <span class="expired-banner-names">建議移除：${names}</span>
+    </div>
+    <div class="expired-banner-actions">
+      <button class="expired-banner-cta" onclick="_goToBudgetSection()">前往編輯</button>
+      <button class="expired-banner-close" onclick="this.closest('.expired-banner').style.display='none'" title="僅關閉提示，項目仍會出現在下次開啟">✕</button>
+    </div>`;
+  banner.style.display = 'grid';
+}
+
+// 點「前往編輯」→ 滾到生活支出預算 + 自動展開
+function _goToBudgetSection() {
+  const el = $('hb-budget');
+  if (!el) return;
+  // 確保是展開狀態（沿用 toggleHolding 的展開機制）
+  const card = el.querySelector('.hc-budget');
+  const detail = el.querySelector('.holding-detail');
+  // 若 detail 隱藏 / collapsed，觸發展開
+  if (detail && detail.style.display === 'none') {
+    if (typeof toggleHolding === 'function') toggleHolding('budget');
+  }
+  el.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
 // 自動活化：APP 啟動時把到期的未來規劃（start_date <= 當月）寫進 expense_budget
@@ -6470,6 +6519,7 @@ async function initApp() {
     showToast('載入資料…');
     await loadAll();
     await _checkAndActivatePlanned(); // Phase 1: 未來支出規劃自動活化（到期項目寫進 expense_budget）
+    _checkExpiredBudgetItems();       // Phase 2: 掃 expense_budget end_date 過期、顯示 reminder banner
     await seedBaselineHistory();
 
     showToast('抓取即時價格…');

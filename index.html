@@ -16,8 +16,8 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=DM+Sans:wght@300;400;500;600;700&display=swap">
-<link rel="stylesheet" href="theme.css?v=202606091046">
-<link rel="stylesheet" href="style.css?v=202606091046">
+<link rel="stylesheet" href="theme.css?v=202606091048">
+<link rel="stylesheet" href="style.css?v=202606091048">
 </head>
 <body>
 
@@ -170,6 +170,9 @@
         <span id="price-ts">價格更新中...</span>
         <span id="price-fail-lbl"></span>
       </div>
+
+      <!-- Phase 2: 過期 Reminder Banner (Monthly w/ end_date 已過結束日) -->
+      <div id="budget-expired-banner" class="expired-banner" style="display:none"></div>
 
       <!-- Holdings Hero Cards -->
       <section class="holdings-hero">
@@ -743,6 +746,6 @@
 <!-- ── Toast ── -->
 <div class="toast" id="toast"></div>
 
-<script src="app.js?v=202606091046"></script>
+<script src="app.js?v=202606091048"></script>
 </body>
 </html>
