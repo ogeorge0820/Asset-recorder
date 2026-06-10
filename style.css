@@ -2554,3 +2554,66 @@ h3.section-header {
 .roi-foot-actions .btn-cancel,
 .roi-foot-actions .btn-ok { flex: 1; }
 
+
+/* ══ 質押收益 Tab ══ */
+.staking-card {
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: var(--card-radius-md, 16px);
+  padding: 18px 20px;
+}
+.staking-head {
+  display: flex; justify-content: space-between; align-items: flex-start;
+  gap: 14px; flex-wrap: wrap;
+  margin-bottom: 6px;
+}
+.staking-title { margin: 0 0 4px; font-size: 1.05rem; color: var(--text); }
+.staking-sub {
+  font-size: 0.78rem; color: var(--muted);
+  max-width: 560px; line-height: 1.5;
+}
+.staking-total-box { text-align: right; }
+.staking-total-label { font-size: 0.7rem; color: var(--muted); margin-bottom: 2px; }
+.staking-total-num {
+  font-size: 26px; font-weight: 700; color: var(--success);
+  font-variant-numeric: tabular-nums; letter-spacing: -0.02em;
+}
+.staking-section { margin-top: 16px; }
+.staking-section-head {
+  display: flex; justify-content: space-between; align-items: center;
+  font-size: 0.8rem; font-weight: 700; color: var(--text);
+  padding: 6px 2px;
+  border-bottom: 1px solid var(--border);
+}
+.staking-section-count {
+  font-size: 0.68rem; font-weight: 600;
+  background: rgba(99,102,241,.16); color: var(--accent-light);
+  padding: 1px 7px; border-radius: 999px;
+  margin-left: 4px;
+}
+.staking-section-sub { color: var(--muted); font-weight: 500; font-size: 0.74rem; font-variant-numeric: tabular-nums; }
+.staking-row {
+  display: grid;
+  grid-template-columns: 64px 1fr auto auto;
+  gap: 10px; align-items: center;
+  padding: 8px 2px;
+  border-bottom: 1px solid rgba(148,163,184,.12);
+  font-size: 0.85rem;
+}
+.staking-row:last-child { border-bottom: none; }
+.staking-sym { font-weight: 700; color: var(--text); }
+.staking-qty { color: var(--muted); font-size: 0.76rem; font-variant-numeric: tabular-nums; }
+.staking-diff { font-variant-numeric: tabular-nums; font-weight: 600; color: var(--muted); }
+.staking-diff.pos { color: var(--success); }
+.staking-diff.neg { color: var(--danger); }
+.staking-val {
+  font-variant-numeric: tabular-nums; color: var(--text);
+  min-width: 96px; text-align: right;
+}
+.staking-empty { color: var(--muted); font-size: 0.85rem; padding: 14px 2px; }
+@media (max-width: 768px) {
+  .staking-card { padding: 14px; }
+  .staking-row { grid-template-columns: 52px 1fr auto; }
+  .staking-val { grid-column: 2 / 4; text-align: right; font-size: 0.76rem; color: var(--muted); padding-right: 0; }
+  .staking-total-num { font-size: 22px; }
+}
+

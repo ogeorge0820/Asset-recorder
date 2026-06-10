@@ -16,8 +16,8 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=DM+Sans:wght@300;400;500;600;700&display=swap">
-<link rel="stylesheet" href="theme.css?v=202606101307">
-<link rel="stylesheet" href="style.css?v=202606101307">
+<link rel="stylesheet" href="theme.css?v=202606102257">
+<link rel="stylesheet" href="style.css?v=202606102257">
 </head>
 <body>
 
@@ -44,6 +44,7 @@
       <button class="tab-btn" onclick="switchTab('dwz')"><span class="tab-full">Die With Zero</span><span class="tab-short">DWZ</span></button>
       <button class="tab-btn" onclick="switchTab('indicators')">指標</button>
       <button class="tab-btn" onclick="switchTab('news')">新聞</button>
+      <button class="tab-btn" onclick="switchTab('staking')">質押</button>
     </nav>
     <div class="header-right">
       <div class="update-badge" id="update-badge">
@@ -649,6 +650,23 @@
       </section>
     </div><!-- /tab-news -->
 
+    <!-- ══ 質押收益 Tab ══ -->
+    <div id="tab-staking" style="display:none">
+      <section class="staking-card">
+        <div class="staking-head">
+          <div>
+            <h3 class="staking-title">質押被動收入</h3>
+            <div class="staking-sub">現在持倉 vs 2025/10/01 基準 — 數量增加的部分視為質押收益，需要用錢時優先變現這部分、不動本金。差異含期間手動買賣的淨效果，解讀時注意。</div>
+          </div>
+          <div class="staking-total-box">
+            <div class="staking-total-label">可優先變現總額</div>
+            <div class="staking-total-num" id="staking-total">—</div>
+          </div>
+        </div>
+        <div id="staking-list" class="staking-list"></div>
+      </section>
+    </div><!-- /tab-staking -->
+
     <!-- Page footer: version (desktop + mobile) -->
     <footer class="page-footer">
       <span class="page-footer-build" id="build-badge"></span>
@@ -754,6 +772,6 @@
 <!-- ── Toast ── -->
 <div class="toast" id="toast"></div>
 
-<script src="app.js?v=202606101307"></script>
+<script src="app.js?v=202606102257"></script>
 </body>
 </html>

@@ -4,7 +4,7 @@
 // 應用版本號 — 重大功能變更才升版（小修補只更新 BUILD_DATE）
 const APP_VERSION = 'v1.0';
 // Build 時間：每次修改 code 後手動更新此時間（UTC+8 台北時間）
-const BUILD_DATE = '2026/06/10 13:07';
+const BUILD_DATE = '2026/06/10 22:57';
 
 const SPREADSHEET_ID = '1lpRpxVzWaYUqL-jVPOAJCtjsJUIedPYYyOx4gg4PPFU';
 const CLIENT_ID = '149884248440-85f8dhc6ub9up10sv0f89e3e0itrnooj.apps.googleusercontent.com';
@@ -24,6 +24,16 @@ const BASELINE_FEB28 = [
   ['CRO', 178573.150], ['SOL', 85.809], ['ADA', 23618.738], ['SUI', 4560.470],
   ['BGB', 2031.098], ['AVAX', 281.443], ['TAO', 2.630], ['LINK', 77.779],
   ['APT', 571.834], ['NEAR', 412.734], ['IMX', 3156.570], ['FET', 1005.576],
+];
+
+// 2025/10/01 加密貨幣數量基準 — 「質押收益」頁的比較基準
+// 現在持倉 − 此基準 = 質押被動收入的數量（需要用錢時優先變現這部分，不動本金）
+// 注意：差異包含期間手動買賣的淨效果（無法與質押區分），解讀時自行注意
+const BASELINE_OCT1 = [
+  ['BTC', 3.003], ['ETH', 47.261], ['USDT', 34046.425], ['BNB', 24.743],
+  ['CRO', 173357.070], ['SOL', 86.202], ['ADA', 23976.142], ['SUI', 4581.087],
+  ['BGB', 2006.649], ['AVAX', 280.590], ['TAO', 2.580], ['LINK', 77.771],
+  ['APT', 577.368], ['NEAR', 412.158], ['IMX', 3156.570], ['FET', 1002.950],
 ];
 
 // 若 crypto_history 中尚無 2026/02 基準資料，自動寫入一次
@@ -2563,7 +2573,6 @@ function deleteBudgetItem(idx) {
     S.data.expense_budget.splice(idx, 1);
     await saveSheet('expense_budget', S.data.expense_budget);
     renderBudget(); renderKPIs(); renderCash();
-    _checkExpiredBudgetItems(); // Phase 2: 同步刷新過期 banner（刪掉過期項時 banner 應消失）
     showToast('已刪除支出項目', 'ok');
   });
 }
@@ -2953,52 +2962,39 @@ async function _backfillBudgetIds() {
   }
 }
 
-// Phase 2: 過期提示 Banner — 掃 expense_budget 找 end_date < 當月的項目
-// 已被自動活化進主預算、但到了 end_date 該由使用者手動處理
-// 設計：只顯示提示、不自動刪除（避免靜默改動使用者實際支出總額）
-function _checkExpiredBudgetItems() {
-  const banner = $('budget-expired-banner');
-  if (!banner) return;
-
+// Phase 3: 到期支出自動移除 — 與自動活化對稱（活化進來、到期出去）
+// George 決策（2026/06/10）：到期不再只跳提示 banner，直接從主預算移除 + toast。
+// 理由：calcBudgetTotal / DWZ 不看 end_date，過期項目若留著會把月支出
+// 一路算到 90 歲，與「項目有結束日」的 DWZ 預測不一致。
+async function _autoExpireBudgetItems() {
   const todayYM = _todayYM();
-  const expired = (S.data.expense_budget || [])
-    .map((r, i) => ({ r, i }))
-    .filter(({ r }) => {
-      const endDate = r[4] || '';
-      return endDate && endDate < todayYM;
-    });
+  const items = S.data.expense_budget || [];
+  const expired = items.filter(r => {
+    const endDate = r[4] || '';
+    return endDate && endDate < todayYM;
+  });
+  if (!expired.length) return;
 
-  if (!expired.length) {
-    banner.style.display = 'none';
-    banner.innerHTML = '';
+  S.data.expense_budget = items.filter(r => {
+    const endDate = r[4] || '';
+    return !(endDate && endDate < todayYM);
+  });
+
+  // 防 saveSheet high-water guard 誤擋（同 _checkAndActivatePlanned 的處理）
+  _SHEET_HIGH_WATER['expense_budget'] = S.data.expense_budget.length;
+
+  try {
+    await saveSheet('expense_budget', S.data.expense_budget);
+  } catch (e) {
+    console.error('[auto expire] save failed:', e);
+    // 還原 in-memory，避免畫面與 Sheet 不一致；下次開啟重試
+    S.data.expense_budget = items;
+    showToast('到期支出自動移除儲存失敗，下次開啟重試', 'err');
     return;
   }
 
-  const names = expired.map(({ r }) => esc(r[1] || '—')).join('、');
-  banner.innerHTML = `
-    <div class="expired-banner-text">
-      <span class="expired-banner-title">⚠ ${expired.length} 筆固定支出已過結束日</span>
-      <span class="expired-banner-names">建議移除：${names}</span>
-    </div>
-    <div class="expired-banner-actions">
-      <button class="expired-banner-cta" onclick="_goToBudgetSection()">前往編輯</button>
-      <button class="expired-banner-close" onclick="this.closest('.expired-banner').style.display='none'" title="僅關閉提示，項目仍會出現在下次開啟">✕</button>
-    </div>`;
-  banner.style.display = 'grid';
-}
-
-// 點「前往編輯」→ 滾到生活支出預算 + 自動展開
-function _goToBudgetSection() {
-  const el = $('hb-budget');
-  if (!el) return;
-  // 確保是展開狀態（沿用 toggleHolding 的展開機制）
-  const card = el.querySelector('.hc-budget');
-  const detail = el.querySelector('.holding-detail');
-  // 若 detail 隱藏 / collapsed，觸發展開
-  if (detail && detail.style.display === 'none') {
-    if (typeof toggleHolding === 'function') toggleHolding('budget');
-  }
-  el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  const names = expired.map(r => `${r[1]}（至 ${_fmtYM(r[4])}）`).join('、');
+  showToast(`已自動移除 ${expired.length} 筆到期支出：${names}`, 'ok');
 }
 
 // 自動活化：APP 啟動時把到期的未來規劃（start_date <= 當月）寫進 expense_budget
@@ -6576,6 +6572,101 @@ async function _confirmBucketItem(editId) {
   showToast(editId ? '已更新' : '已新增', 'ok');
 }
 
+// ══════════════════════════════════════════════════════════════
+// 質押收益 Tab — 現在持倉 vs BASELINE_OCT1（2025/10/01）
+// 數量增加的部分視為質押被動收入；需要用錢時優先變現這部分，不動本金
+// ══════════════════════════════════════════════════════════════
+function _fmtQty(n) {
+  return (n || 0).toLocaleString('en-US', { maximumFractionDigits: 3 });
+}
+
+function _calcStakingDiff() {
+  const baseMap = new Map(BASELINE_OCT1.map(([s, q]) => [s, q]));
+  const rate = S.prices.usdtwd || 32;
+  const rows = [];
+  const seen = new Set();
+
+  (S.data.crypto || []).forEach(r => {
+    const sym = String(r[0] || '').toUpperCase();
+    if (!sym) return;
+    seen.add(sym);
+    const now = parseFloat(r[1]) || 0;
+    const priceTWD = (S.prices.crypto[sym] || 0) * rate;
+    const base = baseMap.get(sym);
+    if (base === undefined) {
+      // 基準日沒有的幣 → 10/1 後新增持倉，無從比較
+      rows.push({ sym, base: null, now, diff: now, priceTWD, valueTWD: now * priceTWD, category: 'new' });
+      return;
+    }
+    const diff = now - base;
+    let category;
+    if (diff > 0) category = 'gain';
+    else if (diff < 0) category = now === 0 ? 'cleared' : 'reduced';
+    else category = 'stable';
+    rows.push({ sym, base, now, diff, priceTWD, valueTWD: diff * priceTWD, category });
+  });
+
+  // 基準有、現在持倉清單已無此幣 → 全數出清
+  baseMap.forEach((base, sym) => {
+    if (seen.has(sym)) return;
+    const priceTWD = (S.prices.crypto[sym] || 0) * rate;
+    rows.push({ sym, base, now: 0, diff: -base, priceTWD, valueTWD: -base * priceTWD, category: 'cleared' });
+  });
+
+  return rows;
+}
+
+function renderStaking() {
+  const listEl = $('staking-list');
+  const totalEl = $('staking-total');
+  if (!listEl) return;
+
+  const rows = _calcStakingDiff();
+  const gains   = rows.filter(x => x.category === 'gain').sort((a, b) => b.valueTWD - a.valueTWD);
+  const newOnes = rows.filter(x => x.category === 'new').sort((a, b) => b.valueTWD - a.valueTWD);
+  const downs   = rows.filter(x => x.category === 'reduced' || x.category === 'cleared')
+                      .sort((a, b) => a.valueTWD - b.valueTWD);
+  const stables = rows.filter(x => x.category === 'stable');
+
+  const totalGainTWD = gains.reduce((s, x) => s + x.valueTWD, 0);
+  if (totalEl) totalEl.textContent = totalGainTWD > 0 ? fmt(totalGainTWD) : '—';
+
+  const rowHTML = (x) => {
+    const baseStr = x.base === null ? '—' : _fmtQty(x.base);
+    const diffStr = (x.diff > 0 ? '+' : '') + _fmtQty(x.diff);
+    const diffCls = x.diff > 0 ? 'pos' : (x.diff < 0 ? 'neg' : '');
+    const valStr = x.priceTWD > 0 ? '≈ ' + fmt(Math.abs(x.valueTWD)) : '—';
+    return `
+      <div class="staking-row">
+        <div class="staking-sym">${esc(x.sym)}</div>
+        <div class="staking-qty">基準 ${baseStr} → 現在 ${_fmtQty(x.now)}</div>
+        <div class="staking-diff ${diffCls}">${diffStr}</div>
+        <div class="staking-val">${valStr}</div>
+      </div>`;
+  };
+
+  const sectionHTML = (title, sub, list) => {
+    if (!list.length) return '';
+    return `
+      <div class="staking-section">
+        <div class="staking-section-head">
+          <span>${title} <span class="staking-section-count">${list.length}</span></span>
+          <span class="staking-section-sub">${sub}</span>
+        </div>
+        ${list.map(rowHTML).join('')}
+      </div>`;
+  };
+
+  const gainSubtotal = totalGainTWD > 0 ? '小計 ' + fmt(totalGainTWD) : '';
+  const html =
+    sectionHTML('質押收益（建議優先變現）', gainSubtotal, gains) +
+    sectionHTML('10/1 後新增持倉', '無基準可比', newOnes) +
+    sectionHTML('數量減少 / 出清', '', downs) +
+    sectionHTML('無變動', '', stables);
+
+  listEl.innerHTML = html || '<div class="staking-empty">尚無持倉資料</div>';
+}
+
 function switchTab(tab) {
   // ⚠ 用空字串而非 'block' — 讓 CSS 的 display 規則生效
   // tab-overview 在 CSS 是 display:flex（column + gap:14px）
@@ -6586,9 +6677,11 @@ function switchTab(tab) {
   $('tab-indicators').style.display  = tab==='indicators'  ? '' : 'none';
   const elNews = $('tab-news');
   if (elNews) elNews.style.display    = tab==='news'        ? '' : 'none';
+  const elStaking = $('tab-staking');
+  if (elStaking) elStaking.style.display = tab==='staking'  ? '' : 'none';
   document.querySelectorAll('.tab-btn').forEach((b,i) => {
     b.classList.toggle('active',
-      (i===0&&tab==='overview')||(i===1&&tab==='management')||(i===2&&tab==='dwz')||(i===3&&tab==='indicators')||(i===4&&tab==='news'));
+      (i===0&&tab==='overview')||(i===1&&tab==='management')||(i===2&&tab==='dwz')||(i===3&&tab==='indicators')||(i===4&&tab==='news')||(i===5&&tab==='staking'));
   });
   // Sidebar nav
   const sO = $('snav-overview'), sM = $('snav-management'), sD = $('snav-dwz'), sI = $('snav-indicators'), sN = $('snav-news');
@@ -6601,6 +6694,7 @@ function switchTab(tab) {
   if (tab === 'dwz') initDWZ();
   if (tab === 'indicators') renderIndicators();
   if (tab === 'news') renderNewsTab();
+  if (tab === 'staking') renderStaking();
   // v1.2.4：切回 overview 只做輕量 resize（不再 destroy+recreate）
   // CSS min-height 已保證容器尺寸穩定，resize 讓 Chart.js 更新內部 viewport
   // 之前的完整 destroy+new 會觸發新的入場動畫，使切回後的 chart 視覺上與首次載入有差
@@ -6714,7 +6808,7 @@ async function initApp() {
     await loadAll();
     await _backfillBudgetIds();        // Phase 3: 補 expense_budget 既有 row 的 id（供 replaces_id 引用）
     await _checkAndActivatePlanned(); // Phase 1: 未來支出規劃自動活化（到期項目寫進 expense_budget）
-    _checkExpiredBudgetItems();       // Phase 2: 掃 expense_budget end_date 過期、顯示 reminder banner
+    await _autoExpireBudgetItems();   // Phase 3: 到期項目自動從主預算移除（與自動活化對稱，DWZ 才一致）
     await seedBaselineHistory();
 
     showToast('抓取即時價格…');
