@@ -4,7 +4,7 @@
 // 應用版本號 — 重大功能變更才升版（小修補只更新 BUILD_DATE）
 const APP_VERSION = 'v1.0';
 // Build 時間：每次修改 code 後手動更新此時間（UTC+8 台北時間）
-const BUILD_DATE = '2026/06/10 22:57';
+const BUILD_DATE = '2026/06/11 11:06';
 
 const SPREADSHEET_ID = '1lpRpxVzWaYUqL-jVPOAJCtjsJUIedPYYyOx4gg4PPFU';
 const CLIENT_ID = '149884248440-85f8dhc6ub9up10sv0f89e3e0itrnooj.apps.googleusercontent.com';
@@ -118,7 +118,18 @@ const SNAPSHOT_SEEDS = [
   ['2026/03','0','0','0','0','0','0','0','21117892'],
 ];
 
+// Binance / CoinGecko 原生回 Access-Control-Allow-Origin:* → 直連優先；
+// corsproxy.io 免費方案已全面回 403、allorigins 大 payload（如 730d klines）常逾時，proxy 只當備援。
+// Yahoo Finance 不支援 CORS，不在此清單，維持走 proxy。
+const DIRECT_CORS_OK = /^https:\/\/(api\.binance\.com|api\.coingecko\.com)\//;
+
 async function proxyFetch(url, opts = {}) {
+  if (DIRECT_CORS_OK.test(url)) {
+    try {
+      const r0 = await fetch(url, { ...opts, signal: AbortSignal.timeout(9000) });
+      if (r0.ok) return r0;
+    } catch {}
+  }
   try {
     const r = await fetch(`${PROXY}${encodeURIComponent(url)}`, { ...opts, signal: AbortSignal.timeout(9000) });
     if (!r.ok) throw new Error(`HTTP ${r.status}`);
