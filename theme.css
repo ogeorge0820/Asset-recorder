@@ -49,48 +49,48 @@
   --pill-neutral-fg:     #d4d4d8;
 }
 
-/* ── 淺色主題 ── */
+/* ── 淺色主題 — 私人銀行（深寶藍 + 金 + 冷調灰白）── */
 :root[data-theme="light"] {
-  --bg:             #f6f4ef;
+  --bg:             #eef0f4;
   --bg-card:        #ffffff;
-  --bg-hover:       #f9f9fb;
+  --bg-hover:       #f3f5f9;
   --bg-input:       #ffffff;
-  --border:         #f0f0f0;
-  --border-strong:  #e5e7eb;
-  --border-hover:   #d4d4d4;
-  --text-primary:   #1a1a1a;
-  --text-secondary: #6b7280;
-  --text-muted:     #9ca3af;
-  --accent:         #1a1a1a;
+  --border:         #e3e6ec;
+  --border-strong:  #d3d8e2;
+  --border-hover:   #c0c7d4;
+  --text-primary:   #14182a;
+  --text-secondary: #586074;
+  --text-muted:     #98a0b0;
+  --accent:         #1e3a8a;
   --accent-fg:      #ffffff;
-  --accent-soft:    rgba(0,0,0,0.04);
-  --pill-bg:        #f3f4f6;
-  --hero-bg:        linear-gradient(135deg, #eef2ff 0%, #faf5ff 50%, #fefce8 100%);
+  --accent-soft:    rgba(30,58,138,0.08);
+  --pill-bg:        #e7ebf5;
+  --hero-bg:        linear-gradient(135deg, #e9eef8 0%, #f5f7fc 55%, #faf7ee 100%);
   --success:        #16a34a;
   --danger:         #dc2626;
-  --warn:           #d97706;
-  --overlay:        rgba(0,0,0,0.4);
-  --card-shadow:    0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
-  --card-shadow-hover: 0 4px 12px rgba(0,0,0,0.08);
-  /* N26 風 v1.1.1：多層陰影 + 大圓角 + 薰衣草紫品牌色 + 卡片色塊背景 */
+  --warn:           #b45309;
+  --overlay:        rgba(15,23,42,0.45);
+  --card-shadow:    0 1px 3px rgba(20,28,46,0.07), 0 1px 2px rgba(20,28,46,0.05);
+  --card-shadow-hover: 0 6px 16px rgba(20,28,46,0.11);
+  /* 私人銀行：多層陰影 + 大圓角 + 深寶藍品牌色 */
   --card-shadow-soft:
-    0 1px 2px rgba(15,23,42,0.04),
-    0 6px 12px rgba(15,23,42,0.05),
-    0 18px 32px rgba(15,23,42,0.07);
+    0 1px 2px rgba(20,28,46,0.05),
+    0 6px 12px rgba(20,28,46,0.06),
+    0 18px 32px rgba(20,28,46,0.08);
   --card-radius-lg:      20px;
   --card-radius-md:      16px;
-  --brand-lavender:      #7c3aed;
-  --brand-lavender-soft: rgba(139,92,246,0.22);
-  --brand-lavender-tint: rgba(139,92,246,0.08);
-  --brand-lavender-border: rgba(139,92,246,0.30);
-  --brand-lavender-fg:   #4c1d95;
+  --brand-lavender:      #1e3a8a;
+  --brand-lavender-soft: rgba(30,58,138,0.10);
+  --brand-lavender-tint: rgba(30,58,138,0.06);
+  --brand-lavender-border: rgba(30,58,138,0.26);
+  --brand-lavender-fg:   #ffffff;
   --tint-gain:           rgba(22,163,74,0.14);
   --tint-loss:           rgba(220,38,38,0.12);
-  --tint-warm:           rgba(245,158,11,0.14);
-  --tint-blue:           rgba(91,141,239,0.14);
-  --tint-peach:          rgba(217,119,87,0.14);
-  --pill-neutral-bg:     rgba(0,0,0,0.05);
-  --pill-neutral-fg:     #4b5563;
+  --tint-warm:           rgba(184,132,11,0.13);
+  --tint-blue:           rgba(30,58,138,0.12);
+  --tint-peach:          rgba(168,116,46,0.12);
+  --pill-neutral-bg:     rgba(20,28,46,0.05);
+  --pill-neutral-fg:     #475069;
 }
 
 /* ── 相容別名（舊 style.css 用的變數名） ── */
@@ -2569,4 +2569,21 @@ body.ov2-animated .ov2-hero-sub-num {
   .news-head { flex-direction: column; align-items: flex-start; gap: 8px; }
   .news-head-right { width: 100%; justify-content: space-between; }
   .news-item-title { font-size: 13.5px; }
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   私人銀行淺色主題 — 局部覆寫（圓餅資產色盤 + Hero pill 實心寶藍）
+   只作用在 light theme；dark theme 維持原樣
+   ═══════════════════════════════════════════════════════════════ */
+:root[data-theme="light"] {
+  --asset-crypto:    #c79a2e;  /* 金 — 加密（最大占比，金色＝財富感）*/
+  --asset-us:        #1e3a8a;  /* 寶藍 — 與品牌主色呼應 */
+  --asset-cash:      #2f8f7d;  /* 深青 — 現金 */
+  --asset-tw:        #a8742e;  /* 古銅 — 台股 */
+  --asset-insurance: #6d5fa6;  /* 板岩紫 — 儲蓄險 */
+}
+/* Hero「可用資產」pill：light 改實心寶藍底白字（取代原本薰衣草淡紫底）*/
+:root[data-theme="light"] .ov2-hero-label {
+  background: var(--brand-lavender);
+  color: #ffffff;
 }
