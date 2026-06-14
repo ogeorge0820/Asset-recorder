@@ -4,7 +4,7 @@
 // 應用版本號 — 重大功能變更才升版（小修補只更新 BUILD_DATE）
 const APP_VERSION = 'v1.0';
 // Build 時間：每次修改 code 後手動更新此時間（UTC+8 台北時間）
-const BUILD_DATE = '2026/06/14 00:20';
+const BUILD_DATE = '2026/06/14 08:48';
 
 const SPREADSHEET_ID = '1lpRpxVzWaYUqL-jVPOAJCtjsJUIedPYYyOx4gg4PPFU';
 const CLIENT_ID = '149884248440-85f8dhc6ub9up10sv0f89e3e0itrnooj.apps.googleusercontent.com';
@@ -663,16 +663,25 @@ const _SHEET_HIGH_WATER = {}; // name → max rows seen this session
 async function saveSheet(name, dataRows) {
   const prevHigh = _SHEET_HIGH_WATER[name] || 0;
   const newSize = (dataRows || []).length;
-  // size guard：本次 session 看過該 Sheet 有 N 列，但這次要寫 < N/2 → 中止
+  // 覆寫前即時重讀 Sheet 現有列數，與本 session high-water 取較大者當「已知列數」。
+  // 為何要重讀：若某次 loadAll 對該表 transient 空讀（HTTP 成功但 values=[]，rows() 不會標 _failed），
+  // high-water 會被歸零、守門失效；但 Sheet 實體列其實還在 —— 重讀就能看到真實列數，照樣擋下抹除。
+  let liveCount = 0;
+  try {
+    const colA = await sheetGet(`${name}!A:A`);
+    liveCount = Math.max(0, (colA?.length || 0) - 1); // 減去標題列
+  } catch (_) { /* 重讀失敗就只靠 high-water，不阻斷正常寫入 */ }
+  const known = Math.max(prevHigh, liveCount);
+  // size guard：已知該 Sheet 有 N 列，但這次要寫 < N/2 → 中止
   // （留容錯空間給 normal CRUD：刪一筆不會觸發；只擋 N→1 / N→0 這種戲劇性收縮）
-  if (prevHigh >= 5 && newSize < Math.max(2, Math.floor(prevHigh / 2))) {
-    const msg = `[saveSheet] BLOCKED: ${name} would shrink ${prevHigh} → ${newSize}. ` +
+  if (known >= 5 && newSize < Math.max(2, Math.floor(known / 2))) {
+    const msg = `[saveSheet] BLOCKED: ${name} would shrink ${known} → ${newSize}. ` +
                 `Likely transient read failure earlier. Refusing to wipe history.`;
     console.error(msg);
-    showToast(`寫入 ${name} 已中止：避免抹掉歷史紀錄（${prevHigh}→${newSize}）`, 'err');
+    showToast(`寫入 ${name} 已中止：避免抹掉歷史紀錄（${known}→${newSize}）`, 'err');
     throw new Error(msg);
   }
-  _SHEET_HIGH_WATER[name] = Math.max(prevHigh, newSize);
+  _SHEET_HIGH_WATER[name] = Math.max(known, newSize);
   const values = [HEADERS[name], ...dataRows.map(r => r.map(v => v ?? ''))];
   await sheetClear(`${name}!A:Z`);   // 先清空，防止刪除後舊列殘留
   await sheetPut(`${name}!A1`, values);
