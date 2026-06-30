@@ -4,7 +4,7 @@
 // 應用版本號 — 重大功能變更才升版（小修補只更新 BUILD_DATE）
 const APP_VERSION = 'v1.0';
 // Build 時間：每次修改 code 後手動更新此時間（UTC+8 台北時間）
-const BUILD_DATE = '2026/06/14 08:48';
+const BUILD_DATE = '2026/06/30 10:59';
 
 const SPREADSHEET_ID = '1lpRpxVzWaYUqL-jVPOAJCtjsJUIedPYYyOx4gg4PPFU';
 const CLIENT_ID = '149884248440-85f8dhc6ub9up10sv0f89e3e0itrnooj.apps.googleusercontent.com';
@@ -2385,11 +2385,22 @@ function _renderCmcPreview(rows) {
     SAME:       '<span style="color:var(--text-muted)">= 相同</span>',
     NOT_IN_CSV: '<span style="color:var(--text-muted)">? CSV 無</span>',
   };
+  // 動作欄左側的數量增減標籤：增加綠色、減少紅色（SAME / NOT_IN_CSV 不顯示）
+  const deltaTag = d => {
+    let delta;
+    if (d.action === 'NEW') delta = d.next;
+    else if (d.action === 'UPDATE') delta = d.next - d.prev;
+    else return '';
+    if (!(Math.abs(delta) > 1e-9)) return '';
+    const up = delta > 0;
+    const txt = (up ? '+' : '−') + Math.abs(delta).toLocaleString(undefined, { maximumFractionDigits: 4 });
+    return `<span style="color:var(--${up ? 'success' : 'danger'});font-variant-numeric:tabular-nums;margin-right:8px;font-weight:600">${txt}</span>`;
+  };
   const tr = d => `
     <tr${d.mapped === false ? ' style="background:rgba(239,68,68,0.08)"' : ''}>
       <td style="white-space:nowrap"><b>${esc(d.symbol)}</b>${d.mapped === false ? ' <span style="color:var(--danger)">?</span>' : ''}</td>
       <td style="color:var(--text-secondary);white-space:nowrap;max-width:180px;overflow:hidden;text-overflow:ellipsis">${esc(d.name)}</td>
-      <td style="white-space:nowrap">${actMap[d.action]}</td>
+      <td style="white-space:nowrap">${deltaTag(d)}${actMap[d.action]}</td>
       <td style="text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums">${d.prev === null ? '—' : d.prev.toLocaleString(undefined,{maximumFractionDigits:4})}</td>
       <td style="text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums">${d.next === null ? '—' : d.next.toLocaleString(undefined,{maximumFractionDigits:4})}</td>
     </tr>`;
@@ -2399,11 +2410,11 @@ function _renderCmcPreview(rows) {
     <div style="margin:10px 0 6px;font-weight:600">變更預覽：${changed} 筆實質變更 / 共 ${diff.length} 項</div>
     ${unmapped.length ? `<div style="color:var(--danger);font-size:11px;margin-bottom:6px">⚠ ${unmapped.length} 個未知幣種（紅底）symbol 直接使用 CSV name 大寫，如有誤請關閉重選</div>` : ''}
     <div style="overflow-x:auto">
-      <table class="data-table" style="font-size:12px;width:100%;min-width:560px">
+      <table class="data-table" style="font-size:12px;width:100%;min-width:620px">
         <thead><tr>
           <th style="width:70px">Symbol</th>
           <th>Name</th>
-          <th style="width:80px">動作</th>
+          <th style="width:150px">動作</th>
           <th style="width:120px;text-align:right">舊數量</th>
           <th style="width:120px;text-align:right">新數量</th>
         </tr></thead>
