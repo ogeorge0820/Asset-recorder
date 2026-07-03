@@ -37,6 +37,18 @@ var COIN_MAP = {
 };
 var STABLECOINS = { USDT:1, USDC:1, DAI:1, BUSD:1, TUSD:1, FRAX:1, FDUSD:1 };
 
+// Yahoo 加密幣代號對照表（2026/07/03 逐一實測驗證）。
+// ⚠ Yahoo 有同名碰撞：SUI-USD / TAO-USD / APT-USD / IMX-USD 是別的幣（價差千倍）！
+//   新增幣種時務必先人工驗證代號再加入；不在表上的幣自動走 Binance→CC→CoinGecko。
+// 為什麼需要這層：Binance/CC/CoinGecko 對 Google 機房共用 IP 嚴格限流（實測 HTTP 429），
+// Yahoo 從 Apps Script 暢通（與台股/美股/匯率同一來源）。
+var YAHOO_CRYPTO = {
+  BTC:'BTC-USD', ETH:'ETH-USD', BNB:'BNB-USD', CRO:'CRO-USD', SOL:'SOL-USD',
+  ADA:'ADA-USD', SUI:'SUI20947-USD', BGB:'BGB-USD', AVAX:'AVAX-USD',
+  TAO:'TAO22974-USD', LINK:'LINK-USD', NEAR:'NEAR-USD', APT:'APT21794-USD',
+  IMX:'IMX10603-USD', FET:'FET-USD'
+};
+
 // ══════════════════════════════════════════════════════════
 // ★ 一鍵安裝：George 只需要執行這一個函式 ★
 //   1. 建立每晚自動快照的觸發器
@@ -322,7 +334,8 @@ function fetchFxRates_(cash, usdtwd, errs) {
   return fx;
 }
 
-// 加密即時價：穩定幣 $1 → Binance（並行）→ CryptoCompare → CoinGecko（與 app.js 三層一致）
+// 加密即時價：穩定幣 $1 → Yahoo（驗證代號表）→ Binance → CryptoCompare → CoinGecko
+// （app.js 沒有 Yahoo 層——瀏覽器端 Binance 直連沒問題；Apps Script 端會被限流，故加此層）
 function fetchCryptoPrices_(syms, errs) {
   var out = {};
   var toFetch = [];
@@ -331,10 +344,22 @@ function fetchCryptoPrices_(syms, errs) {
   });
   if (!toFetch.length) return out;
 
+  // ── 第一優先：Yahoo（只用人工驗證過的代號，避免同名幣陷阱）
+  var afterYahoo = [];
+  toFetch.forEach(function (s) {
+    if (YAHOO_CRYPTO[s]) {
+      try { out[s] = yahooPrice_(YAHOO_CRYPTO[s]); return; } catch (e) { /* 落到下一層 */ }
+    }
+    afterYahoo.push(s);
+  });
+  toFetch = afterYahoo;
+  if (!toFetch.length) return out;
+
   var notFound = [];
   try {
+    // data-api.binance.vision 是 Binance 官方公開行情專用網域（不受地區封鎖影響）
     var resps = UrlFetchApp.fetchAll(toFetch.map(function (s) {
-      return { url: 'https://api.binance.com/api/v3/ticker/price?symbol=' + s + 'USDT', muteHttpExceptions: true };
+      return { url: 'https://data-api.binance.vision/api/v3/ticker/price?symbol=' + s + 'USDT', muteHttpExceptions: true };
     }));
     resps.forEach(function (r, i) {
       try {
@@ -404,8 +429,11 @@ function yahooHistClose_(ticker, endTs) {
   throw new Error('no hist close: ' + ticker);
 }
 
-// 加密歷史：CryptoCompare 小時線收盤（endTs 當下最近一小時）→ 失敗改 CoinGecko 每日快照
+// 加密歷史：Yahoo 日線（驗證代號表）→ CryptoCompare 小時線 → CoinGecko 每日快照
 function cryptoHistClose_(sym, endTs) {
+  if (YAHOO_CRYPTO[sym]) {
+    try { return yahooHistClose_(YAHOO_CRYPTO[sym], endTs); } catch (e) { /* 落到下一層 */ }
+  }
   try {
     var d = fetchJson_('https://min-api.cryptocompare.com/data/v2/histohour?fsym=' + sym + '&tsym=USD&limit=1&toTs=' + endTs);
     var arr = d && d.Data && d.Data.Data;
