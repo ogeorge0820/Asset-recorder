@@ -112,9 +112,48 @@ function nightlySnapshot() {
 // ══════════════════════════════════════════════════════════
 function backfillJul2() { backfillDate('2026/07/02'); }
 
+// ★ 一鍵回補 2026 年 6-7 月所有缺日（自動掃描，已存在的日期不動）★
+function backfillJunJul() { backfillRange_('2026/06/01', '2026/07/02'); }
+
+// 掃描 [startDs, endDs]（含兩端）內 daily_snapshots 缺少的日期，逐日回補
+function backfillRange_(startDs, endDs) {
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var sh = ss.getSheetByName('daily_snapshots');
+  if (!sh || sh.getLastRow() < 2) { Logger.log('daily_snapshots 無資料，中止掃描'); return; }
+  var col = sh.getRange(1, 1, sh.getLastRow(), 1).getValues();
+  var have = {};
+  for (var i = 1; i < col.length; i++) have[normDate_(col[i][0])] = true;
+  var missing = [];
+  for (var ts = dsToUtcNoon_(startDs); ts <= dsToUtcNoon_(endDs); ts += 86400000) {
+    var ds = utcNoonToDs_(ts);
+    if (!have[ds]) missing.push(ds);
+  }
+  if (!missing.length) { Logger.log('範圍內沒有缺日，不需回補'); return; }
+  Logger.log('偵測到 ' + missing.length + ' 個缺日：' + missing.join(', '));
+  var ok = 0;
+  missing.forEach(function (ds) {
+    try { if (backfillDate(ds)) ok++; }
+    catch (e) { Logger.log(ds + ' 回補拋錯：' + e.message); }
+  });
+  Logger.log('✅ 回補結束：成功 ' + ok + ' / ' + missing.length + ' 天（各日明細見上方）');
+}
+
+// 日期字串 ↔ UTC 正午毫秒（用正午避免任何時區邊界問題；純日曆運算）
+function dsToUtcNoon_(ds) {
+  var m = ds.match(/^(\d{4})\/(\d{2})\/(\d{2})$/);
+  if (!m) throw new Error('日期格式須為 yyyy/MM/dd: ' + ds);
+  return Date.UTC(+m[1], +m[2] - 1, +m[3], 12, 0, 0);
+}
+function utcNoonToDs_(ms) {
+  var d = new Date(ms);
+  var p = function (n) { return (n < 10 ? '0' : '') + n; };
+  return d.getUTCFullYear() + '/' + p(d.getUTCMonth() + 1) + '/' + p(d.getUTCDate());
+}
+
+// 回傳 true = 有寫入；false = 跳過或防呆放棄
 function backfillDate(ds) {
   var ss = SpreadsheetApp.getActiveSpreadsheet();
-  if (findDateRow_(ss, ds) > 0) { Logger.log(ds + ' 已存在，跳過回補'); return; }
+  if (findDateRow_(ss, ds) > 0) { Logger.log(ds + ' 已存在，跳過回補'); return false; }
   var data = readHoldings_(ss);
   var errs = [];
   var endTs = dateStrEndEpoch_(ds); // 該日 23:59 台北時間的 epoch 秒
@@ -140,10 +179,11 @@ function backfillDate(ds) {
   });
 
   var row = buildSnapshotRow_(ds, data, usdtwd, fx, twP, usP, cryP);
-  if (!row.ok) { Logger.log('回補失敗：' + row.reason + '；錯誤：' + errs.join(', ')); return; }
+  if (!row.ok) { Logger.log(ds + ' 回補失敗：' + row.reason + '；錯誤：' + errs.join(', ')); return false; }
   var action = upsertDailyRow_(ss, row.values);
   Logger.log(ds + ' 回補 ' + action + '（淨資產 ' + row.values[8] + '；價格失敗 ' + errs.length + ' 項' +
     (errs.length ? '：' + errs.join(', ') : '') + '）');
+  return true;
 }
 
 // ══════════════════════════════════════════════════════════
