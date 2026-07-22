@@ -4,7 +4,7 @@
 // 應用版本號 — 重大功能變更才升版（小修補只更新 BUILD_DATE）
 const APP_VERSION = 'v1.0';
 // Build 時間：每次修改 code 後手動更新此時間（UTC+8 台北時間）
-const BUILD_DATE = '2026/07/22 17:22';
+const BUILD_DATE = '2026/07/22 17:30';
 
 const SPREADSHEET_ID = '1lpRpxVzWaYUqL-jVPOAJCtjsJUIedPYYyOx4gg4PPFU';
 const CLIENT_ID = '149884248440-85f8dhc6ub9up10sv0f89e3e0itrnooj.apps.googleusercontent.com';
@@ -611,8 +611,8 @@ async function loadAll() {
   await _repairCorruptedBucketRows();
 
   S.data.settings = { insurance_total: 0, realestate_total: 0, debt: 0, peak_experience_age: 65 };
-  // dwz_params / dwz_planned_ignored 存的是 JSON 字串（DWZ 跨裝置同步設定），不可 parseFloat
-  const SETTINGS_JSON_KEYS = new Set(['dwz_params', 'dwz_planned_ignored']);
+  // 這些 key 存的是 JSON 字串（DWZ 跨裝置同步設定），不可 parseFloat
+  const SETTINGS_JSON_KEYS = new Set(['dwz_params', 'dwz_planned_ignored', 'dwz_strat', 'dwz_asset_roi']);
   rows(sett, 'settings').forEach(r => {
     if (!r[0]) return;
     S.data.settings[r[0]] = SETTINGS_JSON_KEYS.has(r[0]) ? String(r[1] ?? '') : (parseFloat(r[1]) || 0);
@@ -5505,6 +5505,14 @@ function _saveDWZParams() {
   });
   localStorage.setItem('dwz_params', json); // 本機備援（離線可用）
   _syncDWZSettingToSheet('dwz_params', json); // 雲端同步（手機/電腦共用同一組參數）
+  // 策略實驗室（質押收益/主動收入）同車上雲——renderDWZ 每次重算都會經過這裡
+  const stratJson = JSON.stringify({
+    rewards: $('strat-rewards')?.checked ? '1' : '0',
+    active:  $('strat-active')?.checked ? '1' : '0',
+    amt: $('strat-active-amt')?.value ?? '',
+    age: $('strat-active-age')?.value ?? '',
+  });
+  _syncDWZSettingToSheet('dwz_strat', stratJson);
 }
 
 // 把 DWZ 設定寫回 settings sheet（debounce 2.5 秒；值沒變不寫，避免頻繁打 API）
@@ -5558,8 +5566,19 @@ const DWZ_ROI_PRESETS = {
 };
 const DWZ_ROI_DEFAULT = { tw: 8, us: 10, crypto: 20, ins: 2, cash: 2 };
 
-function _readAssetROIStore() { return JSON.parse(localStorage.getItem('dwz_asset_roi') || '{}'); }
-function _writeAssetROIStore(obj) { localStorage.setItem('dwz_asset_roi', JSON.stringify(obj)); }
+function _readAssetROIStore() {
+  // 雲端 settings 優先（跨裝置同步），本機 localStorage 為備援
+  try {
+    const c = (S.data.settings && S.data.settings.dwz_asset_roi) ? JSON.parse(S.data.settings.dwz_asset_roi) : null;
+    if (c && typeof c === 'object') return c;
+  } catch (_) {}
+  return JSON.parse(localStorage.getItem('dwz_asset_roi') || '{}');
+}
+function _writeAssetROIStore(obj) {
+  const json = JSON.stringify(obj);
+  localStorage.setItem('dwz_asset_roi', json);
+  _syncDWZSettingToSheet('dwz_asset_roi', json);
+}
 
 // 組出「所有非零持倉 + 現金 + 儲蓄險 + 市值 + 當前 ROI」清單
 // 加總 = 首頁「可用資產」（liquid = cashT + twT + usT + cryT + ins）
@@ -5831,9 +5850,15 @@ function _initStratLab() {
     body.hidden = false;
     head.setAttribute('aria-expanded', 'true');
   }
+  // 雲端 settings 優先（跨裝置同步），本機 localStorage 為備援
+  let cloud = null;
+  try {
+    const c = (S.data.settings && S.data.settings.dwz_strat) ? JSON.parse(S.data.settings.dwz_strat) : null;
+    if (c && typeof c === 'object') cloud = c;
+  } catch (_) {}
   const c2 = $('strat-rewards');
   if (c2) {
-    c2.checked = localStorage.getItem('dwz_strat_rewards') === '1';
+    c2.checked = cloud ? cloud.rewards === '1' : localStorage.getItem('dwz_strat_rewards') === '1';
     c2.addEventListener('change', () => localStorage.setItem('dwz_strat_rewards', c2.checked ? '1' : '0'));
   }
   // 主動收入：toggle + 金額 + 截止年齡 三個欄位皆要持久化
@@ -5841,17 +5866,17 @@ function _initStratLab() {
   const amtEl = $('strat-active-amt');
   const ageEl = $('strat-active-age');
   if (cActive) {
-    cActive.checked = localStorage.getItem('dwz_strat_active') === '1';
+    cActive.checked = cloud ? cloud.active === '1' : localStorage.getItem('dwz_strat_active') === '1';
     cActive.addEventListener('change', () => localStorage.setItem('dwz_strat_active', cActive.checked ? '1' : '0'));
   }
   if (amtEl) {
-    const saved = localStorage.getItem('dwz_strat_active_amt');
-    if (saved !== null) amtEl.value = saved;
+    const saved = cloud ? (cloud.amt ?? null) : localStorage.getItem('dwz_strat_active_amt');
+    if (saved !== null && saved !== '') amtEl.value = saved;
     amtEl.addEventListener('input', () => localStorage.setItem('dwz_strat_active_amt', amtEl.value));
   }
   if (ageEl) {
-    const saved = localStorage.getItem('dwz_strat_active_age');
-    if (saved !== null) ageEl.value = saved;
+    const saved = cloud ? (cloud.age ?? null) : localStorage.getItem('dwz_strat_active_age');
+    if (saved !== null && saved !== '') ageEl.value = saved;
     ageEl.addEventListener('input', () => localStorage.setItem('dwz_strat_active_age', ageEl.value));
   }
 }
