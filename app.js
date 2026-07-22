@@ -4,7 +4,7 @@
 // 應用版本號 — 重大功能變更才升版（小修補只更新 BUILD_DATE）
 const APP_VERSION = 'v1.0';
 // Build 時間：每次修改 code 後手動更新此時間（UTC+8 台北時間）
-const BUILD_DATE = '2026/07/03 21:52';
+const BUILD_DATE = '2026/07/22 17:22';
 
 const SPREADSHEET_ID = '1lpRpxVzWaYUqL-jVPOAJCtjsJUIedPYYyOx4gg4PPFU';
 const CLIENT_ID = '149884248440-85f8dhc6ub9up10sv0f89e3e0itrnooj.apps.googleusercontent.com';
@@ -611,7 +611,12 @@ async function loadAll() {
   await _repairCorruptedBucketRows();
 
   S.data.settings = { insurance_total: 0, realestate_total: 0, debt: 0, peak_experience_age: 65 };
-  rows(sett, 'settings').forEach(r => { if (r[0]) S.data.settings[r[0]] = parseFloat(r[1]) || 0; });
+  // dwz_params / dwz_planned_ignored 存的是 JSON 字串（DWZ 跨裝置同步設定），不可 parseFloat
+  const SETTINGS_JSON_KEYS = new Set(['dwz_params', 'dwz_planned_ignored']);
+  rows(sett, 'settings').forEach(r => {
+    if (!r[0]) return;
+    S.data.settings[r[0]] = SETTINGS_JSON_KEYS.has(r[0]) ? String(r[1] ?? '') : (parseFloat(r[1]) || 0);
+  });
 
   // 防呆：任何 sheet 讀失敗就中止——避免後續 saveSheet 把 Sheet 當空陣列寫光歷史
   const failedSheets = [];
@@ -2752,16 +2757,19 @@ function togglePlanned() {
 }
 
 // ── DWZ tab 「未來支出規劃」區塊（per-item toggle，預設全部考量）──
-// 設計：用 localStorage 存「忽略的 id 集合」(default empty = 全部考量)
-//      不動 Google Sheets，純前端設定。重新整理保留。
+// 設計：「忽略的 id 集合」以 settings sheet 為主（跨裝置同步），localStorage 為離線備援。
 function _getDwzPlannedIgnored() {
   try {
-    const arr = JSON.parse(localStorage.getItem('dwz_planned_ignored') || '[]');
+    const raw = (S.data.settings && S.data.settings.dwz_planned_ignored) ||
+      localStorage.getItem('dwz_planned_ignored') || '[]';
+    const arr = JSON.parse(raw);
     return new Set(Array.isArray(arr) ? arr : []);
   } catch (_) { return new Set(); }
 }
 function _saveDwzPlannedIgnored(set) {
-  localStorage.setItem('dwz_planned_ignored', JSON.stringify([...set]));
+  const json = JSON.stringify([...set]);
+  localStorage.setItem('dwz_planned_ignored', json);
+  _syncDWZSettingToSheet('dwz_planned_ignored', json);
 }
 function toggleDwzPlannedItem(id) {
   const ignored = _getDwzPlannedIgnored();
@@ -5481,7 +5489,7 @@ function dwzAutoCalc() {
 }
 
 function _saveDWZParams() {
-  localStorage.setItem('dwz_params', JSON.stringify({
+  const json = JSON.stringify({
     age:        _dwzParam('dwz-age'),
     retire:     _dwzParam('dwz-retire'),
     life:       _dwzParam('dwz-life'),
@@ -5494,11 +5502,34 @@ function _saveDWZParams() {
     giftAge:    _dwzParam('dwz-gift-age'),
     expBudget:  _dwzParam('dwz-exp-budget'),
     windowEnd:  _dwzParam('dwz-window-end'),
-  }));
+  });
+  localStorage.setItem('dwz_params', json); // 本機備援（離線可用）
+  _syncDWZSettingToSheet('dwz_params', json); // 雲端同步（手機/電腦共用同一組參數）
+}
+
+// 把 DWZ 設定寫回 settings sheet（debounce 2.5 秒；值沒變不寫，避免頻繁打 API）
+let _dwzSheetSyncTimer = null;
+function _syncDWZSettingToSheet(key, json) {
+  if (!_dwzInited) return; // 參數載入完成前不同步，避免把 HTML 預設值推上雲端
+  if ((S.data.settings[key] || '') === json) return;
+  S.data.settings[key] = json;
+  clearTimeout(_dwzSheetSyncTimer);
+  _dwzSheetSyncTimer = setTimeout(async () => {
+    try {
+      const settRows = Object.entries(S.data.settings).map(([k, v]) => [k, v]);
+      await saveSheet('settings', settRows);
+    } catch (e) { console.warn('[DWZ] 設定同步到雲端失敗（本機已保存）:', e.message); }
+  }, 2500);
 }
 
 function _loadDWZParams() {
-  const p = JSON.parse(localStorage.getItem('dwz_params') || '{}');
+  // 雲端 settings 優先（跨裝置同步）；雲端沒有值才用本機 localStorage（首次升級時自動上雲）
+  let p = {};
+  try { p = JSON.parse(localStorage.getItem('dwz_params') || '{}'); } catch (_) {}
+  try {
+    const cloud = (S.data.settings && S.data.settings.dwz_params) ? JSON.parse(S.data.settings.dwz_params) : null;
+    if (cloud && typeof cloud === 'object') p = cloud;
+  } catch (_) {}
   const set = (id, v) => { if (v !== undefined && v !== null && document.getElementById(id)) document.getElementById(id).value = v; };
   set('dwz-age',        p.age);
   set('dwz-retire',     p.retire);
