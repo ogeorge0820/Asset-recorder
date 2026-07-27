@@ -4,7 +4,7 @@
 // 應用版本號 — 重大功能變更才升版（小修補只更新 BUILD_DATE）
 const APP_VERSION = 'v1.0';
 // Build 時間：每次修改 code 後手動更新此時間（UTC+8 台北時間）
-const BUILD_DATE = '2026/07/27 14:55';
+const BUILD_DATE = '2026/07/27 15:16';
 
 const SPREADSHEET_ID = '1lpRpxVzWaYUqL-jVPOAJCtjsJUIedPYYyOx4gg4PPFU';
 const CLIENT_ID = '149884248440-85f8dhc6ub9up10sv0f89e3e0itrnooj.apps.googleusercontent.com';
@@ -3619,6 +3619,8 @@ function renderCharts() {
   renderTopMovers();
   renderRewardsSummary();
   renderMonthly();
+  renderCashDefense();
+  renderCashflowForecast();
   // 防呆：圖表建立瞬間若容器尺寸還沒到最終值（grid 拉伸、字型晚載、其他卡片資料
   // 異步載入觸發 grid row 重新計算高度），Chart.js 內建 ResizeObserver 不一定能
   // 及時偵測，所以疊多重保險：RAF + fonts.ready + 階梯式 setTimeout + 自訂 RO。
@@ -4706,6 +4708,251 @@ function openHealthDetail() {
       <div class="health-note">🔍 快照＝雲端最後記下的數字；即時＝現在算出的數字。差異大通常代表快照日之後有持倉/設定變動，或快照寫入失敗。<br>註：畫面上 USDT 顯示於「流動現金」是視覺分類；本比對與快照同採帳本口徑（USDT 歸加密貨幣）。</div>
     </div>`;
   ov.hidden = false;
+}
+
+// ══════════════════════════════════════════════════════════════
+// 現金流防守：現金跑道 / 應收 aging / 90 天預測
+// 口徑（George 2026-07-27 拍板）：
+//   - 跑道與預測起點用「現金 + USDT」（USDT 秒換可花），跑道卡加註純法幣版
+//   - 預測納入被 DWZ 忽略的真實支出（DWZ 忽略清單只管人生模擬，現金流是真實帳）
+//   - 應收雙線：樂觀＝全收（逾期視為馬上入帳）；保守＝逾期不算
+// ══════════════════════════════════════════════════════════════
+
+// 應收到期日：'2026-07-15' → 當日；'2026-07' → 該月最後一天（寬容 / 分隔符）
+function _cfDueDate(str) {
+  const s = String(str || '').replace(/\//g, '-');
+  const m10 = s.match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if (m10) return new Date(+m10[1], +m10[2] - 1, +m10[3]);
+  const m7 = s.match(/^(\d{4})-(\d{2})/);
+  if (m7) return new Date(+m7[1], +m7[2], 0); // 下月 0 日 = 本月最後一天
+  return null;
+}
+
+// 未入帳應收（與 3277 應收卡同口徑：status !== '1'）
+function _cfUnsettled() {
+  return (S.data.income_records || [])
+    .filter(r => r[5] !== '1' && (parseFloat(r[3]) || 0) > 0)
+    .map(r => ({
+      name: r[1] || '—',
+      amount: parseFloat(r[3]) || 0,
+      payer: r[8] || '未標付款方',
+      due: _cfDueDate(r[4]),
+    }));
+}
+
+// 未來某月的月支出（元）：expense_budget 尊重 end_date；expense_planned monthly
+// 於 start~end 區間內計入，且預演 replaces_id 取代（生效月起舊項不再計）。
+// 注意：刻意「不」過濾 _getDwzPlannedIgnored——與 simulateMonthly 不同，見口徑說明。
+function _cfBudgetAtYM(ym) {
+  const replaced = new Set();
+  let plannedSum = 0;
+  (S.data.expense_planned || []).forEach(r => {
+    if ((r[7] || 'monthly') !== 'monthly') return;
+    const start = r[5] || '', end = r[8] || '';
+    if (start && start <= ym && (!end || end >= ym)) {
+      plannedSum += parseFloat(r[2]) || 0;
+      if (r[9]) replaced.add(r[9]);
+    }
+  });
+  let budgetSum = 0;
+  (S.data.expense_budget || []).forEach(b => {
+    const endD = (b[4] || '').replace(/\//g, '-');
+    if (endD && endD < ym) return;
+    if (replaced.has(b[5])) return;
+    budgetSum += parseFloat(b[2]) || 0;
+  });
+  return budgetSum + plannedSum;
+}
+
+function renderCashDefense() {
+  const runwayNum = $('cf-runway-num');
+  if (!runwayNum) return;
+  const today = new Date(); today.setHours(0, 0, 0, 0);
+  const dayMs = 86400000;
+
+  // ── 現金跑道（保守）──
+  const usdtEntry = S.data.crypto.find(r => r[0]?.toUpperCase() === 'USDT');
+  const usdtTWD = usdtEntry ? (parseFloat(usdtEntry[1]) || 0) * S.prices.usdtwd : 0;
+  const { cashT } = calcTotals();
+  const cashAll = cashT + usdtTWD;
+  const monthlyOut = calcBudgetTotal();
+  const unsettled = _cfUnsettled();
+  // 保守月收：未來 90 天內、未逾期應收 ÷ 3（自動涵蓋「老婆生活費」這類已排程收入；
+  // 逾期款與不確定的加密獎勵不計，避免高估跑道）
+  const horizon = new Date(today.getTime() + 90 * dayMs);
+  const confirmed90 = unsettled
+    .filter(u => u.due && u.due >= today && u.due <= horizon)
+    .reduce((s, u) => s + u.amount, 0);
+  const fixedMonthly = confirmed90 / 3;
+  const burn = monthlyOut - fixedMonthly;
+  const months = burn <= 0 ? Infinity : cashAll / burn;
+  const fiatMonths = burn <= 0 ? Infinity : cashT / burn;
+  const cls = months === Infinity || months > 6 ? 'cf-num-green' : months >= 3 ? 'cf-num-yellow' : 'cf-num-red';
+  runwayNum.textContent = months === Infinity ? '∞' : `${months.toFixed(1)} 個月`;
+  runwayNum.className = `cf-num ${cls}`;
+  $('cf-runway-sub').textContent =
+    `淨月燒 ${fmt(Math.max(burn, 0))}＝支出 ${fmt(monthlyOut)} − 保守月收 ${fmt(Math.round(fixedMonthly))}`;
+  $('cf-runway-fiat').textContent =
+    `純法幣 ${fmt(cashT)} ≈ ${fiatMonths === Infinity ? '∞' : fiatMonths.toFixed(1) + ' 個月'}｜含 USDT ${fmt(Math.round(cashAll))}`;
+
+  // ── 應收 aging ──
+  const agingNum = $('cf-aging-num');
+  const total = unsettled.reduce((s, u) => s + u.amount, 0);
+  const overdue = unsettled.filter(u => u.due && u.due < today);
+  const maxDays = overdue.reduce((m, u) => Math.max(m, Math.round((today - u.due) / dayMs)), 0);
+  const byPayer = new Map();
+  unsettled.forEach(u => byPayer.set(u.payer, (byPayer.get(u.payer) || 0) + u.amount));
+  const topPayer = [...byPayer.entries()].sort((a, b) => b[1] - a[1])[0];
+  agingNum.textContent = total > 0 ? fmt(total) : '無應收';
+  agingNum.className = `cf-num ${overdue.length ? 'cf-num-red' : 'cf-num-green'}`;
+  $('cf-aging-sub').textContent = total > 0
+    ? `${unsettled.length} 筆未收${overdue.length ? `，${overdue.length} 筆逾期（最久 ${maxDays} 天）` : '，無逾期'}`
+    : '目前沒有掛帳的收入';
+  $('cf-aging-conc').textContent = (total > 0 && topPayer)
+    ? `集中度：${topPayer[0]} 占 ${(topPayer[1] / total * 100).toFixed(0)}%`
+    : '';
+  const card = $('cf-aging-card');
+  if (card) card.classList.toggle('cf-card-warn', overdue.length > 0);
+}
+
+function openAgingDetail() {
+  const unsettled = _cfUnsettled().sort((a, b) => (a.due || 0) - (b.due || 0));
+  const today = new Date(); today.setHours(0, 0, 0, 0);
+  let ov = $('cf-aging-overlay');
+  if (!ov) {
+    ov = document.createElement('div');
+    ov.id = 'cf-aging-overlay';
+    ov.className = 'health-overlay';
+    ov.onclick = e => { if (e.target === ov) ov.hidden = true; };
+    document.body.appendChild(ov);
+  }
+  const rows = unsettled.map(u => {
+    const days = u.due ? Math.round((today - u.due) / 86400000) : null;
+    const late = days !== null && days > 0;
+    const dueStr = u.due ? `${u.due.getMonth() + 1}/${u.due.getDate()}` : '未填日期';
+    const state = late ? `逾期 ${days} 天` : (days === null ? '—' : '未到期');
+    return `
+      <div class="health-row${late ? ' health-row-flag' : ''}">
+        <span>${late ? '⚠️ ' : ''}${esc(u.name)}<small class="cf-row-payer">${esc(u.payer)}</small></span>
+        <span class="health-row-nums">${fmt(u.amount)}<b>${dueStr} · ${state}</b></span>
+      </div>`;
+  }).join('');
+  ov.innerHTML = `
+    <div class="health-box">
+      <div class="health-head">
+        <span>應收帳款明細（依到期日排序）</span>
+        <button class="health-close" onclick="document.getElementById('cf-aging-overlay').hidden = true" aria-label="關閉">✕</button>
+      </div>
+      ${rows || '<div class="health-note">目前沒有未入帳的收入。</div>'}
+      <div class="health-note">🔍 逾期＝超過預計入帳日仍未標記入帳。同一付款方占比高＝雞蛋集中在同一個籃子，逾期時風險同時發生。</div>
+    </div>`;
+  ov.hidden = false;
+}
+
+// 90 天雙線預測：逐日模擬。支出＝當月月支出/當月天數 平滑攤提＋一次性事件；
+// 收入＝樂觀（全收，逾期視為今天入帳）與 保守（逾期不算）兩條。
+function computeCashflowForecast(days = 90) {
+  const today = new Date(); today.setHours(0, 0, 0, 0);
+  const dayMs = 86400000;
+  const usdtEntry = S.data.crypto.find(r => r[0]?.toUpperCase() === 'USDT');
+  const usdtTWD = usdtEntry ? (parseFloat(usdtEntry[1]) || 0) * S.prices.usdtwd : 0;
+  const start = calcTotals().cashT + usdtTWD;
+
+  // 收入入帳日 → 金額（以「距今天數」為 key）
+  const optIncome = new Map(), conIncome = new Map();
+  _cfUnsettled().forEach(u => {
+    if (!u.due) return;
+    const d = Math.round((u.due - today) / dayMs);
+    if (d > days) return;
+    const dOpt = Math.max(d, 0); // 樂觀：逾期款視為今天入帳
+    optIncome.set(dOpt, (optIncome.get(dOpt) || 0) + u.amount);
+    if (d >= 0) conIncome.set(d, (conIncome.get(d) || 0) + u.amount);
+  });
+
+  // 一次性支出（距今天數 → 金額）：未來月份的 onetime planned ＋ 未付的規劃中體驗
+  const lumps = new Map();
+  const todayYM = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}`;
+  const addLump = (y, m, amount) => {
+    const first = new Date(y, m - 1, 1);
+    const d = Math.max(Math.round((first - today) / dayMs), 0);
+    if (d <= days && amount > 0) lumps.set(d, (lumps.get(d) || 0) + amount);
+  };
+  (S.data.expense_planned || []).forEach(r => {
+    if ((r[7] || 'monthly') !== 'onetime') return;
+    const start_ = (r[5] || '').replace(/\//g, '-');
+    // 只算未來月份（本月的一次性可能已發生，避免重複扣）
+    if (start_ && start_ > todayYM) addLump(+start_.slice(0, 4), +start_.slice(5, 7), parseFloat(r[2]) || 0);
+  });
+  (S.data.bucket_list || []).forEach(r => {
+    const b = _bucketRow(r);
+    if (b.status !== '規劃中' || b.paid || !b.date) return;
+    const [y, m] = b.date.split('/').map(Number);
+    if (y && m) addLump(y, m, b.amount * 10000);
+  });
+
+  const labels = [], opt = [], con = [];
+  let balOpt = start, balCon = start;
+  let dailyOut = 0, curYM = '';
+  let minIdx = 0, minVal = Infinity;
+  for (let d = 0; d <= days; d++) {
+    const date = new Date(today.getTime() + d * dayMs);
+    const ym = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+    if (ym !== curYM) {
+      curYM = ym;
+      dailyOut = _cfBudgetAtYM(ym) / new Date(date.getFullYear(), date.getMonth() + 1, 0).getDate();
+    }
+    const lump = lumps.get(d) || 0;
+    balOpt += (optIncome.get(d) || 0) - dailyOut - lump;
+    balCon += (conIncome.get(d) || 0) - dailyOut - lump;
+    labels.push(`${date.getMonth() + 1}/${date.getDate()}`);
+    opt.push(Math.round(balOpt));
+    con.push(Math.round(balCon));
+    if (balCon < minVal) { minVal = balCon; minIdx = d; }
+  }
+  return { labels, opt, con, minIdx, minVal };
+}
+
+function renderCashflowForecast() {
+  const canvas = $('cashflow-chart');
+  if (!canvas) return;
+  if (S.prices.usdtwd < 10) return; // 價格未載入先不畫，避免假曲線
+  const f = computeCashflowForecast(90);
+  const cc = chartColors();
+  const css = getComputedStyle(document.documentElement);
+  const cOpt = css.getPropertyValue('--success').trim() || '#22c55e';
+  const cCon = css.getPropertyValue('--warn').trim() || '#d97706';
+  const minPointR = f.con.map((_, i) => i === f.minIdx ? 4 : 0);
+  if (S.charts.cashflow) S.charts.cashflow.destroy();
+  S.charts.cashflow = new Chart(canvas.getContext('2d'), {
+    type: 'line',
+    data: {
+      labels: f.labels,
+      datasets: [
+        { label: '樂觀', data: f.opt, borderColor: cOpt, borderWidth: 2, tension: 0.3, pointRadius: 0, pointHoverRadius: 5 },
+        { label: '保守', data: f.con, borderColor: cCon, borderWidth: 2, tension: 0.3,
+          pointRadius: minPointR, pointHoverRadius: 5, pointBackgroundColor: cCon, pointBorderColor: 'transparent' },
+      ],
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      layout: { padding: { top: 8, right: 8, bottom: 0, left: 4 } },
+      plugins: {
+        legend: { display: false },
+        tooltip: { callbacks: { label(c) { return ` ${c.dataset.label}: ${fmt(c.parsed.y)}`; } } },
+      },
+      scales: {
+        x: { grid: { display: false }, ticks: { color: cc.tick, font: { size: 10 }, maxTicksLimit: 6, maxRotation: 0 }, border: { display: false } },
+        y: { grid: { display: false }, ticks: { color: cc.tick, font: { size: 10 }, maxTicksLimit: 4, callback: v => fmtWan(v) }, border: { display: false } },
+      },
+    },
+  });
+  const note = $('cf-chart-note');
+  if (note) {
+    const lbl = f.labels[f.minIdx];
+    note.textContent = f.minVal < 0
+      ? `⚠️ 保守情境 ${lbl} 見底（${fmt(Math.round(f.minVal))}）——逾期應收若收不回，${lbl} 前需補現金`
+      : `保守線最低點：${lbl} ≈ ${fmt(Math.round(f.minVal))}（樂觀與保守的差＝逾期應收 ${fmt(f.opt[f.minIdx] - f.con[f.minIdx])}）`;
+  }
 }
 
 // ══════════════════════════════════════════════════════════════
