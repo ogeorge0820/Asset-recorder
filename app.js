@@ -4,7 +4,7 @@
 // 應用版本號 — 重大功能變更才升版（小修補只更新 BUILD_DATE）
 const APP_VERSION = 'v1.0';
 // Build 時間：每次修改 code 後手動更新此時間（UTC+8 台北時間）
-const BUILD_DATE = '2026/07/22 17:30';
+const BUILD_DATE = '2026/07/27 14:55';
 
 const SPREADSHEET_ID = '1lpRpxVzWaYUqL-jVPOAJCtjsJUIedPYYyOx4gg4PPFU';
 const CLIENT_ID = '149884248440-85f8dhc6ub9up10sv0f89e3e0itrnooj.apps.googleusercontent.com';
@@ -4641,6 +4641,74 @@ function scheduleDailySnapshot() {
 }
 
 // ══════════════════════════════════════════════════════════════
+// 資料健檢：開機時比對「雲端最新快照」vs「即時計算」（帳本口徑）
+// 任一大項差異 > 2% → 總覽頁顯示警示徽章，點開看明細。
+// 註：USDT 在畫面上歸「流動現金」屬視覺重分類（renderCash/renderPie）；
+//     快照與 calcTotals 皆按帳本口徑（USDT 歸加密），本比對不受其影響。
+// ══════════════════════════════════════════════════════════════
+const HEALTH_DIFF_THRESHOLD = 0.02; // 2%
+let _healthReport = null;
+
+function runDataHealthCheck() {
+  const badge = $('health-badge');
+  if (!badge) return;
+  // 價格沒載齊就不健檢，避免用殘缺報價誤報
+  if (S.prices.usdtwd < 10 || Object.keys(S.prices.errs).length) return;
+  const snaps = S.data.daily_snapshots || [];
+  if (!snaps.length) return;
+  const snap = snaps[snaps.length - 1];
+  const { cashT, twT, usT, cryT, ins, re, debt, net } = calcTotals();
+  const items = [
+    { label: '流動現金', snap: parseFloat(snap[1]) || 0, live: cashT },
+    { label: '台股',     snap: parseFloat(snap[2]) || 0, live: twT },
+    { label: '美股',     snap: parseFloat(snap[3]) || 0, live: usT },
+    { label: '加密貨幣', snap: parseFloat(snap[4]) || 0, live: cryT },
+    { label: '儲蓄險',   snap: parseFloat(snap[5]) || 0, live: ins },
+    { label: '房地產',   snap: parseFloat(snap[6]) || 0, live: re },
+    { label: '負債',     snap: parseFloat(snap[7]) || 0, live: debt },
+    { label: '淨資產',   snap: parseFloat(snap[8]) || 0, live: net },
+  ].map(it => {
+    const diffPct = Math.abs(it.live - it.snap) / Math.max(Math.abs(it.snap), 1);
+    return { ...it, diffPct, flag: diffPct > HEALTH_DIFF_THRESHOLD };
+  });
+  const flagged = items.filter(it => it.flag);
+  _healthReport = { date: snap[0], items, flagged };
+  if (flagged.length) {
+    $('health-badge-text').textContent = `資料健檢：${flagged.length} 項與 ${snap[0]} 快照差異 > 2%`;
+    badge.hidden = false;
+  } else {
+    badge.hidden = true;
+  }
+}
+
+function openHealthDetail() {
+  if (!_healthReport) return;
+  let ov = $('health-overlay');
+  if (!ov) {
+    ov = document.createElement('div');
+    ov.id = 'health-overlay';
+    ov.className = 'health-overlay';
+    ov.onclick = e => { if (e.target === ov) ov.hidden = true; };
+    document.body.appendChild(ov);
+  }
+  const rows = _healthReport.items.map(it => `
+    <div class="health-row${it.flag ? ' health-row-flag' : ''}">
+      <span>${it.flag ? '⚠️ ' : ''}${it.label}</span>
+      <span class="health-row-nums">${fmt(it.snap)} → ${fmt(it.live)}<b>${(it.diffPct * 100).toFixed(1)}%</b></span>
+    </div>`).join('');
+  ov.innerHTML = `
+    <div class="health-box">
+      <div class="health-head">
+        <span>資料健檢 · 與 ${_healthReport.date} 快照比對</span>
+        <button class="health-close" onclick="document.getElementById('health-overlay').hidden = true" aria-label="關閉">✕</button>
+      </div>
+      ${rows}
+      <div class="health-note">🔍 快照＝雲端最後記下的數字；即時＝現在算出的數字。差異大通常代表快照日之後有持倉/設定變動，或快照寫入失敗。<br>註：畫面上 USDT 顯示於「流動現金」是視覺分類；本比對與快照同採帳本口徑（USDT 歸加密貨幣）。</div>
+    </div>`;
+  ov.hidden = false;
+}
+
+// ══════════════════════════════════════════════════════════════
 // MODAL
 // ══════════════════════════════════════════════════════════════
 function openModal(title, fields, onOK) {
@@ -6907,6 +6975,10 @@ async function initApp() {
     if (marchCount > 0) showToast(`已新增 ${marchCount} 筆 3 月份質押收益`, 'ok');
 
     renderKPIs();
+
+    // 資料健檢：必須在「啟動時補快照」之前跑，才能比對到雲端原始的最新快照
+    // （補快照會用即時值覆寫今日列，之後再比就永遠一致、失去偵測意義）
+    try { runDataHealthCheck(); } catch (e) { console.warn('healthCheck:', e); }
 
     // 啟動時補快照：若今日無快照（用戶昨晚未開 app 導致昨日斷點），立即寫入當日開盤基準
     // 若今日已有快照但與即時值明顯偏離（例：早盤存的舊值 vs 美股收盤後的新值），也 upsert 覆寫
