@@ -4,7 +4,7 @@
 // 應用版本號 — 重大功能變更才升版（小修補只更新 BUILD_DATE）
 const APP_VERSION = 'v1.0';
 // Build 時間：每次修改 code 後手動更新此時間（UTC+8 台北時間）
-const BUILD_DATE = '2026/07/27 15:16';
+const BUILD_DATE = '2026/07/27 15:34';
 
 const SPREADSHEET_ID = '1lpRpxVzWaYUqL-jVPOAJCtjsJUIedPYYyOx4gg4PPFU';
 const CLIENT_ID = '149884248440-85f8dhc6ub9up10sv0f89e3e0itrnooj.apps.googleusercontent.com';
@@ -4918,19 +4918,56 @@ function renderCashflowForecast() {
   if (S.prices.usdtwd < 10) return; // 價格未載入先不畫，避免假曲線
   const f = computeCashflowForecast(90);
   const cc = chartColors();
-  const css = getComputedStyle(document.documentElement);
-  const cOpt = css.getPropertyValue('--success').trim() || '#22c55e';
-  const cCon = css.getPropertyValue('--warn').trim() || '#d97706';
+  // 安全區門檻沿用跑道卡的淨月燒算法（<3 個月紅 / 3–6 黃 / >6 綠），卡片燈號與底色同一套口徑
+  const today = new Date(); today.setHours(0, 0, 0, 0);
+  const horizon = new Date(today.getTime() + 90 * 86400000);
+  const confirmed90 = _cfUnsettled()
+    .filter(u => u.due && u.due >= today && u.due <= horizon)
+    .reduce((s, u) => s + u.amount, 0);
+  const burn = calcBudgetTotal() - confirmed90 / 3;
+
+  const cMain = '#3b82f6';
+  const dataMin = Math.min(...f.con), dataMax = Math.max(...f.opt);
+  // 縱軸只畫有變化的區間；紅區上緣只在離保守線夠近（一個資料振幅內）時才拉進畫面，避免重演壓扁問題
+  const nearDanger = burn > 0 && burn * 3 > dataMin - (dataMax - dataMin);
+  const lowRef = nearDanger ? Math.min(dataMin, burn * 3) : dataMin;
+  const pad = Math.max((dataMax - lowRef) * 0.08, 10000);
+  const yMin = dataMin < 0 ? dataMin - pad : Math.max(0, lowRef - pad);
+  const yMax = dataMax + pad;
+
+  const cfZones = {
+    id: 'cfZones',
+    beforeDraw(chart) {
+      if (burn <= 0) return;
+      const { ctx, chartArea: a, scales: { y } } = chart;
+      if (!a) return;
+      const bands = [
+        [burn * 6, y.max, 'rgba(34,197,94,0.08)'],
+        [burn * 3, burn * 6, 'rgba(234,179,8,0.10)'],
+        [y.min, burn * 3, 'rgba(239,68,68,0.12)'],
+      ];
+      bands.forEach(([lo, hi, color]) => {
+        const top = Math.max(y.getPixelForValue(hi), a.top);
+        const bot = Math.min(y.getPixelForValue(lo), a.bottom);
+        if (bot <= top) return;
+        ctx.fillStyle = color;
+        ctx.fillRect(a.left, top, a.right - a.left, bot - top);
+      });
+    },
+  };
+
   const minPointR = f.con.map((_, i) => i === f.minIdx ? 4 : 0);
   if (S.charts.cashflow) S.charts.cashflow.destroy();
   S.charts.cashflow = new Chart(canvas.getContext('2d'), {
     type: 'line',
+    plugins: [cfZones],
     data: {
       labels: f.labels,
       datasets: [
-        { label: '樂觀', data: f.opt, borderColor: cOpt, borderWidth: 2, tension: 0.3, pointRadius: 0, pointHoverRadius: 5 },
-        { label: '保守', data: f.con, borderColor: cCon, borderWidth: 2, tension: 0.3,
-          pointRadius: minPointR, pointHoverRadius: 5, pointBackgroundColor: cCon, pointBorderColor: 'transparent' },
+        { label: '樂觀', data: f.opt, borderColor: 'rgba(59,130,246,0.45)', borderWidth: 1.5, borderDash: [4, 4],
+          tension: 0.3, pointRadius: 0, pointHoverRadius: 5, fill: '+1', backgroundColor: 'rgba(59,130,246,0.10)' },
+        { label: '保守', data: f.con, borderColor: cMain, borderWidth: 2, tension: 0.3,
+          pointRadius: minPointR, pointHoverRadius: 5, pointBackgroundColor: cMain, pointBorderColor: 'transparent' },
       ],
     },
     options: {
@@ -4942,7 +4979,8 @@ function renderCashflowForecast() {
       },
       scales: {
         x: { grid: { display: false }, ticks: { color: cc.tick, font: { size: 10 }, maxTicksLimit: 6, maxRotation: 0 }, border: { display: false } },
-        y: { grid: { display: false }, ticks: { color: cc.tick, font: { size: 10 }, maxTicksLimit: 4, callback: v => fmtWan(v) }, border: { display: false } },
+        y: { min: yMin, max: yMax, grid: { display: false },
+          ticks: { color: cc.tick, font: { size: 10 }, maxTicksLimit: 5, callback: v => fmtWan(v) }, border: { display: false } },
       },
     },
   });
@@ -4951,7 +4989,7 @@ function renderCashflowForecast() {
     const lbl = f.labels[f.minIdx];
     note.textContent = f.minVal < 0
       ? `⚠️ 保守情境 ${lbl} 見底（${fmt(Math.round(f.minVal))}）——逾期應收若收不回，${lbl} 前需補現金`
-      : `保守線最低點：${lbl} ≈ ${fmt(Math.round(f.minVal))}（樂觀與保守的差＝逾期應收 ${fmt(f.opt[f.minIdx] - f.con[f.minIdx])}）`;
+      : `最低點 ${lbl} ≈ ${fmt(Math.round(f.minVal))}｜淡藍帶＝逾期應收 ${fmt(f.opt[f.minIdx] - f.con[f.minIdx])} 收回時的差距｜底色紅黃綠門檻同跑道卡（3／6 個月淨月燒）`;
   }
 }
 

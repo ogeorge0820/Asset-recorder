@@ -2664,8 +2664,8 @@ body.ov2-animated .ov2-hero-sub-num {
 .cf-sub2 { margin-top: 2px; font-size: 11px; color: var(--text-muted); font-variant-numeric: tabular-nums; }
 .cf-legend { margin-left: auto; display: flex; align-items: center; gap: 6px; font-size: 10px; font-weight: 500; color: var(--text-muted); }
 .cf-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
-.cf-dot-opt { background: var(--success); }
-.cf-dot-con { background: var(--warn, #d97706); }
+.cf-dot-opt { background: rgba(59,130,246,0.35); }
+.cf-dot-con { background: #3b82f6; }
 .cf-chart-wrap { position: relative; height: 200px; }
 @media (min-width: 640px) { .cf-chart-wrap { height: 240px; } }
 .cf-row-payer { display: block; font-size: 10px; color: var(--text-muted); font-weight: 400; }
