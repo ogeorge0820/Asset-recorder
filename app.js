@@ -4,7 +4,7 @@
 // 應用版本號 — 重大功能變更才升版（小修補只更新 BUILD_DATE）
 const APP_VERSION = 'v1.0';
 // Build 時間：每次修改 code 後手動更新此時間（UTC+8 台北時間）
-const BUILD_DATE = '2026/08/24 15:49';
+const BUILD_DATE = '2026/08/24 15:56';
 
 const SPREADSHEET_ID = '1lpRpxVzWaYUqL-jVPOAJCtjsJUIedPYYyOx4gg4PPFU';
 const CLIENT_ID = '149884248440-85f8dhc6ub9up10sv0f89e3e0itrnooj.apps.googleusercontent.com';
@@ -17,7 +17,7 @@ const PROXY_BACKUP = 'https://api.codetabs.com/v1/proxy/?quest=';
 // 雲端價格 API：試算表 Apps Script 的網頁部署（doGet，見 apps-script/nightly-snapshot.gs）。
 // Google 機房抓 Yahoo 暢通（與瀏覽器端 Binance 直連互補），台美股/匯率走此路。
 // 空字串＝尚未部署，跳過此層直接走備援。
-const PRICE_API_URL = '';
+const PRICE_API_URL = 'https://script.google.com/macros/s/AKfycbz0r8lwc1XdtczJTXhIJqmed6b8rlMplmYbm4xD2T58RgjKYzay1QOLmujb8Sq46csA/exec';
 
 // George，未來每個月初請在這裡更新上月底的快照金額
 const LAST_MONTH_AVAILABLE_SNAPSHOT = 17819156;
