@@ -4,13 +4,20 @@
 // 應用版本號 — 重大功能變更才升版（小修補只更新 BUILD_DATE）
 const APP_VERSION = 'v1.0';
 // Build 時間：每次修改 code 後手動更新此時間（UTC+8 台北時間）
-const BUILD_DATE = '2026/07/27 15:34';
+const BUILD_DATE = '2026/08/24 15:49';
 
 const SPREADSHEET_ID = '1lpRpxVzWaYUqL-jVPOAJCtjsJUIedPYYyOx4gg4PPFU';
 const CLIENT_ID = '149884248440-85f8dhc6ub9up10sv0f89e3e0itrnooj.apps.googleusercontent.com';
 const SCOPE = 'https://www.googleapis.com/auth/spreadsheets';
-const PROXY = 'https://corsproxy.io/?';
-const PROXY_BACKUP = 'https://api.allorigins.win/raw?url=';
+// corsproxy.io 免費匿名版 2026/08 永久停用（403 keyless_legacy_url）→ 剔除。
+// allorigins 升第一位、codetabs 備援（與新聞鏈同款）；Yahoo 系報價已改走雲端價格 API，
+// proxy 僅剩 Binance/CoinGecko 直連失敗時的備援用途。
+const PROXY = 'https://api.allorigins.win/raw?url=';
+const PROXY_BACKUP = 'https://api.codetabs.com/v1/proxy/?quest=';
+// 雲端價格 API：試算表 Apps Script 的網頁部署（doGet，見 apps-script/nightly-snapshot.gs）。
+// Google 機房抓 Yahoo 暢通（與瀏覽器端 Binance 直連互補），台美股/匯率走此路。
+// 空字串＝尚未部署，跳過此層直接走備援。
+const PRICE_API_URL = '';
 
 // George，未來每個月初請在這裡更新上月底的快照金額
 const LAST_MONTH_AVAILABLE_SNAPSHOT = 17819156;
@@ -118,9 +125,8 @@ const SNAPSHOT_SEEDS = [
   ['2026/03','0','0','0','0','0','0','0','21117892'],
 ];
 
-// Binance / CoinGecko 原生回 Access-Control-Allow-Origin:* → 直連優先；
-// corsproxy.io 免費方案已全面回 403、allorigins 大 payload（如 730d klines）常逾時，proxy 只當備援。
-// Yahoo Finance 不支援 CORS，不在此清單，維持走 proxy。
+// Binance / CoinGecko 原生回 Access-Control-Allow-Origin:* → 直連優先，proxy 只當備援。
+// Yahoo Finance 不支援 CORS 且免費 proxy 已不可靠 → 不走此函式，走 PRICE_API_URL 雲端代抓。
 const DIRECT_CORS_OK = /^https:\/\/(api\.binance\.com|api\.coingecko\.com)\//;
 
 async function proxyFetch(url, opts = {}) {
@@ -718,19 +724,28 @@ async function fetchAllPrices(force = false) {
   }
 
   setPriceStatus('spin');
-  const results = await Promise.allSettled([
-    fetchUSDTWD(),
-    fetchFXRates(),
-    fetchTWPrices(),
-    fetchUSPrices(),
-    fetchCryptoPrices(),
-  ]);
+  S.prices.stale = null;
+  // ── 第一優先：雲端價格 API 一次取回 Yahoo 系全部（台美股＋匯率）；失敗才走 proxy 舊路
+  let cloudOK = false;
+  if (PRICE_API_URL) {
+    try { cloudOK = await fetchYahooViaCloud(); }
+    catch (e) { console.warn('雲端價格 API 失敗，退回 proxy 舊路:', e.message); }
+  }
+  const tasks = [fetchCryptoPrices()];
+  if (!cloudOK) tasks.push(fetchUSDTWD(), fetchFXRates(), fetchTWPrices(), fetchUSPrices());
+  const results = await Promise.allSettled(tasks);
+  // ── 補救層 1：匯率缺漏改走 er-api 直連（CORS 官方支援）
+  if (S.prices.errs.usdtwd || Object.keys(S.prices.errs).some(k => k.startsWith('fx_'))) {
+    try { await fetchFXFallbackErApi(); } catch (e) { console.warn('er-api 匯率備援失敗:', e.message); }
+  }
+  // ── 補救層 2：台美股缺價用最近一晚快照的 prices_json 頂上
+  applySnapshotPriceFallback();
   S.lastUpdate = new Date();
   const hasErr = results.some(r => r.status === 'rejected') || Object.keys(S.prices.errs).length > 0;
-  setPriceStatus(hasErr ? 'err' : 'ok');
+  setPriceStatus(hasErr ? 'err' : (S.prices.stale ? 'stale' : 'ok'));
 
-  // ── 若無錯誤才寫入快取，避免把失敗的空值快取下來
-  if (!hasErr) {
+  // ── 若無錯誤且非快照價才寫入快取，避免把失敗的空值或過期價快取下來
+  if (!hasErr && !S.prices.stale) {
     try {
       localStorage.setItem(PRICE_CACHE_KEY, JSON.stringify({
         ts:     Date.now(),
@@ -809,6 +824,74 @@ async function fetchUSPrices() {
       console.warn(`US ${sym}:`, e.message);
     }
   }));
+}
+
+// ── 雲端價格 API（Apps Script doGet）：一個請求取回 usdtwd＋匯率＋台股＋美股
+//    成功回 true；任何一檔沒抓到會設對應 errs key，交給後面的備援層補
+async function fetchYahooViaCloud() {
+  const twSyms = S.data.tw.map(r => r[0]).filter(Boolean);
+  const usSyms = S.data.us.map(r => r[0]).filter(Boolean);
+  const fxCcys = ['SGD', 'JPY', 'EUR', 'HKD'];
+  const qs = `?tw=${twSyms.join(',')}&us=${usSyms.join(',')}&fx=${fxCcys.join(',')}`;
+  const r = await fetch(PRICE_API_URL + qs, { signal: AbortSignal.timeout(20000) });
+  if (!r.ok) throw new Error(`HTTP ${r.status}`);
+  const d = await r.json();
+  if (!d || d.ok !== true) throw new Error('payload 格式不符');
+  if (d.usdtwd > 10) {
+    S.prices.usdtwd = d.usdtwd; S.prices.fx.USD = d.usdtwd; S.prices.fx.TWD = 1;
+    delete S.prices.errs.usdtwd;
+  } else S.prices.errs.usdtwd = true;
+  fxCcys.forEach(ccy => {
+    if (d.fx && d.fx[ccy] > 0) { S.prices.fx[ccy] = d.fx[ccy]; delete S.prices.errs[`fx_${ccy}`]; }
+    else S.prices.errs[`fx_${ccy}`] = true;
+  });
+  twSyms.forEach(sym => {
+    if (d.tw && d.tw[sym] > 0) { S.prices.tw[sym] = d.tw[sym]; delete S.prices.errs[`tw_${sym}`]; }
+    else S.prices.errs[`tw_${sym}`] = true;
+  });
+  usSyms.forEach(sym => {
+    if (d.us && d.us[sym] > 0) { S.prices.us[sym] = d.us[sym]; delete S.prices.errs[`us_${sym}`]; }
+    else S.prices.errs[`us_${sym}`] = true;
+  });
+  return true;
+}
+
+// ── 匯率備援：open.er-api.com（官方 CORS、免金鑰）。USD 基準一次回全部幣別，
+//    X→TWD 用交叉匯率換算（TWD/X）。只補 errs 裡缺的，不覆蓋已成功的值
+async function fetchFXFallbackErApi() {
+  const r = await fetch('https://open.er-api.com/v6/latest/USD', { signal: AbortSignal.timeout(9000) });
+  if (!r.ok) throw new Error(`HTTP ${r.status}`);
+  const d = await r.json();
+  const twd = d?.rates?.TWD;
+  if (!(twd > 10)) throw new Error('無 TWD 匯率');
+  if (S.prices.errs.usdtwd) {
+    S.prices.usdtwd = twd; S.prices.fx.USD = twd; S.prices.fx.TWD = 1;
+    delete S.prices.errs.usdtwd;
+  }
+  Object.keys(S.prices.errs).filter(k => k.startsWith('fx_')).forEach(k => {
+    const cross = d.rates[k.slice(3)];
+    if (cross > 0) { S.prices.fx[k.slice(3)] = twd / cross; delete S.prices.errs[k]; }
+  });
+}
+
+// ── 台美股缺價備援：拿最近一晚快照的 prices_json 頂上（畫面標注快照價，不寫入價格快取）
+function applySnapshotPriceFallback() {
+  const miss = Object.keys(S.prices.errs).filter(k => k.startsWith('tw_') || k.startsWith('us_'));
+  if (!miss.length) return;
+  const snaps = S.data.daily_snapshots || [];
+  for (let i = snaps.length - 1, tried = 0; i >= 0 && tried < 7; i--, tried++) {
+    let pj;
+    try { pj = JSON.parse(snaps[i][9] || 'null'); } catch { continue; }
+    if (!pj || (!pj.tw && !pj.us)) continue;
+    let hit = false;
+    miss.forEach(k => {
+      const kind = k.slice(0, 2), sym = k.slice(3);
+      const p = pj[kind]?.[sym];
+      if (p > 0) { S.prices[kind][sym] = p; delete S.prices.errs[k]; hit = true; }
+    });
+    if (hit) S.prices.stale = snaps[i][0].slice(5); // 'MM/DD'
+    return;
+  }
 }
 
 async function fetchCryptoPrices() {
@@ -909,6 +992,9 @@ async function validateCoinGecko(symbol) {
 }
 
 function setPriceStatus(state) {
+  // 'stale'＝台美股用快照價頂替：視覺沿用綠燈，只加文字標注
+  const stale = state === 'stale';
+  if (stale) state = 'ok';
   // Management page bar
   const dot = $('price-dot'), ts = $('price-ts'), fail = $('price-fail-lbl');
   if (dot) dot.className = `dot ${state}`;
@@ -933,12 +1019,15 @@ function setPriceStatus(state) {
       if (hdrDot) hdrDot.className = 'update-dot err';
       if (sbDot)  sbDot.className  = 'update-dot err';
     } else {
-      if (fail) fail.textContent = '';
+      if (fail) fail.innerHTML = stale
+        ? `<span style="color:var(--warn)">◔ 台美股為 ${S.prices.stale} 快照價（即時源暫斷）</span>`
+        : '';
       if (hdrDot) hdrDot.className = 'update-dot ok';
       if (sbDot)  sbDot.className  = 'update-dot ok';
     }
-    if (hdrTs) hdrTs.textContent = `${t} 更新`;
-    if (sbTs)  sbTs.textContent  = `${t} 更新`;
+    const staleTag = stale ? '（含快照價）' : '';
+    if (hdrTs) hdrTs.textContent = `${t} 更新${staleTag}`;
+    if (sbTs)  sbTs.textContent  = `${t} 更新${staleTag}`;
     const menuTs = $('menu-update-ts'); if (menuTs) menuTs.textContent = `${t}`;
     // Mobile footer dot
     const fDot = $('mobile-footer-dot');

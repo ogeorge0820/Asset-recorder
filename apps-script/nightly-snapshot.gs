@@ -491,3 +491,60 @@ function cryptoHistClose_(sym, endTs) {
   if (p) return p;
   throw new Error('no hist close: ' + sym);
 }
+
+// ══════════════════════════════════════════════════════════════
+// 即時價格 API（2026/08/24 加）
+// app.js 直接呼叫此端點取台美股與匯率——瀏覽器端免費 CORS proxy
+// （corsproxy 永久停用、allorigins/codetabs 不穩）相繼陣亡後，
+// Yahoo 系報價改由 Google 機房代抓（此處抓 Yahoo 暢通，與瀏覽器端 Binance 直連互補）。
+// 部署：編輯器右上「部署」→ 新增部署 → 類型選「網頁應用程式」→
+//      執行身分「我」、存取權「任何人」→ 複製 /exec 網址貼進 app.js 的 PRICE_API_URL。
+// 安全：只回傳公開市場價格；不讀取、不回傳任何試算表內容。
+// ══════════════════════════════════════════════════════════════
+function doGet(e) {
+  var p = (e && e.parameter) || {};
+  var take = function (key) {
+    return String(p[key] || '').split(',')
+      .map(function (s) { return s.trim(); }).filter(Boolean).slice(0, 30);
+  };
+  var jobs = [{ key: 'usdtwd', ticker: 'USDTWD=X' }];
+  take('fx').forEach(function (c) {
+    c = c.toUpperCase();
+    if (c !== 'TWD' && c !== 'USD') jobs.push({ key: 'fx_' + c, ticker: c + 'TWD=X' });
+  });
+  take('tw').forEach(function (s) { jobs.push({ key: 'tw_' + s, ticker: s + '.TW' }); });
+  take('us').forEach(function (s) { jobs.push({ key: 'us_' + s, ticker: s }); });
+
+  var out = { ok: true, ts: new Date().toISOString(), usdtwd: null, fx: {}, tw: {}, us: {}, errs: [] };
+  // 一輪 fetchAll 並行抓 query1，失敗的個別用 yahooPrice_ 重試（會輪替 query1/query2）
+  var reqs = jobs.map(function (j) {
+    return {
+      url: 'https://query1.finance.yahoo.com/v8/finance/chart/' + encodeURIComponent(j.ticker),
+      muteHttpExceptions: true, followRedirects: true,
+      headers: { 'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36' }
+    };
+  });
+  var resps = [];
+  try { resps = UrlFetchApp.fetchAll(reqs); } catch (err) { resps = []; }
+  jobs.forEach(function (j, i) {
+    var price = null;
+    var r = resps[i];
+    if (r && r.getResponseCode() === 200) {
+      try {
+        var d = JSON.parse(r.getContentText());
+        price = d && d.chart && d.chart.result && d.chart.result[0] &&
+          d.chart.result[0].meta && d.chart.result[0].meta.regularMarketPrice;
+      } catch (err2) {}
+    }
+    if (!price) {
+      try { price = yahooPrice_(j.ticker); }
+      catch (err3) { out.errs.push(j.key); return; }
+    }
+    if (j.key === 'usdtwd') out.usdtwd = price;
+    else if (j.key.indexOf('fx_') === 0) out.fx[j.key.slice(3)] = price;
+    else if (j.key.indexOf('tw_') === 0) out.tw[j.key.slice(3)] = price;
+    else out.us[j.key.slice(3)] = price;
+  });
+  return ContentService.createTextOutput(JSON.stringify(out))
+    .setMimeType(ContentService.MimeType.JSON);
+}
