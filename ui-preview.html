@@ -12,23 +12,31 @@
 @media(min-width:769px){.chart text{font-size:12px}.hero .chart svg{max-height:225px}.sidebar{display:flex;position:fixed;inset:0 auto 0 0;width:196px;padding:27px 16px 22px;background:#fafdff;border-right:1px solid var(--line);flex-direction:column}.sidebar .brand{padding:0 9px 32px}.side-links{display:grid;gap:9px}.side-links button{display:flex;align-items:center;gap:14px;text-align:left;padding:13px 15px;border-radius:11px;font-size:13px;min-height:46px}.side-links button[aria-current=page]{background:var(--blue-pale);color:var(--blue);font-weight:650}.side-links .pending small{margin-left:auto;font-size:9px}.side-bottom{margin-top:auto;color:var(--muted);font-size:11px;padding:15px 10px}.profile{display:flex;align-items:center;gap:10px;margin-bottom:15px;color:var(--ink);font-size:13px}.avatar{width:32px;height:32px;border-radius:50%;display:grid;place-items:center;background:var(--blue-pale);color:var(--blue)}.workspace{margin-left:196px}.topbar{padding:20px 30px;border-bottom:1px solid var(--line)}.topbar .brand{font-size:13px;font-weight:450;color:var(--muted)}.topbar .brandmark{display:none}.top-meta .muted{display:block}main{padding:30px 28px 30px}.page-head{margin-bottom:24px}h1{font-size:29px}.hero-grid{grid-template-columns:minmax(0,1.85fr) minmax(245px,1fr);gap:20px}.hero{padding:28px 28px 14px}.hero .balance{font-size:45px}.allocation{padding:25px 22px}.donut-wrap{width:165px;height:165px;margin:22px auto}.lower-grid{grid-template-columns:minmax(0,1.4fr) minmax(0,1fr)}.runways{grid-template-columns:1fr}.income-strip{grid-template-columns:repeat(4,1fr)}.income-stat{border-bottom:0;border-right:1px solid var(--line)}.income-stat:last-child{border-right:0}.mover-columns{grid-template-columns:repeat(3,1fr);gap:28px}.mover-column+.mover-column{border-left:1px solid var(--line);padding-left:24px}.bottom-nav{display:none}.notice{bottom:28px}.hero .chart{margin-top:10px}}
 @media(min-width:1200px){main{padding:34px 36px}.sidebar{width:214px}.workspace{margin-left:214px}.hero-grid{grid-template-columns:minmax(0,2.15fr) minmax(285px,1fr)}.balance,.hero .balance{font-size:49px}.hero{padding:30px 32px 16px}.lower-grid{grid-template-columns:minmax(0,1.25fr) minmax(0,1fr)}.runways{grid-template-columns:1fr 1fr}.runway{padding:23px 20px}.runway-num{font-size:36px;margin-top:22px}.runway-art{top:70px;right:18px;width:40px}.allocation{padding:27px}.donut-wrap{width:180px;height:180px}.income-stat{padding:20px 24px}}
 @media(prefers-reduced-motion:no-preference){button{transition:background .16s,color .16s}.asset-row:hover{background:var(--bg)}.round-button:hover{background:var(--blue-pale)}}
+[hidden]{display:none!important}
+:root{--danger-soft:#fff0f3;--warm:#fff5e7}
+.account-original small{display:block;font-size:10px;color:var(--muted)}
+.subnav{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin:0 0 20px}.subnav button{min-height:40px;padding:8px 15px;border-radius:10px;font-size:13px;color:var(--muted)}.subnav button[aria-pressed=true]{background:var(--blue-pale);color:var(--blue-deep);font-weight:600}
+.primary,.secondary,.danger-button{min-height:42px;padding:9px 16px;border-radius:10px;display:inline-flex;align-items:center;justify-content:center;gap:8px;font-size:13px;font-weight:550}.primary{background:var(--blue);color:white}.secondary{background:var(--paper);border:1px solid var(--line);color:var(--blue)}.danger-button{background:var(--danger-soft);color:var(--negative)}.text-button{color:var(--blue);font-size:12px;min-height:36px;padding:5px 10px}.toolbar{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:22px}.toolbar p{font-size:12px;color:var(--muted)}.section-space{margin-top:24px}.padded{padding:22px}.block-note{padding:12px 16px;background:var(--blue-pale);border-radius:11px;color:var(--blue-deep);font-size:12px;line-height:1.8;margin-top:18px}.subtle-note{font-size:12px;color:var(--muted);margin-top:12px}.management-accounts{margin-top:16px}.record-row{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:12px;padding:17px 0;border-bottom:1px solid var(--line)}.record-row:last-child{border:0}.record-name{font-weight:550;font-size:14px;overflow-wrap:anywhere}.record-name small{font-weight:400;font-size:11px;display:block;color:var(--muted);margin-top:3px}.record-right{display:flex;align-items:center;gap:8px}.record-amount{font-size:17px;text-align:right;font-weight:550;white-space:nowrap}.record-amount small{display:block;font-size:10px;font-weight:400;color:var(--muted)}.edit-button{width:36px;height:36px;border-radius:9px;color:var(--muted);border:1px solid var(--line);font-size:15px}.two-column,.three-column{display:grid;gap:18px;grid-template-columns:minmax(0,1fr)}.quiet-card{background:var(--paper);border:1px solid var(--line);border-radius:14px;padding:21px}.quiet-card .card-value{font-size:28px;font-weight:600;margin:12px 0 5px}.quiet-card .card-value small{font-size:12px;color:var(--muted);font-weight:400}.mini-head{display:flex;justify-content:space-between;align-items:center;gap:8px}.mini-head h3{font-size:14px}.budget-line{padding:14px 0}.budget-line-head{display:flex;justify-content:space-between;font-size:13px;gap:8px}.budget-track{height:7px;background:var(--bg);border-radius:8px;margin-top:9px;overflow:hidden}.budget-track span{display:block;height:100%;background:var(--blue);border-radius:8px}.status-tag{font-size:10px;background:var(--blue-pale);color:var(--blue-deep);border-radius:12px;padding:3px 9px;white-space:nowrap}.status-tag.done{color:var(--positive);background:#e9f7f2}.empty-state{padding:35px 15px;text-align:center;color:var(--muted);font-size:13px}.editor-form{display:grid;gap:16px}.editor-form label{font-size:12px;color:var(--muted);display:grid;gap:7px}.editor-form input,.editor-form select,.param-row input{width:100%;min-width:0;min-height:42px;border:1px solid #d4e1ed;border-radius:9px;background:white;color:var(--ink);padding:9px 11px;font:inherit}.editor-form select{font-size:14px}.editor-form input{font-size:16px}.editor-form .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}.form-actions{display:flex;justify-content:flex-end;gap:10px;flex-wrap:wrap;margin-top:10px}.form-error{color:var(--negative);font-size:13px;min-height:20px}.editor-form .muted{font-size:12px}dialog{max-height:90dvh;overflow:auto}dialog .form-actions .danger-button{margin-right:auto}.dialog-head h2{max-width:calc(100% - 55px);overflow-wrap:anywhere}.global-actions{display:flex;gap:6px}.global-actions button{font-size:11px;color:var(--muted);padding:5px 8px;border-radius:8px}.global-actions button:hover{background:var(--blue-pale)}.side-bottom .text-button{padding-left:0}.private .private-input{visibility:hidden}.page-illustration{width:100%;height:100%;display:block}.experience-card{display:grid;grid-template-columns:85px minmax(0,1fr) auto;align-items:center;gap:14px;padding:15px;border:1px solid var(--line);border-radius:14px;background:white}.experience-art{height:76px;border-radius:10px;overflow:hidden;background:var(--blue-pale)}.experience-copy h3{font-size:14px}.experience-copy p{font-size:11px;color:var(--muted);margin-top:4px}.experience-stack{display:grid;gap:13px;margin-top:18px}.page-banner{position:relative;overflow:hidden;background:linear-gradient(120deg,#eff7fd,#e0f1fc);border:1px solid #deecf7;padding:27px;border-radius:17px;margin-bottom:22px}.page-banner h2{font-size:22px;max-width:75%;line-height:1.5}.page-banner p{color:var(--muted);font-size:13px;max-width:70%;margin-top:6px}.banner-art{position:absolute;right:0;bottom:-3px;height:125px;width:190px;opacity:.75;pointer-events:none}.planning-layout{display:grid;grid-template-columns:minmax(0,1fr);gap:20px}.params{align-self:start;padding:20px}.params summary{cursor:pointer;font-size:15px;font-weight:600;list-style-position:outside;margin-left:16px}.params .param-group{padding:16px 0;border-top:1px solid var(--line);margin-top:16px}.param-group h3{color:var(--muted);font-size:11px;margin-bottom:12px}.param-row{display:grid;grid-template-columns:minmax(0,1fr) 78px 24px;gap:7px;align-items:center;margin:9px 0;font-size:12px}.param-row input{font-size:14px;font-weight:500;padding:7px 8px;min-height:35px;font-variant-numeric:tabular-nums}.param-row>span{color:var(--muted);font-size:10px}.param-help{font-size:11px;color:var(--muted);margin-top:10px}.projection-top{display:flex;align-items:center;justify-content:space-between;gap:16px;background:var(--blue-pale);border-radius:14px;padding:20px;margin-bottom:18px}.projection-top p{font-size:11px;color:var(--muted)}.projection-top strong{font-size:25px;font-weight:600}.projection-chart{margin-top:20px}.timeline{display:flex;justify-content:space-between;gap:12px;position:relative;padding:22px 5px 0}.timeline:before{content:'';position:absolute;left:8px;right:8px;top:27px;height:2px;background:var(--line)}.timeline-item{position:relative;padding-top:20px;font-size:11px;max-width:25%;text-align:center}.timeline-item:before{content:'';position:absolute;top:0;left:calc(50% - 5px);width:10px;height:10px;background:var(--blue);border:3px solid #e1effa;border-radius:50%}.timeline-item strong{display:block;font-size:12px}.projection-legend{display:flex;gap:18px;flex-wrap:wrap;color:var(--muted);font-size:11px}.projection-legend i{width:13px;display:inline-block;border-top:2px solid var(--blue);vertical-align:middle;margin-right:6px}.projection-legend .floor{border-top-style:dashed;border-color:var(--insurance)}.temp-hero{text-align:center;padding:30px 24px}.temp-hero h2{font-size:16px}.temp-number{font-size:52px;font-weight:600;margin:8px 0 15px;line-height:1.3}.temp-number small{font-size:17px;font-weight:450;color:var(--muted);margin-left:12px}.temp-track{height:12px;position:relative;margin:0 auto;background:linear-gradient(90deg,#2f88c9,#a6d3e7,#ecdba2,#eaae7d,#d7706b);border-radius:10px;max-width:720px}.temp-pointer{position:absolute;top:-5px;transform:translateX(-50%);width:20px;height:22px;border:3px solid white;box-shadow:0 0 0 2px var(--ink);background:var(--ink);border-radius:10px}.temp-labels{display:flex;justify-content:space-between;max-width:720px;margin:13px auto 0;font-size:11px;color:var(--muted)}.indicator-grid{display:grid;grid-template-columns:minmax(0,1fr);gap:14px;margin-top:18px}.indicator{padding:20px;border-radius:14px;background:white;border:1px solid var(--line)}.indicator .indicator-head{display:flex;justify-content:space-between;gap:8px;align-items:center}.indicator h3{font-size:14px}.indicator-value{font-size:27px;font-weight:600;margin:10px 0 4px}.indicator-note{font-size:12px;color:var(--muted);min-height:35px}.indicator-range{margin-top:15px;height:5px;background:var(--line);border-radius:9px}.indicator-range span{display:block;background:var(--blue);height:100%;border-radius:9px}.indicator-foot{display:flex;justify-content:space-between;gap:10px;margin-top:8px;font-size:10px;color:var(--muted)}.news-feature{display:grid;gap:0;overflow:hidden}.news-art{min-height:185px;background:var(--blue-pale)}.news-feature-copy{padding:24px}.news-feature h2{font-size:23px;line-height:1.55;margin:11px 0}.news-feature p{color:var(--muted);font-size:13px;line-height:1.9;margin-bottom:12px}.news-meta{display:flex;align-items:center;gap:8px;font-size:11px;color:var(--muted)}.news-row{display:flex;align-items:center;gap:17px;width:100%;padding:20px 0;text-align:left;border-bottom:1px solid var(--line)}.news-row:last-child{border-bottom:none}.news-row .news-thumb{height:67px;width:90px;border-radius:9px;overflow:hidden;flex:none}.news-row h3{font-size:14px;line-height:1.6}.news-row p{font-size:11px;color:var(--muted);margin-top:5px}.news-row .chevron{margin-left:auto}.post{border:1px solid var(--line);border-radius:14px;padding:20px;background:white}.post-head{display:flex;align-items:center;gap:10px;margin-bottom:15px;font-size:12px}.post-head strong{font-size:13px}.post p{font-size:13px;line-height:1.9;color:var(--muted)}.post .text-button{margin:10px 0 0;padding-left:0}.staking-hero{position:relative;overflow:hidden;background:linear-gradient(120deg,white,#eaf5fd);padding:27px;border-radius:18px;border:1px solid var(--line)}.staking-hero .balance{color:var(--blue-deep);margin:14px 0 5px}.staking-hero p{font-size:12px;color:var(--muted);position:relative}.staking-hero .banner-art{height:170px;width:240px;opacity:.4}.staking-list{display:grid;gap:15px;margin-top:18px}.stake-item{background:white;border:1px solid var(--line);border-radius:14px;overflow:hidden}.stake-item summary{padding:20px;display:flex;justify-content:space-between;align-items:center;gap:15px;cursor:pointer;list-style:none}.stake-title{display:flex;align-items:center;gap:11px;font-size:16px;font-weight:600}.stake-title .asset-icon{border-radius:50%}.stake-value{font-size:18px;font-weight:600;text-align:right}.stake-value small{display:block;font-size:10px;color:var(--muted);font-weight:400}.stake-detail{padding:0 20px 20px}.stake-numbers{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;padding:16px;background:var(--bg);border-radius:11px}.stake-numbers span{display:block;font-size:10px;color:var(--muted)}.stake-numbers b{display:block;font-size:17px;font-weight:550;margin-top:5px;overflow-wrap:anywhere}.stake-formula{margin-top:14px;font-size:12px;color:var(--muted)}.login-page{min-height:100dvh;display:grid;grid-template-columns:minmax(0,1fr);background:white}.login-story{padding:36px 25px;position:relative;overflow:hidden;background:linear-gradient(140deg,#edf7fe,#d7ecfa);min-height:300px}.login-story h1{font-size:32px;line-height:1.45;position:relative;z-index:1}.login-story p{font-size:14px;position:relative;z-index:1;margin-top:14px;color:var(--muted);max-width:420px}.login-story .login-art{height:200px;width:100%;position:absolute;bottom:-35px;left:0;opacity:.55}.login-panel{display:grid;place-items:center;padding:45px 28px;min-height:400px}.login-inner{max-width:370px;width:100%;text-align:center}.login-inner .brand{justify-content:center;margin-bottom:38px;font-size:24px}.login-inner h2{font-size:28px;margin-bottom:10px}.login-inner>p{font-size:13px;color:var(--muted);line-height:1.9;margin-bottom:28px}.google-demo{width:100%;padding:14px 20px;border:1px solid var(--line);background:white;border-radius:11px;box-shadow:var(--shadow);font-size:16px;font-weight:550;min-height:52px}.google-letter{color:var(--blue);font-size:23px;font-weight:700;margin-right:12px}.login-inner .block-note{text-align:left;margin-top:25px}.login-small{font-size:11px!important;margin-top:22px}.privacy-explanation{font-size:11px;color:var(--muted);margin-bottom:12px}
+@media(min-width:600px){.two-column{grid-template-columns:repeat(2,minmax(0,1fr))}.three-column{grid-template-columns:repeat(3,minmax(0,1fr))}.indicator-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.news-feature{grid-template-columns:1fr 1.2fr}.news-feature .news-art{min-height:280px}.record-row.account-record{grid-template-columns:minmax(0,1.1fr) minmax(0,.8fr) auto}.account-original{text-align:right}.account-original small{display:block;color:var(--muted);font-size:10px}.login-story h1{font-size:42px}}
+@media(max-width:599px){.account-original{font-size:11px;color:var(--muted);grid-column:1;grid-row:2}.account-record .record-right{grid-column:2;grid-row:1 / span 2}.account-record{gap:3px 10px}.record-amount{font-size:15px}.experience-card{grid-template-columns:60px minmax(0,1fr) auto;gap:10px;padding:11px}.experience-art{height:64px}.experience-copy h3{font-size:12px}.experience-copy p{font-size:10px}.page-banner h2{font-size:19px;max-width:80%}.page-banner p{max-width:85%;font-size:12px}.banner-art{opacity:.3}.page-banner{padding:21px}.projection-top strong{font-size:21px}.temp-hero{padding:26px 18px}.global-actions{display:none}.staking-hero .balance{font-size:36px}.stake-numbers{gap:6px;padding:12px}.stake-numbers b{font-size:14px}.news-feature h2{font-size:21px}.news-row .news-thumb{width:65px;height:60px}.news-row{gap:12px}.subnav{flex-wrap:nowrap;overflow:auto}.subnav button{white-space:nowrap;padding:8px 12px}}
+@media(min-width:1000px){.planning-layout{grid-template-columns:270px minmax(0,1fr)}.params{position:sticky;top:20px}.login-page{grid-template-columns:1.2fr 1fr}.login-story{display:flex;flex-direction:column;justify-content:center;padding:80px 65px;min-height:100dvh}.login-story h1{font-size:45px}.login-story .login-art{height:400px;bottom:0;opacity:.6}.login-story p{max-width:460px}.news-feature{grid-template-columns:.85fr 1.15fr}.news-feature-copy{padding:34px}.news-feature h2{font-size:26px}.padded{padding:25px}.staking-hero{padding:34px}.staking-hero .banner-art{width:350px;height:220px}.indicator-grid{gap:17px}}
 </style>
 </head>
 <body>
 <a class="skip" href="#main">跳到主要內容</a>
 <svg xmlns="http://www.w3.org/2000/svg" style="display:none" aria-hidden="true"><symbol id="home" viewBox="0 0 24 24"><path d="m3 10 9-7 9 7v10H15v-7H9v7H3z"/></symbol><symbol id="wallet" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="15" rx="3"/><path d="M17 11h4v5h-4a2.5 2.5 0 0 1 0-5ZM5 5V3h12"/></symbol><symbol id="life" viewBox="0 0 24 24"><path d="M12 21V10M12 15C3 16 3 8 3 8s9-2 9 7ZM12 11C12 2 21 3 21 3s2 8-9 8Z"/></symbol><symbol id="bars" viewBox="0 0 24 24"><path d="M4 20V12h4v8M10 20V4h4v16M16 20V8h4v12"/></symbol><symbol id="news" viewBox="0 0 24 24"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 7h8M8 11h8M8 15h4M8 18h8"/></symbol><symbol id="coins" viewBox="0 0 24 24"><ellipse cx="12" cy="5" rx="8" ry="3"/><path d="M4 5v5c0 4 16 4 16 0V5M4 10v5c0 4 16 4 16 0v-5M4 15v4c0 4 16 4 16 0v-4"/></symbol><symbol id="eye" viewBox="0 0 24 24"><path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/></symbol><symbol id="mountain" viewBox="0 0 24 24"><path d="m2 20 7-13 4 7 3-5 6 11H2ZM7 11l2 3 2-3"/></symbol><symbol id="logo" viewBox="0 0 30 28"><path fill="currentColor" stroke="none" d="m0 25 10-18 5 9 7-14 8 23z"/></symbol></svg>
-<aside class="sidebar"><div class="brand"><svg class="brandmark"><use href="#logo"/></svg>我的資產</div><nav class="side-links" aria-label="主要導覽"></nav><div class="side-bottom"><div class="profile"><span class="avatar">G</span>George<span class="muted">· 預覽</span></div><p>霧白海藍 · 第一階段</p><p>假資料，不連接 Google Sheet</p></div></aside>
-<div class="workspace"><header class="topbar"><div class="brand"><svg class="brandmark"><use href="#logo"/></svg><span>我的資產 / 總覽</span></div><div class="top-meta"><span class="badge">安全預覽</span><span class="muted">示意資料 · 非即時報價</span></div></header>
+<aside class="sidebar"><div class="brand"><svg class="brandmark"><use href="#logo"/></svg>我的資產</div><nav class="side-links" aria-label="主要導覽"></nav><div class="side-bottom"><div class="profile"><span class="avatar">G</span>George<span class="muted">· 預覽</span></div><p>霧白海藍 · 全頁預覽</p><p>假資料，不連接 Google Sheet</p><button class="text-button" data-action="login">返回登入預覽</button></div></aside>
+<div class="workspace"><header class="topbar"><div class="brand"><svg class="brandmark"><use href="#logo"/></svg><span>我的資產 / 總覽</span></div><div class="top-meta"><span class="badge">安全預覽</span><div class="global-actions"><button data-action="reset">還原示意資料</button><button data-action="login">登入預覽</button></div><span class="muted">示意資料 · 非即時報價</span></div></header>
 <main id="main"><div class="page-head"><div><h1>看看資產的變化</h1><p>掌握現在，留一點空間給未來。</p></div><button class="round-button" id="privacy" aria-label="隱藏金額" aria-pressed="false"><svg class="icon"><use href="#eye"/></svg></button></div>
-<div class="hero-grid"><section class="panel hero" aria-labelledby="available-label"><div class="eyebrow" id="available-label">可用資產 <span>TWD</span></div><div class="balance num money">1,280.00 <small>萬</small></div><div class="hero-facts"><div><span class="muted">淨資產</span><strong class="num money">1,880.00 萬</strong></div><div><span class="muted">本月變動</span><strong class="positive num money">＋12.80 萬</strong></div></div><div class="chart-heading"><span class="muted" style="font-size:12px">資產走勢</span><div class="segmented" id="periods" aria-label="趨勢期間"><button data-period="6m" aria-pressed="true">六個月</button><button data-period="1y" aria-pressed="false">一年</button><button data-period="all" aria-pressed="false">全部</button></div></div><div class="chart money" id="trend"></div><div class="chart-caption"><span>金額單位：萬 TWD</span><span>每月月底快照 · 示意</span></div><label class="date-control"><span>查看日期</span><input id="history-date" aria-label="查看歷史日期" type="range" min="0" max="5" value="5"><output id="history-value" class="money" aria-live="polite"></output></label></section>
+<div id="overview-page"><div class="hero-grid"><section class="panel hero" aria-labelledby="available-label"><div class="eyebrow" id="available-label">可用資產 <span>TWD</span></div><div class="balance num money">1,280.00 <small>萬</small></div><div class="hero-facts"><div><span class="muted">淨資產</span><strong class="num money">1,880.00 萬</strong></div><div><span class="muted">本月變動</span><strong class="positive num money">＋12.80 萬</strong></div></div><div class="chart-heading"><span class="muted" style="font-size:12px">資產走勢</span><div class="segmented" id="periods" aria-label="趨勢期間"><button data-period="6m" aria-pressed="true">六個月</button><button data-period="1y" aria-pressed="false">一年</button><button data-period="all" aria-pressed="false">全部</button></div></div><div class="chart money" id="trend"></div><div class="chart-caption"><span>金額單位：萬 TWD</span><span>歷史示意快照 · 不隨編輯改變</span></div><label class="date-control"><span>查看日期</span><input id="history-date" aria-label="查看歷史日期" type="range" min="0" max="5" value="5"><output id="history-value" class="money" aria-live="polite"></output></label></section>
 <section class="panel allocation"><div class="section-head"><h2>可用資產分布</h2><span class="muted">5 類</span></div><div class="donut-wrap" role="img" aria-label="資產分布，詳細金額見下方清單"><div class="donut"></div><div class="donut-center money"><b class="num">1,280.00</b><span>萬 TWD</span></div></div><ul class="legend" id="allocation-list"></ul><p class="preview-note">USDT 顯示於現金；帳本仍歸加密。</p></section></div>
 <div class="lower-grid"><section class="panel assets"><div class="section-head"><h2>我的資產</h2><span class="muted">點選查看明細</span></div><div class="filters" id="filters" aria-label="資產分類"><button data-category="all" aria-pressed="true">全部</button><button data-category="cash" aria-pressed="false">現金</button><button data-category="tw" aria-pressed="false">台股</button><button data-category="us" aria-pressed="false">美股</button><button data-category="crypto" aria-pressed="false">加密</button><button data-category="insurance" aria-pressed="false">儲蓄險</button></div><div id="asset-list" aria-live="polite"></div></section><div class="runways"><section class="panel runway"><h2>現金跑道<span class="tag">保守</span></h2><svg class="icon runway-art"><use href="#life"/></svg><div class="runway-num num money">8.0 <small>年</small></div><p>只看手上的流動現金，留意生活開銷的餘裕。</p><details><summary>查看假設</summary><ul class="money"><li>示意流動現金 320 萬</li><li>示意年支出 40 萬</li><li>此預覽使用簡化固定示意值</li></ul></details></section><section class="panel runway"><h2>財務存活<span class="tag">樂觀</span></h2><svg class="icon runway-art"><use href="#mountain"/></svg><div class="runway-num num money">18.0 <small>年</small></div><p>加入投資與未來收入，觀察更長期的生活安排。</p><details><summary>查看假設</summary><ul class="money"><li>18 年為版面展示用數字</li><li>未執行正式財務存活模擬</li><li>正式版仍沿用原計算規則</li></ul></details></section></div></div>
-<section class="income-strip" aria-label="收益與應收摘要"><div class="income-stat"><span>本日投資損益</span><b class="num positive money">＋2.46 萬</b><small>與昨日快照比較</small></div><div class="income-stat"><span>本月收益</span><b class="num positive money">＋12.80 萬</b><small>本月資產變化</small></div><div class="income-stat"><span>本年收益</span><b class="num positive money">＋86.40 萬</b><small>與去年年底基準比較</small></div><div class="income-stat"><span>應收帳款</span><b class="num money">8.00 萬</b><button id="receivables" style="font-size:11px;color:var(--blue);padding:0;min-height:28px">查看應收明細 ›</button></div></section>
+<section class="income-strip" aria-label="收益與應收摘要"><div class="income-stat"><span>本日投資損益</span><b class="num positive money">＋2.46 萬</b><small>與昨日快照比較</small></div><div class="income-stat"><span>本月收益</span><b class="num positive money">＋12.80 萬</b><small>固定歷史示意值</small></div><div class="income-stat"><span>本年收益</span><b class="num positive money">＋86.40 萬</b><small>固定歷史示意值</small></div><div class="income-stat"><span>應收帳款</span><b class="num money">8.00 萬</b><button id="receivables" style="font-size:11px;color:var(--blue);padding:0;min-height:28px">查看應收明細 ›</button></div></section>
 <section class="panel cashflow"><div class="section-head"><h2>90 天現金流預測</h2><div class="line-legend"><span><i></i>保守水位</span><span><i class="optimistic"></i>樂觀差額</span></div></div><div class="chart cashflow-chart money"><svg viewBox="0 0 1000 145" role="img" aria-label="示意現金流，保守水位由320萬逐步降至310萬，樂觀水位包含應收款"><path d="M42 25H978M42 70H978M42 115H978" class="chart-grid"/><text x="0" y="29">320</text><text x="0" y="74">315</text><text x="0" y="119">310</text><path d="M42 25 250 42 370 57 500 66 600 82 780 101 978 115L978 48 780 33 600 25 500 20 370 35 250 27 42 25" fill="#dceef9"/><path d="M42 25 250 42 370 57 500 66 600 82 780 101 978 115" class="chart-line"/><path d="M42 25 250 27 370 35 500 20 600 25 780 33 978 48" fill="none" stroke="#54acd5" stroke-width="2" stroke-dasharray="5 5"/><text x="42" y="143">今天</text><text x="345" y="143">30 天後</text><text x="650" y="143">60 天後</text><text x="923" y="143">90 天後</text></svg></div><p class="preview-note">示意曲線，非實際預測。正式版保留原有預計收入、支出與逾期應收計算。</p></section>
 <section class="panel movers"><div class="section-head"><h2>這段時間，誰在變動？</h2><span class="muted">近 15 天 · 示意</span></div><div class="mover-columns"><div class="mover-column"><h3>領漲 · 漲幅</h3><div class="mover-item"><span>台積電 <small>2330</small></span><b class="positive money">＋2.80%</b></div><div class="mover-item"><span>Apple <small>AAPL</small></span><b class="positive money">＋1.90%</b></div></div><div class="mover-column"><h3>領漲 · 金額</h3><div class="mover-item"><span>台積電 <small>2330</small></span><b class="positive money">＋3.20 萬</b></div><div class="mover-item"><span>Apple <small>AAPL</small></span><b class="positive money">＋1.60 萬</b></div></div><div class="mover-column"><h3>領跌 · 漲幅</h3><div class="mover-item"><span>比特幣 <small>BTC</small></span><b class="negative money">−2.10%</b></div><div class="mover-item"><span>以太幣 <small>ETH</small></span><b class="negative money">−1.80%</b></div></div></div></section>
-<footer class="footer"><span>總覽互動預覽 · 所有資料皆為虛構</span><span id="preview-build">BUILD_DATE 2026/09/08 22:08 · 基準 v1.1</span></footer></main></div>
-<nav class="bottom-nav" aria-label="手機主要導覽"></nav><div class="notice" role="status" id="notice"></div>
-<dialog id="detail"><div class="dialog-head"><h2 id="detail-title"></h2><button class="round-button" id="close-detail" aria-label="關閉明細">✕</button></div><div id="detail-body"></div><button class="dialog-close" id="done-detail">知道了</button></dialog>
+</div><section id="secondary-page" hidden></section><footer class="footer"><span>總覽互動預覽 · 所有資料皆為虛構</span><span id="preview-build">BUILD_DATE 2026/09/09 07:31 · 基準 v1.1</span></footer></main></div>
+<section id="login-page" class="login-page" hidden></section><nav class="bottom-nav" aria-label="手機主要導覽"></nav><div class="notice" role="status" id="notice"></div>
+<dialog id="detail" aria-labelledby="detail-title"><div class="dialog-head"><h2 id="detail-title"></h2><button class="round-button" id="close-detail" aria-label="關閉明細">✕</button></div><div id="detail-body"></div><button class="dialog-close" id="done-detail">知道了</button></dialog>
 <script id="preview-model">
 const ASSETS = Object.freeze([
   Object.freeze({id:'cash',name:'流動現金',value:320,unit:'TWD / USD / USDT',icon:'$',color:'--cash',description:'台幣帳戶 240 萬，加上美元與 USDT 換算共 80 萬。USDT 畫面歸現金、帳本歸加密。'}),
@@ -45,19 +53,112 @@ function chartPoints(rows){
   const min=Math.min(...rows.map(r=>r.value)), max=Math.max(...rows.map(r=>r.value));
   return rows.map((r,i)=>({x:50+(rows.length===1?0:i/(rows.length-1)*610),y:max===min?130:220-(r.value-min)/(max-min)*170}));
 }
+
+const DEMO_FX = Object.freeze({TWD:1, USD:32, USDT:32});
+function createDemoState() {
+  return {
+    accounts:[
+      {id:'cash-twd',category:'cash',name:'日常台幣帳戶',currency:'TWD',amount:2400000,price:1},
+      {id:'cash-usd',category:'cash',name:'美元備用金',currency:'USD',amount:15000,price:1},
+      {id:'usdt',category:'crypto',name:'USDT',currency:'USDT',amount:10000,price:1},
+      {id:'tw-tsmc',category:'tw',name:'台積電 · 2330',currency:'TWD',amount:3000,price:1000},
+      {id:'tw-etf',category:'tw',name:'台灣 ETF · 示意',currency:'TWD',amount:10000,price:180},
+      {id:'us-aapl',category:'us',name:'Apple · AAPL',currency:'USD',amount:100,price:250},
+      {id:'us-vti',category:'us',name:'美股 ETF · 示意',currency:'USD',amount:375,price:250},
+      {id:'btc',category:'crypto',name:'Bitcoin · BTC',currency:'USD',amount:0.04,price:100000},
+      {id:'eth',category:'crypto',name:'Ethereum · ETH',currency:'USD',amount:7,price:3000},
+      {id:'policy',category:'insurance',name:'美元儲蓄險',currency:'USD',amount:6250,price:1}
+    ],
+    budget:[{id:'rent',name:'住宅與水電',amount:18000},{id:'daily',name:'日常生活',amount:10000},{id:'transport',name:'交通與其他',amount:5300}],
+    income:[{id:'income-a',name:'專案合作款 A',amount:50000,status:'待入帳'},{id:'income-b',name:'專案合作款 B',amount:30000,status:'待入帳'},{id:'income-c',name:'本月顧問收入',amount:60000,status:'已入帳'}],
+    rewards:[{id:'reward-a',name:'本月示意質押收益',amount:4600},{id:'reward-b',name:'美元活存利息（已換算）',amount:860}],
+    planned:[{id:'planned-a',name:'家電汰換',amount:40000},{id:'planned-b',name:'年度保費',amount:24000}],
+    experiences:[{id:'trip',name:'京都慢旅行',amount:200000,age:45,status:'規劃中',kind:'travel'},{id:'photo',name:'把日常拍成故事',amount:80000,age:40,status:'規劃中',kind:'photo'}],
+    extras:{realestate:9500000,debt:3500000},
+    indicators:[
+      {id:'rank',name:'Coinbase 排名',value:112,min:1,max:500,reverse:true,manual:true,note:'觀察應用程式的市場關注度。'},
+      {id:'search',name:'Google 搜尋趨勢',value:52,min:0,max:100,manual:true,note:'觀察比特幣搜尋熱度的變化。'},
+      {id:'nupl',name:'NUPL',value:0.3,min:-0.5,max:1,manual:true,note:'未實現損益的市場狀態。'},
+      {id:'rainbow',name:'彩虹圖',value:4,min:1,max:9,manual:false,note:'長期價格區間的視覺參考。'},
+      {id:'mvrv',name:'MVRV Z-Score',value:1.2,min:-2,max:10,manual:true,note:'市值與實現價值的相對位置。'},
+      {id:'mayer',name:'Mayer Multiple',value:1.05,min:0.5,max:2.5,manual:false,note:'價格相對於 200 日均線的位置。'},
+      {id:'ma',name:'兩年均線',value:1.12,min:0,max:3,manual:false,note:'以長期均線觀察價格週期。'},
+      {id:'pi',name:'Pi Cycle',value:null,min:0,max:1,manual:false,note:'週期訊號尚無示意資料。'},
+      {id:'ahr',name:'AHR999',value:0.85,min:0,max:4,manual:false,note:'長期價格與估值的觀察指標。'},
+      {id:'dominance',name:'BTC 市佔率',value:54.3,min:30,max:70,manual:false,note:'比特幣在加密市場中的比重。'}
+    ]
+  };
+}
+function displayCategory(record) { return record.currency === 'USDT' ? 'cash' : record.category; }
+function recordTWD(record) { return record.amount * record.price * DEMO_FX[record.currency]; }
+function assetSummary(state) {
+  return ASSETS.map(asset => ({...asset,value:state.accounts.filter(r=>displayCategory(r)===asset.id).reduce((sum,r)=>sum+recordTWD(r),0)/10000}));
+}
+function applyDemoRecord(state, collection, record) {
+  if (!['accounts','budget','income','rewards','planned','experiences'].includes(collection)) throw new Error('不支援的示意資料');
+  if (!record.id || !String(record.name??'').trim() || String(record.name).length>60) throw new Error('請填寫 1–60 字的名稱');
+  if (!Number.isFinite(record.amount) || record.amount<0 || record.amount>1e10) throw new Error('請填寫合理的非負金額或數量');
+  if (collection==='accounts') {
+    if (!['cash','tw','us','crypto','insurance'].includes(record.category) || !Object.hasOwn(DEMO_FX,record.currency)) throw new Error('幣別或分類不正確');
+    if (!Number.isFinite(record.price) || record.price<=0 || record.price>1e8) throw new Error('示意單價必須大於零');
+    if (record.currency==='USDT' && record.category!=='crypto') throw new Error('USDT 帳本分類必須為加密貨幣');
+  }
+  if (collection==='experiences' && (!Number.isInteger(record.age) || record.age<20 || record.age>120)) throw new Error('體驗年齡請填 20–120 歲');
+  const copy={...record,name:String(record.name).trim()};
+  const index=state[collection].findIndex(r=>r.id===record.id);
+  if (index<0) state[collection].push(copy); else state[collection][index]=copy;
+}
+function removeDemoRecord(state, collection, id) {
+  if (!['accounts','budget','income','rewards','planned','experiences'].includes(collection)) throw new Error('不支援的示意資料');
+  state[collection]=state[collection].filter(r=>r.id!==id);
+}
+function previewProjection(p, experiences=[]) {
+  if (![p.age,p.life,p.retire,p.start,p.spend,p.rate,p.inflation,p.income].every(Number.isFinite) || p.life<=p.age || p.life>120 || p.age<20) return [];
+  const rows=[{age:p.age,value:p.start}], rate=p.rate/100, inflation=p.inflation/100;
+  let balance=p.start;
+  for(let age=p.age+1;age<=p.life;age++) {
+    const multiplier=age<p.retire?1:age<p.retire+15?(p.early??120)/100:(p.late??80)/100;
+    const spending=p.spend*Math.pow(1+inflation,age-p.age)*multiplier;
+    const extra=experiences.filter(e=>e.age===age&&e.status!=='已完成').reduce((sum,e)=>sum+e.amount/10000,0)+(age===p.giftAge?(p.legacy??0):0)+(age<=(p.windowEnd??p.life)?(p.experienceBudget??0):0);
+    balance=Math.max(0,balance*(1+rate)+(age<p.retire?p.income:0)-spending-extra);
+    rows.push({age,value:balance});
+  }
+  return rows;
+}
+function demoTemperature(rows) {
+  const values=rows.filter(r=>Number.isFinite(r.value)&&r.max>r.min).map(r=>{
+    const normalized=Math.max(0,Math.min(1,(r.value-r.min)/(r.max-r.min)));
+    return (r.reverse?1-normalized:normalized)*100;
+  });
+  return values.length?Math.round(values.reduce((n,v)=>n+v,0)/values.length):null;
+}
+function escapeText(value) { return String(value).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
+function isQuantityRecord(record) { return ['tw','us','crypto'].includes(record.category) && record.currency!=='USDT'; }
+function validatedProjectionValues(entries) {
+  const result={};
+  for(const entry of entries) {
+    const value=Number(entry.value);
+    if(String(entry.value).trim()==='' || !Number.isFinite(value) || value<entry.min || value>entry.max)return null;
+    result[entry.key]=value;
+  }
+  return result;
+}
 </script>
 <script>
 const el=id=>document.getElementById(id);
 const money=value=>value.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
 let period='6m', privateMode=false, noticeTimer;
+let demo=createDemoState();
+let activePage='總覽',managementCategory='cash',incomeFilter='all';
 const pages=[['home','總覽'],['wallet','管理'],['life','人生規劃'],['bars','指標'],['news','新聞'],['coins','質押']];
 for(const nav of document.querySelectorAll('.side-links,.bottom-nav')){
-  nav.innerHTML=pages.map(([icon,label],i)=>`<button ${i===0?'aria-current="page"':'class="pending"'} data-page="${label}"><svg class="icon" aria-hidden="true"><use href="#${icon}"/></svg><span>${label}</span></button>`).join('');
-  nav.addEventListener('click',event=>{const b=event.target.closest('button');if(b&&b.dataset.page!=='總覽')showNotice(`${b.dataset.page}尚未實作；目前可預覽總覽頁。`);else if(b)window.scrollTo({top:0,behavior:'instant'});});
+  nav.innerHTML=pages.map(([icon,label],i)=>`<button ${i===0?'aria-current="page"':''} data-page="${label}"><svg class="icon" aria-hidden="true"><use href="#${icon}"/></svg><span>${label}</span></button>`).join('');
+  nav.addEventListener('click',event=>{const b=event.target.closest('button');if(b)navigatePage(b.dataset.page);});
 }
 function showNotice(message){clearTimeout(noticeTimer);el('notice').textContent=message;noticeTimer=setTimeout(()=>el('notice').textContent='',3500);}
 function renderAssets(category){
-  el('asset-list').innerHTML=selectAssets(category).map(a=>`<button class="asset-row" data-asset="${a.id}" aria-label="查看${a.name}明細"><span class="asset-icon" style="color:var(${a.color})">${a.icon}</span><span class="asset-title">${a.name}<small>${a.unit}</small></span><svg class="spark" viewBox="0 0 70 25" aria-hidden="true"><path d="M1 21 10 17 18 19 27 9 35 12 45 7 54 9 68 2"/></svg><span class="asset-value num money">${money(a.value)} 萬<small>TWD</small></span><span class="chevron" aria-hidden="true">›</span></button>`).join('');
+  el('asset-list').innerHTML=assetSummary(demo).filter(a=>category==='all'||a.id===category).map(a=>`<button class="asset-row" data-asset="${a.id}" aria-label="查看${a.name}明細"><span class="asset-icon" style="color:var(${a.color})">${a.icon}</span><span class="asset-title">${a.name}<small>${a.unit}</small></span><svg class="spark" viewBox="0 0 70 25" aria-hidden="true"><path d="M1 21 10 17 18 19 27 9 35 12 45 7 54 9 68 2"/></svg><span class="asset-value num money">${money(a.value)} 萬<small>TWD</small></span><span class="chevron" aria-hidden="true">›</span></button>`).join('');
 }
 function renderTrend(){
   const rows=selectHistory(period),points=chartPoints(rows),line=points.map(p=>`${p.x},${p.y}`).join(' '),last=points.at(-1);
@@ -65,16 +166,252 @@ function renderTrend(){
   el('history-date').max=rows.length-1;el('history-date').value=rows.length-1;renderCursor();
 }
 function renderCursor(){const rows=selectHistory(period),i=Number(el('history-date').value),p=chartPoints(rows)[i];el('history-value').textContent=`${rows[i].date} · ${money(rows[i].value)} 萬`;el('cursor-line').setAttribute('x1',p.x);el('cursor-line').setAttribute('x2',p.x);el('cursor-dot').setAttribute('cx',p.x);el('cursor-dot').setAttribute('cy',p.y);}
-function openDetail(title,body){el('detail-title').textContent=title;el('detail-body').innerHTML=body;el('detail').showModal();}
+function openDetail(title,body){el('done-detail').hidden=false;el('done-detail').textContent='知道了';el('detail-title').textContent=title;el('detail-body').innerHTML=body;el('detail').showModal();}
 el('allocation-list').innerHTML=ASSETS.map(a=>`<li><span class="dot" style="background:var(${a.color})"></span><span>${a.name}</span><span class="pct money">${(a.value/1280*100).toFixed(1)}%</span><b class="num money">${money(a.value)} 萬</b></li>`).join('');
 el('filters').addEventListener('click',event=>{const b=event.target.closest('button');if(!b)return;for(const button of el('filters').children)button.setAttribute('aria-pressed',String(button===b));renderAssets(b.dataset.category);});
 el('periods').addEventListener('click',event=>{const b=event.target.closest('button');if(!b)return;period=b.dataset.period;for(const button of el('periods').children)button.setAttribute('aria-pressed',String(button===b));renderTrend();});
 el('history-date').addEventListener('input',renderCursor);
-el('asset-list').addEventListener('click',event=>{const button=event.target.closest('[data-asset]');if(!button)return;if(privateMode){showNotice('請先顯示金額，再查看明細。');return;}const a=ASSETS.find(a=>a.id===button.dataset.asset);openDetail(a.name,`<p class="muted">示意資產 · 換算為 TWD</p><div class="detail-value num">${money(a.value)} 萬</div><p class="detail-meta">${a.description}</p><p class="preview-note">此處只有假資料，不提供寫入或交易操作。</p>`);});
-el('receivables').addEventListener('click',()=>{if(privateMode){showNotice('請先顯示金額，再查看明細。');return;}openDetail('應收帳款',`<p class="dialog-copy">以下為虛構應收資料，僅展示閱讀與關閉明細的操作。</p><div class="detail-value num">8.00 萬 TWD</div><div class="detail-meta">專案款 A：5.00 萬 · 尚未到期<br>專案款 B：3.00 萬 · 逾期 7 天</div>`);});
+el('asset-list').addEventListener('click',event=>{const button=event.target.closest('[data-asset]');if(!button)return;if(privateMode){showNotice('請先顯示金額，再查看明細。');return;}const a=assetSummary(demo).find(a=>a.id===button.dataset.asset);openDetail(a.name,`<p class="muted">示意資產 · 換算為 TWD</p><div class="detail-value num">${money(a.value)} 萬</div><p class="detail-meta">${escapeText(demo.accounts.filter(r=>displayCategory(r)===a.id).map(r=>r.name+'：'+money(r.amount)+' '+r.currency+(r.price!==1?' × 示意單價 '+money(r.price):'')).join('；'))}</p><p class="preview-note">此處只有假資料，不提供寫入或交易操作。</p>`);});
+el('receivables').addEventListener('click',()=>{if(privateMode){showNotice('請先顯示金額，再查看明細。');return;}openDetail('應收帳款',`<p class="dialog-copy">以下為虛構應收資料，僅展示閱讀與關閉明細的操作。</p><div class="detail-value num">${money(demo.income.filter(r=>r.status==='待入帳').reduce((sum,r)=>sum+r.amount,0)/10000)} 萬 TWD</div><div class="detail-meta">${demo.income.filter(r=>r.status==='待入帳').map(r=>escapeText(r.name)+'：'+money(r.amount/10000)+' 萬').join('<br>')||'目前沒有待入帳示意款項。'}</div>`);});
 for(const id of ['close-detail','done-detail'])el(id).addEventListener('click',()=>el('detail').close());
 el('privacy').addEventListener('click',()=>{privateMode=!privateMode;document.body.classList.toggle('private',privateMode);for(const node of document.querySelectorAll('.money'))node.setAttribute('aria-hidden',String(privateMode));el('privacy').setAttribute('aria-pressed',String(privateMode));el('privacy').setAttribute('aria-label',privateMode?'顯示金額':'隱藏金額');});
 renderAssets('all');renderTrend();
+/* 全頁預覽互動 */
+
+const pageDescriptions={
+  '總覽':['看看資產的變化','掌握現在，留一點空間給未來。'],
+  '管理':['把每一筆錢安排好','整理資產與收支，讓生活有更多選擇。'],
+  '人生規劃':['讓資產陪你走過每個階段','Die With Zero · 把資源留給值得的體驗。'],
+  '指標':['市場現在的溫度','從不同角度觀察，留一點距離做判斷。'],
+  '新聞':['比特幣新聞','換個角度，看看正在發生的事。'],
+  '質押':['看看持倉累積了多少','看懂數量變化，再安排下一步。']
+};
+let projection={age:35,retire:55,life:90,start:1280,spend:40,rate:3,inflation:2,income:0,floor:500,windowEnd:65,early:120,late:80,legacy:0,giftAge:60,experienceBudget:0};
+let includeExperiences=true;
+let nextDemoId=1;
+const categoryNames=Object.fromEntries(ASSETS.map(a=>[a.id,a.name]));
+const collectionNames={accounts:'資產',budget:'生活支出',income:'收入',rewards:'收益',planned:'未來支出',experiences:'體驗'};
+function scene(kind='mountain') {
+  const base='<svg class="page-illustration" viewBox="0 0 400 220" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">';
+  if(kind==='photo')return base+'<rect width="400" height="220" fill="#e4eff9"/><circle cx="300" cy="60" r="38" fill="#c9e2f5"/><path d="M0 190 120 83 242 220H0M135 220 280 110 400 220" fill="#bdd9ee"/><rect x="113" y="66" width="180" height="115" rx="15" fill="#386c96"/><path d="M149 66V48h68l18 18" fill="#386c96"/><circle cx="204" cy="123" r="43" fill="#e3f2fc"/><circle cx="204" cy="123" r="30" fill="#2176b3"/><circle cx="194" cy="112" r="12" fill="#79bce7"/><rect x="260" y="84" width="15" height="8" rx="2" fill="#d5ebfa"/></svg>';
+  if(kind==='bitcoin')return base+'<rect width="400" height="220" fill="#e5f2fc"/><path d="M0 190 90 143 165 167 252 85 320 110 400 35V220H0" fill="#c3e0f5"/><path d="M0 178 90 131 165 155 252 73 320 98 400 23" fill="none" stroke="#78b8e2" stroke-width="3"/><circle cx="205" cy="114" r="69" fill="#2176b3"/><circle cx="205" cy="114" r="57" fill="none" stroke="#9bd0ef" stroke-width="2"/><text x="205" y="143" font-family="sans-serif" font-size="81" text-anchor="middle" fill="white">₿</text></svg>';
+  return base+'<rect width="400" height="220" fill="#e6f3fc"/><circle cx="305" cy="47" r="25" fill="#f6e8c8"/><path d="m-20 192 115-129 127 146 78-93 130 104H0" fill="#bedbef"/><path d="m30 220 127-117 75 74 35-43 157 86" fill="#91c0df"/><path d="M0 204Q90 172 180 196T400 182V220H0" fill="#d1e8f5"/><path d="M165 139v65M227 139v65M149 130h95M155 149h83" stroke="#3e7da7" stroke-width="8" stroke-linecap="round"/><path d="M0 219Q180 173 400 212" stroke="#f6fbff" fill="none" stroke-width="7"/></svg>';
+}
+function privacyRefresh(){
+  for(const node of document.querySelectorAll('.money,.private-input'))node.setAttribute('aria-hidden',String(privateMode));
+}
+function refreshOverview(){
+  const assets=assetSummary(demo),total=assets.reduce((n,a)=>n+a.value,0);
+  el('overview-page').querySelector('.balance').innerHTML=money(total)+' <small>萬</small>';
+  el('overview-page').querySelector('.hero-facts strong').textContent=money(total+(demo.extras.realestate-demo.extras.debt)/10000)+' 萬';
+  document.querySelector('.donut-center b').textContent=money(total);
+  let accumulated=0;
+  const segments=assets.map(a=>{const start=accumulated;accumulated+=total?a.value/total*100:0;return `var(${a.color}) ${start}% ${accumulated}%`;});
+  document.querySelector('.donut').style.background=total?`conic-gradient(${segments.join(',')})`:'var(--line)';
+  el('allocation-list').innerHTML=assets.map(a=>`<li><span class="dot" style="background:var(${a.color})"></span><span>${a.name}</span><span class="pct money">${total?(a.value/total*100).toFixed(1):'0.0'}%</span><b class="num money">${money(a.value)} 萬</b></li>`).join('');
+  renderAssets(el('filters').querySelector('[aria-pressed=true]').dataset.category);
+  const pending=demo.income.filter(r=>r.status==='待入帳').reduce((sum,r)=>sum+r.amount,0);
+  document.querySelector('.income-stat:last-child b').textContent=money(pending/10000)+' 萬';
+  const cash=assets.find(a=>a.id==='cash').value, spend=demo.budget.reduce((sum,r)=>sum+r.amount,0)*12/10000;
+  document.querySelector('.runway-num').innerHTML=(spend>0?(cash/spend).toFixed(1):'—')+' <small>年</small>';
+  document.querySelector('.runway details ul').innerHTML='<li>示意流動現金 '+money(cash)+' 萬</li><li>示意年支出 '+money(spend)+' 萬</li><li>簡化為現金除以年支出，非正式跑道模型</li>';
+
+  privacyRefresh();
+}
+function navigatePage(name){
+  if(!Object.hasOwn(pageDescriptions,name))return;
+  activePage=name;
+  document.querySelector('.skip').setAttribute('href','#main');
+  document.querySelector('.workspace').hidden=false;
+  document.querySelector('.sidebar').hidden=false;
+  document.querySelector('.bottom-nav').hidden=false;
+  el('login-page').hidden=true;
+  el('overview-page').hidden=name!=='總覽';
+  el('secondary-page').hidden=name==='總覽';
+  document.querySelector('.page-head h1').textContent=pageDescriptions[name][0];
+  document.querySelector('.page-head p').textContent=pageDescriptions[name][1];
+  document.querySelector('.topbar .brand span').textContent='我的資產 / '+name;
+  document.title=name+' · 霧白海藍預覽';
+  for(const button of document.querySelectorAll('[data-page]')){
+    if(button.dataset.page===name)button.setAttribute('aria-current','page');else button.removeAttribute('aria-current');
+  }
+  if(name==='總覽')refreshOverview();else renderCurrentPage();
+  window.scrollTo({top:0,behavior:'instant'});
+}
+function renderCurrentPage(){
+  const renderers={'管理':renderManagementPreview,'人生規劃':renderPlanningPreview,'指標':renderIndicatorsPreview,'新聞':renderNewsPreview,'質押':renderStakingPreview};
+  if(renderers[activePage])renderers[activePage]();
+  privacyRefresh();
+}
+function sectionTitle(title,collection){return `<div class="section-head"><h2>${title}</h2>${collection?`<button class="text-button" data-action="add" data-collection="${collection}">＋ 新增${collectionNames[collection]}</button>`:''}</div>`;}
+function listRecords(collection){
+  const rows=collection==='income'?demo.income.filter(r=>incomeFilter==='all'||r.status===incomeFilter):demo[collection];
+  if(!rows.length)return '<div class="empty-state">這裡還沒有示意紀錄。可以新增一筆試試。</div>';
+  return rows.map(r=>`<div class="record-row"><div class="record-name">${escapeText(r.name)}${r.status?`<small><span class="status-tag ${r.status==='已入帳'?'done':''}">${r.status}</span></small>`:''}</div><div class="record-right"><span class="record-amount num money">${money(r.amount/10000)} 萬<small>TWD</small></span><button class="edit-button" data-action="edit" data-collection="${collection}" data-id="${r.id}" aria-label="編輯${escapeText(r.name)}">✎</button></div></div>`).join('');
+}
+function experienceCards(){
+  if(!demo.experiences.length)return '<div class="empty-state">先從一件想做的事開始。</div>';
+  return demo.experiences.map(r=>`<article class="experience-card"><div class="experience-art">${scene(r.kind)}</div><div class="experience-copy"><h3>${escapeText(r.name)}</h3><p>${r.age} 歲 · <span class="money">預算 ${money(r.amount/10000)} 萬 TWD</span></p><p><span class="status-tag ${r.status==='已完成'?'done':''}">${r.status}</span></p></div><button class="edit-button" data-action="edit" data-collection="experiences" data-id="${r.id}" aria-label="編輯${escapeText(r.name)}">✎</button></article>`).join('');
+}
+function renderManagementPreview(){
+  const accounts=demo.accounts.filter(r=>displayCategory(r)===managementCategory);
+  const policy=assetSummary(demo).find(a=>a.id==='insurance');
+  el('secondary-page').innerHTML=`
+    <div class="toolbar"><p>以下操作只變更本次預覽的假資料，重新整理即還原。</p><button class="secondary" data-action="reset">還原示意資料</button></div>
+    <section class="panel padded">${sectionTitle('資產帳戶','accounts')}
+      <div class="subnav section-space" aria-label="管理資產分類">${ASSETS.filter(a=>a.id!=='insurance').map(a=>`<button data-action="account-filter" data-id="${a.id}" aria-pressed="${managementCategory===a.id}">${a.name}</button>`).join('')}</div>
+      <div class="management-accounts">${accounts.length?accounts.map(r=>`<div class="record-row account-record"><div class="record-name">${escapeText(r.name)}<small>${r.currency==='USDT'?'帳本：加密貨幣 · 畫面：流動現金':categoryNames[r.category]}</small></div><div class="account-original money">${money(r.amount)} ${['tw','us','crypto'].includes(r.category)&&r.currency!=='USDT'?'單位':r.currency}<small>${isQuantityRecord(r)?'示意單價 '+money(r.price)+' '+r.currency:'原幣餘額'}</small></div><div class="record-right"><span class="record-amount num money">${money(recordTWD(r)/10000)} 萬<small>換算 TWD</small></span><button class="edit-button" data-action="edit" data-collection="accounts" data-id="${r.id}" aria-label="編輯${escapeText(r.name)}">✎</button></div></div>`).join(''):'<div class="empty-state">尚無示意資產，新增一筆看看。</div>'}</div>
+      <p class="block-note">示意匯率：1 USD／USDT = 32 TWD。USDT 保留加密帳本分類，畫面歸現金。</p>
+    </section>
+    <section class="section-space">${sectionTitle('其他資產與負債')}<div class="three-column section-space">
+      <div class="quiet-card"><div class="mini-head"><h3>美元儲蓄險</h3><button class="text-button" data-action="edit" data-collection="accounts" data-id="policy">編輯</button></div><div class="card-value num money">${money(demo.accounts.find(r=>r.id==='policy')?.amount??0)} <small>USD</small></div><p class="muted money">約 ${money(policy.value)} 萬 TWD</p><p class="subtle-note">設定存美元，快照存台幣。</p></div>
+      ${['realestate','debt'].map(key=>`<div class="quiet-card"><div class="mini-head"><h3>${key==='realestate'?'房地產':'負債'}</h3><button class="text-button" data-action="extra" data-id="${key}">編輯</button></div><div class="card-value num money">${money(demo.extras[key]/10000)} <small>萬 TWD</small></div><p class="subtle-note">${key==='realestate'?'長期持有的資產':'整理負擔，留意未來現金流'}</p></div>`).join('')}
+    </div></section>
+    <section class="panel padded section-space">${sectionTitle('質押與活存收益','rewards')}${listRecords('rewards')}</section>
+    <div class="two-column section-space"><section class="panel padded">${sectionTitle('生活支出預算','budget')}<div class="card-value num money" style="font-size:27px;margin-top:18px">${money(demo.budget.reduce((s,r)=>s+r.amount,0)/10000)} <small style="font-size:12px">萬 TWD／月</small></div>${demo.budget.length?demo.budget.map(r=>`<div class="budget-line"><div class="budget-line-head"><span>${escapeText(r.name)}</span><span class="money">${money(r.amount/10000)} 萬 <button class="text-button" data-action="edit" data-collection="budget" data-id="${r.id}" aria-label="編輯${escapeText(r.name)}">編輯</button></span></div><div class="budget-track"><span style="width:${demo.budget.reduce((n,a)=>n+a.amount,0)?r.amount/demo.budget.reduce((n,a)=>n+a.amount,0)*100:0}%"></span></div></div>`).join(''):'<p class="empty-state">尚無支出預算。</p>'}<div class="section-space">${sectionTitle('未來支出','planned')}${listRecords('planned')}</div></section>
+    <section class="panel padded">${sectionTitle('主動收入','income')}<div class="subnav section-space">${['all','已入帳','待入帳'].map(key=>`<button data-action="income-filter" data-id="${key}" aria-pressed="${incomeFilter===key}">${key==='all'?'全部':key}</button>`).join('')}</div>${listRecords('income')}<p class="subtle-note">示意入帳狀態只在本頁預覽，不觸發帳戶轉帳或正式入帳流程。</p></section></div>
+    <section class="panel padded section-space">${sectionTitle('重大體驗支出規劃','experiences')}<div class="experience-stack">${experienceCards()}</div></section>`;
+}
+function openEditor(collection,id){
+  if(privateMode){showNotice('請先顯示金額，再編輯示意資料。');return;}
+  const existing=demo[collection]?.find(r=>r.id===id);
+  const isAccount=collection==='accounts', isExperience=collection==='experiences';
+  const draft=existing??{id:'demo-'+nextDemoId++,name:'',amount:0,category:managementCategory,currency:managementCategory==='tw'?'TWD':managementCategory==='cash'?'TWD':'USD',price:1,age:45,status:collection==='income'?'待入帳':'規劃中',kind:'travel'};
+  const kind=collectionNames[collection];
+  const accountCurrency=draft.currency==='USDT'?['USDT']:draft.category==='cash'?['TWD','USD']:draft.category==='tw'?['TWD']:['USD'];
+  openDetail((existing?'編輯':'新增')+kind,`<form id="demo-form" class="editor-form"><p class="muted">只修改假資料，重新整理就會還原。</p>
+    <label>名稱<input name="name" required maxlength="60" value="${escapeText(draft.name)}" autocomplete="off"></label>
+    <div class="form-grid"><label>${isAccount&&isQuantityRecord(draft)?'持有數量':isAccount?'原幣金額':'金額（TWD）'}<input name="amount" type="number" min="0" max="10000000000" step="any" required value="${draft.amount}"></label>
+    ${isAccount?`<label>原幣別<select name="currency">${accountCurrency.map(c=>`<option ${c===draft.currency?'selected':''}>${c}</option>`).join('')}</select></label>`:`<label>顯示單位<input value="TWD · 台幣元" disabled></label>`}</div>
+    ${isAccount&&!['cash','insurance'].includes(draft.category)&&draft.currency!=='USDT'?`<label>示意單價（${draft.currency}）<input name="price" type="number" min="0.00000001" max="100000000" step="any" value="${draft.price}" required></label>`:''}
+    ${isExperience?`<div class="form-grid"><label>體驗年齡<input name="age" type="number" min="20" max="120" step="1" required value="${draft.age}"></label><label>狀態<select name="status"><option ${draft.status==='規劃中'?'selected':''}>規劃中</option><option ${draft.status==='已完成'?'selected':''}>已完成</option></select></label></div>`:''}
+    ${collection==='income'?`<label>入帳狀態<select name="status"><option ${draft.status==='待入帳'?'selected':''}>待入帳</option><option ${draft.status==='已入帳'?'selected':''}>已入帳</option></select></label>`:''}
+    <p class="form-error" id="form-error" role="alert"></p><div class="form-actions">${existing&&id!=='policy'?'<button type="button" class="danger-button" id="delete-demo">刪除</button>':''}<button type="button" class="secondary" id="cancel-demo">取消</button><button type="submit" class="primary">儲存示意資料</button></div></form>`);
+  el('done-detail').hidden=true;
+  el('cancel-demo').addEventListener('click',()=>el('detail').close());
+  el('demo-form').addEventListener('submit',event=>{
+    event.preventDefault();
+    const form=event.currentTarget;if(!form.reportValidity())return;
+    const fields=new FormData(form);
+    try{
+      applyDemoRecord(demo,collection,{...draft,name:fields.get('name'),amount:Number(fields.get('amount')),currency:fields.get('currency')??draft.currency,price:fields.has('price')?Number(fields.get('price')):draft.price,age:fields.has('age')?Number(fields.get('age')):draft.age,status:fields.get('status')??draft.status});
+      el('detail').close();refreshOverview();renderCurrentPage();showNotice('示意資料已更新，未寫入 Google Sheet。');
+    }catch(error){el('form-error').textContent=error.message;}
+  });
+  if(el('delete-demo'))el('delete-demo').addEventListener('click',()=>{
+    el('detail').close();openDetail('刪除這筆示意資料？',`<p class="dialog-copy">「${escapeText(draft.name)}」只會從目前預覽移除。重新整理可以還原。</p><div class="form-actions"><button class="secondary" id="cancel-delete">取消</button><button class="danger-button" id="confirm-delete">確認刪除示意資料</button></div>`);el('done-detail').hidden=true;
+    el('cancel-delete').addEventListener('click',()=>el('detail').close());
+    el('confirm-delete').addEventListener('click',()=>{removeDemoRecord(demo,collection,id);el('detail').close();refreshOverview();renderCurrentPage();showNotice('已移除示意資料。');});
+  });
+}
+function editExtra(key){
+  if(privateMode){showNotice('請先顯示金額。');return;}
+  openDetail(key==='realestate'?'房地產示意金額':'負債示意金額',`<form class="editor-form" id="extra-form"><label>金額（TWD）<input name="value" type="number" min="0" max="10000000000" step="any" required value="${demo.extras[key]}"></label><p class="muted">只修改預覽資料，不寫入 Sheet。</p><button class="primary" type="submit">儲存示意金額</button></form>`);el('done-detail').textContent='取消';
+  el('extra-form').addEventListener('submit',e=>{e.preventDefault();if(!e.currentTarget.reportValidity())return;demo.extras[key]=Number(new FormData(e.currentTarget).get('value'));el('detail').close();refreshOverview();renderCurrentPage();showNotice('示意金額已更新。');});
+}
+function parameter(key,label,unit,min,max,step=1){return `<label class="param-row">${label}<input required data-param="${key}" aria-label="${label}" type="number" min="${min}" max="${max}" step="${step}" value="${projection[key]}" class="${['start','spend','income','floor','legacy','experienceBudget'].includes(key)?'private-input':''}"><span>${unit}</span></label>`;}
+function renderPlanningPreview(){
+  el('secondary-page').innerHTML=`<div class="page-banner"><h2>把時間留給想做的事</h2><p>試著調整人生階段，看看資產曲線如何改變。</p><div class="banner-art">${scene()}</div></div>
+    <div class="planning-layout"><details class="panel params" open><summary>模擬參數</summary>
+      <div class="param-group"><h3>時間軸</h3>${parameter('age','目前年齡','歲',20,100)}${parameter('retire','退休年齡','歲',20,120)}${parameter('life','預計壽命','歲',21,120)}${parameter('windowEnd','體驗窗口至','歲',20,120)}</div>
+      <div class="param-group"><h3>資產與生活</h3>${parameter('start','起始資產','萬',0,100000,1)}${parameter('spend','目前年支出','萬',0,10000,1)}${parameter('income','退休前年收入','萬',0,10000,1)}${parameter('rate','年報酬率','%',-20,30,.1)}${parameter('inflation','年通膨率','%',0,15,.1)}</div>
+      <div class="param-group"><h3>退休與保留</h3>${parameter('early','退休初期支出','%',0,300,5)}${parameter('late','晚年支出','%',0,300,5)}${parameter('floor','保底金','萬',0,100000,10)}</div>
+      <details class="param-group"><summary>遺贈與體驗</summary>${parameter('legacy','留給下一代','萬',0,100000,1)}${parameter('giftAge','贈與年齡','歲',20,120)}${parameter('experienceBudget','每年體驗預算','萬',0,10000,1)}<label style="display:flex;gap:8px;font-size:12px;margin-top:16px"><input id="include-experiences" type="checkbox" ${includeExperiences?'checked':''}>計入下方體驗清單</label></details>
+      <p class="param-help">簡化模型：年末計息與收支，退休前收入、分階段支出、通膨及一次性體驗。與正式 DWZ 模型不同。</p></details>
+      <div><div class="projection-top"><div><h3>你的體驗窗口</h3><p>依輸入年齡展示，非自動建議</p></div><strong id="experience-window"></strong></div><section class="panel padded"><div class="section-head"><h2>財富生命曲線</h2><span class="badge">簡化試算</span></div><div id="projection-output"></div></section>
+      <section class="panel padded section-space"><h2>未來事件時間軸</h2><div id="life-timeline"></div></section>
+      <section class="panel padded section-space">${sectionTitle('體驗清單','experiences')}<div class="experience-stack">${experienceCards()}</div></section></div></div>`;
+  renderProjection();
+  for(const input of el('secondary-page').querySelectorAll('[data-param]'))input.addEventListener('input',()=>{
+    renderProjection();privacyRefresh();
+  });
+  el('include-experiences').addEventListener('change',event=>{includeExperiences=event.target.checked;renderProjection();privacyRefresh();});
+}
+function renderProjection(){
+  const inputs=Array.from(el('secondary-page').querySelectorAll('[data-param]'));
+  const values=validatedProjectionValues(inputs.map(input=>({key:input.dataset.param,value:input.value,min:Number(input.min),max:Number(input.max)})));
+  if(!values || inputs.some(input=>!input.validity.valid)) {
+    el('projection-output').innerHTML='<p class="form-error" role="alert">請填入範圍內的參數，全部有效後才會更新曲線。</p>';
+    el('life-timeline').textContent='請先確認參數。';
+    el('experience-window').textContent='—';
+    return;
+  }
+  projection={...projection,...values};
+  const rows=previewProjection(projection,includeExperiences?demo.experiences:[]);
+  el('experience-window').textContent=projection.windowEnd>projection.age?`${projection.age}–${projection.windowEnd} 歲`:'窗口已結束';
+  if(!rows.length){el('projection-output').innerHTML='<p class="form-error">預計壽命必須大於目前年齡。</p>';el('life-timeline').textContent='請先確認年齡設定。';return;}
+  const ceiling=Math.max(projection.floor,...rows.map(r=>r.value),1)*1.1;
+  const pts=rows.map((r,i)=>({x:52+i/(rows.length-1)*608,y:215-r.value/ceiling*180}));
+  const path=pts.map(p=>`${p.x},${p.y}`).join(' '),fy=215-projection.floor/ceiling*180;
+  const zero=rows.find(r=>r.value===0);
+  el('projection-output').innerHTML=`<div class="chart projection-chart money"><svg viewBox="0 0 700 265" role="img" aria-label="簡化人生資產試算曲線"><path d="M52 35H660M52 95H660M52 155H660M52 215H660" class="chart-grid"/><path d="M${path.replaceAll(' ',' L')} L660 215 L52 215Z" fill="#e5f2fc"/><polyline points="${path}" class="chart-line"/><path d="M52 ${fy}H660" stroke="#c39b61" stroke-width="2" stroke-dasharray="5 5"/><text x="0" y="39">${Math.round(ceiling)}</text><text x="20" y="219">0</text>${[0,Math.floor(rows.length/2),rows.length-1].map(i=>`<text x="${pts[i].x}" y="250" text-anchor="middle">${rows[i].age} 歲</text>`).join('')}</svg></div><div class="projection-legend"><span><i></i>資產（萬 TWD）</span><span><i class="floor"></i>保底金參考線</span></div><p class="block-note money">${zero?'此示意條件下，約 '+zero.age+' 歲資產歸零。':projection.life+' 歲的示意餘額：'+money(rows.at(-1).value)+' 萬 TWD。'} 保底金只是一條參考線，不會自動限制支出。</p><p class="subtle-note">僅供操作預覽，不代表正式 DWZ 結果，也不是報酬保證。</p>`;
+  const events=[{age:projection.age,name:'現在'},{age:projection.retire,name:'退休'},{age:projection.giftAge,name:'贈與'},{age:projection.life,name:'規劃終點'}].sort((a,b)=>a.age-b.age);
+  el('life-timeline').innerHTML=`<div class="timeline">${events.map(e=>`<div class="timeline-item"><strong>${e.age} 歲</strong>${e.name}</div>`).join('')}</div>`;
+}
+function renderIndicatorsPreview(){
+  const temp=demoTemperature(demo.indicators),label=temp===null?'資料不足':temp<35?'偏冷':temp>65?'偏熱':'中性';
+  el('secondary-page').innerHTML=`<section class="panel temp-hero"><h2>市場溫度計</h2><div class="temp-number num">${temp??'—'}<small>${label}</small></div><div class="temp-track"><span class="temp-pointer" style="left:${temp??50}%"></span></div><div class="temp-labels"><span>冷</span><span>偏冷</span><span>中性</span><span>偏熱</span><span>熱</span></div><p class="subtle-note">示意綜合分數，非即時行情；使用簡化範圍正規化，與正式指標演算法不同。</p></section>
+    <div class="toolbar section-space"><div><h2>10 項指標，不同角度</h2><p>觀察趨勢，也留意資料是否完整。</p></div><button class="secondary" data-action="indicators-edit">更新示意指標</button></div>
+    <div class="indicator-grid">${demo.indicators.map(r=>{const score=demoTemperature([r]);return `<article class="indicator"><div class="indicator-head"><h3>${r.name}</h3><span class="status-tag">${r.manual?'手動值示意':'自動值示意'}</span></div><div class="indicator-value num">${r.value??'—'}${r.id==='dominance'?'%':''}</div><p class="indicator-note">${r.note}</p><div class="indicator-range"><span style="width:${score??0}%"></span></div><div class="indicator-foot"><span>${r.value===null?'尚無示意值':'示意值 · 非即時資料'}</span><span>${r.min}–${r.max}</span></div></article>`;}).join('')}</div><p class="block-note">指標僅供參考，不構成投資建議。預覽不會抓取行情或更新真實指標。</p>`;
+}
+function editIndicators(){
+  openDetail('更新示意指標',`<form id="indicator-form" class="editor-form"><p class="muted">可編輯數值觀察版面與溫度變化，留白表示資料不足。</p><div class="form-grid">${demo.indicators.filter(r=>r.manual).map(r=>`<label>${r.name}<input name="${r.id}" type="number" min="${r.min}" max="${r.max}" step="any" value="${r.value??''}"></label>`).join('')}</div><button class="primary" type="submit">套用示意值</button></form>`);el('done-detail').textContent='取消';
+  el('indicator-form').addEventListener('submit',event=>{event.preventDefault();if(!event.currentTarget.reportValidity())return;const values=new FormData(event.currentTarget);for(const r of demo.indicators.filter(r=>r.manual))r.value=values.get(r.id)===''?null:Number(values.get(r.id));el('detail').close();renderIndicatorsPreview();showNotice('已套用示意值，未更新正式指標。');});
+}
+const demoArticles=[
+  {id:'feature',group:'英文媒體',title:'比特幣市場觀察：從價格之外看見變化',intro:'把短期波動放遠一點，從鏈上活動、資金流向與市場情緒，練習建立自己的觀察角度。',art:'bitcoin'},
+  {id:'chain',group:'繁中媒體',title:'讀懂鏈上數據的三個角度',intro:'哪些數據值得持續追蹤？從資料的定義開始，而不是只看單一數字。',art:'mountain'},
+  {id:'flow',group:'繁中媒體',title:'市場資金流向觀察',intro:'這是一則示意文章，展示列表、時間與內容的閱讀層次。',art:'bitcoin'},
+  {id:'ecosystem',group:'繁中媒體',title:'比特幣生態近期動態',intro:'用簡短摘要找到感興趣的主題，再深入閱讀完整內容。',art:'photo'}
+];
+function renderNewsPreview(){
+  const feature=demoArticles[0];
+  el('secondary-page').innerHTML=`<div class="toolbar"><p>近 12 小時 · 全部為虛構示意內容</p><button class="secondary" data-action="news-refresh">↻ 重新整理示意內容</button></div>
+    <section><div class="section-head" style="margin-bottom:16px"><h2>英文媒體</h2><span class="muted">示意來源</span></div><article class="panel news-feature"><div class="news-art">${scene('bitcoin')}</div><div class="news-feature-copy"><span class="badge">示意新聞</span><h2>${feature.title}</h2><div class="news-meta">英文媒體 · 2 小時前</div><p style="margin-top:14px">${feature.intro}</p><button class="text-button" style="padding-left:0" data-action="article" data-id="feature">閱讀示意文章 ›</button></div></article></section>
+    <section class="panel padded section-space">${sectionTitle('繁中媒體')}${demoArticles.slice(1).map((a,i)=>`<button class="news-row" data-action="article" data-id="${a.id}"><span class="news-thumb">${scene(a.art)}</span><span><h3>${a.title}</h3><p>示意來源 · ${i+3} 小時前</p></span><span class="chevron">›</span></button>`).join('')}</section>
+    <section class="section-space">${sectionTitle('X 熱議')}<div class="three-column section-space">${['把資料來源看清楚，也是一種重要的市場觀察。','每個人的持有期間不同，看待價格波動的方式也不同。','今天想追蹤哪個主題？先選一個，再深入了解。'].map((copy,i)=>`<article class="post"><div class="post-head"><span class="avatar">${['觀','數','幣'][i]}</span><span><strong>示意討論 ${i+1}</strong><br><span class="muted">${i+1} 小時前 · 虛構內容</span></span></div><p>${copy}</p></article>`).join('')}</div></section><p class="subtle-note">本頁不連外、不抓取新聞，也不代表任何媒體或真實帳號的發言。</p>`;
+}
+function renderStakingPreview(){
+  const baseline={btc:0.035,eth:6.8};
+  const rows=demo.accounts.filter(r=>r.category==='crypto'&&r.currency!=='USDT');
+  const total=rows.reduce((n,r)=>n+(baseline[r.id]===undefined?0:Math.max(0,r.amount-baseline[r.id])*r.price*DEMO_FX[r.currency]),0);
+  el('secondary-page').innerHTML=`<section class="staking-hero"><div class="banner-art">${scene('bitcoin')}</div><div class="eyebrow">可優先變現總額 · 示意</div><div class="balance num money">${money(total/10000)} <small>萬 TWD</small></div><p>目前持倉與 2025/10/01 示意基準比較</p><p class="block-note" style="max-width:570px">數量差異包含期間買賣，不等同純質押收益。本頁不提供交易操作。</p></section>
+    <div class="toolbar section-space"><h2>持倉明細</h2><p>換算使用固定示意價格</p></div><div class="staking-list">${rows.length?rows.map((r,i)=>{const has=baseline[r.id]!==undefined,delta=has?r.amount-baseline[r.id]:0;return `<details class="stake-item" ${i===0?'open':''}><summary><span class="stake-title"><span class="asset-icon">${r.id==='btc'?'₿':'◇'}</span>${escapeText(r.name)}</span><span class="stake-value num money">${has?money(Math.max(0,delta)*r.price*DEMO_FX[r.currency]/10000):'—'} 萬<small>TWD · 展開明細⌄</small></span></summary><div class="stake-detail"><div class="stake-numbers money"><div><span>基準數量</span><b class="num">${has?baseline[r.id].toFixed(4):'未設定'}</b></div><div><span>目前數量</span><b class="num">${r.amount.toFixed(4)}</b></div><div><span>數量差額</span><b class="num ${delta>=0?'positive':'negative'}">${has?(delta>=0?'+':'')+delta.toFixed(4):'—'}</b></div></div><p class="stake-formula">${has?'正數差額 × 示意原幣單價 × 示意匯率，換算為台幣；負數差額不計入可優先變現額。':'新建持倉尚未設定歷史基準，不計入合計。'}</p></div></details>`;}).join(''):'<p class="empty-state">尚無示意加密持倉。</p>'}</div>`;
+}
+function showLoginPreview(){
+  document.querySelector('.skip').setAttribute('href','#login-page');
+  document.querySelector('.workspace').hidden=true;document.querySelector('.sidebar').hidden=true;document.querySelector('.bottom-nav').hidden=true;
+  el('login-page').hidden=false;
+  el('login-page').innerHTML=`<div class="login-story"><h1>看清資產，<br>安排生活。</h1><p>把資產、收支與人生計畫放在一起。<br>留意今天的變化，也為未來留一點空間。</p><div class="login-art">${scene()}</div></div><div class="login-panel"><div class="login-inner"><div class="brand"><svg class="brandmark"><use href="#logo"/></svg>我的資產</div><h2>歡迎回來</h2><p>從了解自己的資產開始，<br>一步步靠近想過的生活。</p><button class="google-demo" data-action="demo-login"><span class="google-letter">G</span>模擬 Google 登入</button><p class="block-note">這是登入畫面預覽，不會連接 Google、不索取帳號或密碼。點擊後直接進入假資料總覽。</p><p class="login-small">霧白海藍 · 設計互動預覽</p></div></div>`;
+  document.title='登入 · 霧白海藍預覽';window.scrollTo({top:0,behavior:'instant'});
+}
+document.addEventListener('click',event=>{
+  const button=event.target.closest('[data-action]');if(!button)return;
+  const action=button.dataset.action,id=button.dataset.id,collection=button.dataset.collection;
+  if(action==='account-filter'){managementCategory=id;renderCurrentPage();}
+  if(action==='income-filter'){incomeFilter=id;renderCurrentPage();}
+  if(action==='add'||action==='edit')openEditor(collection,action==='edit'?id:undefined);
+  if(action==='extra')editExtra(id);
+  if(action==='indicators-edit')editIndicators();
+  if(action==='news-refresh'){renderNewsPreview();showNotice('示意內容已重繪，沒有連接外部新聞來源。');}
+  if(action==='article'){
+    const article=demoArticles.find(a=>a.id===id);
+    openDetail(article.title,`<p class="news-meta">${article.group} · 虛構示意文章</p><div class="news-art" style="min-height:150px;height:160px;margin:18px 0;border-radius:12px;overflow:hidden">${scene(article.art)}</div><p class="dialog-copy">${article.intro}</p><p class="block-note">正式版可開啟原文；此預覽只展示閱讀互動，沒有外部連結。</p>`);
+  }
+  if(action==='login')showLoginPreview();
+  if(action==='demo-login')navigatePage('總覽');
+  if(action==='reset'){
+    openDetail('還原示意資料？','<p class="dialog-copy">會清除這次預覽的持倉、收支與體驗編輯，回到原始假資料。不影響正式帳本。</p><div class="form-actions"><button class="secondary" id="cancel-reset">取消</button><button class="primary" id="confirm-reset">確認還原</button></div>');el('done-detail').hidden=true;
+    el('cancel-reset').addEventListener('click',()=>el('detail').close());
+    el('confirm-reset').addEventListener('click',()=>{demo=createDemoState();el('detail').close();refreshOverview();renderCurrentPage();showNotice('示意資料已還原。');});
+  }
+});
+// 隱藏金額狀態也套用到新建立的頁面內容。
+el('privacy').addEventListener('click',privacyRefresh);
+document.querySelector('.footer').insertAdjacentHTML('beforeend','<button class="text-button" data-action="login">登入預覽</button>');
+document.querySelector('.footer > span').textContent='全頁互動預覽 · 假資料 · 重新整理即還原';
+refreshOverview();
+
 </script>
 </body>
 </html>
