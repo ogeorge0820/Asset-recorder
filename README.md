@@ -4,7 +4,7 @@
 
 **線上預覽**：[https://ogeorge0820.github.io/Asset-recorder](https://ogeorge0820.github.io/Asset-recorder)
 
-**目前穩定版**：`v1.0`（tag 已保留在 GitHub，2026/05/27 發布）
+**目前穩定版**：`v1.1`（tag 已保留在 GitHub，2026/09/08 發布）
 
 **開發協作**：本專案原由 Claude Code 建立，目前改為 Claude Code 與 Codex 共用維護。所有 agent 動工前需遵守 [AGENTS.md](AGENTS.md) 的工作守則，尤其是 `BUILD_DATE`、cache-buster、commit/push 與資料寫入防呆規範。
 
@@ -23,9 +23,9 @@
 | 資產類型 | 功能說明 |
 |----------|----------|
 | 流動現金 | 支援多幣種（TWD、USD、JPY、SGD、EUR、HKD），自動換算台幣現值；USDT 自動整合顯示 |
-| 台股 | 輸入代號與股數，自動抓取即時股價（Yahoo Finance） |
-| 美股 | 輸入代號與股數，自動抓取即時股價（Yahoo Finance），換算台幣 |
-| 加密貨幣 | 輸入幣種與數量，透過 CoinGecko API 抓取即時幣價 |
+| 台股 | 輸入代號與股數，自動抓取即時股價（Yahoo Finance，經雲端價格 API 代抓） |
+| 美股 | 輸入代號與股數，自動抓取即時股價（Yahoo Finance，經雲端價格 API 代抓），換算台幣 |
+| 加密貨幣 | 輸入幣種與數量，透過 Binance / CoinGecko API 直連抓取即時幣價 |
 | 質押/活存收益 | 記錄每月因質押或活存增加的幣量；支援手動、外部存入、系統換算三種類型；顯示歷史累計總收益 |
 | 儲蓄險 | 輸入美元保額，自動換算台幣 |
 | 房地產 | 記錄不動產市值（計入總資產但排除於可用資產） |
@@ -44,6 +44,8 @@
 ### 快照功能
 - 每天 23:59 自動靜默記錄每日淨資產快照，用於計算本日 / 本月 / 本年收益
 - 每次資產變動後同步觸發靜默快照更新，趨勢圖即時反映最新數據
+- **雲端夜間快照**：Apps Script 每晚台北時間 22:00 / 23:00 自動寫入當日快照——app 沒開的日子也不會缺資料
+- **資料健檢徽章**：開機時比對雲端快照與即時計算，任一類別差異 >2% 即警示
 
 ### 主題切換
 - 支援 Dark Mode（深色）與 Light Mode（白色木質調）
@@ -59,9 +61,10 @@
 | 圖表 | [Chart.js 4.4.0](https://www.chartjs.org/) |
 | 認證 | Google Identity Services（OAuth 2.0） |
 | 資料儲存 | Google Sheets API v4 |
-| 股票報價 | Yahoo Finance API（透過 CORS Proxy） |
-| 加密貨幣報價 | [CoinGecko API](https://www.coingecko.com/en/api)（透過 CORS Proxy） |
-| 匯率 | Yahoo Finance（USDTWD=X、SGDTWD=X 等） |
+| 股票報價 | Yahoo Finance（透過自架 Apps Script 雲端價格 API 代抓；免費 CORS proxy 已於 2026/08 全面失效） |
+| 加密貨幣報價 | Binance / [CoinGecko API](https://www.coingecko.com/en/api)（原生 CORS 直連） |
+| 匯率 | Yahoo Finance（USDTWD=X 等，經雲端價格 API）；[open.er-api.com](https://www.exchangerate-api.com/) 備援 |
+| 雲端排程 | Google Apps Script（夜間自動快照 + 即時價格 API `doGet`） |
 | 部署 | GitHub Pages |
 
 ---
@@ -112,12 +115,57 @@ asset-recorder/
 ├── index.html    # HTML 結構（登入畫面、儀表板、管理頁面）
 ├── theme.css     # 主題變數與 Dark/Light Mode
 ├── style.css     # 主要樣式與 RWD
-└── app.js        # 單檔邏輯（API 串接、資料處理、圖表渲染）
+├── app.js        # 單檔邏輯（API 串接、資料處理、圖表渲染）
+└── apps-script/
+    └── nightly-snapshot.gs  # 雲端夜間快照 + 即時價格 API（鏡像檔，需手動貼回試算表部署）
 ```
 
 ---
 
 ## 版本歷史
+
+### v1.1 (2026/09/08)
+
+從 v1.0 起累積 53 個 commit，重心是「未來支出規劃」、「現金流防守包」、「價格源雲端化＋資料防護」三大塊。
+
+#### ✨ 新功能
+
+- **未來支出規劃（Phase 1–3 完整落地）**
+  - 新增 `expense_planned` 工作表與 CRUD UI：月固定支出（可設結束日）與一次性支出
+  - per-item toggle 整合進 DWZ 模擬與首頁財務存活月數，預設全部納入考量
+  - 到期支出自動移除、取代既有支出流程、未來事件時間軸
+- **現金流防守包**
+  - 現金跑道卡（保守估計：現金 ÷ 淨月燒）
+  - 應收帳款卡：未收筆數、最久逾期天數、集中度分析
+  - 90 天現金流預測，後改版為**安全水位圖**：保守水位主線＋紅黃綠安全區底色（門檻同跑道卡 3／6 個月淨月燒）＋樂觀差額色帶（逾期應收價值）
+- **雲端夜間自動快照（Apps Script）**
+  - 每晚台北 22:00 / 23:00 自動寫入 `daily_snapshots`——app 沒開的日子不再缺資料
+  - 加密幣價改 Yahoo 驗證代號優先（Google 機房對 Binance / CoinGecko 限流 429）
+  - `backfillJunJul` 一鍵回補歷史缺日工具
+- **資料健檢徽章**：開機比對雲端快照 vs 即時計算，任一類別差異 >2% 警示（上線一個月即抓到一筆壞快照，真實立功）
+- **比特幣新聞 tab**：近 12 小時英文／中文／X 三區塊
+- **質押收益獨立頁**
+- **DWZ 參數雲端同步**：參數、未來支出開關、策略實驗室、ROI 精算表全部跨裝置同步（解決手機/電腦數值不一致）
+- **CSV 匯入預覽增強**：「動作」欄顯示每幣數量增減（綠加紅減）
+
+#### 🎨 UI / UX
+
+- 總覽視覺兩輪演進：v1.1 lavender 風（hero 強化、入場動畫、數字 pop）→ 定稿「私人銀行」淺色風（去粉嫩漸層）
+- 本日／本月卡片改極簡 mini-bars，主角回歸大數字（42 → 30px hero 層級調整）
+- mini-bars 自訂 tooltip（取代瀏覽器原生慢速 title）
+
+#### 🐛 Bug Fix
+
+- **台美股價格全面抓不到（2026/08/24）**：免費 CORS proxy 生態全滅（corsproxy.io 永久停用免費版、allorigins / codetabs 不穩）。治本方案：自架 Apps Script 雲端價格 API（`doGet` /exec）代抓 Yahoo，加 er-api 匯率備援與近 7 日快照價墊底，三層防線
+- **daily_snapshots 可能被 transient 空讀抹光**：`saveSheet` 守門改為覆寫前即時重讀
+- **切 tab 跑版根因**：`switchTab` 強制 `display:block` 蓋掉 CSS flex 導致 gap 失效；連帶修正 chart resize 策略（輕量 resize 取代 destroy+recreate）
+- CRO 價格失敗（CoinGecko id 失效）、新聞源代理鏈修復、編輯列 sort/index 錯位、週末誤標「今日」
+
+#### 🔧 架構與協作
+
+- **價格源架構重造**：瀏覽器直連（Binance / CoinGecko 原生 CORS）＋雲端代抓（Yahoo 台美股／匯率），徹底脫離免費 proxy 依賴
+- `.claude/skills/` 專案層 skills 建立（危險區守則、版本 bump 機械化、視覺除錯流程）
+- `AGENTS.md` 全面校訂：Claude Code 與 Codex 共同守則，涵蓋資料防線、部署流程、口徑設計說明
 
 ### v1.0 (2026/05/27)
 
