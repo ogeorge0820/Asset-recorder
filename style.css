@@ -2808,3 +2808,13 @@ h3.section-header {
 .asset-explorer #tab-dwz .bucket-tab:hover { color: var(--text-primary); }
 .asset-explorer #tab-dwz .bucket-tab.active { background: var(--brand-lavender-soft); color: var(--brand-lavender); border-color: transparent; font-weight: 600; }
 .asset-explorer #tab-dwz .btn-dwz-add { border: 1px dashed var(--brand-lavender-border); background: var(--brand-lavender-tint); color: var(--accent); border-radius: 12px; min-height: 38px; padding: 6px 14px; }
+
+/* 指標：溫度計主卡與指標卡統一圓角柔影；紅黃綠訊號底色為語意色，保留。 */
+.asset-explorer #tab-indicators { padding: 0; }
+.asset-explorer #tab-indicators .explorer-welcome { margin-bottom: 18px; }
+.asset-explorer .ind-thermo-card { border-radius: 20px !important; box-shadow: var(--card-shadow-soft); padding: 24px 24px 26px; margin-bottom: 20px; }
+.asset-explorer .ind-thermo-num { font-weight: 600; font-size: 40px; color: var(--accent); }
+.asset-explorer .ind-grid { gap: 16px; }
+.asset-explorer .ind-card { border-radius: 14px !important; box-shadow: var(--card-shadow-soft); padding: 18px 18px 14px; }
+.asset-explorer #tab-indicators .ind-card-edit { border-radius: 8px; }
+.asset-explorer .ind-disclaimer { background: var(--brand-lavender-tint); color: var(--text-secondary); padding: 12px 16px; border-radius: 11px; margin-top: 20px; line-height: 1.8; }
