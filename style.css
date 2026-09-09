@@ -2818,3 +2818,15 @@ h3.section-header {
 .asset-explorer .ind-card { border-radius: 14px !important; box-shadow: var(--card-shadow-soft); padding: 18px 18px 14px; }
 .asset-explorer #tab-indicators .ind-card-edit { border-radius: 8px; }
 .asset-explorer .ind-disclaimer { background: var(--brand-lavender-tint); color: var(--text-secondary); padding: 12px 16px; border-radius: 11px; margin-top: 20px; line-height: 1.8; }
+
+/* 新聞：主卡圓角柔影、清單列呼吸感加大；抓取與來源邏輯未動。 */
+.asset-explorer #tab-news { padding: 0; }
+.asset-explorer #tab-news .explorer-welcome { margin-bottom: 18px; }
+.asset-explorer .news-card { border: 1px solid var(--border); border-radius: 20px !important; box-shadow: var(--card-shadow-soft); padding: 24px; }
+.asset-explorer .news-zone-label { color: var(--text-primary); font-size: 14px; font-weight: 600; }
+.asset-explorer .news-zone-count { background: var(--brand-lavender-soft); color: var(--brand-lavender); border-radius: 12px; padding: 2px 9px; }
+.asset-explorer .news-item { padding: 14px 0; }
+.asset-explorer .news-item-title { font-size: 13.5px; line-height: 1.65; }
+.asset-explorer #tab-news .news-refresh-btn { border: 1px solid var(--border); border-radius: 50%; width: 36px; height: 36px; background: var(--bg-card); color: var(--accent); }
+.asset-explorer #tab-news .news-refresh-btn:hover { background: var(--brand-lavender-soft); }
+.asset-explorer .news-disclaimer { color: var(--text-muted); margin-top: 16px; line-height: 1.8; }
