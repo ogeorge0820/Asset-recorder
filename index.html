@@ -16,18 +16,29 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=DM+Sans:wght@300;400;500;600;700&display=swap">
-<link rel="stylesheet" href="theme.css?v=202609100755">
-<link rel="stylesheet" href="style.css?v=202609100755">
+<link rel="stylesheet" href="theme.css?v=202609100757">
+<link rel="stylesheet" href="style.css?v=202609100757">
 </head>
 <body class="asset-explorer">
 
 <!-- ── Login Screen ── -->
 <div id="login-screen">
-  <div class="login-card">
-    <h1>個人資產追蹤</h1>
-    <p>使用 Google 帳號登入<br>以存取您的資產資料</p>
-    <button class="btn-google" id="btn-signin">使用 Google 登入</button>
-    <div id="login-error"></div>
+  <div class="login-story" aria-hidden="true">
+    <div class="login-story-copy">
+      <p class="explorer-eyebrow">資產探索</p>
+      <h2>看清資產，<br>安排生活。</h2>
+      <p>把資產、收支與人生計畫放在一起。<br>留意今天的變化，也為未來留一點空間。</p>
+    </div>
+    <svg class="login-art" viewBox="0 0 400 220" xmlns="http://www.w3.org/2000/svg"><rect width="400" height="220" fill="#e6f3fc"/><circle cx="305" cy="47" r="25" fill="#f6e8c8"/><path d="m-20 192 115-129 127 146 78-93 130 104H0" fill="#bedbef"/><path d="m30 220 127-117 75 74 35-43 157 86" fill="#91c0df"/><path d="M0 204Q90 172 180 196T400 182V220H0" fill="#d1e8f5"/><path d="M165 139v65M227 139v65M149 130h95M155 149h83" stroke="#3e7da7" stroke-width="8" stroke-linecap="round"/><path d="M0 219Q180 173 400 212" stroke="#f6fbff" fill="none" stroke-width="7"/></svg>
+  </div>
+  <div class="login-panel">
+    <div class="login-card">
+      <div class="login-brand"><span class="nav-logo">$</span>資產探索</div>
+      <h1>歡迎回來</h1>
+      <p>使用 Google 帳號登入<br>以存取您的資產資料</p>
+      <button class="btn-google" id="btn-signin">使用 Google 登入</button>
+      <div id="login-error"></div>
+    </div>
   </div>
 </div>
 
@@ -807,6 +818,6 @@
 <!-- ── Toast ── -->
 <div class="toast" id="toast"></div>
 
-<script src="app.js?v=202609100755"></script>
+<script src="app.js?v=202609100757"></script>
 </body>
 </html>
