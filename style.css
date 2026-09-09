@@ -2725,3 +2725,41 @@ h3.section-header {
 }
 .asset-explorer .ov2-alloc-head { flex-wrap: wrap; }
 .asset-explorer .ov2-alloc-head h3 { flex-shrink: 0; }
+
+/* 管理頁保留原本展開與編輯流程，以一致的分類卡呈現。 */
+.asset-explorer #tab-management { padding: 0; }
+.asset-explorer #tab-management .explorer-welcome { margin-bottom: 18px; }
+.asset-explorer #tab-management .price-bar { margin-bottom: 26px; background: transparent; padding: 0; border: 0; }
+.asset-explorer #tab-management .holdings-hero { padding: 0; margin: 0 0 30px; }
+.asset-explorer #tab-management .holdings-hero-title { font-size: 17px; margin: 0 0 14px; }
+.asset-explorer #tab-management .holdings-grid { grid-template-columns: minmax(0,1fr) !important; gap: 14px !important; }
+.asset-explorer #tab-management .holding-block { border: 1px solid var(--border); border-radius: 20px; background: var(--bg-card); box-shadow: var(--card-shadow-soft); min-width: 0; }
+.asset-explorer #tab-management .holding-card {
+  background: var(--bg-card) !important; color: var(--text-primary) !important;
+  border-radius: 0; min-height: 152px; padding: 22px; box-shadow: none;
+}
+.asset-explorer #tab-management .holding-card:hover { background: var(--bg-hover) !important; transform: none; box-shadow: none; }
+.asset-explorer #tab-management .holding-block.expanded .holding-card { background: var(--brand-lavender-tint) !important; border-bottom: 1px solid var(--border); }
+.asset-explorer #tab-management .hc-deco { display: none; }
+.asset-explorer #tab-management .hc-top { gap: 10px; align-items: center; }
+.asset-explorer #tab-management .hc-label { opacity: 1; color: var(--text-primary); font-size: 13px; letter-spacing: 0; }
+.asset-explorer #tab-management .hc-label-en { display: none; }
+.asset-explorer #tab-management .hc-count { color: var(--text-secondary); opacity: 1; font-size: 11px; white-space: nowrap; }
+.asset-explorer #tab-management .hc-amount { color: var(--accent); font-weight: 600; font-size: 30px !important; padding-top: 16px; overflow-wrap: anywhere; }
+.asset-explorer #tab-management .hc-symbols { opacity: 1; color: var(--text-secondary); letter-spacing: 0; padding-right: 20px; }
+.asset-explorer #tab-management .hc-avail { color: var(--text-secondary); }
+.asset-explorer #tab-management .hc-change.pos { color: var(--success); }
+.asset-explorer #tab-management .hc-change.neg { color: var(--danger); }
+.asset-explorer #tab-management .hc-side-label, .asset-explorer #tab-management .hc-side-val { color: var(--text-secondary); opacity: 1; }
+.asset-explorer #tab-management .hc-split-right { border-color: var(--border); }
+.asset-explorer #tab-management .holding-detail { padding: 16px; background: var(--bg-card); }
+.asset-explorer #tab-management .btn-add { border: 1px dashed var(--brand-lavender-border); background: var(--brand-lavender-tint); color: var(--accent); border-radius: 12px; min-height: 44px; }
+.asset-explorer #tab-management .asset-card-pct { background: var(--brand-lavender-soft) !important; color: var(--brand-lavender) !important; }
+.asset-explorer #tab-management .asset-card { padding: 16px 0 !important; }
+.asset-explorer #tab-management .asset-card-sym { font-weight: 600; }
+.asset-explorer #tab-management .holding-card:focus-visible { outline: 2px solid var(--accent); outline-offset: -4px; }
+@media (min-width: 1024px) {
+  .asset-explorer #tab-management .holdings-grid { grid-template-columns: repeat(2,minmax(0,1fr)) !important; gap: 20px !important; }
+  .asset-explorer #tab-management .holding-detail { padding: 20px 24px; }
+}
+.asset-explorer #tab-management .holding-card .hc-amount { color: var(--accent) !important; }

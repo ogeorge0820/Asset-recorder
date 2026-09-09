@@ -9,7 +9,7 @@ const current=fs.readFileSync(path.join(root,'app.js'),'utf8');
 const baseline=execFileSync('git',['show','v1.1:app.js'],{cwd:root,encoding:'utf8'});
 const html=fs.readFileSync(path.join(root,'index.html'),'utf8');
 function run(source,expression){
- const context=vm.createContext({document:{addEventListener(){}},localStorage:{getItem(){return null}},console, Chart:{register(){},defaults:{font:{}},Tooltip:{positioners:{}}}, setTimeout(){},setInterval(){},window:{addEventListener(){}}});
+ const context=vm.createContext({document:{addEventListener(){}},localStorage:{getItem(){return null}},console, Chart:{register(){},defaults:{font:{}},Tooltip:{positioners:{}}}, setTimeout(){},clearTimeout(){},setInterval(){},window:{addEventListener(){}}});
  vm.runInContext(source,context);
  return JSON.parse(vm.runInContext(`
  S.data.cash=[['示意台幣',2400000,'TWD'],['示意美元',15000,'USD']];
@@ -41,4 +41,32 @@ test('新版六個導覽入口具備清楚的圖示與名稱',()=>{
 test('桌機側欄與原頁尾使用獨立版本掛載點',()=>{
  assert.equal((html.match(/id="build-badge"/g)||[]).length,1);
  assert.equal((html.match(/id="sidebar-build-badge"/g)||[]).length,1);
+});
+test('管理頁保留全部資料掛載點、匯入與原有操作入口',()=>{
+ const before=execFileSync('git',['show','v1.1:index.html'],{cwd:root,encoding:'utf8'});
+ const management=s=>s.split('<div id="tab-management" style="display:none">')[1].split('</div><!-- /tab-management -->')[0];
+ for(const m of management(before).matchAll(/(?:id|onclick)="([^"]+)"/g)) assert.ok(management(html).includes(m[0]),m[0]);
+});
+async function captureWrite(source, count, rows){
+ const operations=[];
+ const ctx=vm.createContext({document:{addEventListener(){},getElementById(){return {textContent:'',className:''}}},localStorage:{getItem(){return null}},console:{error(){}},Chart:{register(){},defaults:{font:{}},Tooltip:{positioners:{}}},setTimeout(){},clearTimeout(){},setInterval(){},window:{addEventListener(){}}});
+ vm.runInContext(source,ctx);
+ ctx.testRows=rows;
+ ctx.testCount=count;
+ ctx.capture=(method,range,values)=>operations.push({method,range,values:values?JSON.parse(JSON.stringify(values)):undefined});
+ vm.runInContext("sheetGet=async()=>Array.from({length:testCount+1},()=>['示意']); sheetClear=async range=>capture('clear',range); sheetPut=async(range,values)=>capture('put',range,values);",ctx);
+ let error=null;
+ try { await vm.runInContext("saveSheet('cash_accounts',testRows)",ctx); } catch(e){error=e.message;}
+ return {operations,error};
+}
+test('原本寫入流程的欄位、清除範圍與 v1.1 相同',async()=>{
+ const rows=[['示意帳戶',10000,'TWD']];
+ const result=await captureWrite(current,2,rows);
+ assert.deepEqual(result,await captureWrite(baseline,2,rows));
+ assert.deepEqual(result.operations[1].values,[['bank_name','amount','currency'],...rows]);
+});
+test('列數異常減少時仍拒寫，完全不清除資料',async()=>{
+ const result=await captureWrite(current,8,[['示意帳戶',10000,'TWD']]);
+ assert.match(result.error,/BLOCKED/);
+ assert.deepEqual(result.operations,[]);
 });
