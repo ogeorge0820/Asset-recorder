@@ -2763,3 +2763,12 @@ h3.section-header {
   .asset-explorer #tab-management .holding-detail { padding: 20px 24px; }
 }
 .asset-explorer #tab-management .holding-card .hc-amount { color: var(--accent) !important; }
+
+/* 桌機恢復整頁捲動：舊設計鎖 html/body、內容區內部捲；改版後內容區已 overflow:visible，外層必須跟著解鎖。 */
+@media (min-width: 769px) {
+  html:has(body.asset-explorer), body.asset-explorer {
+    height: auto !important;
+    min-height: 100vh;
+    overflow: visible !important;
+  }
+}
