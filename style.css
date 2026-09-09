@@ -2772,3 +2772,39 @@ h3.section-header {
     overflow: visible !important;
   }
 }
+
+/* 人生規劃（DWZ）：左欄合併為單一參數卡、右欄卡片統一圓角柔影。只覆蓋視覺，不動計算與掛載點。 */
+.asset-explorer #tab-dwz { padding: 0; }
+.asset-explorer #tab-dwz .explorer-welcome { margin-bottom: 18px; }
+.asset-explorer .dwz-layout { gap: 20px; }
+.asset-explorer .dwz-left {
+  background: var(--bg-card); border: 1px solid var(--border);
+  border-radius: 20px; box-shadow: var(--card-shadow-soft);
+  padding: 20px 18px; gap: 0; top: 24px; max-height: calc(100vh - 48px);
+}
+@media (max-width: 900px) { .asset-explorer .dwz-left { max-height: none; } }
+.asset-explorer .dwz-left-head { background: none; border: none; box-shadow: none; border-radius: 0; padding: 0 0 12px; }
+.asset-explorer .dwz-left-blocks { gap: 0; }
+.asset-explorer .dwz-param-block {
+  background: none; border: none; box-shadow: none; border-radius: 0;
+  border-top: 1px solid var(--border); padding: 12px 0; margin: 0;
+}
+.asset-explorer .dwz-block-title { color: var(--text-muted); font-size: 11px; font-weight: 500; letter-spacing: .05em; }
+.asset-explorer .dwz-kpi-tag { background: var(--brand-lavender-soft); border-color: transparent; backdrop-filter: none; -webkit-backdrop-filter: none; }
+.asset-explorer .dwz-kpi-tag b { color: var(--brand-lavender); }
+.asset-explorer .dwz-param-input {
+  background: var(--bg-input); border: 1px solid var(--border); border-radius: 9px;
+  min-height: 34px; padding: 5px 9px;
+}
+.asset-explorer .dwz-param-input:hover { background: var(--bg-hover); }
+.asset-explorer .dwz-param-input:focus { background: var(--bg-card); border-color: var(--accent); box-shadow: 0 0 0 3px var(--brand-lavender-tint); }
+.asset-explorer .dwz-best-window-card,
+.asset-explorer .dwz-chart-card,
+.asset-explorer .dwz-expenses-card { border-radius: 20px !important; box-shadow: var(--card-shadow-soft); }
+.asset-explorer .dwz-chart-card,
+.asset-explorer .dwz-expenses-card { background: var(--bg-card) !important; border: 1px solid var(--border); padding: 20px; }
+.asset-explorer .bucket-filter-tabs { border-bottom: none; gap: 6px; flex-wrap: wrap; }
+.asset-explorer #tab-dwz .bucket-tab { background: none; border: 1px solid var(--border); border-radius: 18px; padding: 6px 13px; margin-bottom: 0; color: var(--text-secondary); min-height: 34px; }
+.asset-explorer #tab-dwz .bucket-tab:hover { color: var(--text-primary); }
+.asset-explorer #tab-dwz .bucket-tab.active { background: var(--brand-lavender-soft); color: var(--brand-lavender); border-color: transparent; font-weight: 600; }
+.asset-explorer #tab-dwz .btn-dwz-add { border: 1px dashed var(--brand-lavender-border); background: var(--brand-lavender-tint); color: var(--accent); border-radius: 12px; min-height: 38px; padding: 6px 14px; }
