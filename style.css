@@ -2830,3 +2830,12 @@ h3.section-header {
 .asset-explorer #tab-news .news-refresh-btn { border: 1px solid var(--border); border-radius: 50%; width: 36px; height: 36px; background: var(--bg-card); color: var(--accent); }
 .asset-explorer #tab-news .news-refresh-btn:hover { background: var(--brand-lavender-soft); }
 .asset-explorer .news-disclaimer { color: var(--text-muted); margin-top: 16px; line-height: 1.8; }
+
+/* 質押：主卡圓角柔影＋頁首總額區改淡藍暈染 hero；基準比對計算未動。 */
+.asset-explorer #tab-staking { padding: 0; }
+.asset-explorer #tab-staking .explorer-welcome { margin-bottom: 18px; }
+.asset-explorer .staking-card { border-radius: 20px !important; box-shadow: var(--card-shadow-soft); background: var(--bg-card); padding: 24px; }
+.asset-explorer .staking-head { background: linear-gradient(120deg, var(--brand-lavender-tint), var(--explorer-sky)); border: 1px solid var(--brand-lavender-border); border-radius: 16px; padding: 20px 22px; margin-bottom: 14px; }
+.asset-explorer .staking-total-num { color: var(--accent); font-weight: 600; font-size: 30px; }
+.asset-explorer .staking-section-count { background: var(--brand-lavender-soft); color: var(--brand-lavender); }
+.asset-explorer .staking-row { padding: 12px 2px; border-bottom: 1px solid var(--border); }
