@@ -4,7 +4,7 @@
 // 應用版本號 — 重大功能變更才升版（小修補只更新 BUILD_DATE）
 const APP_VERSION = 'v1.0';
 // Build 時間：每次修改 code 後手動更新此時間（UTC+8 台北時間）
-const BUILD_DATE = '2026/09/09 07:31';
+const BUILD_DATE = '2026/09/09 14:47';
 
 const SPREADSHEET_ID = '1lpRpxVzWaYUqL-jVPOAJCtjsJUIedPYYyOx4gg4PPFU';
 const CLIENT_ID = '149884248440-85f8dhc6ub9up10sv0f89e3e0itrnooj.apps.googleusercontent.com';
@@ -3662,7 +3662,7 @@ function chartColors() {
     center_sub:  light ? '#666666'             : 'rgba(255,255,255,0.82)',
     nodata:      light ? '#999999'             : 'rgba(255,255,255,0.7)',
     border:      light ? '#ffffff'             : '#1a1a1a',
-    line1:       light ? '#111111'             : '#ffffff',
+    line1:       light ? '#1676bf'             : '#ffffff',
     line2:       light ? '#16a34a'             : '#22c55e',
     barPos:      light ? 'rgba(22,163,74,.65)' : 'rgba(34,197,94,.65)',
     barNeg:      light ? 'rgba(220,38,38,.65)' : 'rgba(239,68,68,.65)',
@@ -4061,7 +4061,7 @@ function renderTrend() {
           const { ctx: c, chartArea } = context.chart;
           if (!chartArea) return 'rgba(0,0,0,0)';
           const g = c.createLinearGradient(0, chartArea.top, 0, chartArea.bottom);
-          g.addColorStop(0, cc.line1 === '#007AFF' ? 'rgba(0,122,255,0.22)' : 'rgba(99,102,241,0.22)');
+          g.addColorStop(0, cc.line1 === '#1676bf' ? 'rgba(22,118,191,0.18)' : 'rgba(99,102,241,0.22)');
           g.addColorStop(1, 'rgba(0,0,0,0)');
           return g;
         },
@@ -7706,13 +7706,13 @@ function _renderNewsZone(zone, items, error) {
 document.addEventListener('DOMContentLoaded', () => {
   // 一次性遷移到乾淨主題系統（清除舊 Phase 遷移 flag）
   if (!localStorage.getItem('theme_clean_v1')) {
-    // 沿用使用者既有偏好（如果有），否則預設 dark
+    // 沿用使用者既有偏好（如果有），否則預設 light
     const prev = localStorage.getItem('theme');
-    localStorage.setItem('theme', prev === 'light' ? 'light' : 'dark');
+    localStorage.setItem('theme', prev === 'dark' ? 'dark' : 'light');
     localStorage.setItem('theme_clean_v1', '1');
   }
-  // Restore saved theme（預設深色）
-  const savedTheme = localStorage.getItem('theme') || 'dark';
+  // 沿用儲存的主題（預設淺色）
+  const savedTheme = localStorage.getItem('theme') || 'light';
   document.documentElement.dataset.theme = savedTheme;
   Chart.defaults.color = savedTheme === 'light' ? '#666666' : 'rgba(255,255,255,0.88)';
   updateThemeBtn();

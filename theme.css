@@ -2669,3 +2669,32 @@ body.ov2-animated .ov2-hero-sub-num {
 .cf-chart-wrap { position: relative; height: 200px; }
 @media (min-width: 640px) { .cf-chart-wrap { height: 240px; } }
 .cf-row-payer { display: block; font-size: 10px; color: var(--text-muted); font-weight: 400; }
+
+/* 霧白海藍：沿用原本主題切換與資產分類。 */
+:root[data-theme="light"] {
+  --bg: #f4f8fc;
+  --text-primary: #203449;
+  --text-secondary: #60758a;
+  --text-muted: #6c8093;
+  --accent: #1676bf;
+  --bg-hover: #e7f2fc;
+  --border: #e1eaf2;
+  --brand-lavender: #1676bf;
+  --brand-lavender-soft: #e7f2fc;
+  --brand-lavender-tint: #f0f7fd;
+  --brand-lavender-border: #cce4f5;
+  --card-shadow-soft: 0 8px 28px rgba(46,85,120,.045);
+  --explorer-sky: #dceefa;
+  --explorer-sea: #a6cce5;
+}
+:root[data-theme="dark"] {
+  --explorer-sky: #203c52;
+  --explorer-sea: #396786;
+}
+:root[data-theme="light"] {
+  --asset-cash: #4d9fa8;
+  --asset-tw: #1676bf;
+  --asset-us: #659dcd;
+  --asset-crypto: #94bdd9;
+  --asset-insurance: #a2b2c5;
+}

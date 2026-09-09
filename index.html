@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="zh-TW" data-theme="dark">
+<html lang="zh-TW" data-theme="light">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="theme-color" content="#0a0a0a">
+<meta name="theme-color" content="#f4f8fc">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black">
 <meta name="apple-mobile-web-app-title" content="資產">
@@ -16,10 +16,10 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=DM+Sans:wght@300;400;500;600;700&display=swap">
-<link rel="stylesheet" href="theme.css?v=202609090731">
-<link rel="stylesheet" href="style.css?v=202609090731">
+<link rel="stylesheet" href="theme.css?v=202609091447">
+<link rel="stylesheet" href="style.css?v=202609091447">
 </head>
-<body>
+<body class="asset-explorer">
 
 <!-- ── Login Screen ── -->
 <div id="login-screen">
@@ -36,17 +36,18 @@
   <header id="app-header">
     <div class="nav-brand">
       <div class="nav-logo">$</div>
-      <span class="nav-brand-text">資產追蹤</span>
+      <span class="nav-brand-text">資產探索</span>
     </div>
-    <nav class="tab-nav">
-      <button class="tab-btn active" onclick="switchTab('overview')">總覽</button>
-      <button class="tab-btn" onclick="switchTab('management')">管理</button>
-      <button class="tab-btn" onclick="switchTab('dwz')"><span class="tab-full">Die With Zero</span><span class="tab-short">DWZ</span></button>
-      <button class="tab-btn" onclick="switchTab('indicators')">指標</button>
-      <button class="tab-btn" onclick="switchTab('news')">新聞</button>
-      <button class="tab-btn" onclick="switchTab('staking')">質押</button>
+    <nav class="tab-nav" aria-label="主要導覽">
+      <button class="tab-btn active" onclick="switchTab('overview')"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="2"/><rect x="14" y="3" width="7" height="7" rx="2"/><rect x="3" y="14" width="7" height="7" rx="2"/><rect x="14" y="14" width="7" height="7" rx="2"/></svg><span>總覽</span></button>
+      <button class="tab-btn" onclick="switchTab('management')"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M3 7h18v13H3zM3 7l3-4h12l3 4M7 12h10"/></svg><span>管理</span></button>
+      <button class="tab-btn" onclick="switchTab('dwz')"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M4 21V4m0 1c6-5 10 5 16 0v11c-6 5-10-5-16 0"/></svg><span><span class="tab-full">Die With Zero</span><span class="tab-short">DWZ</span></span></button>
+      <button class="tab-btn" onclick="switchTab('indicators')"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M4 20V10m8 10V4m8 16v-7"/></svg><span>指標</span></button>
+      <button class="tab-btn" onclick="switchTab('news')"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M7 8h10M7 12h4m-4 4h10"/></svg><span>新聞</span></button>
+      <button class="tab-btn" onclick="switchTab('staking')"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><ellipse cx="12" cy="6" rx="8" ry="3"/><path d="M4 6v6c0 4 16 4 16 0V6M4 12v6c0 4 16 4 16 0v-6"/></svg><span>質押</span></button>
     </nav>
     <div class="header-right">
+      <span class="explorer-build" id="sidebar-build-badge"></span>
       <div class="update-badge" id="update-badge">
         <span class="update-dot" id="update-dot"></span>
         <span id="update-ts">—</span>
@@ -61,6 +62,7 @@
 
     <!-- ══ 總覽 Tab ══ -->
     <div id="tab-overview">
+      <div class="explorer-welcome"><div><p class="explorer-eyebrow">你的資產全貌</p><h1>讓資產，支持你想過的生活</h1><p>掌握今天的累積，也為下一段生活留好餘裕。</p></div><span class="explorer-horizon" aria-hidden="true"></span></div>
 
       <!-- 資料健檢徽章：雲端快照與即時計算差異 > 2% 時顯示 -->
       <button id="health-badge" class="health-badge" hidden onclick="openHealthDetail()">⚠️&nbsp;<span id="health-badge-text">資料健檢</span><span class="health-badge-cta">查看 ›</span></button>
@@ -70,7 +72,7 @@
         <div class="ov2-hero">
           <div class="ov2-hero-head">
             <div class="ov2-hero-primary">
-              <div class="ov2-hero-label"><span class="ov2-hero-label-icon" aria-hidden="true">💰</span>可用資產 · LIQUID NET WORTH</div>
+              <div class="ov2-hero-label"><span class="ov2-hero-label-icon" aria-hidden="true">💰</span>目前可用資產</div>
               <div class="ov2-hero-num skel" id="kv-liquid">—</div>
               <div class="ov2-hero-meta" id="ks-liquid">現金 + 投資組合</div>
             </div>
@@ -164,7 +166,7 @@
       <!-- 持倉 Top Movers — 近 14 天領漲（漲幅 / 賺額）+ 領跌 -->
       <section class="ov2-movers">
         <div class="ov2-movers-head">
-          <div class="ov2-movers-title">持倉 Top Movers</div>
+          <div class="ov2-movers-title">近期持倉動態</div>
           <div class="ov2-movers-period">
             <span class="ov2-movers-window" id="movers-window"></span>
             <div class="chart-filter ov2-movers-filter">
@@ -800,6 +802,6 @@
 <!-- ── Toast ── -->
 <div class="toast" id="toast"></div>
 
-<script src="app.js?v=202609090731"></script>
+<script src="app.js?v=202609091447"></script>
 </body>
 </html>
