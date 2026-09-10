@@ -4,7 +4,7 @@
 // 應用版本號 — 重大功能變更才升版（小修補只更新 BUILD_DATE）
 const APP_VERSION = 'v1.0';
 // Build 時間：每次修改 code 後手動更新此時間（UTC+8 台北時間）
-const BUILD_DATE = '2026/09/10 09:15';
+const BUILD_DATE = '2026/09/10 09:16';
 
 const SPREADSHEET_ID = '1lpRpxVzWaYUqL-jVPOAJCtjsJUIedPYYyOx4gg4PPFU';
 const CLIENT_ID = '149884248440-85f8dhc6ub9up10sv0f89e3e0itrnooj.apps.googleusercontent.com';
@@ -7602,6 +7602,8 @@ async function _fetchNewsEN(cutoffMs) {
         source: sp.source,
         ts,
         stat: '',
+        // Google News 的 description 是聚合連結，不當摘要；縮圖有提供才帶
+        thumb: it.thumbnail || (it.enclosure && it.enclosure.link) || '',
         score: tier * 100 + Math.max(0, 12 - (Date.now() - ts) / 3600000),
       };
     })
@@ -7632,6 +7634,8 @@ async function _fetchNewsZH(cutoffMs) {
         source: f.source,
         ts: new Date(it.pubDate).getTime(),
         stat: '',
+        thumb: it.thumbnail || (it.enclosure && it.enclosure.link) || '',
+        desc: _newsExcerpt(it.description),
       }))
       .filter(it => Number.isFinite(it.ts) && it.ts >= cutoffMs)
       .filter(it => BTC_KW.test(it.title || ''));
@@ -7738,6 +7742,16 @@ function _renderNewsUI(data, isStale) {
   }
 }
 
+// 來源提供的 description 去標籤截為摘要；沒有就回空字串（不自行編寫內容）
+function _newsExcerpt(html) {
+  if (!html) return '';
+  const text = String(html).replace(/<[^>]*>/g, ' ').replace(/&[a-z#\d]+;/gi, ' ').replace(/\s+/g, ' ').trim();
+  if (text.length < 8) return '';
+  return text.length > 90 ? text.slice(0, 90) + '…' : text;
+}
+// 缺圖時的中性插畫（取自核准設計稿；純裝飾，不代表文章內容）
+const _NEWS_ART = '<svg class="news-art-neutral" viewBox="0 0 400 220" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><rect width="400" height="220" fill="#e5f2fc"/><path d="M0 190 90 143 165 167 252 85 320 110 400 35V220H0" fill="#c3e0f5"/><path d="M0 178 90 131 165 155 252 73 320 98 400 23" fill="none" stroke="#78b8e2" stroke-width="3"/><circle cx="205" cy="114" r="69" fill="#2176b3"/><circle cx="205" cy="114" r="57" fill="none" stroke="#9bd0ef" stroke-width="2"/><text x="205" y="143" font-family="sans-serif" font-size="81" text-anchor="middle" fill="#fff">₿</text></svg>';
+
 function _renderNewsZone(zone, items, error) {
   const list = $('news-list-' + zone);
   const cEl = $('news-count-' + zone);
@@ -7752,19 +7766,55 @@ function _renderNewsZone(zone, items, error) {
     if (cEl) cEl.textContent = '0 則';
     return;
   }
-  list.innerHTML = items.map(it => `
-    <li class="news-item">
-      <a class="news-link" href="${esc(it.url || '#')}" target="_blank" rel="noopener noreferrer">
-        <div class="news-item-title">${esc(it.title || '(無標題)')}</div>
-        <div class="news-item-meta">
+  const metaHTML = (it) => `
+        <span class="news-item-meta">
           <span class="news-item-source">${esc(it.source || '—')}</span>
           <span class="news-item-dot">·</span>
           <span>${_fmtRelTime(it.ts)}</span>
           ${it.stat ? `<span class="news-item-dot">·</span><span class="news-item-stat">${esc(it.stat)}</span>` : ''}
-        </div>
+        </span>`;
+  const artHTML = (it) => `${it.thumb ? `<img src="${esc(it.thumb)}" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()">` : ''}${_NEWS_ART}`;
+  const rowHTML = (it) => `
+    <li class="news-item${zone === 'zh' ? ' news-item-thumbed' : ''}">
+      <a class="news-link" href="${esc(it.url || '#')}" target="_blank" rel="noopener noreferrer">
+        ${zone === 'zh' ? `<span class="news-thumb">${artHTML(it)}</span>` : ''}
+        <span class="news-item-body">
+          <span class="news-item-title">${esc(it.title || '(無標題)')}</span>
+          ${metaHTML(it)}
+          ${it.desc ? `<span class="news-item-desc">${esc(it.desc)}</span>` : ''}
+        </span>
       </a>
-    </li>
-  `).join('');
+    </li>`;
+  if (zone === 'en') {
+    const [feat, ...rest] = items;
+    list.innerHTML = `
+      <li class="news-feature-item">
+        <a class="news-link news-feature-link" href="${esc(feat.url || '#')}" target="_blank" rel="noopener noreferrer">
+          <span class="news-feature-art">${artHTML(feat)}</span>
+          <span class="news-feature-copy">
+            <span class="news-feature-badge">頭條</span>
+            <span class="news-feature-title">${esc(feat.title || '(無標題)')}</span>
+            ${metaHTML(feat)}
+            ${feat.desc ? `<span class="news-feature-desc">${esc(feat.desc)}</span>` : ''}
+            <span class="news-feature-cta">閱讀原文 ›</span>
+          </span>
+        </a>
+      </li>` + rest.map(rowHTML).join('');
+  } else if (zone === 'x') {
+    list.innerHTML = items.map(it => `
+      <li class="news-post">
+        <a class="news-link" href="${esc(it.url || '#')}" target="_blank" rel="noopener noreferrer">
+          <span class="news-post-head">
+            <span class="news-avatar">${esc((it.source || 'X').replace('@', '').charAt(0).toUpperCase())}</span>
+            <b>${esc(it.source || 'X')}</b>
+            <span class="news-post-time">${_fmtRelTime(it.ts)}${it.stat ? ' · ' + esc(it.stat) : ''}</span>
+          </span>
+          <span class="news-post-text">${esc(it.title || '(無標題)')}</span>
+        </a>
+      </li>`).join('');
+  } else {
+    list.innerHTML = items.map(rowHTML).join('');
+  }
   if (cEl) cEl.textContent = items.length + ' 則';
 }
 

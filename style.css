@@ -2945,3 +2945,29 @@ h3.section-header {
 .asset-explorer .dwz-timeline-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 20px; box-shadow: var(--card-shadow-soft); padding: 20px; }
 .asset-explorer .dwz-timeline-card .dwz-timeline { margin-top: 0; border-top: 0; padding-top: 0; }
 .asset-explorer .dwz-adv-block .dwz-strat-lab-body { padding-top: 8px; }
+
+/* 新聞對齊核准稿：英文主打卡、繁中圖文列、X 討論卡。圖文只用來源提供內容，缺圖用中性插畫。 */
+.asset-explorer .news-feature-item { list-style: none; margin-bottom: 6px; }
+.asset-explorer .news-feature-link { display: grid !important; grid-template-columns: minmax(0,1fr); gap: 0; border: 1px solid var(--border); border-radius: 16px; overflow: hidden; background: var(--bg-card); }
+@media (min-width: 600px) { .asset-explorer .news-feature-link { grid-template-columns: minmax(0,.9fr) minmax(0,1.1fr); } }
+.asset-explorer .news-feature-art { position: relative; min-height: 160px; display: block; background: var(--brand-lavender-soft); }
+.asset-explorer .news-feature-art img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; z-index: 1; }
+.asset-explorer .news-art-neutral { position: absolute; inset: 0; width: 100%; height: 100%; }
+.asset-explorer .news-feature-copy { display: block; padding: 20px 22px; }
+.asset-explorer .news-feature-badge { display: inline-flex; align-items: center; background: var(--brand-lavender-soft); color: var(--brand-lavender); font-size: 11px; font-weight: 600; border-radius: 12px; padding: 3px 10px; margin-bottom: 10px; }
+.asset-explorer .news-feature-title { display: block; font-size: 18px; font-weight: 600; line-height: 1.6; color: var(--text-primary); margin-bottom: 8px; }
+.asset-explorer .news-feature-desc { display: block; color: var(--text-secondary); font-size: 12.5px; line-height: 1.8; margin-top: 10px; }
+.asset-explorer .news-feature-cta { display: inline-block; color: var(--accent); font-size: 12px; margin-top: 12px; }
+.asset-explorer .news-item-thumbed .news-link { display: flex; gap: 15px; align-items: center; }
+.asset-explorer .news-thumb { position: relative; width: 90px; height: 64px; border-radius: 9px; overflow: hidden; flex: none; display: block; background: var(--brand-lavender-soft); }
+.asset-explorer .news-thumb img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; z-index: 1; }
+.asset-explorer .news-item-body { display: block; min-width: 0; flex: 1; }
+.asset-explorer .news-item-desc { display: block; color: var(--text-muted); font-size: 11.5px; line-height: 1.7; margin-top: 4px; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+.asset-explorer #news-list-x { display: grid; gap: 12px; grid-template-columns: minmax(0,1fr); padding-top: 4px; }
+@media (min-width: 900px) { .asset-explorer #news-list-x { grid-template-columns: repeat(3, minmax(0,1fr)); } }
+.asset-explorer .news-post { list-style: none; border: 1px solid var(--border); border-radius: 14px; background: var(--bg-card); }
+.asset-explorer .news-post .news-link { display: block; padding: 16px 18px; }
+.asset-explorer .news-post-head { display: flex; align-items: center; gap: 9px; margin-bottom: 9px; font-size: 12px; color: var(--text-primary); }
+.asset-explorer .news-avatar { width: 30px; height: 30px; border-radius: 50%; display: grid; place-items: center; background: var(--brand-lavender-soft); color: var(--brand-lavender); font-weight: 650; flex: none; }
+.asset-explorer .news-post-time { color: var(--text-muted); margin-left: auto; font-size: 11px; white-space: nowrap; }
+.asset-explorer .news-post-text { display: block; font-size: 13px; line-height: 1.8; color: var(--text-secondary); }
