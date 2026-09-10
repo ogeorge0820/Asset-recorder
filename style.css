@@ -2971,3 +2971,21 @@ h3.section-header {
 .asset-explorer .news-avatar { width: 30px; height: 30px; border-radius: 50%; display: grid; place-items: center; background: var(--brand-lavender-soft); color: var(--brand-lavender); font-weight: 650; flex: none; }
 .asset-explorer .news-post-time { color: var(--text-muted); margin-left: auto; font-size: 11px; white-space: nowrap; }
 .asset-explorer .news-post-text { display: block; font-size: 13px; line-height: 1.8; color: var(--text-secondary); }
+
+/* 質押對齊核准稿：每幣可展開明細（基準/目前/差額＋公式說明），分類分區保留。 */
+.asset-explorer .staking-section { display: grid; gap: 10px; }
+.asset-explorer .staking-section-head { border-bottom: 0; padding: 10px 2px 2px; }
+.asset-explorer .stake-item { background: var(--bg-card); border: 1px solid var(--border); border-radius: 14px; overflow: hidden; }
+.asset-explorer .stake-item summary { padding: 16px 18px; display: flex; justify-content: space-between; align-items: center; gap: 14px; cursor: pointer; list-style: none; }
+.asset-explorer .stake-item summary::-webkit-details-marker { display: none; }
+.asset-explorer .stake-item summary .staking-sym { font-size: 15px; }
+.asset-explorer .stake-sumval { text-align: right; }
+.asset-explorer .stake-sumval b { font-size: 15px; font-variant-numeric: tabular-nums; }
+.asset-explorer .stake-sumval small { display: block; font-size: 10px; color: var(--text-muted); font-weight: 400; margin-top: 2px; }
+.asset-explorer .stake-item[open] summary { border-bottom: 1px solid var(--border); background: var(--brand-lavender-tint); }
+.asset-explorer .stake-detail { padding: 14px 18px 16px; }
+.asset-explorer .stake-numbers { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 8px; padding: 14px; background: var(--bg); border-radius: 11px; }
+:root[data-theme="dark"] .asset-explorer .stake-numbers { background: var(--bg-hover); }
+.asset-explorer .stake-numbers span { display: block; font-size: 10px; color: var(--text-muted); }
+.asset-explorer .stake-numbers b { display: block; font-size: 15px; font-weight: 550; margin-top: 4px; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+.asset-explorer .stake-formula { margin: 12px 0 0; font-size: 11.5px; color: var(--text-muted); line-height: 1.7; }
