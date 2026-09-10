@@ -2929,3 +2929,19 @@ h3.section-header {
   .asset-explorer #tab-management .expenses-hero .holdings-grid { grid-template-columns: repeat(2, minmax(0,1fr)) !important; align-items: start; }
   .asset-explorer #tab-management .holding-block-full { grid-column: 1 / -1; }
 }
+
+/* 人生規劃對齊核准稿：情境橫幅＋獨立時間軸卡＋進階設定收合 */
+.asset-explorer .dwz-banner {
+  position: relative; overflow: hidden; display: flex; align-items: center;
+  background: linear-gradient(120deg, #eff7fd, #e0f1fc); border: 1px solid #deecf7;
+  border-radius: 17px; padding: 24px 27px; margin-bottom: 20px; min-height: 110px;
+}
+:root[data-theme="dark"] .asset-explorer .dwz-banner { background: linear-gradient(120deg, var(--brand-lavender-tint), var(--explorer-sky)); border-color: var(--border); }
+.asset-explorer .dwz-banner-copy { position: relative; z-index: 1; max-width: 75%; }
+.asset-explorer .dwz-banner-copy h2 { font-size: 21px; margin: 0; line-height: 1.5; letter-spacing: -.02em; }
+.asset-explorer .dwz-banner-copy p { color: var(--text-secondary); font-size: 13px; margin: 6px 0 0; max-width: 34em; }
+.asset-explorer .dwz-banner-art { position: absolute; right: 0; bottom: -3px; height: 125px; width: 190px; opacity: .75; pointer-events: none; }
+@media (max-width: 599px) { .asset-explorer .dwz-banner { padding: 20px 22px; } .asset-explorer .dwz-banner-copy h2 { font-size: 18px; } .asset-explorer .dwz-banner-art { opacity: .3; } }
+.asset-explorer .dwz-timeline-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 20px; box-shadow: var(--card-shadow-soft); padding: 20px; }
+.asset-explorer .dwz-timeline-card .dwz-timeline { margin-top: 0; border-top: 0; padding-top: 0; }
+.asset-explorer .dwz-adv-block .dwz-strat-lab-body { padding-top: 8px; }

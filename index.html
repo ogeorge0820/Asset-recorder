@@ -16,8 +16,8 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=DM+Sans:wght@300;400;500;600;700&display=swap">
-<link rel="stylesheet" href="theme.css?v=202609100849">
-<link rel="stylesheet" href="style.css?v=202609100849">
+<link rel="stylesheet" href="theme.css?v=202609100915">
+<link rel="stylesheet" href="style.css?v=202609100915">
 </head>
 <body class="asset-explorer">
 
@@ -493,6 +493,10 @@
     <!-- ══ Die With Zero Tab ══ -->
     <div id="tab-dwz" style="display:none">
      <div class="explorer-welcome"><div><p class="explorer-eyebrow">人生規劃</p><h1>讓資產陪你走過每個階段</h1><p>Die With Zero · 把資源留給值得的體驗，也為未來留好餘裕。</p></div><span class="explorer-horizon" aria-hidden="true"></span></div>
+     <div class="dwz-banner">
+       <div class="dwz-banner-copy"><h2>把時間留給想做的事</h2><p>試著調整人生階段，看看資產曲線如何改變。</p></div>
+       <svg class="dwz-banner-art" viewBox="0 0 400 220" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><rect width="400" height="220" fill="#e6f3fc"/><circle cx="305" cy="47" r="25" fill="#f6e8c8"/><path d="m-20 192 115-129 127 146 78-93 130 104H0" fill="#bedbef"/><path d="m30 220 127-117 75 74 35-43 157 86" fill="#91c0df"/><path d="M0 204Q90 172 180 196T400 182V220H0" fill="#d1e8f5"/><path d="M165 139v65M227 139v65M149 130h95M155 149h83" stroke="#3e7da7" stroke-width="8" stroke-linecap="round"/><path d="M0 219Q180 173 400 212" stroke="#f6fbff" fill="none" stroke-width="7"/></svg>
+     </div>
      <div class="dwz-layout">
 
       <!-- ═══ 左欄：模擬參數（水平 row 版） ═══ -->
@@ -535,11 +539,16 @@
             <div class="dwz-row"><label>保底金 <span class="dwz-param-unit">萬</span><button type="button" class="dwz-param-info" onclick="alert('保底金（萬）\n\n用途：你希望臨終時至少保留的金額（喪葬、應急、小額遺產）。\n\n效果：\n• 圖上會畫一條綠色虛線基準\n• NW 跌破此線時曲線變紅色警示\n• 90 歲時 NW 超過保底金的部分會列為「終局浪費」徽章\n\n注意：此參數純為視覺與終局浪費計算用，不會影響模擬本身的數學（不會強制省錢、不會觸發警告）。')" title="點擊查看保底金說明" aria-label="保底金說明">ⓘ</button></label><input id="dwz-safe-floor" class="dwz-param-input" type="number" min="0" step="50" value="500" oninput="dwzAutoCalc()"></div>
           </section>
 
-          <section class="dwz-param-block">
-            <h4 class="dwz-block-title">遺贈 &amp; 體驗</h4>
-            <div class="dwz-row"><label>留給下一代 <span class="dwz-param-unit">萬</span></label><input id="dwz-legacy" class="dwz-param-input" type="number" min="0" step="1" value="0" oninput="dwzAutoCalc()"></div>
-            <div class="dwz-row"><label>贈與年齡 <span class="dwz-param-unit">歲</span></label><input id="dwz-gift-age" class="dwz-param-input" type="number" min="40" max="90" value="60" oninput="dwzAutoCalc()"></div>
-            <div class="dwz-row"><label>40–65 體驗 <span class="dwz-param-unit">萬/年</span></label><input id="dwz-exp-budget" class="dwz-param-input" type="number" min="0" step="5" value="0" oninput="dwzAutoCalc()"></div>
+          <section class="dwz-param-block dwz-adv-block">
+            <button class="dwz-strat-lab-head" type="button" onclick="toggleDwzAdvanced()" aria-expanded="false">
+              <h4 class="dwz-block-title">進階：遺贈 &amp; 體驗</h4>
+              <span class="dwz-strat-lab-arrow">▾</span>
+            </button>
+            <div class="dwz-strat-lab-body" id="dwz-adv-body" hidden>
+              <div class="dwz-row"><label>留給下一代 <span class="dwz-param-unit">萬</span></label><input id="dwz-legacy" class="dwz-param-input" type="number" min="0" step="1" value="0" oninput="dwzAutoCalc()"></div>
+              <div class="dwz-row"><label>贈與年齡 <span class="dwz-param-unit">歲</span></label><input id="dwz-gift-age" class="dwz-param-input" type="number" min="40" max="90" value="60" oninput="dwzAutoCalc()"></div>
+              <div class="dwz-row"><label>40–65 體驗 <span class="dwz-param-unit">萬/年</span></label><input id="dwz-exp-budget" class="dwz-param-input" type="number" min="0" step="5" value="0" oninput="dwzAutoCalc()"></div>
+            </div>
           </section>
 
           <section class="dwz-param-block dwz-planned-block">
@@ -633,8 +642,10 @@
             <span class="dwz-legend-exp"></span><span>體驗</span>
             <span class="dwz-legend-energy"></span><span>生命能量</span>
           </div>
+        </div>
 
-          <!-- Phase 3: 未來事件時間軸（與財富曲線同為年齡軸，視覺對應） -->
+        <!-- 未來事件時間軸 — 獨立區塊（曲線 → 時間軸 → 體驗清單，順序對齊核准稿） -->
+        <div class="dwz-timeline-card">
           <div class="dwz-timeline" id="dwz-timeline">
             <div class="dwz-timeline-title">未來事件時間軸</div>
             <div class="dwz-timeline-track" id="dwz-timeline-track"></div>
@@ -842,6 +853,6 @@
 <!-- ── Toast ── -->
 <div class="toast" id="toast"></div>
 
-<script src="app.js?v=202609100849"></script>
+<script src="app.js?v=202609100915"></script>
 </body>
 </html>

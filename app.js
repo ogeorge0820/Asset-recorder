@@ -4,7 +4,7 @@
 // 應用版本號 — 重大功能變更才升版（小修補只更新 BUILD_DATE）
 const APP_VERSION = 'v1.0';
 // Build 時間：每次修改 code 後手動更新此時間（UTC+8 台北時間）
-const BUILD_DATE = '2026/09/10 08:49';
+const BUILD_DATE = '2026/09/10 09:15';
 
 const SPREADSHEET_ID = '1lpRpxVzWaYUqL-jVPOAJCtjsJUIedPYYyOx4gg4PPFU';
 const CLIENT_ID = '149884248440-85f8dhc6ub9up10sv0f89e3e0itrnooj.apps.googleusercontent.com';
@@ -1467,6 +1467,16 @@ function toggleHolding(cat) {
   const block = $('hb-' + cat);
   if (!block) return;
   block.classList.toggle('expanded');
+}
+
+// ── DWZ 進階設定（遺贈&體驗）收合──
+function toggleDwzAdvanced() {
+  const body = $('dwz-adv-body');
+  const head = document.querySelector('.dwz-adv-block .dwz-strat-lab-head');
+  if (!body || !head) return;
+  body.hidden = !body.hidden;
+  head.classList.toggle('open', !body.hidden);
+  head.setAttribute('aria-expanded', String(!body.hidden));
 }
 
 // ── 管理頁分類切換（核准稿：pills 取代大卡逐張展開；四個 holding-block 一次只顯示一個）──
