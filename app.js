@@ -4,7 +4,7 @@
 // 應用版本號 — 重大功能變更才升版（小修補只更新 BUILD_DATE）
 const APP_VERSION = 'v1.0';
 // Build 時間：每次修改 code 後手動更新此時間（UTC+8 台北時間）
-const BUILD_DATE = '2026/09/10 08:24';
+const BUILD_DATE = '2026/09/10 08:49';
 
 const SPREADSHEET_ID = '1lpRpxVzWaYUqL-jVPOAJCtjsJUIedPYYyOx4gg4PPFU';
 const CLIENT_ID = '149884248440-85f8dhc6ub9up10sv0f89e3e0itrnooj.apps.googleusercontent.com';
@@ -1317,6 +1317,7 @@ function renderKPIs() {
     const el = $(id); if (el) el.textContent = `版本 ${APP_VERSION} ${BUILD_DATE}`;
   });
 
+  try { renderOvxAssets(); } catch (e) { console.error('[renderOvxAssets]', e); }
 }
 
 function setKPI(vid, val, sid, sub) {
@@ -1466,6 +1467,60 @@ function toggleHolding(cat) {
   const block = $('hb-' + cat);
   if (!block) return;
   block.classList.toggle('expanded');
+}
+
+// ── 管理頁分類切換（核准稿：pills 取代大卡逐張展開；四個 holding-block 一次只顯示一個）──
+let MGMT_CAT = 'cash';
+function setMgmtCat(cat) {
+  if (!['cash', 'tw', 'us', 'crypto'].includes(cat)) return;
+  MGMT_CAT = cat;
+  ['cash', 'tw', 'us', 'crypto'].forEach(c => {
+    const b = $('hb-' + c);
+    if (!b) return;
+    b.classList.toggle('mgmt-hidden', c !== cat);
+    if (c === cat) b.classList.add('expanded');
+  });
+  const nav = $('mgmt-subnav');
+  if (nav) [...nav.children].forEach(btn => btn.setAttribute('aria-pressed', String(btn.dataset.cat === cat)));
+}
+
+// ── 總覽「我的資產」分類清單（核准稿 lower-grid 左欄）──
+// 畫面口徑同 renderHoldingCards：USDT 折台幣併入現金、自加密扣除
+let OVX_FILTER = 'all';
+const OVX_CATS = [
+  { id: 'cash',      name: '流動現金', unit: 'TWD / USD / USDT',        icon: '$',  mgmt: 'cash' },
+  { id: 'tw',        name: '台灣股票', unit: '原幣 TWD',                icon: '台', mgmt: 'tw' },
+  { id: 'us',        name: '美國股票', unit: '原幣 USD',                icon: '美', mgmt: 'us' },
+  { id: 'crypto',    name: '加密貨幣', unit: '不含畫面歸現金的 USDT',   icon: '₿',  mgmt: 'crypto' },
+  { id: 'insurance', name: '儲蓄險',   unit: '原幣 USD',                icon: '保', mgmt: '' },
+];
+function setOvxFilter(cat) {
+  OVX_FILTER = cat;
+  const wrap = $('ovx-filters');
+  if (wrap) [...wrap.children].forEach(b => b.setAttribute('aria-pressed', String(b.dataset.cat === cat)));
+  renderOvxAssets();
+}
+function ovxGo(cat) {
+  switchTab('management');
+  if (cat) setMgmtCat(cat);
+}
+function renderOvxAssets() {
+  const list = $('ovx-asset-list');
+  if (!list) return;
+  const { cashT, twT, usT, cryT, ins } = calcTotals();
+  const rate = S.prices.usdtwd || 0;
+  const usdtEntry = (S.data.crypto || []).find(r => r[0]?.toUpperCase() === 'USDT');
+  const usdtTWD = usdtEntry ? (parseFloat(usdtEntry[1]) || 0) * rate : 0;
+  const vals = { cash: cashT + usdtTWD, tw: twT, us: usT, crypto: cryT - usdtTWD, insurance: ins };
+  list.innerHTML = OVX_CATS
+    .filter(c => OVX_FILTER === 'all' || c.id === OVX_FILTER)
+    .map(c => `
+      <button class="ovx-row" type="button" onclick="ovxGo('${c.mgmt}')" aria-label="前往管理：${c.name}">
+        <span class="ovx-icon">${c.icon}</span>
+        <span class="ovx-title">${c.name}<small>${c.unit}</small></span>
+        <span class="ovx-value">${vals[c.id] > 0 ? fmt(vals[c.id]) : '—'}<small>TWD</small></span>
+        <span class="ovx-chevron" aria-hidden="true">›</span>
+      </button>`).join('');
 }
 
 // 管理頁第二排：其他資產+負債（合併卡）/ 質押收益
