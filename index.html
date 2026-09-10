@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="zh-TW" data-theme="dark">
+<html lang="zh-TW" data-theme="light">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="theme-color" content="#0a0a0a">
+<meta name="theme-color" content="#f4f8fc">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black">
 <meta name="apple-mobile-web-app-title" content="資產">
@@ -16,18 +16,29 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=DM+Sans:wght@300;400;500;600;700&display=swap">
-<link rel="stylesheet" href="theme.css?v=202609082142">
-<link rel="stylesheet" href="style.css?v=202609082142">
+<link rel="stylesheet" href="theme.css?v=202609100823">
+<link rel="stylesheet" href="style.css?v=202609100823">
 </head>
-<body>
+<body class="asset-explorer">
 
 <!-- ── Login Screen ── -->
 <div id="login-screen">
-  <div class="login-card">
-    <h1>個人資產追蹤</h1>
-    <p>使用 Google 帳號登入<br>以存取您的資產資料</p>
-    <button class="btn-google" id="btn-signin">使用 Google 登入</button>
-    <div id="login-error"></div>
+  <div class="login-story" aria-hidden="true">
+    <div class="login-story-copy">
+      <p class="explorer-eyebrow">資產探索</p>
+      <h2>看清資產，<br>安排生活。</h2>
+      <p>把資產、收支與人生計畫放在一起。<br>留意今天的變化，也為未來留一點空間。</p>
+    </div>
+    <svg class="login-art" viewBox="0 0 400 220" xmlns="http://www.w3.org/2000/svg"><rect width="400" height="220" fill="#e6f3fc"/><circle cx="305" cy="47" r="25" fill="#f6e8c8"/><path d="m-20 192 115-129 127 146 78-93 130 104H0" fill="#bedbef"/><path d="m30 220 127-117 75 74 35-43 157 86" fill="#91c0df"/><path d="M0 204Q90 172 180 196T400 182V220H0" fill="#d1e8f5"/><path d="M165 139v65M227 139v65M149 130h95M155 149h83" stroke="#3e7da7" stroke-width="8" stroke-linecap="round"/><path d="M0 219Q180 173 400 212" stroke="#f6fbff" fill="none" stroke-width="7"/></svg>
+  </div>
+  <div class="login-panel">
+    <div class="login-card">
+      <div class="login-brand"><span class="nav-logo">$</span>資產探索</div>
+      <h1>歡迎回來</h1>
+      <p>使用 Google 帳號登入<br>以存取您的資產資料</p>
+      <button class="btn-google" id="btn-signin">使用 Google 登入</button>
+      <div id="login-error"></div>
+    </div>
   </div>
 </div>
 
@@ -36,17 +47,18 @@
   <header id="app-header">
     <div class="nav-brand">
       <div class="nav-logo">$</div>
-      <span class="nav-brand-text">資產追蹤</span>
+      <span class="nav-brand-text">資產探索</span>
     </div>
-    <nav class="tab-nav">
-      <button class="tab-btn active" onclick="switchTab('overview')">總覽</button>
-      <button class="tab-btn" onclick="switchTab('management')">管理</button>
-      <button class="tab-btn" onclick="switchTab('dwz')"><span class="tab-full">Die With Zero</span><span class="tab-short">DWZ</span></button>
-      <button class="tab-btn" onclick="switchTab('indicators')">指標</button>
-      <button class="tab-btn" onclick="switchTab('news')">新聞</button>
-      <button class="tab-btn" onclick="switchTab('staking')">質押</button>
+    <nav class="tab-nav" aria-label="主要導覽">
+      <button class="tab-btn active" onclick="switchTab('overview')"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="2"/><rect x="14" y="3" width="7" height="7" rx="2"/><rect x="3" y="14" width="7" height="7" rx="2"/><rect x="14" y="14" width="7" height="7" rx="2"/></svg><span>總覽</span></button>
+      <button class="tab-btn" onclick="switchTab('management')"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M3 7h18v13H3zM3 7l3-4h12l3 4M7 12h10"/></svg><span>管理</span></button>
+      <button class="tab-btn" onclick="switchTab('dwz')"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M4 21V4m0 1c6-5 10 5 16 0v11c-6 5-10-5-16 0"/></svg><span><span class="tab-full">Die With Zero</span><span class="tab-short">DWZ</span></span></button>
+      <button class="tab-btn" onclick="switchTab('indicators')"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M4 20V10m8 10V4m8 16v-7"/></svg><span>指標</span></button>
+      <button class="tab-btn" onclick="switchTab('news')"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M7 8h10M7 12h4m-4 4h10"/></svg><span>新聞</span></button>
+      <button class="tab-btn" onclick="switchTab('staking')"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><ellipse cx="12" cy="6" rx="8" ry="3"/><path d="M4 6v6c0 4 16 4 16 0V6M4 12v6c0 4 16 4 16 0v-6"/></svg><span>質押</span></button>
     </nav>
     <div class="header-right">
+      <span class="explorer-build" id="sidebar-build-badge"></span>
       <div class="update-badge" id="update-badge">
         <span class="update-dot" id="update-dot"></span>
         <span id="update-ts">—</span>
@@ -61,6 +73,7 @@
 
     <!-- ══ 總覽 Tab ══ -->
     <div id="tab-overview">
+      <div class="explorer-welcome"><div><p class="explorer-eyebrow">你的資產全貌</p><h1>讓資產，支持你想過的生活</h1><p>掌握今天的累積，也為下一段生活留好餘裕。</p></div><span class="explorer-horizon" aria-hidden="true"></span></div>
 
       <!-- 資料健檢徽章：雲端快照與即時計算差異 > 2% 時顯示 -->
       <button id="health-badge" class="health-badge" hidden onclick="openHealthDetail()">⚠️&nbsp;<span id="health-badge-text">資料健檢</span><span class="health-badge-cta">查看 ›</span></button>
@@ -70,7 +83,7 @@
         <div class="ov2-hero">
           <div class="ov2-hero-head">
             <div class="ov2-hero-primary">
-              <div class="ov2-hero-label"><span class="ov2-hero-label-icon" aria-hidden="true">💰</span>可用資產 · LIQUID NET WORTH</div>
+              <div class="ov2-hero-label"><span class="ov2-hero-label-icon" aria-hidden="true">💰</span>目前可用資產</div>
               <div class="ov2-hero-num skel" id="kv-liquid">—</div>
               <div class="ov2-hero-meta" id="ks-liquid">現金 + 投資組合</div>
             </div>
@@ -164,7 +177,7 @@
       <!-- 持倉 Top Movers — 近 14 天領漲（漲幅 / 賺額）+ 領跌 -->
       <section class="ov2-movers">
         <div class="ov2-movers-head">
-          <div class="ov2-movers-title">持倉 Top Movers</div>
+          <div class="ov2-movers-title">近期持倉動態</div>
           <div class="ov2-movers-period">
             <span class="ov2-movers-window" id="movers-window"></span>
             <div class="chart-filter ov2-movers-filter">
@@ -194,6 +207,7 @@
 
     <!-- ══ 管理 Tab ══ -->
     <div id="tab-management" style="display:none">
+      <div class="explorer-welcome"><div><p class="explorer-eyebrow">日常管理</p><h1>每一筆資產，都有自己的位置</h1><p>點開分類查看明細，輕鬆整理持倉、收入與生活支出。</p></div><span class="explorer-horizon" aria-hidden="true"></span></div>
       <div class="price-bar">
         <span class="dot spin" id="price-dot"></span>
         <span id="price-ts">價格更新中...</span>
@@ -454,6 +468,7 @@
 
     <!-- ══ Die With Zero Tab ══ -->
     <div id="tab-dwz" style="display:none">
+     <div class="explorer-welcome"><div><p class="explorer-eyebrow">人生規劃</p><h1>讓資產陪你走過每個階段</h1><p>Die With Zero · 把資源留給值得的體驗，也為未來留好餘裕。</p></div><span class="explorer-horizon" aria-hidden="true"></span></div>
      <div class="dwz-layout">
 
       <!-- ═══ 左欄：模擬參數（水平 row 版） ═══ -->
@@ -625,6 +640,7 @@
 
     <!-- ══ 指標 Tab ══ -->
     <div id="tab-indicators" style="display:none">
+      <div class="explorer-welcome"><div><p class="explorer-eyebrow">市場指標</p><h1>市場現在的溫度</h1><p>從不同角度觀察，留一點距離做判斷。</p></div><span class="explorer-horizon" aria-hidden="true"></span></div>
       <section class="ind-thermo-card">
         <div class="ind-thermo-head">
           <h3 class="ind-thermo-title">市場溫度</h3>
@@ -642,6 +658,7 @@
 
     <!-- ══ 新聞 Tab ══ -->
     <div id="tab-news" style="display:none">
+      <div class="explorer-welcome"><div><p class="explorer-eyebrow">市場動態</p><h1>比特幣新聞</h1><p>換個角度，看看正在發生的事。</p></div><span class="explorer-horizon" aria-hidden="true"></span></div>
       <section class="news-card">
         <div class="news-head">
           <div class="news-head-left">
@@ -680,6 +697,7 @@
 
     <!-- ══ 質押收益 Tab ══ -->
     <div id="tab-staking" style="display:none">
+      <div class="explorer-welcome"><div><p class="explorer-eyebrow">質押收益</p><h1>看看持倉累積了多少</h1><p>看懂數量變化，再安排下一步。</p></div><span class="explorer-horizon" aria-hidden="true"></span></div>
       <section class="staking-card">
         <div class="staking-head">
           <div>
@@ -800,6 +818,6 @@
 <!-- ── Toast ── -->
 <div class="toast" id="toast"></div>
 
-<script src="app.js?v=202609082142"></script>
+<script src="app.js?v=202609100823"></script>
 </body>
 </html>
