@@ -99,7 +99,13 @@
 
 ## 8. 驗證流程
 
-無自動測試。每次改完使用者會在手機開 GitHub Pages 驗證：
+**自動測試**（2026/09 UI 改版起）：`node --test tests/*.test.cjs` — 18 項，涵蓋 v1.1 計算比對、DOM 掛載點保留、saveSheet 寫入欄位與異常縮減拒寫。改 app.js / index.html / CSS 後、commit 前必跑。
+
+**本機隔離視覺驗證**：`python3 tests/serve-ui-integration.py` → http://127.0.0.1:5187/integration.html 。示意持倉、CSP 禁連外、寫入只進記憶體、重新整理即還原；新聞抓取失敗是禁連外的預期結果。需要本機 Chart.js 4.4.0（預設路徑 `/private/tmp/asset-chart-4.4.0.js`，可傳參數指定）。
+
+**UI 樣式慣例**（霧白海藍改版）：視覺調整走 `.asset-explorer` 前綴的覆蓋層，**追加**在 style.css 檔尾，不改舊規則；遇到舊 `!important` 或高權重選擇器（如 `button:not(...)×4`）時用 `#tab-xxx` ID 前綴或同級 `!important` 蓋回。
+
+最終仍以使用者手機開 GitHub Pages 驗收：
 1. 確認 header 顯示新 BUILD_DATE
 2. 確認手機下拉刷新後拉到新版（cache-buster 對應）
 3. 走過受影響的 UI flow
