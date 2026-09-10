@@ -4,7 +4,7 @@
 // 應用版本號 — 重大功能變更才升版（小修補只更新 BUILD_DATE）
 const APP_VERSION = 'v1.0';
 // Build 時間：每次修改 code 後手動更新此時間（UTC+8 台北時間）
-const BUILD_DATE = '2026/09/10 09:18';
+const BUILD_DATE = '2026/09/10 09:19';
 
 const SPREADSHEET_ID = '1lpRpxVzWaYUqL-jVPOAJCtjsJUIedPYYyOx4gg4PPFU';
 const CLIENT_ID = '149884248440-85f8dhc6ub9up10sv0f89e3e0itrnooj.apps.googleusercontent.com';
@@ -1467,6 +1467,23 @@ function toggleHolding(cat) {
   const block = $('hb-' + cat);
   if (!block) return;
   block.classList.toggle('expanded');
+}
+
+// ── 全站金額隱藏（涵蓋各頁個人金額與圖表；市場指標與匯率屬公開資訊不遮）──
+function _applyAmountPrivacy(on) {
+  document.body.classList.toggle('amounts-hidden', on);
+  const b = $('btn-privacy');
+  if (b) {
+    b.setAttribute('aria-pressed', String(on));
+    b.setAttribute('aria-label', on ? '顯示金額' : '隱藏金額');
+    b.title = on ? '顯示金額' : '隱藏金額';
+    b.classList.toggle('privacy-on', on);
+  }
+}
+function toggleAmountPrivacy() {
+  const on = !document.body.classList.contains('amounts-hidden');
+  _applyAmountPrivacy(on);
+  try { localStorage.setItem('amounts_hidden', on ? '1' : '0'); } catch (_) {}
 }
 
 // ── DWZ 進階設定（遺贈&體驗）收合──
@@ -7842,6 +7859,8 @@ document.addEventListener('DOMContentLoaded', () => {
   document.documentElement.dataset.theme = savedTheme;
   Chart.defaults.color = savedTheme === 'light' ? '#666666' : 'rgba(255,255,255,0.88)';
   updateThemeBtn();
+  // 金額隱藏偏好（全站 privacy）
+  if (localStorage.getItem('amounts_hidden') === '1') _applyAmountPrivacy(true);
   updateMobileBuildBar();
 
   $('btn-signin').addEventListener('click', signIn);

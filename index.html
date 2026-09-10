@@ -16,8 +16,8 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=DM+Sans:wght@300;400;500;600;700&display=swap">
-<link rel="stylesheet" href="theme.css?v=202609100918">
-<link rel="stylesheet" href="style.css?v=202609100918">
+<link rel="stylesheet" href="theme.css?v=202609100919">
+<link rel="stylesheet" href="style.css?v=202609100919">
 </head>
 <body class="asset-explorer">
 
@@ -64,6 +64,7 @@
         <span id="update-ts">—</span>
       </div>
       <div class="rate-badge" id="header-rate"><span>USD</span><b id="header-rate-val">—</b></div>
+      <button class="btn-theme btn-privacy" id="btn-privacy" onclick="toggleAmountPrivacy()" aria-label="隱藏金額" aria-pressed="false" title="隱藏金額"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/></svg></button>
       <button class="btn-theme" id="btn-theme" onclick="toggleTheme()" aria-label="切換主題">☀</button>
       <button class="btn-signout" onclick="signOut()">登出</button>
     </div>
@@ -853,6 +854,6 @@
 <!-- ── Toast ── -->
 <div class="toast" id="toast"></div>
 
-<script src="app.js?v=202609100918"></script>
+<script src="app.js?v=202609100919"></script>
 </body>
 </html>

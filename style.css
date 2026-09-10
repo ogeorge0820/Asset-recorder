@@ -2995,3 +2995,18 @@ h3.section-header {
 .asset-explorer .ind-card-value { font-size: 26px; font-weight: 600; }
 .asset-explorer .ind-card-thresh { min-height: 30px; color: var(--text-secondary); font-size: 11.5px; line-height: 1.7; }
 .asset-explorer .ind-card .ind-gauge { margin-top: 4px; }
+
+/* 全站金額隱藏：個人金額與圖表模糊；隱藏中同時停用互動避免誤操作。市場指標與匯率屬公開資訊不遮。 */
+body.amounts-hidden :is(.ov2-hero-num, .ov2-hero-sub-num, .ov2-hero-meta, .ov2-pl-num, .ov2-stat-num,
+  .ov2-mini-bars, .pie-legend, .ovx-value, .cf-num, .cf-sub, .cf-sub2, .ov2-movers-list,
+  .hc-amount, .hc-avail, .hc-change, .hc-side-val, .data-table td, .cash-cards, .stock-cards, .crypto-cards,
+  .other-item-value, #rewards-accordion, .budget-ratio-bar, .budget-cats, .budget-planned-wrap,
+  .exp-plan-list, #income-accordion, .income-forecast, .section-avail,
+  .dwz-kpi-tag b, .dwz-pill, #dwz-expenses-list, .bucket-stats, .dwz-smart-tips,
+  .staking-total-num, #staking-list, #modal-body, #app-content canvas) {
+  filter: blur(7px) !important;
+  user-select: none;
+  pointer-events: none;
+}
+.btn-privacy svg { width: 16px; height: 16px; display: block; }
+.btn-privacy.privacy-on { color: var(--accent) !important; background: var(--brand-lavender-soft) !important; }
