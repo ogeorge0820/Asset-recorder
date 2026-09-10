@@ -2989,3 +2989,9 @@ h3.section-header {
 .asset-explorer .stake-numbers span { display: block; font-size: 10px; color: var(--text-muted); }
 .asset-explorer .stake-numbers b { display: block; font-size: 15px; font-weight: 550; margin-top: 4px; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
 .asset-explorer .stake-formula { margin: 12px 0 0; font-size: 11.5px; color: var(--text-muted); line-height: 1.7; }
+
+/* 指標對齊核准稿：標籤旁手動/自動、閾值說明升為數值下註解、層級為 值→說明→區間→狀態。 */
+.asset-explorer .ind-card-mode { display: inline-block; margin-left: 8px; font-size: 10px; font-weight: 600; color: var(--brand-lavender); background: var(--brand-lavender-soft); border-radius: 12px; padding: 2px 8px; vertical-align: 1px; }
+.asset-explorer .ind-card-value { font-size: 26px; font-weight: 600; }
+.asset-explorer .ind-card-thresh { min-height: 30px; color: var(--text-secondary); font-size: 11.5px; line-height: 1.7; }
+.asset-explorer .ind-card .ind-gauge { margin-top: 4px; }

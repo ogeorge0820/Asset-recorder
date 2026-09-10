@@ -4,7 +4,7 @@
 // 應用版本號 — 重大功能變更才升版（小修補只更新 BUILD_DATE）
 const APP_VERSION = 'v1.0';
 // Build 時間：每次修改 code 後手動更新此時間（UTC+8 台北時間）
-const BUILD_DATE = '2026/09/10 09:17';
+const BUILD_DATE = '2026/09/10 09:18';
 
 const SPREADSHEET_ID = '1lpRpxVzWaYUqL-jVPOAJCtjsJUIedPYYyOx4gg4PPFU';
 const CLIENT_ID = '149884248440-85f8dhc6ub9up10sv0f89e3e0itrnooj.apps.googleusercontent.com';
@@ -4621,15 +4621,15 @@ function renderIndicatorCard(id) {
   return `
     <div class="ind-card ind-${sig}">
       <div class="ind-card-head">
-        <span class="ind-card-label">${esc(def.label)}</span>
+        <span class="ind-card-label">${esc(def.label)}<span class="ind-card-mode">${def.manual ? '手動' : '自動'}</span></span>
         <span class="ind-card-actions">
           ${stale ? '<span class="ind-stale-badge" title="超過 14 天未更新">⚠</span>' : ''}
           ${def.manual ? `<button class="ind-card-edit" title="更新" onclick="openIndicatorEdit('${id}')">✏︎</button>` : ''}
         </span>
       </div>
       <div class="ind-card-value">${esc(def.fmt(v))}</div>
-      <div class="ind-gauge"><div class="ind-gauge-fill ${sig === 'unknown' ? '' : sig}" style="width:${fillPct}%"></div></div>
       ${def.thresholds ? `<div class="ind-card-thresh">${esc(def.thresholds)}</div>` : ''}
+      <div class="ind-gauge"><div class="ind-gauge-fill ${sig === 'unknown' ? '' : sig}" style="width:${fillPct}%"></div></div>
       <div class="ind-card-foot">
         <span class="ind-card-signal ${sig}">${sigText}</span>
         <span>
