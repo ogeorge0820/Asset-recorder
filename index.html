@@ -16,8 +16,8 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=DM+Sans:wght@300;400;500;600;700&display=swap">
-<link rel="stylesheet" href="theme.css?v=202609100824">
-<link rel="stylesheet" href="style.css?v=202609100824">
+<link rel="stylesheet" href="theme.css?v=202609101208">
+<link rel="stylesheet" href="style.css?v=202609101208">
 </head>
 <body class="asset-explorer">
 
@@ -64,6 +64,7 @@
         <span id="update-ts">—</span>
       </div>
       <div class="rate-badge" id="header-rate"><span>USD</span><b id="header-rate-val">—</b></div>
+      <button class="btn-theme btn-privacy" id="btn-privacy" onclick="toggleAmountPrivacy()" aria-label="隱藏金額" aria-pressed="false" title="隱藏金額"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/></svg></button>
       <button class="btn-theme" id="btn-theme" onclick="toggleTheme()" aria-label="切換主題">☀</button>
       <button class="btn-signout" onclick="signOut()">登出</button>
     </div>
@@ -117,8 +118,41 @@
         </div>
       </section>
 
-      <!-- Mid row — 本日 (大) / 本月 (大) / 雙併卡（本年收益 + 財務存活） -->
-      <section class="ov2-mid-row">
+      <!-- 我的資產 + 跑道並排（對齊核准稿 lower-grid） -->
+      <section class="ovx-lower">
+        <div class="ovx-assets">
+          <div class="ovx-assets-head">
+            <h3>我的資產</h3>
+            <span class="ovx-assets-sub">點選分類前往管理</span>
+          </div>
+          <div class="ovx-filters" id="ovx-filters" aria-label="資產分類篩選">
+            <button type="button" data-cat="all" aria-pressed="true" onclick="setOvxFilter('all')">全部</button>
+            <button type="button" data-cat="cash" aria-pressed="false" onclick="setOvxFilter('cash')">現金</button>
+            <button type="button" data-cat="tw" aria-pressed="false" onclick="setOvxFilter('tw')">台股</button>
+            <button type="button" data-cat="us" aria-pressed="false" onclick="setOvxFilter('us')">美股</button>
+            <button type="button" data-cat="crypto" aria-pressed="false" onclick="setOvxFilter('crypto')">加密</button>
+            <button type="button" data-cat="insurance" aria-pressed="false" onclick="setOvxFilter('insurance')">儲蓄險</button>
+          </div>
+          <div id="ovx-asset-list" aria-live="polite"></div>
+          <p class="ovx-note">USDT 顯示於現金；帳本仍歸加密。</p>
+        </div>
+        <div class="ovx-runways">
+          <div class="cf-card" id="cf-runway-card">
+            <div class="cf-card-head">現金跑道<span class="cf-tag">保守估計</span></div>
+            <div class="cf-num" id="cf-runway-num">—</div>
+            <div class="cf-sub" id="cf-runway-sub">計算中…</div>
+            <div class="cf-sub2" id="cf-runway-fiat"></div>
+          </div>
+          <div class="cf-card" id="card-survival">
+            <div class="cf-card-head">財務存活<span class="cf-tag">樂觀估計</span></div>
+            <div class="ov2-stat-num skel" id="kv-survival">—</div>
+            <div class="cf-sub" id="ks-survival">含未來預計收入模擬</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 收益摘要 strip — 本日 / 本月 / 本年 / 應收（退為次要資訊） -->
+      <section class="ovx-strip">
         <div class="ov2-pl-card" id="card-invest-gain">
           <div class="ov2-pl-head">
             <div class="ov2-pl-label">本日投資損益</div>
@@ -135,36 +169,21 @@
           <div class="ov2-pl-num skel" id="kv-monthly">—</div>
           <div class="ov2-mini-bars" id="monthly-mini-bars" aria-label="近 6 個月收益迷你長條圖"></div>
         </div>
-        <div class="ov2-stat-pair">
-          <div class="ov2-stat-half" id="card-growth">
-            <div class="ov2-stat-label"><span class="ov2-stat-label-icon" aria-hidden="true">🌱</span>本年收益</div>
-            <div class="ov2-stat-num skel" id="kv-growth">—</div>
-            <div class="ov2-stat-meta" id="ks-growth">淨資產 − 2025/12/31 基準</div>
-          </div>
-          <div class="ov2-stat-half" id="card-survival">
-            <div class="ov2-stat-label"><span class="ov2-stat-label-icon" aria-hidden="true">🛟</span>財務存活</div>
-            <div class="ov2-stat-num skel" id="kv-survival">—</div>
-            <div class="ov2-stat-meta" id="ks-survival">含未來預計收入模擬</div>
-          </div>
+        <div class="ov2-stat-half" id="card-growth">
+          <div class="ov2-stat-label">本年收益</div>
+          <div class="ov2-stat-num skel" id="kv-growth">—</div>
+          <div class="ov2-stat-meta" id="ks-growth">淨資產 − 2025/12/31 基準</div>
         </div>
+        <button class="cf-card cf-card-btn" id="cf-aging-card" onclick="openAgingDetail()">
+          <div class="cf-card-head">應收帳款<span class="cf-tag cf-tag-cta">明細 ›</span></div>
+          <div class="cf-num" id="cf-aging-num">—</div>
+          <div class="cf-sub" id="cf-aging-sub"></div>
+          <div class="cf-sub2" id="cf-aging-conc"></div>
+        </button>
       </section>
 
-      <!-- 現金流防守 — 跑道 / 應收 aging / 90 天預測 -->
+      <!-- 90 天現金流預測 -->
       <section class="cf-section">
-        <div class="cf-grid">
-          <div class="cf-card" id="cf-runway-card">
-            <div class="cf-card-head">現金跑道<span class="cf-tag">保守估計</span></div>
-            <div class="cf-num" id="cf-runway-num">—</div>
-            <div class="cf-sub" id="cf-runway-sub">計算中…</div>
-            <div class="cf-sub2" id="cf-runway-fiat"></div>
-          </div>
-          <button class="cf-card cf-card-btn" id="cf-aging-card" onclick="openAgingDetail()">
-            <div class="cf-card-head">應收帳款<span class="cf-tag cf-tag-cta">明細 ›</span></div>
-            <div class="cf-num" id="cf-aging-num">—</div>
-            <div class="cf-sub" id="cf-aging-sub"></div>
-            <div class="cf-sub2" id="cf-aging-conc"></div>
-          </button>
-        </div>
         <div class="cf-card cf-chart-card">
           <div class="cf-card-head">90 天現金流預測
             <span class="cf-legend"><i class="cf-dot cf-dot-con"></i>保守水位<i class="cf-dot cf-dot-opt"></i>樂觀差額（逾期應收）</span>
@@ -220,9 +239,15 @@
       <!-- Holdings Hero Cards -->
       <section class="holdings-hero">
         <h3 class="holdings-hero-title">持有資產</h3>
+        <div class="mgmt-subnav" id="mgmt-subnav" aria-label="管理資產分類">
+          <button type="button" data-cat="cash" aria-pressed="true" onclick="setMgmtCat('cash')">現金</button>
+          <button type="button" data-cat="tw" aria-pressed="false" onclick="setMgmtCat('tw')">台股</button>
+          <button type="button" data-cat="us" aria-pressed="false" onclick="setMgmtCat('us')">美股</button>
+          <button type="button" data-cat="crypto" aria-pressed="false" onclick="setMgmtCat('crypto')">加密</button>
+        </div>
         <div class="holdings-grid">
 
-          <div class="holding-block" id="hb-crypto">
+          <div class="holding-block mgmt-hidden" id="hb-crypto">
             <button class="holding-card hc-crypto" onclick="toggleHolding('crypto')" type="button">
               <span class="hc-deco hc-deco-rings" aria-hidden="true"></span>
               <div class="hc-top">
@@ -251,7 +276,7 @@
             </div>
           </div>
 
-          <div class="holding-block" id="hb-us">
+          <div class="holding-block mgmt-hidden" id="hb-us">
             <button class="holding-card hc-us" onclick="toggleHolding('us')" type="button">
               <span class="hc-deco hc-deco-stars" aria-hidden="true"></span>
               <div class="hc-top">
@@ -277,7 +302,7 @@
             </div>
           </div>
 
-          <div class="holding-block" id="hb-tw">
+          <div class="holding-block mgmt-hidden" id="hb-tw">
             <button class="holding-card hc-tw" onclick="toggleHolding('tw')" type="button">
               <span class="hc-deco hc-deco-stripes" aria-hidden="true"></span>
               <div class="hc-top">
@@ -303,7 +328,7 @@
             </div>
           </div>
 
-          <div class="holding-block" id="hb-cash">
+          <div class="holding-block expanded" id="hb-cash">
             <button class="holding-card hc-cash" onclick="toggleHolding('cash')" type="button">
               <span class="hc-deco hc-deco-dollar" aria-hidden="true">$</span>
               <div class="hc-top">
@@ -469,6 +494,10 @@
     <!-- ══ Die With Zero Tab ══ -->
     <div id="tab-dwz" style="display:none">
      <div class="explorer-welcome"><div><p class="explorer-eyebrow">人生規劃</p><h1>讓資產陪你走過每個階段</h1><p>Die With Zero · 把資源留給值得的體驗，也為未來留好餘裕。</p></div><span class="explorer-horizon" aria-hidden="true"></span></div>
+     <div class="dwz-banner">
+       <div class="dwz-banner-copy"><h2>把時間留給想做的事</h2><p>試著調整人生階段，看看資產曲線如何改變。</p></div>
+       <svg class="dwz-banner-art" viewBox="0 0 400 220" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><rect width="400" height="220" fill="#e6f3fc"/><circle cx="305" cy="47" r="25" fill="#f6e8c8"/><path d="m-20 192 115-129 127 146 78-93 130 104H0" fill="#bedbef"/><path d="m30 220 127-117 75 74 35-43 157 86" fill="#91c0df"/><path d="M0 204Q90 172 180 196T400 182V220H0" fill="#d1e8f5"/><path d="M165 139v65M227 139v65M149 130h95M155 149h83" stroke="#3e7da7" stroke-width="8" stroke-linecap="round"/><path d="M0 219Q180 173 400 212" stroke="#f6fbff" fill="none" stroke-width="7"/></svg>
+     </div>
      <div class="dwz-layout">
 
       <!-- ═══ 左欄：模擬參數（水平 row 版） ═══ -->
@@ -511,11 +540,16 @@
             <div class="dwz-row"><label>保底金 <span class="dwz-param-unit">萬</span><button type="button" class="dwz-param-info" onclick="alert('保底金（萬）\n\n用途：你希望臨終時至少保留的金額（喪葬、應急、小額遺產）。\n\n效果：\n• 圖上會畫一條綠色虛線基準\n• NW 跌破此線時曲線變紅色警示\n• 90 歲時 NW 超過保底金的部分會列為「終局浪費」徽章\n\n注意：此參數純為視覺與終局浪費計算用，不會影響模擬本身的數學（不會強制省錢、不會觸發警告）。')" title="點擊查看保底金說明" aria-label="保底金說明">ⓘ</button></label><input id="dwz-safe-floor" class="dwz-param-input" type="number" min="0" step="50" value="500" oninput="dwzAutoCalc()"></div>
           </section>
 
-          <section class="dwz-param-block">
-            <h4 class="dwz-block-title">遺贈 &amp; 體驗</h4>
-            <div class="dwz-row"><label>留給下一代 <span class="dwz-param-unit">萬</span></label><input id="dwz-legacy" class="dwz-param-input" type="number" min="0" step="1" value="0" oninput="dwzAutoCalc()"></div>
-            <div class="dwz-row"><label>贈與年齡 <span class="dwz-param-unit">歲</span></label><input id="dwz-gift-age" class="dwz-param-input" type="number" min="40" max="90" value="60" oninput="dwzAutoCalc()"></div>
-            <div class="dwz-row"><label>40–65 體驗 <span class="dwz-param-unit">萬/年</span></label><input id="dwz-exp-budget" class="dwz-param-input" type="number" min="0" step="5" value="0" oninput="dwzAutoCalc()"></div>
+          <section class="dwz-param-block dwz-adv-block">
+            <button class="dwz-strat-lab-head" type="button" onclick="toggleDwzAdvanced()" aria-expanded="false">
+              <h4 class="dwz-block-title">進階：遺贈 &amp; 體驗</h4>
+              <span class="dwz-strat-lab-arrow">▾</span>
+            </button>
+            <div class="dwz-strat-lab-body" id="dwz-adv-body" hidden>
+              <div class="dwz-row"><label>留給下一代 <span class="dwz-param-unit">萬</span></label><input id="dwz-legacy" class="dwz-param-input" type="number" min="0" step="1" value="0" oninput="dwzAutoCalc()"></div>
+              <div class="dwz-row"><label>贈與年齡 <span class="dwz-param-unit">歲</span></label><input id="dwz-gift-age" class="dwz-param-input" type="number" min="40" max="90" value="60" oninput="dwzAutoCalc()"></div>
+              <div class="dwz-row"><label>40–65 體驗 <span class="dwz-param-unit">萬/年</span></label><input id="dwz-exp-budget" class="dwz-param-input" type="number" min="0" step="5" value="0" oninput="dwzAutoCalc()"></div>
+            </div>
           </section>
 
           <section class="dwz-param-block dwz-planned-block">
@@ -609,8 +643,10 @@
             <span class="dwz-legend-exp"></span><span>體驗</span>
             <span class="dwz-legend-energy"></span><span>生命能量</span>
           </div>
+        </div>
 
-          <!-- Phase 3: 未來事件時間軸（與財富曲線同為年齡軸，視覺對應） -->
+        <!-- 未來事件時間軸 — 獨立區塊（曲線 → 時間軸 → 體驗清單，順序對齊核准稿） -->
+        <div class="dwz-timeline-card">
           <div class="dwz-timeline" id="dwz-timeline">
             <div class="dwz-timeline-title">未來事件時間軸</div>
             <div class="dwz-timeline-track" id="dwz-timeline-track"></div>
@@ -818,6 +854,6 @@
 <!-- ── Toast ── -->
 <div class="toast" id="toast"></div>
 
-<script src="app.js?v=202609100824"></script>
+<script src="app.js?v=202609101208"></script>
 </body>
 </html>

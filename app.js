@@ -4,7 +4,7 @@
 // 應用版本號 — 重大功能變更才升版（小修補只更新 BUILD_DATE）
 const APP_VERSION = 'v1.0';
 // Build 時間：每次修改 code 後手動更新此時間（UTC+8 台北時間）
-const BUILD_DATE = '2026/09/10 08:24';
+const BUILD_DATE = '2026/09/10 12:08';
 
 const SPREADSHEET_ID = '1lpRpxVzWaYUqL-jVPOAJCtjsJUIedPYYyOx4gg4PPFU';
 const CLIENT_ID = '149884248440-85f8dhc6ub9up10sv0f89e3e0itrnooj.apps.googleusercontent.com';
@@ -1317,6 +1317,7 @@ function renderKPIs() {
     const el = $(id); if (el) el.textContent = `版本 ${APP_VERSION} ${BUILD_DATE}`;
   });
 
+  try { renderOvxAssets(); } catch (e) { console.error('[renderOvxAssets]', e); }
 }
 
 function setKPI(vid, val, sid, sub) {
@@ -1466,6 +1467,87 @@ function toggleHolding(cat) {
   const block = $('hb-' + cat);
   if (!block) return;
   block.classList.toggle('expanded');
+}
+
+// ── 全站金額隱藏（涵蓋各頁個人金額與圖表；市場指標與匯率屬公開資訊不遮）──
+function _applyAmountPrivacy(on) {
+  document.body.classList.toggle('amounts-hidden', on);
+  const b = $('btn-privacy');
+  if (b) {
+    b.setAttribute('aria-pressed', String(on));
+    b.setAttribute('aria-label', on ? '顯示金額' : '隱藏金額');
+    b.title = on ? '顯示金額' : '隱藏金額';
+    b.classList.toggle('privacy-on', on);
+  }
+}
+function toggleAmountPrivacy() {
+  const on = !document.body.classList.contains('amounts-hidden');
+  _applyAmountPrivacy(on);
+  try { localStorage.setItem('amounts_hidden', on ? '1' : '0'); } catch (_) {}
+}
+
+// ── DWZ 進階設定（遺贈&體驗）收合──
+function toggleDwzAdvanced() {
+  const body = $('dwz-adv-body');
+  const head = document.querySelector('.dwz-adv-block .dwz-strat-lab-head');
+  if (!body || !head) return;
+  body.hidden = !body.hidden;
+  head.classList.toggle('open', !body.hidden);
+  head.setAttribute('aria-expanded', String(!body.hidden));
+}
+
+// ── 管理頁分類切換（核准稿：pills 取代大卡逐張展開；四個 holding-block 一次只顯示一個）──
+let MGMT_CAT = 'cash';
+function setMgmtCat(cat) {
+  if (!['cash', 'tw', 'us', 'crypto'].includes(cat)) return;
+  MGMT_CAT = cat;
+  ['cash', 'tw', 'us', 'crypto'].forEach(c => {
+    const b = $('hb-' + c);
+    if (!b) return;
+    b.classList.toggle('mgmt-hidden', c !== cat);
+    if (c === cat) b.classList.add('expanded');
+  });
+  const nav = $('mgmt-subnav');
+  if (nav) [...nav.children].forEach(btn => btn.setAttribute('aria-pressed', String(btn.dataset.cat === cat)));
+}
+
+// ── 總覽「我的資產」分類清單（核准稿 lower-grid 左欄）──
+// 畫面口徑同 renderHoldingCards：USDT 折台幣併入現金、自加密扣除
+let OVX_FILTER = 'all';
+const OVX_CATS = [
+  { id: 'cash',      name: '流動現金', unit: 'TWD / USD / USDT',        icon: '$',  mgmt: 'cash' },
+  { id: 'tw',        name: '台灣股票', unit: '原幣 TWD',                icon: '台', mgmt: 'tw' },
+  { id: 'us',        name: '美國股票', unit: '原幣 USD',                icon: '美', mgmt: 'us' },
+  { id: 'crypto',    name: '加密貨幣', unit: '不含畫面歸現金的 USDT',   icon: '₿',  mgmt: 'crypto' },
+  { id: 'insurance', name: '儲蓄險',   unit: '原幣 USD',                icon: '保', mgmt: '' },
+];
+function setOvxFilter(cat) {
+  OVX_FILTER = cat;
+  const wrap = $('ovx-filters');
+  if (wrap) [...wrap.children].forEach(b => b.setAttribute('aria-pressed', String(b.dataset.cat === cat)));
+  renderOvxAssets();
+}
+function ovxGo(cat) {
+  switchTab('management');
+  if (cat) setMgmtCat(cat);
+}
+function renderOvxAssets() {
+  const list = $('ovx-asset-list');
+  if (!list) return;
+  const { cashT, twT, usT, cryT, ins } = calcTotals();
+  const rate = S.prices.usdtwd || 0;
+  const usdtEntry = (S.data.crypto || []).find(r => r[0]?.toUpperCase() === 'USDT');
+  const usdtTWD = usdtEntry ? (parseFloat(usdtEntry[1]) || 0) * rate : 0;
+  const vals = { cash: cashT + usdtTWD, tw: twT, us: usT, crypto: cryT - usdtTWD, insurance: ins };
+  list.innerHTML = OVX_CATS
+    .filter(c => OVX_FILTER === 'all' || c.id === OVX_FILTER)
+    .map(c => `
+      <button class="ovx-row" type="button" onclick="ovxGo('${c.mgmt}')" aria-label="前往管理：${c.name}">
+        <span class="ovx-icon">${c.icon}</span>
+        <span class="ovx-title">${c.name}<small>${c.unit}</small></span>
+        <span class="ovx-value">${vals[c.id] > 0 ? fmt(vals[c.id]) : '—'}<small>TWD</small></span>
+        <span class="ovx-chevron" aria-hidden="true">›</span>
+      </button>`).join('');
 }
 
 // 管理頁第二排：其他資產+負債（合併卡）/ 質押收益
@@ -4556,15 +4638,15 @@ function renderIndicatorCard(id) {
   return `
     <div class="ind-card ind-${sig}">
       <div class="ind-card-head">
-        <span class="ind-card-label">${esc(def.label)}</span>
+        <span class="ind-card-label">${esc(def.label)}<span class="ind-card-mode">${def.manual ? '手動' : '自動'}</span></span>
         <span class="ind-card-actions">
           ${stale ? '<span class="ind-stale-badge" title="超過 14 天未更新">⚠</span>' : ''}
           ${def.manual ? `<button class="ind-card-edit" title="更新" onclick="openIndicatorEdit('${id}')">✏︎</button>` : ''}
         </span>
       </div>
       <div class="ind-card-value">${esc(def.fmt(v))}</div>
-      <div class="ind-gauge"><div class="ind-gauge-fill ${sig === 'unknown' ? '' : sig}" style="width:${fillPct}%"></div></div>
       ${def.thresholds ? `<div class="ind-card-thresh">${esc(def.thresholds)}</div>` : ''}
+      <div class="ind-gauge"><div class="ind-gauge-fill ${sig === 'unknown' ? '' : sig}" style="width:${fillPct}%"></div></div>
       <div class="ind-card-foot">
         <span class="ind-card-signal ${sig}">${sigText}</span>
         <span>
@@ -7165,13 +7247,24 @@ function renderStaking() {
     const diffStr = (x.diff > 0 ? '+' : '') + _fmtQty(x.diff);
     const diffCls = x.diff > 0 ? 'pos' : (x.diff < 0 ? 'neg' : '');
     const valStr = x.priceTWD > 0 ? '≈ ' + fmt(Math.abs(x.valueTWD)) : '—';
+    const formula = x.base === null
+      ? '10/1 後新增持倉，尚無基準可比，不計入可優先變現額。'
+      : '數量差額 × 現價換算台幣；差異含期間手動買賣的淨效果，解讀時注意。';
     return `
-      <div class="staking-row">
-        <div class="staking-sym">${esc(x.sym)}</div>
-        <div class="staking-qty">基準 ${baseStr} → 現在 ${_fmtQty(x.now)}</div>
-        <div class="staking-diff ${diffCls}">${diffStr}</div>
-        <div class="staking-val">${valStr}</div>
-      </div>`;
+      <details class="stake-item">
+        <summary>
+          <span class="staking-sym">${esc(x.sym)}</span>
+          <span class="stake-sumval"><b class="staking-diff ${diffCls}">${diffStr}</b><small>${valStr} · 展開明細 ⌄</small></span>
+        </summary>
+        <div class="stake-detail">
+          <div class="stake-numbers">
+            <div><span>基準數量</span><b>${baseStr}</b></div>
+            <div><span>目前數量</span><b>${_fmtQty(x.now)}</b></div>
+            <div><span>數量差額</span><b class="staking-diff ${diffCls}">${diffStr}</b></div>
+          </div>
+          <p class="stake-formula">${formula}</p>
+        </div>
+      </details>`;
   };
 
   const sectionHTML = (title, sub, list) => {
@@ -7537,6 +7630,8 @@ async function _fetchNewsEN(cutoffMs) {
         source: sp.source,
         ts,
         stat: '',
+        // Google News 的 description 是聚合連結，不當摘要；縮圖有提供才帶
+        thumb: it.thumbnail || (it.enclosure && it.enclosure.link) || '',
         score: tier * 100 + Math.max(0, 12 - (Date.now() - ts) / 3600000),
       };
     })
@@ -7567,6 +7662,8 @@ async function _fetchNewsZH(cutoffMs) {
         source: f.source,
         ts: new Date(it.pubDate).getTime(),
         stat: '',
+        thumb: it.thumbnail || (it.enclosure && it.enclosure.link) || '',
+        desc: _newsExcerpt(it.description),
       }))
       .filter(it => Number.isFinite(it.ts) && it.ts >= cutoffMs)
       .filter(it => BTC_KW.test(it.title || ''));
@@ -7673,6 +7770,16 @@ function _renderNewsUI(data, isStale) {
   }
 }
 
+// 來源提供的 description 去標籤截為摘要；沒有就回空字串（不自行編寫內容）
+function _newsExcerpt(html) {
+  if (!html) return '';
+  const text = String(html).replace(/<[^>]*>/g, ' ').replace(/&[a-z#\d]+;/gi, ' ').replace(/\s+/g, ' ').trim();
+  if (text.length < 8) return '';
+  return text.length > 90 ? text.slice(0, 90) + '…' : text;
+}
+// 缺圖時的中性插畫（取自核准設計稿；純裝飾，不代表文章內容）
+const _NEWS_ART = '<svg class="news-art-neutral" viewBox="0 0 400 220" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><rect width="400" height="220" fill="#e5f2fc"/><path d="M0 190 90 143 165 167 252 85 320 110 400 35V220H0" fill="#c3e0f5"/><path d="M0 178 90 131 165 155 252 73 320 98 400 23" fill="none" stroke="#78b8e2" stroke-width="3"/><circle cx="205" cy="114" r="69" fill="#2176b3"/><circle cx="205" cy="114" r="57" fill="none" stroke="#9bd0ef" stroke-width="2"/><text x="205" y="143" font-family="sans-serif" font-size="81" text-anchor="middle" fill="#fff">₿</text></svg>';
+
 function _renderNewsZone(zone, items, error) {
   const list = $('news-list-' + zone);
   const cEl = $('news-count-' + zone);
@@ -7687,19 +7794,55 @@ function _renderNewsZone(zone, items, error) {
     if (cEl) cEl.textContent = '0 則';
     return;
   }
-  list.innerHTML = items.map(it => `
-    <li class="news-item">
-      <a class="news-link" href="${esc(it.url || '#')}" target="_blank" rel="noopener noreferrer">
-        <div class="news-item-title">${esc(it.title || '(無標題)')}</div>
-        <div class="news-item-meta">
+  const metaHTML = (it) => `
+        <span class="news-item-meta">
           <span class="news-item-source">${esc(it.source || '—')}</span>
           <span class="news-item-dot">·</span>
           <span>${_fmtRelTime(it.ts)}</span>
           ${it.stat ? `<span class="news-item-dot">·</span><span class="news-item-stat">${esc(it.stat)}</span>` : ''}
-        </div>
+        </span>`;
+  const artHTML = (it) => `${it.thumb ? `<img src="${esc(it.thumb)}" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()">` : ''}${_NEWS_ART}`;
+  const rowHTML = (it) => `
+    <li class="news-item${zone === 'zh' ? ' news-item-thumbed' : ''}">
+      <a class="news-link" href="${esc(it.url || '#')}" target="_blank" rel="noopener noreferrer">
+        ${zone === 'zh' ? `<span class="news-thumb">${artHTML(it)}</span>` : ''}
+        <span class="news-item-body">
+          <span class="news-item-title">${esc(it.title || '(無標題)')}</span>
+          ${metaHTML(it)}
+          ${it.desc ? `<span class="news-item-desc">${esc(it.desc)}</span>` : ''}
+        </span>
       </a>
-    </li>
-  `).join('');
+    </li>`;
+  if (zone === 'en') {
+    const [feat, ...rest] = items;
+    list.innerHTML = `
+      <li class="news-feature-item">
+        <a class="news-link news-feature-link" href="${esc(feat.url || '#')}" target="_blank" rel="noopener noreferrer">
+          <span class="news-feature-art">${artHTML(feat)}</span>
+          <span class="news-feature-copy">
+            <span class="news-feature-badge">頭條</span>
+            <span class="news-feature-title">${esc(feat.title || '(無標題)')}</span>
+            ${metaHTML(feat)}
+            ${feat.desc ? `<span class="news-feature-desc">${esc(feat.desc)}</span>` : ''}
+            <span class="news-feature-cta">閱讀原文 ›</span>
+          </span>
+        </a>
+      </li>` + rest.map(rowHTML).join('');
+  } else if (zone === 'x') {
+    list.innerHTML = items.map(it => `
+      <li class="news-post">
+        <a class="news-link" href="${esc(it.url || '#')}" target="_blank" rel="noopener noreferrer">
+          <span class="news-post-head">
+            <span class="news-avatar">${esc((it.source || 'X').replace('@', '').charAt(0).toUpperCase())}</span>
+            <b>${esc(it.source || 'X')}</b>
+            <span class="news-post-time">${_fmtRelTime(it.ts)}${it.stat ? ' · ' + esc(it.stat) : ''}</span>
+          </span>
+          <span class="news-post-text">${esc(it.title || '(無標題)')}</span>
+        </a>
+      </li>`).join('');
+  } else {
+    list.innerHTML = items.map(rowHTML).join('');
+  }
   if (cEl) cEl.textContent = items.length + ' 則';
 }
 
@@ -7716,6 +7859,8 @@ document.addEventListener('DOMContentLoaded', () => {
   document.documentElement.dataset.theme = savedTheme;
   Chart.defaults.color = savedTheme === 'light' ? '#666666' : 'rgba(255,255,255,0.88)';
   updateThemeBtn();
+  // 金額隱藏偏好（全站 privacy）
+  if (localStorage.getItem('amounts_hidden') === '1') _applyAmountPrivacy(true);
   updateMobileBuildBar();
 
   $('btn-signin').addEventListener('click', signIn);

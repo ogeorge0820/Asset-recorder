@@ -2861,3 +2861,152 @@ h3.section-header {
   .asset-explorer .login-story { flex: 1.2; min-height: 100dvh; padding: 80px 60px 0; }
   .asset-explorer .login-panel { flex: 1; min-height: 100dvh; }
 }
+
+/* ═══ 對齊核准稿第二輪：總覽 lower-grid（我的資產＋跑道並排）＋收益 strip ═══ */
+.asset-explorer .ovx-lower { display: grid; gap: 18px; grid-template-columns: minmax(0,1fr); }
+@media (min-width: 1024px) { .asset-explorer .ovx-lower { grid-template-columns: minmax(0,1.4fr) minmax(0,1fr); align-items: start; } }
+.asset-explorer .ovx-assets { background: var(--bg-card); border: 1px solid var(--border); border-radius: 20px; box-shadow: var(--card-shadow-soft); padding: 22px; }
+.asset-explorer .ovx-assets-head { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+.asset-explorer .ovx-assets-head h3 { font-size: 16px; margin: 0; }
+.asset-explorer .ovx-assets-sub { color: var(--text-muted); font-size: 12px; }
+.asset-explorer .ovx-filters { display: flex; gap: 6px; overflow-x: auto; padding: 14px 0 8px; }
+.asset-explorer .ovx-filters button { font-size: 12px; min-height: 36px; padding: 6px 13px; white-space: nowrap; border-radius: 18px !important; border: 1px solid var(--border); background: none; color: var(--text-secondary); }
+.asset-explorer .ovx-filters button[aria-pressed="true"] { background: var(--brand-lavender-soft); color: var(--brand-lavender); border-color: transparent; font-weight: 600; }
+.asset-explorer .ovx-row { width: 100%; display: flex; align-items: center; text-align: left; gap: 12px; padding: 15px 2px; min-height: 72px; cursor: pointer; background: none !important; border: 0 !important; border-bottom: 1px solid var(--border) !important; border-radius: 0 !important; }
+.asset-explorer .ovx-row:last-child { border-bottom: 0 !important; }
+.asset-explorer .ovx-row:hover { background: var(--bg-hover) !important; }
+.asset-explorer .ovx-icon { width: 38px; height: 38px; display: grid; place-items: center; border-radius: 12px; font-weight: 650; font-size: 16px; background: var(--brand-lavender-soft); color: var(--brand-lavender); flex: none; }
+.asset-explorer .ovx-title { min-width: 0; flex: 1; font-size: 13px; font-weight: 600; color: var(--text-primary); overflow-wrap: anywhere; }
+.asset-explorer .ovx-title small { display: block; color: var(--text-muted); font-size: 11px; font-weight: 400; margin-top: 2px; }
+.asset-explorer .ovx-value { text-align: right; font-size: 16px; font-weight: 550; font-family: var(--font-num); font-variant-numeric: tabular-nums; color: var(--text-primary); }
+.asset-explorer .ovx-value small { display: block; font-size: 10px; color: var(--text-muted); font-weight: 400; }
+.asset-explorer .ovx-chevron { color: var(--text-muted); font-size: 18px; flex: none; }
+.asset-explorer .ovx-note { color: var(--text-muted); font-size: 11px; margin: 10px 0 0; }
+.asset-explorer .ovx-runways { display: grid; gap: 14px; align-content: start; grid-template-columns: minmax(0,1fr); }
+@media (min-width: 500px) and (max-width: 1023px) { .asset-explorer .ovx-runways { grid-template-columns: 1fr 1fr; } }
+.asset-explorer .ovx-runways .cf-card { margin: 0; }
+.asset-explorer #card-survival .ov2-stat-num { font-family: var(--font-num); font-variant-numeric: tabular-nums; font-size: 26px; font-weight: 600; letter-spacing: -0.02em; margin: 8px 0 4px; display: block; }
+
+.asset-explorer .ovx-strip { display: grid; grid-template-columns: 1fr 1fr; gap: 0; background: var(--bg-card); border: 1px solid var(--border); border-radius: 16px; overflow: hidden; box-shadow: var(--card-shadow-soft); }
+@media (min-width: 1024px) { .asset-explorer .ovx-strip { grid-template-columns: repeat(4,1fr); } }
+.asset-explorer .ovx-strip > * { background: none !important; border: 0 !important; border-radius: 0 !important; box-shadow: none !important; padding: 18px !important; min-height: 0 !important; margin: 0 !important; text-align: left; overflow: visible; }
+.asset-explorer .ovx-strip > *:nth-child(odd) { border-right: 1px solid var(--border) !important; }
+.asset-explorer .ovx-strip > *:nth-child(-n+2) { border-bottom: 1px solid var(--border) !important; }
+@media (min-width: 1024px) {
+  .asset-explorer .ovx-strip > * { border-bottom: 0 !important; border-right: 1px solid var(--border) !important; }
+  .asset-explorer .ovx-strip > *:last-child { border-right: 0 !important; }
+}
+.asset-explorer .ovx-strip .ov2-pl-num, .asset-explorer .ovx-strip .ov2-stat-num, .asset-explorer .ovx-strip .cf-num { font-size: 21px !important; }
+.asset-explorer .ovx-strip .ov2-mini-bars { height: 26px; margin-top: 8px; }
+.asset-explorer .ovx-strip .ov2-stat-label, .asset-explorer .ovx-strip .cf-card-head { font-size: 12px; color: var(--text-secondary); }
+
+/* ═══ 對齊核准稿第二輪：管理頁 pills＋單一清單、三張獨立卡、支出收入直接呈現 ═══ */
+.asset-explorer #tab-management .mgmt-subnav { display: flex; gap: 6px; flex-wrap: wrap; margin: 0 0 14px; }
+.asset-explorer #tab-management .mgmt-subnav button { min-height: 40px; padding: 8px 15px; border-radius: 10px !important; font-size: 13px; color: var(--text-secondary); background: none !important; border: 0 !important; }
+.asset-explorer #tab-management .mgmt-subnav button[aria-pressed="true"] { background: var(--brand-lavender-soft) !important; color: var(--brand-lavender); font-weight: 600; }
+.asset-explorer #tab-management .holding-block.mgmt-hidden { display: none; }
+.asset-explorer #tab-management .holdings-hero:not(.extras-hero):not(.expenses-hero) .holdings-grid { grid-template-columns: minmax(0,1fr) !important; }
+/* 分類 summary 卡壓成 slim header：總額/漲跌/代號資訊保留，展開改由 pills 控制 */
+.asset-explorer #tab-management .holdings-hero:not(.extras-hero):not(.expenses-hero) .holding-card { pointer-events: none; min-height: 0 !important; padding: 16px 20px 12px; }
+.asset-explorer #tab-management .holdings-hero:not(.extras-hero):not(.expenses-hero) .holding-card .hc-amount { font-size: 24px !important; padding-top: 8px; }
+.asset-explorer #tab-management .hc-arrow { display: none; }
+/* 其他資產&負債 → 隱藏合併 summary，明細常開排成三張獨立卡 */
+.asset-explorer #tab-management #hb-other-assets .holding-card { display: none; }
+.asset-explorer #tab-management #hb-other-assets .holding-detail { display: grid !important; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px; border-top: 0; }
+.asset-explorer #tab-management #hb-other-assets #other-assets-items,
+.asset-explorer #tab-management #hb-other-assets #liab-items { display: contents !important; }
+/* 質押收益、支出、體驗、收入 → 明細常開、summary 變 slim header */
+.asset-explorer #tab-management #hb-rewards .holding-detail,
+.asset-explorer #tab-management #hb-budget .holding-detail,
+.asset-explorer #tab-management #hb-exp-plan .holding-detail,
+.asset-explorer #tab-management #hb-income .holding-detail { display: block !important; }
+.asset-explorer #tab-management .extras-hero .holding-card,
+.asset-explorer #tab-management .expenses-hero .holding-card { pointer-events: none; min-height: 0 !important; padding: 16px 20px 10px; }
+.asset-explorer #tab-management .extras-hero .holding-card .hc-amount,
+.asset-explorer #tab-management .expenses-hero .holding-card .hc-amount { font-size: 22px !important; padding-top: 6px; }
+@media (min-width: 1024px) {
+  .asset-explorer #tab-management .extras-hero .holdings-grid,
+  .asset-explorer #tab-management .expenses-hero .holdings-grid { grid-template-columns: repeat(2, minmax(0,1fr)) !important; align-items: start; }
+  .asset-explorer #tab-management .holding-block-full { grid-column: 1 / -1; }
+}
+
+/* 人生規劃對齊核准稿：情境橫幅＋獨立時間軸卡＋進階設定收合 */
+.asset-explorer .dwz-banner {
+  position: relative; overflow: hidden; display: flex; align-items: center;
+  background: linear-gradient(120deg, #eff7fd, #e0f1fc); border: 1px solid #deecf7;
+  border-radius: 17px; padding: 24px 27px; margin-bottom: 20px; min-height: 110px;
+}
+:root[data-theme="dark"] .asset-explorer .dwz-banner { background: linear-gradient(120deg, var(--brand-lavender-tint), var(--explorer-sky)); border-color: var(--border); }
+.asset-explorer .dwz-banner-copy { position: relative; z-index: 1; max-width: 75%; }
+.asset-explorer .dwz-banner-copy h2 { font-size: 21px; margin: 0; line-height: 1.5; letter-spacing: -.02em; }
+.asset-explorer .dwz-banner-copy p { color: var(--text-secondary); font-size: 13px; margin: 6px 0 0; max-width: 34em; }
+.asset-explorer .dwz-banner-art { position: absolute; right: 0; bottom: -3px; height: 125px; width: 190px; opacity: .75; pointer-events: none; }
+@media (max-width: 599px) { .asset-explorer .dwz-banner { padding: 20px 22px; } .asset-explorer .dwz-banner-copy h2 { font-size: 18px; } .asset-explorer .dwz-banner-art { opacity: .3; } }
+.asset-explorer .dwz-timeline-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 20px; box-shadow: var(--card-shadow-soft); padding: 20px; }
+.asset-explorer .dwz-timeline-card .dwz-timeline { margin-top: 0; border-top: 0; padding-top: 0; }
+.asset-explorer .dwz-adv-block .dwz-strat-lab-body { padding-top: 8px; }
+
+/* 新聞對齊核准稿：英文主打卡、繁中圖文列、X 討論卡。圖文只用來源提供內容，缺圖用中性插畫。 */
+.asset-explorer .news-feature-item { list-style: none; margin-bottom: 6px; }
+.asset-explorer .news-feature-link { display: grid !important; grid-template-columns: minmax(0,1fr); gap: 0; border: 1px solid var(--border); border-radius: 16px; overflow: hidden; background: var(--bg-card); }
+@media (min-width: 600px) { .asset-explorer .news-feature-link { grid-template-columns: minmax(0,.9fr) minmax(0,1.1fr); } }
+.asset-explorer .news-feature-art { position: relative; min-height: 160px; display: block; background: var(--brand-lavender-soft); }
+.asset-explorer .news-feature-art img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; z-index: 1; }
+.asset-explorer .news-art-neutral { position: absolute; inset: 0; width: 100%; height: 100%; }
+.asset-explorer .news-feature-copy { display: block; padding: 20px 22px; }
+.asset-explorer .news-feature-badge { display: inline-flex; align-items: center; background: var(--brand-lavender-soft); color: var(--brand-lavender); font-size: 11px; font-weight: 600; border-radius: 12px; padding: 3px 10px; margin-bottom: 10px; }
+.asset-explorer .news-feature-title { display: block; font-size: 18px; font-weight: 600; line-height: 1.6; color: var(--text-primary); margin-bottom: 8px; }
+.asset-explorer .news-feature-desc { display: block; color: var(--text-secondary); font-size: 12.5px; line-height: 1.8; margin-top: 10px; }
+.asset-explorer .news-feature-cta { display: inline-block; color: var(--accent); font-size: 12px; margin-top: 12px; }
+.asset-explorer .news-item-thumbed .news-link { display: flex; gap: 15px; align-items: center; }
+.asset-explorer .news-thumb { position: relative; width: 90px; height: 64px; border-radius: 9px; overflow: hidden; flex: none; display: block; background: var(--brand-lavender-soft); }
+.asset-explorer .news-thumb img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; z-index: 1; }
+.asset-explorer .news-item-body { display: block; min-width: 0; flex: 1; }
+.asset-explorer .news-item-desc { display: block; color: var(--text-muted); font-size: 11.5px; line-height: 1.7; margin-top: 4px; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+.asset-explorer #news-list-x { display: grid; gap: 12px; grid-template-columns: minmax(0,1fr); padding-top: 4px; }
+@media (min-width: 900px) { .asset-explorer #news-list-x { grid-template-columns: repeat(3, minmax(0,1fr)); } }
+.asset-explorer .news-post { list-style: none; border: 1px solid var(--border); border-radius: 14px; background: var(--bg-card); }
+.asset-explorer .news-post .news-link { display: block; padding: 16px 18px; }
+.asset-explorer .news-post-head { display: flex; align-items: center; gap: 9px; margin-bottom: 9px; font-size: 12px; color: var(--text-primary); }
+.asset-explorer .news-avatar { width: 30px; height: 30px; border-radius: 50%; display: grid; place-items: center; background: var(--brand-lavender-soft); color: var(--brand-lavender); font-weight: 650; flex: none; }
+.asset-explorer .news-post-time { color: var(--text-muted); margin-left: auto; font-size: 11px; white-space: nowrap; }
+.asset-explorer .news-post-text { display: block; font-size: 13px; line-height: 1.8; color: var(--text-secondary); }
+
+/* 質押對齊核准稿：每幣可展開明細（基準/目前/差額＋公式說明），分類分區保留。 */
+.asset-explorer .staking-section { display: grid; gap: 10px; }
+.asset-explorer .staking-section-head { border-bottom: 0; padding: 10px 2px 2px; }
+.asset-explorer .stake-item { background: var(--bg-card); border: 1px solid var(--border); border-radius: 14px; overflow: hidden; }
+.asset-explorer .stake-item summary { padding: 16px 18px; display: flex; justify-content: space-between; align-items: center; gap: 14px; cursor: pointer; list-style: none; }
+.asset-explorer .stake-item summary::-webkit-details-marker { display: none; }
+.asset-explorer .stake-item summary .staking-sym { font-size: 15px; }
+.asset-explorer .stake-sumval { text-align: right; }
+.asset-explorer .stake-sumval b { font-size: 15px; font-variant-numeric: tabular-nums; }
+.asset-explorer .stake-sumval small { display: block; font-size: 10px; color: var(--text-muted); font-weight: 400; margin-top: 2px; }
+.asset-explorer .stake-item[open] summary { border-bottom: 1px solid var(--border); background: var(--brand-lavender-tint); }
+.asset-explorer .stake-detail { padding: 14px 18px 16px; }
+.asset-explorer .stake-numbers { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 8px; padding: 14px; background: var(--bg); border-radius: 11px; }
+:root[data-theme="dark"] .asset-explorer .stake-numbers { background: var(--bg-hover); }
+.asset-explorer .stake-numbers span { display: block; font-size: 10px; color: var(--text-muted); }
+.asset-explorer .stake-numbers b { display: block; font-size: 15px; font-weight: 550; margin-top: 4px; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+.asset-explorer .stake-formula { margin: 12px 0 0; font-size: 11.5px; color: var(--text-muted); line-height: 1.7; }
+
+/* 指標對齊核准稿：標籤旁手動/自動、閾值說明升為數值下註解、層級為 值→說明→區間→狀態。 */
+.asset-explorer .ind-card-mode { display: inline-block; margin-left: 8px; font-size: 10px; font-weight: 600; color: var(--brand-lavender); background: var(--brand-lavender-soft); border-radius: 12px; padding: 2px 8px; vertical-align: 1px; }
+.asset-explorer .ind-card-value { font-size: 26px; font-weight: 600; }
+.asset-explorer .ind-card-thresh { min-height: 30px; color: var(--text-secondary); font-size: 11.5px; line-height: 1.7; }
+.asset-explorer .ind-card .ind-gauge { margin-top: 4px; }
+
+/* 全站金額隱藏：個人金額與圖表模糊；隱藏中同時停用互動避免誤操作。市場指標與匯率屬公開資訊不遮。 */
+body.amounts-hidden :is(.ov2-hero-num, .ov2-hero-sub-num, .ov2-hero-meta, .ov2-pl-num, .ov2-stat-num,
+  .ov2-mini-bars, .pie-legend, .ovx-value, .cf-num, .cf-sub, .cf-sub2, .ov2-movers-list,
+  .hc-amount, .hc-avail, .hc-change, .hc-side-val, .data-table td, .cash-cards, .stock-cards, .crypto-cards,
+  .other-item-value, #rewards-accordion, .budget-ratio-bar, .budget-cats, .budget-planned-wrap,
+  .exp-plan-list, #income-accordion, .income-forecast, .section-avail,
+  .dwz-kpi-tag b, .dwz-pill, #dwz-expenses-list, .bucket-stats, .dwz-smart-tips,
+  .staking-total-num, #staking-list, #modal-body, #app-content canvas) {
+  filter: blur(7px) !important;
+  user-select: none;
+  pointer-events: none;
+}
+.btn-privacy svg { width: 16px; height: 16px; display: block; }
+.btn-privacy.privacy-on { color: var(--accent) !important; background: var(--brand-lavender-soft) !important; }
