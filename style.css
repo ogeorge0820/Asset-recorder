@@ -3081,3 +3081,39 @@ body.amounts-hidden :is(.ov2-hero-num, .ov2-hero-sub-num, .ov2-hero-meta, .ov2-p
     color: var(--text-secondary); font-size: 18px; line-height: 1;
   }
 }
+
+/* ── 第三輪：總覽主資產卡對齊核准稿 ──
+   大字餘額改墨色、字級節奏對齊；淨資產成為餘額下方事實列；
+   趨勢圖補標題列（走勢名稱＋期間切換）與幣別/口徑說明 */
+.asset-explorer .ov2-hero-head { display: block; }
+.asset-explorer .ov2-hero-num {
+  color: var(--text-primary); font-weight: 650;
+  font-size: clamp(38px, 3.4vw, 49px); letter-spacing: -1.8px; line-height: 1.2;
+}
+.asset-explorer .ov2-hero-ccy {
+  color: var(--text-secondary); font-size: 12px; font-weight: 400; margin-left: 6px;
+}
+.asset-explorer .ov2-hero-secondary {
+  border-left: none; border-top: 0; padding: 0; margin-top: 16px;
+  display: inline-flex; flex-direction: column; justify-content: flex-start;
+}
+.asset-explorer .ov2-hero-sub-label {
+  font-size: 12px; text-transform: none; letter-spacing: 0;
+  color: var(--text-secondary); margin-bottom: 2px;
+}
+.asset-explorer .ov2-hero-sub-num {
+  font-size: 17px; font-weight: 550; color: var(--text-primary);
+}
+.asset-explorer .ov2-chart-heading {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 8px; margin: 22px 0 4px;
+}
+.asset-explorer .ov2-chart-title { font-size: 12px; color: var(--text-secondary); flex: none; white-space: nowrap; }
+.asset-explorer .ov2-chart-caption {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 10px; flex-wrap: wrap; font-size: 11px; color: var(--text-secondary);
+  padding-top: 8px;
+}
+@media (min-width: 769px) {
+  .asset-explorer .ov2-hero { padding: 26px 26px 16px; }
+}

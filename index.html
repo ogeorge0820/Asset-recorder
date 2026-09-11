@@ -16,8 +16,8 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=DM+Sans:wght@300;400;500;600;700&display=swap">
-<link rel="stylesheet" href="theme.css?v=202609110912">
-<link rel="stylesheet" href="style.css?v=202609110912">
+<link rel="stylesheet" href="theme.css?v=202609110918">
+<link rel="stylesheet" href="style.css?v=202609110918">
 </head>
 <body class="asset-explorer">
 
@@ -84,7 +84,7 @@
         <div class="ov2-hero">
           <div class="ov2-hero-head">
             <div class="ov2-hero-primary">
-              <div class="ov2-hero-label"><span class="ov2-hero-label-icon" aria-hidden="true">💰</span>目前可用資產</div>
+              <div class="ov2-hero-label"><span class="ov2-hero-label-icon" aria-hidden="true">💰</span>目前可用資產<span class="ov2-hero-ccy">TWD</span></div>
               <div class="ov2-hero-num skel" id="kv-liquid">—</div>
               <div class="ov2-hero-meta" id="ks-liquid">現金 + 投資組合</div>
             </div>
@@ -93,6 +93,9 @@
               <div class="ov2-hero-sub-num" id="kv-net">—</div>
               <div class="ov2-hero-sub-meta" id="ks-net">含長期持有與負債</div>
             </div>
+          </div>
+          <div class="ov2-chart-heading">
+            <span class="ov2-chart-title">淨資產走勢</span>
             <div class="chart-filter ov2-trend-filter">
               <button class="filter-btn" data-f="6m" onclick="setTrendFilter(this)">6M</button>
               <button class="filter-btn" data-f="1y" onclick="setTrendFilter(this)">1Y</button>
@@ -105,6 +108,7 @@
               <div style="color:var(--muted);font-size:0.9rem">尚無歷史資料</div>
             </div>
           </div>
+          <div class="ov2-chart-caption"><span>幣別：TWD ・ 金額以萬／億顯示</span><span>月度快照 ・「▸」為本月即時值</span></div>
         </div>
         <div class="ov2-alloc-card">
           <div class="ov2-alloc-head">
@@ -860,6 +864,6 @@
 <!-- ── Toast ── -->
 <div class="toast" id="toast"></div>
 
-<script src="app.js?v=202609110912"></script>
+<script src="app.js?v=202609110918"></script>
 </body>
 </html>
