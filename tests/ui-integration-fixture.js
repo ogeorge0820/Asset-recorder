@@ -10,6 +10,19 @@ S.prices.crypto = {USDT: 1, BTC: 100000, ETH: 3000};
 S.data.settings = {insurance_total: 6250, realestate_total: 9500000, debt: 3500000};
 S.data.expense_budget = [['固定', '示意生活費', 33300, '現金', '', 'demo-budget']];
 const fixtureToday = new Date();
+const fxY = fixtureToday.getFullYear(), fxM = String(fixtureToday.getMonth() + 1).padStart(2, '0');
+S.data.rewards = [
+  [`${fxY}/${fxM}`, 'ETH', 0.05, 3000, 4800, 'staking', '示意質押收益'],
+  [`${fxY}/${fxM}`, 'USDT', 143.75, 1, 4600, 'interest', '示意美元活存利息'],
+];
+S.data.income_records = [
+  ['demo-inc-1', '示意薪資', '薪資', 90000, `${fxY}-${fxM}-25`, '0', '', '', '示意公司'],
+  ['demo-inc-2', '示意接案尾款', '接案', 25000, `${fxY + 1}-01-15`, '0', '', '', ''],
+];
+S.data.bucket_list = [
+  ['demo-bk-1', '示意北歐極光之旅', '旅行', 45, 20, '規劃中', `${fxY + 1}/02`, '', ''],
+  ['demo-bk-2', '示意夏季家族露營', '家庭', 43, 6, '規劃中', `${fxY + 1}/07`, '', ''],
+];
 for (let i = 17; i >= 0; i--) {
   const date = new Date(fixtureToday.getFullYear(), fixtureToday.getMonth() - i, 1);
   const key = `${date.getFullYear()}/${String(date.getMonth()+1).padStart(2,'0')}`;

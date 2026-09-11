@@ -16,8 +16,8 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=DM+Sans:wght@300;400;500;600;700&display=swap">
-<link rel="stylesheet" href="theme.css?v=202609101208">
-<link rel="stylesheet" href="style.css?v=202609101208">
+<link rel="stylesheet" href="theme.css?v=202609110912">
+<link rel="stylesheet" href="style.css?v=202609110912">
 </head>
 <body class="asset-explorer">
 
@@ -358,9 +358,9 @@
         </div>
       </section>
 
-      <!-- 其他資產 / 負債 / 質押收益 — 卡片式（與上方 holdings-hero 同層） -->
+      <!-- 其他資產 / 負債 — 三張等寬卡片（與上方 holdings-hero 同層） -->
       <section class="holdings-hero extras-hero">
-          <h3 class="holdings-hero-title">其他資產 &amp; 收益</h3>
+          <h3 class="holdings-hero-title">其他資產 &amp; 負債</h3>
           <div class="holdings-grid">
 
             <div class="holding-block" id="hb-other-assets">
@@ -394,25 +394,31 @@
               </div>
             </div>
 
-            <div class="holding-block" id="hb-rewards">
-              <button class="holding-card hc-rewards" onclick="toggleHolding('rewards')" type="button">
-                <span class="hc-deco hc-deco-stars" aria-hidden="true"></span>
-                <div class="hc-top">
-                  <span class="hc-label">質押 / 活存收益<span class="hc-label-en"> / STAKING REWARDS</span></span>
-                  <span class="hc-count">總計</span>
-                </div>
-                <div class="hc-amount" id="hc-amount-rewards">—</div>
-                <div class="hc-symbols" id="hc-symbols-rewards">—</div>
-                <span class="hc-arrow" aria-hidden="true">▾</span>
-              </button>
-              <div class="holding-detail">
-                <div id="rewards-accordion"></div>
-                <button class="btn-add" onclick="addReward()" style="margin-top:12px">+ 新增收益記錄</button>
-              </div>
-            </div>
-
           </div>
         </section>
+
+      <!-- 質押 / 活存收益 — 獨立完整區塊 -->
+      <section class="holdings-hero rewards-hero">
+        <h3 class="holdings-hero-title">質押 &amp; 活存收益</h3>
+        <div class="holdings-grid">
+          <div class="holding-block" id="hb-rewards">
+            <button class="holding-card hc-rewards" onclick="toggleHolding('rewards')" type="button">
+              <span class="hc-deco hc-deco-stars" aria-hidden="true"></span>
+              <div class="hc-top">
+                <span class="hc-label">質押 / 活存收益<span class="hc-label-en"> / STAKING REWARDS</span></span>
+                <span class="hc-count">總計</span>
+              </div>
+              <div class="hc-amount" id="hc-amount-rewards">—</div>
+              <div class="hc-symbols" id="hc-symbols-rewards">—</div>
+              <span class="hc-arrow" aria-hidden="true">▾</span>
+            </button>
+            <div class="holding-detail">
+              <div id="rewards-accordion"></div>
+              <button class="btn-add" onclick="addReward()" style="margin-top:12px">+ 新增收益記錄</button>
+            </div>
+          </div>
+        </div>
+      </section>
 
       <!-- 隱形 ID 容器（其他 JS 讀取用） -->
       <div style="display:none">
@@ -451,24 +457,7 @@
             </div>
           </div>
 
-          <div class="holding-block" id="hb-exp-plan">
-            <button class="holding-card hc-exp-plan" onclick="toggleHolding('exp-plan')" type="button">
-              <span class="hc-deco hc-deco-rings" aria-hidden="true"></span>
-              <div class="hc-top">
-                <span class="hc-label">重大體驗支出規劃<span class="hc-label-en"> / EXPERIENCE PLAN</span></span>
-                <span class="hc-count"><span id="cnt-exp-plan">0</span> 項</span>
-              </div>
-              <div class="hc-amount"><span id="tot-exp-plan">—</span></div>
-              <div class="hc-symbols" id="hc-symbols-exp-plan">規劃中</div>
-              <span class="hc-arrow" aria-hidden="true">▾</span>
-            </button>
-            <div class="holding-detail">
-              <div class="exp-plan-list" id="exp-plan-list"></div>
-              <button class="btn-add" onclick="addExpPlanItem()">+ 新增體驗支出</button>
-            </div>
-          </div>
-
-          <div class="holding-block holding-block-full" id="hb-income">
+          <div class="holding-block" id="hb-income">
             <button class="holding-card hc-income" onclick="toggleHolding('income')" type="button">
               <span class="hc-deco hc-deco-stars" aria-hidden="true"></span>
               <div class="hc-top">
@@ -483,6 +472,23 @@
               <div id="income-accordion"></div>
               <div class="income-forecast" id="income-month-forecast" style="display:none"></div>
               <button class="btn-add" onclick="addIncomeItem()">+ 新增收入</button>
+            </div>
+          </div>
+
+          <div class="holding-block holding-block-full" id="hb-exp-plan">
+            <button class="holding-card hc-exp-plan" onclick="toggleHolding('exp-plan')" type="button">
+              <span class="hc-deco hc-deco-rings" aria-hidden="true"></span>
+              <div class="hc-top">
+                <span class="hc-label">重大體驗支出規劃<span class="hc-label-en"> / EXPERIENCE PLAN</span></span>
+                <span class="hc-count"><span id="cnt-exp-plan">0</span> 項</span>
+              </div>
+              <div class="hc-amount"><span id="tot-exp-plan">—</span></div>
+              <div class="hc-symbols" id="hc-symbols-exp-plan">規劃中</div>
+              <span class="hc-arrow" aria-hidden="true">▾</span>
+            </button>
+            <div class="holding-detail">
+              <div class="exp-plan-list" id="exp-plan-list"></div>
+              <button class="btn-add" onclick="addExpPlanItem()">+ 新增體驗支出</button>
             </div>
           </div>
 
@@ -854,6 +860,6 @@
 <!-- ── Toast ── -->
 <div class="toast" id="toast"></div>
 
-<script src="app.js?v=202609101208"></script>
+<script src="app.js?v=202609110912"></script>
 </body>
 </html>

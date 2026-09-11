@@ -3010,3 +3010,74 @@ body.amounts-hidden :is(.ov2-hero-num, .ov2-hero-sub-num, .ov2-hero-meta, .ov2-p
 }
 .btn-privacy svg { width: 16px; height: 16px; display: block; }
 .btn-privacy.privacy-on { color: var(--accent) !important; background: var(--brand-lavender-soft) !important; }
+
+/* ══════════════════════════════════════════════════════════
+   第三輪版面對齊：管理頁（2026/09/11）
+   儲蓄險/房地產/負債三等寬卡、質押收益獨立區塊、
+   預算收入並排、持倉明細列式對齊核准稿
+   ══════════════════════════════════════════════════════════ */
+
+/* ── 其他資產 & 負債：三張等寬卡片 ── */
+.asset-explorer #tab-management .other-item-card {
+  display: grid; grid-template-columns: minmax(0,1fr) auto;
+  align-items: start; gap: 0 10px;
+  padding: 21px; border-radius: 14px;
+  border: 1px solid var(--border); background: var(--bg-card);
+}
+.asset-explorer #tab-management .other-item-card:hover {
+  background: var(--bg-card); border-color: var(--brand-lavender);
+}
+.asset-explorer #tab-management .other-item-info { display: contents; }
+.asset-explorer #tab-management .other-item-icon {
+  grid-column: 2; grid-row: 1; width: auto; height: auto;
+  background: none; font-size: 18px; opacity: .8;
+}
+.asset-explorer #tab-management .other-item-label {
+  grid-column: 1; grid-row: 1; font-size: 14px; font-weight: 600;
+}
+.asset-explorer #tab-management .other-item-value {
+  grid-column: 1 / -1; grid-row: 2; text-align: left;
+  font-size: 26px; font-weight: 600; margin: 12px 0 5px;
+  font-variant-numeric: tabular-nums; letter-spacing: -.5px;
+}
+.asset-explorer #tab-management .other-item-sub {
+  grid-column: 1 / -1; grid-row: 3; font-size: 12px; color: var(--text-secondary);
+}
+@media (min-width: 769px) {
+  .asset-explorer #tab-management .extras-hero .holdings-grid { grid-template-columns: minmax(0,1fr) !important; }
+  .asset-explorer #tab-management #hb-other-assets .holding-detail {
+    grid-template-columns: repeat(3, minmax(0,1fr)) !important; gap: 18px;
+  }
+  /* 支出收入並排；重大體驗支出整列在下 */
+  .asset-explorer #tab-management .expenses-hero .holdings-grid { grid-template-columns: repeat(2, minmax(0,1fr)) !important; }
+}
+
+/* ── 質押收益獨立區塊：標頭卡貼齊清單 ── */
+.asset-explorer #tab-management .rewards-hero .holding-card { border-radius: 18px 18px 0 0; }
+.asset-explorer #tab-management .rewards-hero .holding-detail { border-top: 0; }
+
+/* ── 持倉明細列（卡片列是唯一呈現，表格恆隱藏於 theme.css）：
+      桌機改三欄格線＝名稱｜原幣餘額/數量｜台幣換算＋編輯箭頭 ── */
+@media (min-width: 641px) {
+  #tab-management #cash-cards .asset-card,
+  #tab-management #tw-cards .asset-card,
+  #tab-management #us-cards .asset-card,
+  #tab-management #crypto-cards .asset-card {
+    display: grid !important;
+    grid-template-columns: auto minmax(0,1.1fr) minmax(0,.9fr) auto 14px !important;
+    align-items: center !important;
+    gap: 4px 16px !important;
+    padding: 15px 16px !important;
+  }
+  #tab-management .holdings-grid .asset-card-info { display: contents; }
+  #tab-management .holdings-grid .asset-card-sym { grid-column: 2; font-size: 14px !important; }
+  #tab-management .holdings-grid .asset-card-sub {
+    grid-column: 3; text-align: right !important;
+    font-variant-numeric: tabular-nums;
+  }
+  #tab-management .holdings-grid .asset-card-right { grid-column: 4; }
+  #tab-management .holdings-grid .asset-card::after {
+    content: '›'; grid-column: 5; text-align: right;
+    color: var(--text-secondary); font-size: 18px; line-height: 1;
+  }
+}
