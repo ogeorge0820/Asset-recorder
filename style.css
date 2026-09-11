@@ -3245,3 +3245,75 @@ body.amounts-hidden :is(.ov2-hero-num, .ov2-hero-sub-num, .ov2-hero-meta, .ov2-p
 
 /* 收益月份列的「⋯」選單鈕補到可點大小 */
 .asset-explorer #tab-management .rwd-more { min-width: 32px; min-height: 32px; }
+
+/* ══════════════════════════════════════════════════════════
+   第四輪視覺操作收尾（2026/09/11）
+   手機 44px 觸控區、全站區塊標題統一、金額隱藏補洞
+   ══════════════════════════════════════════════════════════ */
+
+/* ── 1) 手機觸控區 ≥44px：小圖示鈕用透明外擴，不放大圖示本身 ── */
+@media (max-width: 640px) {
+  .asset-explorer .rwd-more, .asset-explorer .income-status-btn,
+  .asset-explorer #hb-income .btn-icon, .asset-explorer .dwz-param-info,
+  .asset-explorer .ind-card-edit, .asset-explorer .news-refresh-btn,
+  .asset-explorer .dwz-roi-precise,
+  .asset-explorer .ov2-trend-filter .filter-btn { position: relative; }
+  .asset-explorer .rwd-more::after, .asset-explorer .income-status-btn::after,
+  .asset-explorer #hb-income .btn-icon::after, .asset-explorer .dwz-param-info::after,
+  .asset-explorer .ind-card-edit::after, .asset-explorer .news-refresh-btn::after,
+  .asset-explorer .dwz-roi-precise::after,
+  .asset-explorer .ov2-trend-filter .filter-btn::after {
+    content: ''; position: absolute; left: 50%; top: 50%;
+    width: 44px; height: 44px; transform: translate(-50%, -50%);
+    background: transparent;
+  }
+  /* 外擴後相鄰鈕拉開距離，避免觸控區互相蓋到 */
+  .asset-explorer #hb-income .income-item-actions { gap: 8px !important; }
+  /* 文字類按鈕直接長高到可點 */
+  .asset-explorer .bucket-tab { min-height: 44px; }
+  .asset-explorer .btn-dwz-add { min-height: 44px; }
+  .asset-explorer .dwz-strat-lab-head { min-height: 44px; }
+  .asset-explorer .news-error-retry { min-height: 40px; padding: 8px 16px; }
+  .asset-explorer .ind-thermo-card button { min-height: 44px; }
+  .asset-explorer .ovx-filters button { min-height: 44px; }
+  .asset-explorer .mgmt-subnav button { min-height: 44px; }
+  .asset-explorer .bucket-status-select { min-height: 38px; font-size: 13px; }
+  .asset-explorer .ov2-trend-filter .filter-btn { padding: 8px 12px; }
+  /* 體驗清單頭：統計移到次行整列，不與標題、新增鈕互擠 */
+  .asset-explorer #tab-dwz .dwz-expenses-header { flex-wrap: wrap; }
+  .asset-explorer #tab-dwz .dwz-expenses-header .bucket-stats { flex-basis: 100%; order: 3; }
+}
+/* 體驗卡金額不折行（欄寬由刪除鈕撐 44px 時 CJK 會被拆字） */
+.asset-explorer #tab-dwz .bucket-amt { white-space: nowrap; }
+
+/* ── 2) 區塊標題統一（對齊核准稿 h2 = 17px/600）── */
+.asset-explorer .ovx-assets-head h3,
+.asset-explorer .ov2-alloc-head h3,
+.asset-explorer .ov2-movers-title,
+.asset-explorer .staking-title,
+.asset-explorer .news-title-main,
+.asset-explorer .dwz-section-title,
+.asset-explorer .ind-thermo-title {
+  font-size: 17px !important; font-weight: 600 !important; letter-spacing: -.3px;
+}
+
+/* ── 3) 金額隱藏補洞：儲蓄險原幣註記、收入卡摘要行、DWZ 金額輸入框、
+      資產明細滑出面板（金額與變動記錄；操作按鈕保持可用）── */
+body.amounts-hidden :is(.other-item-sub, #hc-symbols-income, #dwz-safe-floor, #dwz-legacy, #dwz-exp-budget,
+  .crypto-panel-value, .crypto-panel-value-sub, .crypto-panel-history) {
+  filter: blur(7px) !important;
+  user-select: none;
+  pointer-events: none;
+}
+/* 體驗清單改卡片後，整片模糊會鎖死狀態/編輯操作——放行卡片、只遮金額
+   （雙 ID 蓋過舊 :is() 清單以 #app-content canvas 撐高的特異度） */
+body.amounts-hidden #tab-dwz #dwz-expenses-list {
+  filter: none !important;
+  user-select: auto;
+  pointer-events: auto;
+}
+body.amounts-hidden #tab-dwz #dwz-expenses-list .bucket-amt {
+  filter: blur(7px) !important;
+  user-select: none;
+  pointer-events: none;
+}
