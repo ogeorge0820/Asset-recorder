@@ -16,8 +16,8 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=DM+Sans:wght@300;400;500;600;700&display=swap">
-<link rel="stylesheet" href="theme.css?v=202609110918">
-<link rel="stylesheet" href="style.css?v=202609110918">
+<link rel="stylesheet" href="theme.css?v=202609110923">
+<link rel="stylesheet" href="style.css?v=202609110923">
 </head>
 <body class="asset-explorer">
 
@@ -692,11 +692,11 @@
           <h3 class="ind-thermo-title">市場溫度</h3>
           <span class="ind-thermo-sub" id="ind-thermo-sub">—</span>
         </div>
+        <div class="ind-thermo-num" id="ind-thermo-num">—</div>
         <div class="ind-thermo-bar">
           <div class="ind-thermo-pointer" id="ind-thermo-pointer"></div>
         </div>
         <div class="ind-thermo-labels"><span>抄底</span><span>偏底</span><span>中性</span><span>偏頂</span><span>出清</span></div>
-        <div class="ind-thermo-num" id="ind-thermo-num">—</div>
       </section>
       <section class="ind-grid" id="ind-grid"></section>
       <p class="ind-disclaimer">指標僅供參考，不構成投資建議。請多點驗證，並搭配技術分析。</p>
@@ -744,17 +744,14 @@
     <!-- ══ 質押收益 Tab ══ -->
     <div id="tab-staking" style="display:none">
       <div class="explorer-welcome"><div><p class="explorer-eyebrow">質押收益</p><h1>看看持倉累積了多少</h1><p>看懂數量變化，再安排下一步。</p></div><span class="explorer-horizon" aria-hidden="true"></span></div>
+      <section class="staking-hero">
+        <span class="staking-hero-art" aria-hidden="true"><svg viewBox="0 0 400 220" xmlns="http://www.w3.org/2000/svg"><path d="M0 190 90 143 165 167 252 85 320 110 400 35V220H0" fill="#c3e0f5"/><path d="M0 178 90 131 165 155 252 73 320 98 400 23" fill="none" stroke="#78b8e2" stroke-width="3"/><circle cx="205" cy="114" r="69" fill="#2176b3"/><circle cx="205" cy="114" r="57" fill="none" stroke="#9bd0ef" stroke-width="2"/><text x="205" y="143" font-family="sans-serif" font-size="81" text-anchor="middle" fill="#fff">₿</text></svg></span>
+        <div class="staking-total-label">可優先變現總額</div>
+        <div class="staking-total-num" id="staking-total">—</div>
+        <div class="staking-sub">現在持倉 vs 2025/10/01 基準 — 數量增加的部分視為質押收益，需要用錢時優先變現這部分、不動本金。差異含期間手動買賣的淨效果，解讀時注意。</div>
+      </section>
       <section class="staking-card">
-        <div class="staking-head">
-          <div>
-            <h3 class="staking-title">質押被動收入</h3>
-            <div class="staking-sub">現在持倉 vs 2025/10/01 基準 — 數量增加的部分視為質押收益，需要用錢時優先變現這部分、不動本金。差異含期間手動買賣的淨效果，解讀時注意。</div>
-          </div>
-          <div class="staking-total-box">
-            <div class="staking-total-label">可優先變現總額</div>
-            <div class="staking-total-num" id="staking-total">—</div>
-          </div>
-        </div>
+        <h3 class="staking-title">質押被動收入</h3>
         <div id="staking-list" class="staking-list"></div>
       </section>
     </div><!-- /tab-staking -->
@@ -864,6 +861,6 @@
 <!-- ── Toast ── -->
 <div class="toast" id="toast"></div>
 
-<script src="app.js?v=202609110918"></script>
+<script src="app.js?v=202609110923"></script>
 </body>
 </html>

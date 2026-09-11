@@ -3117,3 +3117,89 @@ body.amounts-hidden :is(.ov2-hero-num, .ov2-hero-sub-num, .ov2-hero-meta, .ov2-p
 @media (min-width: 769px) {
   .asset-explorer .ov2-hero { padding: 26px 26px 16px; }
 }
+
+/* ── 第三輪：質押頁——總額主視覺＋插畫層級 ── */
+.asset-explorer .staking-hero {
+  position: relative; overflow: hidden;
+  background: linear-gradient(120deg, var(--bg-card), var(--brand-lavender-soft));
+  border: 1px solid var(--border); border-radius: 20px;
+  box-shadow: var(--card-shadow-soft);
+  padding: 27px; margin-bottom: 18px;
+}
+.asset-explorer .staking-hero-art {
+  position: absolute; right: -10px; bottom: -6px;
+  width: 250px; height: 150px; opacity: .38; pointer-events: none;
+}
+.asset-explorer .staking-hero-art svg { width: 100%; height: 100%; display: block; }
+.asset-explorer .staking-hero .staking-total-label {
+  position: relative; font-size: 13px; color: var(--text-secondary); margin-bottom: 0;
+}
+.asset-explorer .staking-hero .staking-total-num {
+  position: relative; font-size: clamp(36px, 4vw, 49px) !important;
+  font-weight: 650; letter-spacing: -1.5px; color: var(--accent);
+  margin: 8px 0 10px; font-variant-numeric: tabular-nums;
+}
+.asset-explorer .staking-hero .staking-sub {
+  position: relative; font-size: 12px; color: var(--text-secondary);
+  max-width: 570px; line-height: 1.8;
+}
+@media (min-width: 769px) {
+  .asset-explorer .staking-hero { padding: 34px; }
+  .asset-explorer .staking-hero-art { width: 350px; height: 210px; right: 0; }
+}
+.asset-explorer .staking-card .staking-title { margin-bottom: 12px; }
+
+/* ── 第三輪：指標頁——總分升為主視覺、說明留白 ── */
+.asset-explorer .ind-thermo-card { text-align: center; padding: 30px 24px 28px; }
+.asset-explorer .ind-thermo-head { justify-content: center; }
+.asset-explorer .ind-thermo-num {
+  font-size: clamp(44px, 5vw, 52px); letter-spacing: -1.5px;
+  margin: 6px 0 16px; line-height: 1.2;
+}
+.asset-explorer .ind-thermo-bar { max-width: 720px; margin-left: auto; margin-right: auto; }
+.asset-explorer .ind-thermo-labels { max-width: 720px; margin: 10px auto 0; }
+.asset-explorer .ind-card-thresh { font-size: 12px; line-height: 1.75; color: var(--text-secondary); margin: 2px 0 10px; }
+.asset-explorer .ind-card-foot { margin-top: 12px; }
+.asset-explorer .ind-card { padding: 20px !important; }
+
+/* ── 第三輪：新聞頁——拆掉大卡包小卡的外框層 ── */
+.asset-explorer .news-card {
+  background: none; border: 0; box-shadow: none; padding: 0;
+}
+.asset-explorer .news-zone {
+  background: var(--bg-card); border: 1px solid var(--border);
+  border-radius: 20px; box-shadow: var(--card-shadow-soft);
+  padding: 20px 22px; margin-bottom: 18px;
+}
+.asset-explorer .news-zone:has(#news-list-x) {
+  background: none; border: 0; box-shadow: none; padding: 0;
+}
+.asset-explorer .news-zone:has(#news-list-x) .news-zone-head { padding: 0 4px 2px; }
+.asset-explorer .news-head { margin-bottom: 16px; }
+
+/* ── 第三輪：人生規劃——體驗清單改生活化卡片 ── */
+.asset-explorer #tab-dwz .bucket-item {
+  display: grid;
+  grid-template-columns: 58px auto 1fr auto auto auto;
+  grid-template-rows: auto auto;
+  gap: 3px 12px; align-items: center;
+  border: 1px solid var(--border); border-radius: 14px;
+  background: var(--bg-card); padding: 13px 15px; margin-bottom: 10px;
+}
+.asset-explorer #tab-dwz .bucket-item:last-child { border-bottom: 1px solid var(--border); margin-bottom: 0; }
+.asset-explorer #tab-dwz .bucket-cat {
+  grid-area: 1 / 1 / 3 / 2; width: 58px; height: 58px;
+  display: grid; place-items: center; border-radius: 12px;
+  font-size: 14px; font-weight: 650; padding: 0; margin: 0;
+}
+.asset-explorer #tab-dwz .bucket-main { grid-area: 1 / 2 / 2 / 6; min-width: 0; }
+.asset-explorer #tab-dwz .bucket-item .bucket-name { font-size: 13.5px; font-weight: 600; }
+.asset-explorer #tab-dwz .bucket-amt {
+  grid-area: 1 / 6 / 2 / 7; justify-self: end;
+  font-size: 15px; font-weight: 650; font-variant-numeric: tabular-nums;
+}
+.asset-explorer #tab-dwz .bucket-age { grid-area: 2 / 2 / 3 / 3; justify-self: start; }
+.asset-explorer #tab-dwz .bucket-status-select { grid-area: 2 / 4 / 3 / 5; justify-self: end; }
+.asset-explorer #tab-dwz .bucket-item .btn-icon.edit { grid-area: 2 / 5 / 3 / 6; }
+.asset-explorer #tab-dwz .bucket-item .btn-icon.del { grid-area: 2 / 6 / 3 / 7; }
+.asset-explorer #tab-dwz .bucket-group-title { margin: 14px 0 8px; }

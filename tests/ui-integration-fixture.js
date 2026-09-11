@@ -5,8 +5,8 @@ S.data.tw = [['2330', 3000], ['0050', 10000]];
 S.prices.tw = {'2330': 1000, '0050': 180};
 S.data.us = [['AAPL', 100], ['MSFT', 375]];
 S.prices.us = {AAPL: 250, MSFT: 250};
-S.data.crypto = [['USDT', 10000], ['BTC', .04], ['ETH', 7]];
-S.prices.crypto = {USDT: 1, BTC: 100000, ETH: 3000};
+S.data.crypto = [['USDT', 10000], ['BTC', .04], ['ETH', 6.7], ['FET', 2000]];
+S.prices.crypto = {USDT: 1, BTC: 100000, ETH: 3000, FET: 0.5};
 S.data.settings = {insurance_total: 6250, realestate_total: 9500000, debt: 3500000};
 S.data.expense_budget = [['固定', '示意生活費', 33300, '現金', '', 'demo-budget']];
 const fixtureToday = new Date();
@@ -20,8 +20,8 @@ S.data.income_records = [
   ['demo-inc-2', '示意接案尾款', '接案', 25000, `${fxY + 1}-01-15`, '0', '', '', ''],
 ];
 S.data.bucket_list = [
-  ['demo-bk-1', '示意北歐極光之旅', '旅行', 45, 20, '規劃中', `${fxY + 1}/02`, '', ''],
-  ['demo-bk-2', '示意夏季家族露營', '家庭', 43, 6, '規劃中', `${fxY + 1}/07`, '', ''],
+  ['demo-bk-1', '示意北歐極光之旅', '旅遊', 45, 20, '規劃中', `${fxY + 1}/02`, '', ''],
+  ['demo-bk-2', '示意夏季家族露營', '家人', 43, 6, '規劃中', `${fxY + 1}/07`, '', ''],
 ];
 for (let i = 17; i >= 0; i--) {
   const date = new Date(fixtureToday.getFullYear(), fixtureToday.getMonth() - i, 1);
