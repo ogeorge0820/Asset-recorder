@@ -3010,3 +3010,238 @@ body.amounts-hidden :is(.ov2-hero-num, .ov2-hero-sub-num, .ov2-hero-meta, .ov2-p
 }
 .btn-privacy svg { width: 16px; height: 16px; display: block; }
 .btn-privacy.privacy-on { color: var(--accent) !important; background: var(--brand-lavender-soft) !important; }
+
+/* ══════════════════════════════════════════════════════════
+   第三輪版面對齊：管理頁（2026/09/11）
+   儲蓄險/房地產/負債三等寬卡、質押收益獨立區塊、
+   預算收入並排、持倉明細列式對齊核准稿
+   ══════════════════════════════════════════════════════════ */
+
+/* ── 其他資產 & 負債：三張等寬卡片 ── */
+.asset-explorer #tab-management .other-item-card {
+  display: grid; grid-template-columns: minmax(0,1fr) auto;
+  align-items: start; gap: 0 10px;
+  padding: 21px; border-radius: 14px;
+  border: 1px solid var(--border); background: var(--bg-card);
+}
+.asset-explorer #tab-management .other-item-card:hover {
+  background: var(--bg-card); border-color: var(--brand-lavender);
+}
+.asset-explorer #tab-management .other-item-info { display: contents; }
+.asset-explorer #tab-management .other-item-icon {
+  grid-column: 2; grid-row: 1; width: auto; height: auto;
+  background: none; font-size: 18px; opacity: .8;
+}
+.asset-explorer #tab-management .other-item-label {
+  grid-column: 1; grid-row: 1; font-size: 14px; font-weight: 600;
+}
+.asset-explorer #tab-management .other-item-value {
+  grid-column: 1 / -1; grid-row: 2; text-align: left;
+  font-size: 26px; font-weight: 600; margin: 12px 0 5px;
+  font-variant-numeric: tabular-nums; letter-spacing: -.5px;
+}
+.asset-explorer #tab-management .other-item-sub {
+  grid-column: 1 / -1; grid-row: 3; font-size: 12px; color: var(--text-secondary);
+}
+@media (min-width: 769px) {
+  .asset-explorer #tab-management .extras-hero .holdings-grid { grid-template-columns: minmax(0,1fr) !important; }
+  .asset-explorer #tab-management #hb-other-assets .holding-detail {
+    grid-template-columns: repeat(3, minmax(0,1fr)) !important; gap: 18px;
+  }
+  /* 支出收入並排；重大體驗支出整列在下 */
+  .asset-explorer #tab-management .expenses-hero .holdings-grid { grid-template-columns: repeat(2, minmax(0,1fr)) !important; }
+}
+
+/* ── 質押收益獨立區塊：標頭卡貼齊清單 ── */
+.asset-explorer #tab-management .rewards-hero .holding-card { border-radius: 18px 18px 0 0; }
+.asset-explorer #tab-management .rewards-hero .holding-detail { border-top: 0; }
+
+/* ── 持倉明細列（卡片列是唯一呈現，表格恆隱藏於 theme.css）：
+      桌機改三欄格線＝名稱｜原幣餘額/數量｜台幣換算＋編輯箭頭 ── */
+@media (min-width: 641px) {
+  #tab-management #cash-cards .asset-card,
+  #tab-management #tw-cards .asset-card,
+  #tab-management #us-cards .asset-card,
+  #tab-management #crypto-cards .asset-card {
+    display: grid !important;
+    grid-template-columns: auto minmax(0,1.1fr) minmax(0,.9fr) auto 14px !important;
+    align-items: center !important;
+    gap: 4px 16px !important;
+    padding: 15px 16px !important;
+  }
+  #tab-management .holdings-grid .asset-card-info { display: contents; }
+  #tab-management .holdings-grid .asset-card-sym { grid-column: 2; font-size: 14px !important; }
+  #tab-management .holdings-grid .asset-card-sub {
+    grid-column: 3; text-align: right !important;
+    font-variant-numeric: tabular-nums;
+  }
+  #tab-management .holdings-grid .asset-card-right { grid-column: 4; }
+  #tab-management .holdings-grid .asset-card::after {
+    content: '›'; grid-column: 5; text-align: right;
+    color: var(--text-secondary); font-size: 18px; line-height: 1;
+  }
+}
+
+/* ── 第三輪：總覽主資產卡對齊核准稿 ──
+   大字餘額改墨色、字級節奏對齊；淨資產成為餘額下方事實列；
+   趨勢圖補標題列（走勢名稱＋期間切換）與幣別/口徑說明 */
+.asset-explorer .ov2-hero-head { display: block; }
+.asset-explorer .ov2-hero-num {
+  color: var(--text-primary); font-weight: 650;
+  font-size: clamp(38px, 3.4vw, 49px); letter-spacing: -1.8px; line-height: 1.2;
+}
+.asset-explorer .ov2-hero-ccy {
+  color: var(--text-secondary); font-size: 12px; font-weight: 400; margin-left: 6px;
+}
+.asset-explorer .ov2-hero-secondary {
+  border-left: none; border-top: 0; padding: 0; margin-top: 16px;
+  display: inline-flex; flex-direction: column; justify-content: flex-start;
+}
+.asset-explorer .ov2-hero-sub-label {
+  font-size: 12px; text-transform: none; letter-spacing: 0;
+  color: var(--text-secondary); margin-bottom: 2px;
+}
+.asset-explorer .ov2-hero-sub-num {
+  font-size: 17px; font-weight: 550; color: var(--text-primary);
+}
+.asset-explorer .ov2-chart-heading {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 8px; margin: 22px 0 4px;
+}
+.asset-explorer .ov2-chart-title { font-size: 12px; color: var(--text-secondary); flex: none; white-space: nowrap; }
+.asset-explorer .ov2-chart-caption {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 10px; flex-wrap: wrap; font-size: 11px; color: var(--text-secondary);
+  padding-top: 8px;
+}
+@media (min-width: 769px) {
+  .asset-explorer .ov2-hero { padding: 26px 26px 16px; }
+}
+
+/* ── 第三輪：質押頁——總額主視覺＋插畫層級 ── */
+.asset-explorer .staking-hero {
+  position: relative; overflow: hidden;
+  background: linear-gradient(120deg, var(--bg-card), var(--brand-lavender-soft));
+  border: 1px solid var(--border); border-radius: 20px;
+  box-shadow: var(--card-shadow-soft);
+  padding: 27px; margin-bottom: 18px;
+}
+.asset-explorer .staking-hero-art {
+  position: absolute; right: -10px; bottom: -6px;
+  width: 250px; height: 150px; opacity: .38; pointer-events: none;
+}
+.asset-explorer .staking-hero-art svg { width: 100%; height: 100%; display: block; }
+.asset-explorer .staking-hero .staking-total-label {
+  position: relative; font-size: 13px; color: var(--text-secondary); margin-bottom: 0;
+}
+.asset-explorer .staking-hero .staking-total-num {
+  position: relative; font-size: clamp(36px, 4vw, 49px) !important;
+  font-weight: 650; letter-spacing: -1.5px; color: var(--accent);
+  margin: 8px 0 10px; font-variant-numeric: tabular-nums;
+}
+.asset-explorer .staking-hero .staking-sub {
+  position: relative; font-size: 12px; color: var(--text-secondary);
+  max-width: 570px; line-height: 1.8;
+}
+@media (min-width: 769px) {
+  .asset-explorer .staking-hero { padding: 34px; }
+  .asset-explorer .staking-hero-art { width: 350px; height: 210px; right: 0; }
+}
+.asset-explorer .staking-card .staking-title { margin-bottom: 12px; }
+
+/* ── 第三輪：指標頁——總分升為主視覺、說明留白 ── */
+.asset-explorer .ind-thermo-card { text-align: center; padding: 30px 24px 28px; }
+.asset-explorer .ind-thermo-head { justify-content: center; }
+.asset-explorer .ind-thermo-num {
+  font-size: clamp(44px, 5vw, 52px); letter-spacing: -1.5px;
+  margin: 6px 0 16px; line-height: 1.2;
+}
+.asset-explorer .ind-thermo-bar { max-width: 720px; margin-left: auto; margin-right: auto; }
+.asset-explorer .ind-thermo-labels { max-width: 720px; margin: 10px auto 0; }
+.asset-explorer .ind-card-thresh { font-size: 12px; line-height: 1.75; color: var(--text-secondary); margin: 2px 0 10px; }
+.asset-explorer .ind-card-foot { margin-top: 12px; }
+.asset-explorer .ind-card { padding: 20px !important; }
+
+/* ── 第三輪：新聞頁——拆掉大卡包小卡的外框層 ── */
+.asset-explorer .news-card {
+  background: none; border: 0; box-shadow: none; padding: 0;
+}
+.asset-explorer .news-zone {
+  background: var(--bg-card); border: 1px solid var(--border);
+  border-radius: 20px; box-shadow: var(--card-shadow-soft);
+  padding: 20px 22px; margin-bottom: 18px;
+}
+.asset-explorer .news-zone:has(#news-list-x) {
+  background: none; border: 0; box-shadow: none; padding: 0;
+}
+.asset-explorer .news-zone:has(#news-list-x) .news-zone-head { padding: 0 4px 2px; }
+.asset-explorer .news-head { margin-bottom: 16px; }
+
+/* ── 第三輪：人生規劃——體驗清單改生活化卡片 ── */
+.asset-explorer #tab-dwz .bucket-item {
+  display: grid;
+  grid-template-columns: 58px auto 1fr auto auto auto;
+  grid-template-rows: auto auto;
+  gap: 3px 12px; align-items: center;
+  border: 1px solid var(--border); border-radius: 14px;
+  background: var(--bg-card); padding: 13px 15px; margin-bottom: 10px;
+}
+.asset-explorer #tab-dwz .bucket-item:last-child { border-bottom: 1px solid var(--border); margin-bottom: 0; }
+.asset-explorer #tab-dwz .bucket-cat {
+  grid-area: 1 / 1 / 3 / 2; width: 58px; height: 58px;
+  display: grid; place-items: center; border-radius: 12px;
+  font-size: 14px; font-weight: 650; padding: 0; margin: 0;
+}
+.asset-explorer #tab-dwz .bucket-main { grid-area: 1 / 2 / 2 / 6; min-width: 0; }
+.asset-explorer #tab-dwz .bucket-item .bucket-name { font-size: 13.5px; font-weight: 600; }
+.asset-explorer #tab-dwz .bucket-amt {
+  grid-area: 1 / 6 / 2 / 7; justify-self: end;
+  font-size: 15px; font-weight: 650; font-variant-numeric: tabular-nums;
+}
+.asset-explorer #tab-dwz .bucket-age { grid-area: 2 / 2 / 3 / 3; justify-self: start; }
+.asset-explorer #tab-dwz .bucket-status-select { grid-area: 2 / 4 / 3 / 5; justify-self: end; }
+.asset-explorer #tab-dwz .bucket-item .btn-icon.edit { grid-area: 2 / 5 / 3 / 6; }
+.asset-explorer #tab-dwz .bucket-item .btn-icon.del { grid-area: 2 / 6 / 3 / 7; }
+.asset-explorer #tab-dwz .bucket-group-title { margin: 14px 0 8px; }
+
+/* ── 視覺收尾（2026/09/11 第二回）：管理頁明細邊界修正 ──
+   theme.css 的收入列欄位比例是全寬時代的產物（22px 2.2fr…!important），
+   並排半寬與手機下名稱會被壓成細條——同級 !important 蓋回：
+   名稱可換行、徽章/付款方退居次行、入帳勾選鈕放大到可點 */
+.asset-explorer #tab-management #hb-income .income-item {
+  grid-template-columns: 32px minmax(0,1fr) auto auto auto !important;
+  gap: 4px 12px !important;
+  padding: 10px 12px !important;
+}
+.asset-explorer #tab-management #hb-income .income-item-info {
+  display: block !important;
+}
+.asset-explorer #tab-management #hb-income .income-item-name {
+  display: block; white-space: normal; overflow: visible;
+  overflow-wrap: anywhere; line-height: 1.45; margin-bottom: 2px;
+}
+.asset-explorer #tab-management #hb-income .income-payer { overflow: visible; white-space: normal; }
+.asset-explorer #tab-management .income-status-btn {
+  width: 32px; height: 32px; min-width: 32px;
+  display: inline-flex; align-items: center; justify-content: center;
+  font-size: 16px; border-radius: 8px;
+}
+@media (max-width: 640px) {
+  .asset-explorer #tab-management #hb-income .income-item {
+    grid-template-columns: 32px minmax(0,1fr) auto !important;
+    grid-template-rows: auto auto;
+  }
+  .asset-explorer #tab-management #hb-income .income-status-btn { grid-row: 1 / 3; align-self: center; }
+  .asset-explorer #tab-management #hb-income .income-item-info { grid-row: 1; grid-column: 2 / 3 !important; }
+  .asset-explorer #tab-management #hb-income .income-item-actions { grid-row: 1 !important; grid-column: 3 !important; align-self: start; }
+  .asset-explorer #tab-management #hb-income .income-item-date { grid-row: 2; grid-column: 2; text-align: left !important; }
+  .asset-explorer #tab-management #hb-income .income-item-amt { grid-row: 2; grid-column: 3; }
+}
+
+/* 手機現金/持倉卡片列：長名稱換行，不再壓到金額欄 */
+.asset-explorer #tab-management .holdings-grid .asset-card-sym {
+  white-space: normal !important; overflow-wrap: anywhere; line-height: 1.4;
+}
+
+/* 收益月份列的「⋯」選單鈕補到可點大小 */
+.asset-explorer #tab-management .rwd-more { min-width: 32px; min-height: 32px; }
