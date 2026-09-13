@@ -3269,15 +3269,15 @@ body.amounts-hidden :is(.ov2-hero-num, .ov2-hero-sub-num, .ov2-hero-meta, .ov2-p
   }
   /* 外擴後相鄰鈕拉開距離，避免觸控區互相蓋到 */
   .asset-explorer #hb-income .income-item-actions { gap: 8px !important; }
-  /* 文字類按鈕直接長高到可點 */
-  .asset-explorer .bucket-tab { min-height: 44px; }
-  .asset-explorer .btn-dwz-add { min-height: 44px; }
+  /* 文字類按鈕直接長高到可點（帶 ID 前綴：低權重版被 2807/2810/2905 的舊覆蓋規則壓過，實測 34/38/40px）*/
+  .asset-explorer #tab-dwz .bucket-tab { min-height: 44px; }
+  .asset-explorer #tab-dwz .btn-dwz-add { min-height: 44px; }
   .asset-explorer .dwz-strat-lab-head { min-height: 44px; }
-  .asset-explorer .news-error-retry { min-height: 40px; padding: 8px 16px; }
+  .asset-explorer .news-error-retry { min-height: 44px; padding: 8px 16px; }
   .asset-explorer .ind-thermo-card button { min-height: 44px; }
   .asset-explorer .ovx-filters button { min-height: 44px; }
-  .asset-explorer .mgmt-subnav button { min-height: 44px; }
-  .asset-explorer .bucket-status-select { min-height: 38px; font-size: 13px; }
+  .asset-explorer #tab-management .mgmt-subnav button { min-height: 44px; }
+  .asset-explorer .bucket-status-select { min-height: 44px; font-size: 13px; }
   .asset-explorer .ov2-trend-filter .filter-btn { padding: 8px 12px; }
   /* 體驗清單頭：統計移到次行整列，不與標題、新增鈕互擠 */
   .asset-explorer #tab-dwz .dwz-expenses-header { flex-wrap: wrap; }
@@ -3313,6 +3313,49 @@ body.amounts-hidden #tab-dwz #dwz-expenses-list {
   pointer-events: auto;
 }
 body.amounts-hidden #tab-dwz #dwz-expenses-list .bucket-amt {
+  filter: blur(7px) !important;
+  user-select: none;
+  pointer-events: none;
+}
+
+/* ══════════════════════════════════════════════════════════
+   第四輪操作驗收收尾（2026/09/13）
+   隔離環境實測修正：外擴觸控區被後繪元素蓋住或被 overflow 裁切、
+   手機體驗卡欄寬總和溢出、隱私模式彈窗被模糊層鎖死
+   ══════════════════════════════════════════════════════════ */
+@media (max-width: 640px) {
+  /* 趨勢鈕外擴下緣被圖表 canvas 蓋住、ⓘ 外擴被輸入格 label 蓋住 → 提到上層 */
+  .asset-explorer .ov2-trend-filter .filter-btn { z-index: 1; }
+  .asset-explorer .dwz-param-info { z-index: 1; }
+  /* ⓘ 的 44px 外擴被 label overflow:hidden 裁到只剩 16px 高 → 手機放行
+     （label 文字皆為固定短字串，390px 下不會溢出到輸入框） */
+  .asset-explorer #tab-dwz .dwz-row > label { overflow: visible; }
+
+  /* 體驗卡：兩列六欄的固定欄寬總和（44px 按鈕＋12px 間距）超出 390 內容寬 40px，
+     金額與刪除鈕吊出卡片外 → 改三列：名稱／金額／操作列，44px 按鈕原尺寸放得下 */
+  .asset-explorer #tab-dwz .bucket-item {
+    grid-template-columns: 58px minmax(0, 1fr) auto auto;
+    grid-template-rows: auto auto auto;
+  }
+  .asset-explorer #tab-dwz .bucket-cat { grid-area: 1 / 1 / 3 / 2; }
+  .asset-explorer #tab-dwz .bucket-main { grid-area: 1 / 2 / 2 / 5; }
+  .asset-explorer #tab-dwz .bucket-amt { grid-area: 2 / 2 / 3 / 5; }
+  .asset-explorer #tab-dwz .bucket-age { grid-area: 3 / 1 / 4 / 2; }
+  .asset-explorer #tab-dwz .bucket-status-select { grid-area: 3 / 2 / 4 / 3; justify-self: start; }
+  .asset-explorer #tab-dwz .bucket-item .btn-icon.edit { grid-area: 3 / 3 / 4 / 4; }
+  .asset-explorer #tab-dwz .bucket-item .btn-icon.del { grid-area: 3 / 4 / 4 / 5; }
+}
+
+/* 隱私模式彈窗：整體模糊會連 取消/儲存/確認 一起鎖死（Esc 也關不掉，只剩點背景）。
+   按鈕一律放行；體驗編輯彈窗（無其他金額欄位）解除整體模糊、只遮金額欄。
+   :has 參數計入特異度 → (2,1,1) 蓋過 :is 清單的 (1,1,1)。 */
+body.amounts-hidden #modal-body button { pointer-events: auto; }
+body.amounts-hidden #modal-body:has(#m-bk-name) {
+  filter: none !important;
+  user-select: auto;
+  pointer-events: auto;
+}
+body.amounts-hidden #modal-body:has(#m-bk-name) #m-bk-amt {
   filter: blur(7px) !important;
   user-select: none;
   pointer-events: none;
