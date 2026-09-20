@@ -4,7 +4,7 @@
 // 應用版本號 — 重大功能變更才升版（小修補只更新 BUILD_DATE）
 const APP_VERSION = 'v1.0';
 // Build 時間：每次修改 code 後手動更新此時間（UTC+8 台北時間）
-const BUILD_DATE = '2026/09/20 12:17';
+const BUILD_DATE = '2026/09/20 20:28';
 
 const SPREADSHEET_ID = '1lpRpxVzWaYUqL-jVPOAJCtjsJUIedPYYyOx4gg4PPFU';
 const CLIENT_ID = '149884248440-85f8dhc6ub9up10sv0f89e3e0itrnooj.apps.googleusercontent.com';
@@ -6726,7 +6726,7 @@ function renderDWZ() {
 
   // ── Chart ──
   const isDark    = document.documentElement.dataset.theme !== 'light';
-  const primaryLine = isDark ? '#ffffff' : '#111111';
+  const primaryLine = isDark ? '#88bfe6' : '#397bb6';
   const floorVal    = safeFloor;
   const allExps     = _allDWZExpenses();
   const expAgeSet   = new Set(allExps.map(e => e.age));
@@ -6735,15 +6735,15 @@ function renderDWZ() {
   if (_dwzChart) { _dwzChart.destroy(); _dwzChart = null; }
   const ctx = document.getElementById('dwz-chart');
   if (!ctx) return;
-  const gridColor = isDark ? '#1a1a1a' : 'rgba(0,0,0,0.07)';
+  const gridColor = isDark ? 'rgba(148,163,184,0.12)' : 'rgba(70,100,125,0.08)';
 
   const grad = ctx.getContext('2d').createLinearGradient(0, 0, 0, 300);
   if (isDark) {
-    grad.addColorStop(0, 'rgba(255,255,255,0.08)');
-    grad.addColorStop(1, 'rgba(255,255,255,0)');
+    grad.addColorStop(0, 'rgba(136,191,230,0.16)');
+    grad.addColorStop(1, 'rgba(136,191,230,0)');
   } else {
-    grad.addColorStop(0, 'rgba(24,24,27,0.12)');
-    grad.addColorStop(1, 'rgba(24,24,27,0)');
+    grad.addColorStop(0, 'rgba(57,123,182,0.13)');
+    grad.addColorStop(1, 'rgba(57,123,182,0)');
   }
 
   const goldenWindowPlugin = (goldenStart !== null && goldenEnd !== null && goldenEnd >= goldenStart) ? {
@@ -6759,13 +6759,13 @@ function renderDWZ() {
       const xE = xScale.getPixelForValue(eIdx);
       const c2 = chart.ctx;
       c2.save();
-      c2.fillStyle = 'rgba(34, 197, 94, 0.12)';
-      c2.fillRect(xS, area.top, xE - xS, area.bottom - area.top);
-      c2.fillStyle = '#16a34a';
+      c2.fillStyle = isDark ? 'rgba(136,191,230,0.22)' : 'rgba(57,123,182,0.14)';
+      c2.fillRect(xS, area.top, xE - xS, 5);
+      c2.fillStyle = primaryLine;
       c2.font = '600 12px -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif';
       c2.textAlign = 'center';
       c2.textBaseline = 'top';
-      c2.fillText('✦ 最佳體驗窗口', (xS + xE) / 2, area.top + 4);
+      c2.fillText('體驗窗口', (xS + xE) / 2, area.top + 10);
       c2.restore();
     }
   } : null;
@@ -6783,7 +6783,9 @@ function renderDWZ() {
           borderColor: primaryLine,
           backgroundColor: grad,
           borderWidth: 2,
-          pointRadius: ages.map(a => expAgeSet.has(a) ? 6 : 2.5),
+          pointRadius: ages.map(a => expAgeSet.has(a) ? 5 : 0),
+          pointHoverRadius: 5,
+          pointHitRadius: 12,
           pointBackgroundColor: ages.map((a, i) => expAgeSet.has(a) ? '#f59e0b' : pointColors[i]),
           pointBorderColor:     ages.map((a, i) => expAgeSet.has(a) ? '#f59e0b' : pointColors[i]),
           fill: true,
@@ -6798,7 +6800,7 @@ function renderDWZ() {
         {
           label: '生活保底線',
           data: ages.map(() => floorVal),
-          borderColor: 'rgba(34,197,94,0.7)',
+          borderColor: isDark ? '#82b5a7' : '#699b8e',
           backgroundColor: 'transparent',
           borderWidth: 1.5,
           borderDash: [6, 4],
@@ -6812,7 +6814,7 @@ function renderDWZ() {
         {
           label: '生命能量',
           data: lifeEnergy,
-          borderColor: 'rgba(251,191,36,0.65)',
+          borderColor: isDark ? '#a4acba' : '#939caa',
           backgroundColor: 'transparent',
           borderWidth: 1.5,
           borderDash: [3, 3],
@@ -6860,7 +6862,7 @@ function renderDWZ() {
       },
       scales: {
         x: {
-          grid: { color: gridColor },
+          grid: { display: false },
           ticks: {
             font: { size: 11 },
             callback: (_, i) => ages[i] % 5 === 0 ? `${ages[i]}歲` : '',
@@ -6878,7 +6880,7 @@ function renderDWZ() {
           grid: { drawOnChartArea: false },
           ticks: {
             font: { size: 10 },
-            color: 'rgba(251,191,36,0.6)',
+            color: isDark ? '#a4acba' : '#758291',
             callback: v => v % 25 === 0 ? `${v}%` : '',
           },
         },
@@ -6886,7 +6888,7 @@ function renderDWZ() {
     }
   });
 
-  // ── 智慧建議浮層 ──
+  // ── 圖表下方模擬提示 ──
   _renderDWZSmartTips({
     currentAge, lifeAge, wealthAt90, ages, wealth,
     wealthBaseline: trackBaseline ? wealthBaseline : null,

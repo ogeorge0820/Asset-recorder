@@ -16,8 +16,8 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=DM+Sans:wght@300;400;500;600;700&display=swap">
-<link rel="stylesheet" href="theme.css?v=202609201217">
-<link rel="stylesheet" href="style.css?v=202609201217">
+<link rel="stylesheet" href="theme.css?v=202609202028">
+<link rel="stylesheet" href="style.css?v=202609202028">
 </head>
 <body class="asset-explorer">
 
@@ -629,12 +629,6 @@
 
       <!-- ═══ 右欄：曲線 + 分析 ═══ -->
       <main class="dwz-right">
-        <div class="dwz-alerts-row">
-          <div id="dwz-safety-info" class="dwz-pill dwz-pill-safety" style="display:none"></div>
-          <div id="dwz-warning" class="dwz-pill" style="display:none"></div>
-          <div id="dwz-waste-info" class="dwz-pill dwz-pill-waste" style="display:none"></div>
-        </div>
-
         <div class="dwz-best-window-card" id="dwz-best-window">
           <div class="dwz-bw-header">最佳體驗窗口</div>
           <div class="dwz-bw-body">
@@ -658,16 +652,30 @@
           </div>
           <div class="dwz-chart-canvas-wrap">
             <canvas id="dwz-chart"></canvas>
-            <div class="dwz-smart-tips" id="dwz-smart-tips"></div>
           </div>
-          <div class="dwz-legend-row">
-            <span class="dwz-legend-dot dwz-legend-ok"></span><span>健康</span>
-            <span class="dwz-legend-dot dwz-legend-bad"></span><span>歸零</span>
-            <span class="dwz-legend-floor"></span><span>保底</span>
-            <span class="dwz-legend-exp"></span><span>體驗</span>
-            <span class="dwz-legend-energy"></span><span>生命能量</span>
+          <div class="dwz-legend-row" aria-label="曲線圖例">
+            <span class="dwz-legend-key"><i class="dwz-legend-dot dwz-legend-ok" aria-hidden="true"></i>可用資產</span>
+            <span class="dwz-legend-key"><i class="dwz-legend-dot dwz-legend-bad" aria-hidden="true"></i>低於保底</span>
+            <span class="dwz-legend-key"><i class="dwz-legend-floor" aria-hidden="true"></i>保底線</span>
+            <span class="dwz-legend-key"><i class="dwz-legend-exp" aria-hidden="true"></i>體驗支出</span>
+            <span class="dwz-legend-key"><i class="dwz-legend-energy" aria-hidden="true"></i>生命能量</span>
           </div>
+          <details class="dwz-chart-guide">
+            <summary>如何閱讀這張圖</summary>
+            <p>左軸為可用資產（TWD），右軸為生命能量百分比。紅色曲線表示低於設定的保底金，不一定代表資產已歸零。</p>
+            <p>上方淡藍色帶標示體驗窗口。橘色圓點代表已安排體驗支出的年齡；點擊曲線上的年齡可新增體驗。</p>
+          </details>
         </div>
+
+        <section class="dwz-insights" aria-labelledby="dwz-insights-title">
+          <h3 id="dwz-insights-title">模擬結果</h3>
+          <div class="dwz-alerts-row">
+            <div id="dwz-safety-info" class="dwz-pill dwz-pill-safety" style="display:none"></div>
+            <div id="dwz-warning" class="dwz-pill" style="display:none"></div>
+            <div id="dwz-waste-info" class="dwz-pill dwz-pill-waste" style="display:none"></div>
+          </div>
+          <div class="dwz-smart-tips" id="dwz-smart-tips"></div>
+        </section>
 
         <!-- 未來事件時間軸 — 獨立區塊（曲線 → 時間軸 → 體驗清單，順序對齊核准稿） -->
         <div class="dwz-timeline-card">
@@ -875,6 +883,6 @@
 <!-- ── Toast ── -->
 <div class="toast" id="toast"></div>
 
-<script src="app.js?v=202609201217"></script>
+<script src="app.js?v=202609202028"></script>
 </body>
 </html>
