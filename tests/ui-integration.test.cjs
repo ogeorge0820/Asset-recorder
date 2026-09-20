@@ -36,7 +36,8 @@ test('保留所有原有總覽 DOM 掛載點及操作',()=>{
 });
 test('新版六個導覽入口具備清楚的圖示與名稱',()=>{
  assert.equal((html.match(/class="nav-icon"/g)||[]).length,6);
- assert.ok(html.includes('讓資產，支持你想過的生活'));
+ assert.ok(html.includes('看看資產的變化'));
+ assert.equal((html.match(/id="kv-hero-monthly"/g)||[]).length,1);
 });
 test('桌機側欄與原頁尾使用獨立版本掛載點',()=>{
  assert.equal((html.match(/id="build-badge"/g)||[]).length,1);

@@ -16,8 +16,8 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=DM+Sans:wght@300;400;500;600;700&display=swap">
-<link rel="stylesheet" href="theme.css?v=202609141344">
-<link rel="stylesheet" href="style.css?v=202609141344">
+<link rel="stylesheet" href="theme.css?v=202609201217">
+<link rel="stylesheet" href="style.css?v=202609201217">
 </head>
 <body class="asset-explorer">
 
@@ -74,7 +74,7 @@
 
     <!-- ══ 總覽 Tab ══ -->
     <div id="tab-overview">
-      <div class="explorer-welcome"><div><p class="explorer-eyebrow">你的資產全貌</p><h1>讓資產，支持你想過的生活</h1><p>掌握今天的累積，也為下一段生活留好餘裕。</p></div><span class="explorer-horizon" aria-hidden="true"></span></div>
+      <div class="explorer-welcome"><div><p class="explorer-eyebrow">你的資產全貌</p><h1>看看資產的變化</h1><p>掌握現在，留一點空間給未來。</p></div><span class="explorer-horizon" aria-hidden="true"></span></div>
 
       <!-- 資料健檢徽章：雲端快照與即時計算差異 > 2% 時顯示 -->
       <button id="health-badge" class="health-badge" hidden onclick="openHealthDetail()">⚠️&nbsp;<span id="health-badge-text">資料健檢</span><span class="health-badge-cta">查看 ›</span></button>
@@ -86,20 +86,26 @@
             <div class="ov2-hero-primary">
               <div class="ov2-hero-label"><span class="ov2-hero-label-icon" aria-hidden="true">💰</span>目前可用資產<span class="ov2-hero-ccy">TWD</span></div>
               <div class="ov2-hero-num skel" id="kv-liquid">—</div>
-              <div class="ov2-hero-meta" id="ks-liquid">現金 + 投資組合</div>
+              <div class="ov2-hero-meta" id="ks-liquid" hidden>現金 + 投資組合</div>
             </div>
+            <div class="overview-facts">
             <div class="ov2-hero-secondary">
               <div class="ov2-hero-sub-label">淨資產</div>
               <div class="ov2-hero-sub-num" id="kv-net">—</div>
               <div class="ov2-hero-sub-meta" id="ks-net">含長期持有與負債</div>
             </div>
+              <div class="ov2-hero-secondary">
+                <div class="ov2-hero-sub-label">本月收益</div>
+                <div class="ov2-hero-sub-num skel" id="kv-hero-monthly">—</div>
+              </div>
+            </div>
           </div>
           <div class="ov2-chart-heading">
             <span class="ov2-chart-title">淨資產走勢</span>
             <div class="chart-filter ov2-trend-filter">
-              <button class="filter-btn" data-f="6m" onclick="setTrendFilter(this)">6M</button>
-              <button class="filter-btn" data-f="1y" onclick="setTrendFilter(this)">1Y</button>
-              <button class="filter-btn active" data-f="all" onclick="setTrendFilter(this)">MAX</button>
+              <button class="filter-btn" data-f="6m" onclick="setTrendFilter(this)">六個月</button>
+              <button class="filter-btn" data-f="1y" onclick="setTrendFilter(this)">一年</button>
+              <button class="filter-btn active" data-f="all" onclick="setTrendFilter(this)">全部</button>
             </div>
           </div>
           <div class="ov2-hero-trend">
@@ -113,7 +119,7 @@
         <div class="ov2-alloc-card">
           <div class="ov2-alloc-head">
             <h3>可用資產分布</h3>
-            <span class="ov2-alloc-sub">5 類 · 現金 / 加密 / 美股 / 台股 / 儲蓄險</span>
+            <span class="ov2-alloc-sub">5 類資產</span>
           </div>
           <div class="pie-wrap" id="pie-wrap">
             <div class="pie-canvas"><canvas id="pie-chart"></canvas></div>
@@ -144,13 +150,21 @@
           <div class="cf-card" id="cf-runway-card">
             <div class="cf-card-head">現金跑道<span class="cf-tag">保守估計</span></div>
             <div class="cf-num" id="cf-runway-num">—</div>
-            <div class="cf-sub" id="cf-runway-sub">計算中…</div>
-            <div class="cf-sub2" id="cf-runway-fiat"></div>
+            <p class="overview-runway-copy">依目前淨月支出，估算現金可支應的時間。</p>
+            <details class="overview-assumptions">
+              <summary>查看計算說明</summary>
+              <div class="cf-sub" id="cf-runway-sub">計算中…</div>
+              <div class="cf-sub2" id="cf-runway-fiat"></div>
+            </details>
           </div>
           <div class="cf-card" id="card-survival">
             <div class="cf-card-head">財務存活<span class="cf-tag">樂觀估計</span></div>
             <div class="ov2-stat-num skel" id="kv-survival">—</div>
-            <div class="cf-sub" id="ks-survival">含未來預計收入模擬</div>
+            <p class="overview-runway-copy">納入未來預計收入，模擬資金可支應的時間。</p>
+            <details class="overview-assumptions">
+              <summary>查看計算說明</summary>
+              <div class="cf-sub" id="ks-survival">含未來預計收入模擬</div>
+            </details>
           </div>
         </div>
       </section>
@@ -861,6 +875,6 @@
 <!-- ── Toast ── -->
 <div class="toast" id="toast"></div>
 
-<script src="app.js?v=202609141344"></script>
+<script src="app.js?v=202609201217"></script>
 </body>
 </html>

@@ -4,7 +4,7 @@
 // 應用版本號 — 重大功能變更才升版（小修補只更新 BUILD_DATE）
 const APP_VERSION = 'v1.0';
 // Build 時間：每次修改 code 後手動更新此時間（UTC+8 台北時間）
-const BUILD_DATE = '2026/09/14 13:44';
+const BUILD_DATE = '2026/09/20 12:17';
 
 const SPREADSHEET_ID = '1lpRpxVzWaYUqL-jVPOAJCtjsJUIedPYYyOx4gg4PPFU';
 const CLIENT_ID = '149884248440-85f8dhc6ub9up10sv0f89e3e0itrnooj.apps.googleusercontent.com';
@@ -1156,6 +1156,18 @@ function calcTotals() {
 // ══════════════════════════════════════════════════════════════
 // RENDER — KPIs
 // ══════════════════════════════════════════════════════════════
+function setOverviewValue(el, text) {
+  if (!el) return;
+  const match = String(text).match(/^(.*?)(個月|萬|億)$/);
+  el.textContent = match ? match[1].trim() : text;
+  if (match) {
+    const unit = document.createElement('span');
+    unit.className = 'overview-unit';
+    unit.textContent = match[2];
+    el.append(unit);
+  }
+}
+
 function renderKPIs() {
   const { cashT, twT, usT, cryT, ins, re, total, net, liquid, available, budget } = calcTotals();
   const snaps = S.data.snapshots;
@@ -1169,9 +1181,9 @@ function renderKPIs() {
   setKPI('kv-total', fmt(total), 'ks-total', '');
   // hero kv-liquid / kv-net 都不能用 setKPI（會洗掉 ov2-* 專屬尺寸 class），改手動 + 移除 skel
   const elLiquid = $('kv-liquid');
-  if (elLiquid) { elLiquid.textContent = fmt(investable); elLiquid.classList.remove('skel'); }
+  if (elLiquid) { setOverviewValue(elLiquid, fmtWan(investable)); elLiquid.classList.remove('skel'); }
   const elNet = $('kv-net');
-  if (elNet) { elNet.textContent = fmt(net); elNet.classList.remove('skel'); }
+  if (elNet) { setOverviewValue(elNet, fmtWan(net)); elNet.classList.remove('skel'); }
   const sNet = $('ks-net'); if (sNet) sNet.textContent = '含長期持有與負債';
 
   // 本月收益：用淨資產 (col 8) − 上月底淨資產，跟趨勢圖 / 月度長條圖一致
@@ -1193,6 +1205,11 @@ function renderKPIs() {
     elMonthly.textContent = (monthlyDiff > 0 ? '+' : '') + fmt(monthlyDiff);
     elMonthly.className = `ov2-pl-num ${monthlyDiff > 0 ? 'pos' : 'neg'}`;
     if (cardMonthly) cardMonthly.className = `ov2-pl-card ${monthlyDiff > 0 ? 'kpi-gain' : 'kpi-loss'}`;
+  }
+  const heroMonthly = $('kv-hero-monthly');
+  if (heroMonthly) {
+    setOverviewValue(heroMonthly, elMonthly.textContent);
+    heroMonthly.className = `ov2-hero-sub-num ${monthlyDiff > 0 ? 'pos' : monthlyDiff < 0 ? 'neg' : 'neutral'}`;
   }
   const sMonthly = $('ks-monthly');
   if (sMonthly) sMonthly.textContent = `淨資產 − ${monthBaselineLabel} 月底基準`;
@@ -1304,7 +1321,7 @@ function renderKPIs() {
         monthlyBudget: budget,
       });
       const mf = sim.monthsFloat;
-      svEl.textContent = sim.isInfinite ? '∞ 個月' : mf.toFixed(1) + ' 個月';
+      setOverviewValue(svEl, sim.isInfinite ? '∞ 個月' : mf.toFixed(1) + ' 個月');
       svEl.className = 'ov2-stat-num' + (sim.isInfinite || mf >= 6 ? '' : mf >= 3 ? ' neutral' : ' neg');
       if (svSub) svSub.textContent = '含未來預計收入模擬';
     } else {
@@ -3955,7 +3972,7 @@ function renderPie() {
     { label:'儲蓄險',   value:ins,               color: 'var(--asset-insurance)' },
   ].filter(e => e.value > 0);
   // 把 var(--asset-...) 解析成實際色碼，Chart.js 不認 CSS variables
-  const _root = getComputedStyle(document.documentElement);
+  const _root = getComputedStyle($('pie-chart'));
   entries.forEach(e => { if (e.color.startsWith('var(')) {
     const name = e.color.slice(4, -1).trim();
     e.color = _root.getPropertyValue(name).trim() || '#888';
@@ -4959,7 +4976,7 @@ function renderCashDefense() {
   const months = burn <= 0 ? Infinity : cashAll / burn;
   const fiatMonths = burn <= 0 ? Infinity : cashT / burn;
   const cls = months === Infinity || months > 6 ? 'cf-num-green' : months >= 3 ? 'cf-num-yellow' : 'cf-num-red';
-  runwayNum.textContent = months === Infinity ? '∞' : `${months.toFixed(1)} 個月`;
+  setOverviewValue(runwayNum, months === Infinity ? '∞' : `${months.toFixed(1)} 個月`);
   runwayNum.className = `cf-num ${cls}`;
   $('cf-runway-sub').textContent =
     `淨月燒 ${fmt(Math.max(burn, 0))}＝支出 ${fmt(monthlyOut)} − 保守月收 ${fmt(Math.round(fixedMonthly))}`;
