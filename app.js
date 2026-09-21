@@ -4,7 +4,7 @@
 // 應用版本號 — 重大功能變更才升版（小修補只更新 BUILD_DATE）
 const APP_VERSION = 'v1.0';
 // Build 時間：每次修改 code 後手動更新此時間（UTC+8 台北時間）
-const BUILD_DATE = '2026/09/20 20:28';
+const BUILD_DATE = '2026/09/21 17:18';
 
 const SPREADSHEET_ID = '1lpRpxVzWaYUqL-jVPOAJCtjsJUIedPYYyOx4gg4PPFU';
 const CLIENT_ID = '149884248440-85f8dhc6ub9up10sv0f89e3e0itrnooj.apps.googleusercontent.com';
@@ -7265,15 +7265,15 @@ function renderStaking() {
     const baseStr = x.base === null ? '—' : _fmtQty(x.base);
     const diffStr = (x.diff > 0 ? '+' : '') + _fmtQty(x.diff);
     const diffCls = x.diff > 0 ? 'pos' : (x.diff < 0 ? 'neg' : '');
-    const valStr = x.priceTWD > 0 ? '≈ ' + fmt(Math.abs(x.valueTWD)) : '—';
+    const valStr = x.priceTWD > 0 ? '≈ ' + fmtWan(Math.abs(x.valueTWD)) : '—';
     const formula = x.base === null
       ? '10/1 後新增持倉，尚無基準可比，不計入可優先變現額。'
       : '數量差額 × 現價換算台幣；差異含期間手動買賣的淨效果，解讀時注意。';
     return `
       <details class="stake-item">
         <summary>
-          <span class="staking-sym">${esc(x.sym)}</span>
-          <span class="stake-sumval"><b class="staking-diff ${diffCls}">${diffStr}</b><small>${valStr} · 展開明細 ⌄</small></span>
+          <span class="stake-identity"><span class="stake-symbol-icon" aria-hidden="true">${esc(x.sym.slice(0, 1))}</span><span class="staking-sym">${esc(x.sym)}</span></span>
+          <span class="stake-sumval"><b>${valStr}</b><small>差額換算 TWD</small><small class="staking-diff ${diffCls}">數量差額 ${diffStr}</small></span><span class="stake-chevron" aria-hidden="true">⌄</span>
         </summary>
         <div class="stake-detail">
           <div class="stake-numbers">

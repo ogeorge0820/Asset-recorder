@@ -3476,3 +3476,48 @@ body.amounts-hidden #modal-body:has(#m-bk-name) #m-bk-amt {
   .asset-explorer #tab-dwz .dwz-insights { padding: 24px; }
 }
 :root[data-theme="dark"] .asset-explorer #tab-dwz { --dwz-line: #88bfe6; --dwz-floor: #82b5a7; --dwz-energy: #a4acba; }
+
+/* 管理與質押延續核准稿的清單層級，讓名稱與換算金額能快速對讀。 */
+.asset-explorer #tab-management :is(#cash-cards, #tw-cards, #us-cards, #crypto-cards) .asset-card {
+  min-height: 84px; border-radius: 0; border: 0; border-bottom: 1px solid var(--border);
+  box-shadow: none !important; background: transparent; gap: 12px; padding: 18px 4px !important;
+}
+.asset-explorer #tab-management .holdings-grid .asset-card:last-child { border-bottom: 0; }
+.asset-explorer #tab-management .holdings-grid .asset-card:hover { background: var(--bg-hover); }
+.asset-explorer #tab-management .asset-card:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+.asset-explorer #tab-management .asset-card-pct { flex-basis: 38px !important; width: 38px !important; height: 38px !important; font-size: 11px !important; font-weight: 500 !important; }
+.asset-explorer #tab-management .asset-card-info { min-width: 0; flex: 1; }
+.asset-explorer #tab-management .holdings-grid .asset-card-sym { font-size: 14px !important; letter-spacing: 0; }
+.asset-explorer #tab-management .asset-card-sub { color: var(--text-secondary) !important; font-size: 12px; line-height: 1.6; overflow-wrap: anywhere; }
+.asset-explorer #tab-management .asset-card-right { min-width: 0; max-width: 46%; }
+.asset-explorer #tab-management .asset-card-twd { font-size: 17px !important; font-weight: 550 !important; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+.asset-explorer #tab-management .mgmt-subnav { gap: 8px; margin-bottom: 20px; }
+.asset-explorer #tab-management .mgmt-subnav button { min-height: 44px; }
+.asset-explorer #tab-staking .staking-section { gap: 12px; }
+.asset-explorer #tab-staking .staking-section-head { display: flex; flex-wrap: wrap; gap: 8px 16px; padding: 18px 2px 4px; }
+.asset-explorer #tab-staking .stake-item summary { min-height: 84px; padding: 18px 16px; gap: 12px; }
+.asset-explorer #tab-staking .stake-identity { display: flex; align-items: center; gap: 12px; min-width: 0; flex: 1; }
+.asset-explorer #tab-staking .stake-symbol-icon { width: 36px; height: 36px; flex: none; display: grid; place-items: center; border-radius: 50%; background: var(--brand-lavender-soft); color: var(--accent); font-size: 17px; font-weight: 600; }
+.asset-explorer #tab-staking .staking-sym { overflow-wrap: anywhere; }
+.asset-explorer #tab-staking .stake-sumval { min-width: 0; max-width: 55%; overflow-wrap: anywhere; }
+.asset-explorer #tab-staking .stake-sumval b { font-size: 18px; font-weight: 550; color: var(--text-primary); }
+.asset-explorer #tab-staking .stake-sumval small { font-size: 11px; line-height: 1.6; margin-top: 5px; color: var(--text-secondary); }
+.asset-explorer #tab-staking .stake-chevron { color: var(--text-muted); transition: transform .15s; }
+.asset-explorer #tab-staking .stake-item[open] .stake-chevron { transform: rotate(180deg); }
+.asset-explorer #tab-staking .stake-item summary:focus-visible { outline: 2px solid var(--accent); outline-offset: -3px; }
+.asset-explorer #tab-staking .stake-numbers { padding: 16px 12px; gap: 12px; }
+.asset-explorer #tab-staking .stake-numbers span { font-size: 11px; }
+.asset-explorer #tab-staking .stake-numbers b { font-size: 16px; margin-top: 8px; }
+.asset-explorer #tab-staking .stake-formula { font-size: 12px; line-height: 1.8; }
+@media (min-width: 769px) {
+  .asset-explorer #tab-management :is(#cash-cards, #tw-cards, #us-cards, #crypto-cards) .asset-card { grid-template-columns: 38px minmax(0,1.1fr) minmax(0,.9fr) minmax(120px,.7fr) 14px !important; padding: 20px 8px !important; }
+  .asset-explorer #tab-management .asset-card-right { max-width: none; }
+  .asset-explorer #tab-management .asset-card-twd { font-size: 18px !important; }
+  .asset-explorer #tab-staking .stake-item summary { padding: 22px 24px; }
+  .asset-explorer #tab-staking .stake-detail { padding: 18px 24px 24px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .asset-explorer #tab-staking .stake-chevron { transition: none; }
+}
+.asset-explorer #tab-staking .stake-sumval .staking-diff.pos { color: var(--success); }
+.asset-explorer #tab-staking .stake-sumval .staking-diff.neg { color: var(--danger); }
