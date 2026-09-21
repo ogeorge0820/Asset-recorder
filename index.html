@@ -16,8 +16,8 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=DM+Sans:wght@300;400;500;600;700&display=swap">
-<link rel="stylesheet" href="theme.css?v=202609211718">
-<link rel="stylesheet" href="style.css?v=202609211718">
+<link rel="stylesheet" href="theme.css?v=202609211749">
+<link rel="stylesheet" href="style.css?v=202609211749">
 </head>
 <body class="asset-explorer">
 
@@ -258,10 +258,10 @@
       <section class="holdings-hero">
         <h3 class="holdings-hero-title">持有資產</h3>
         <div class="mgmt-subnav" id="mgmt-subnav" aria-label="管理資產分類">
-          <button type="button" data-cat="cash" aria-pressed="true" onclick="setMgmtCat('cash')">現金</button>
-          <button type="button" data-cat="tw" aria-pressed="false" onclick="setMgmtCat('tw')">台股</button>
-          <button type="button" data-cat="us" aria-pressed="false" onclick="setMgmtCat('us')">美股</button>
-          <button type="button" data-cat="crypto" aria-pressed="false" onclick="setMgmtCat('crypto')">加密</button>
+          <button type="button" data-cat="cash" aria-pressed="true" onclick="setMgmtCat('cash')" aria-label="現金"><span class="mgmt-summary-label">現金</span><strong class="mgmt-summary-amount" id="mgmt-amount-cash">—</strong><span class="mgmt-summary-unit">TWD</span></button>
+          <button type="button" data-cat="tw" aria-pressed="false" onclick="setMgmtCat('tw')" aria-label="台股"><span class="mgmt-summary-label">台股</span><strong class="mgmt-summary-amount" id="mgmt-amount-tw">—</strong><span class="mgmt-summary-unit">TWD</span></button>
+          <button type="button" data-cat="us" aria-pressed="false" onclick="setMgmtCat('us')" aria-label="美股"><span class="mgmt-summary-label">美股</span><strong class="mgmt-summary-amount" id="mgmt-amount-us">—</strong><span class="mgmt-summary-unit">TWD</span></button>
+          <button type="button" data-cat="crypto" aria-pressed="false" onclick="setMgmtCat('crypto')" aria-label="加密貨幣"><span class="mgmt-summary-label">加密貨幣</span><strong class="mgmt-summary-amount" id="mgmt-amount-crypto">—</strong><span class="mgmt-summary-unit">TWD</span></button>
         </div>
         <div class="holdings-grid">
 
@@ -883,6 +883,6 @@
 <!-- ── Toast ── -->
 <div class="toast" id="toast"></div>
 
-<script src="app.js?v=202609211718"></script>
+<script src="app.js?v=202609211749"></script>
 </body>
 </html>

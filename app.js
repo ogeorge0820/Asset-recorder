@@ -4,7 +4,7 @@
 // 應用版本號 — 重大功能變更才升版（小修補只更新 BUILD_DATE）
 const APP_VERSION = 'v1.0';
 // Build 時間：每次修改 code 後手動更新此時間（UTC+8 台北時間）
-const BUILD_DATE = '2026/09/21 17:18';
+const BUILD_DATE = '2026/09/21 17:49';
 
 const SPREADSHEET_ID = '1lpRpxVzWaYUqL-jVPOAJCtjsJUIedPYYyOx4gg4PPFU';
 const CLIENT_ID = '149884248440-85f8dhc6ub9up10sv0f89e3e0itrnooj.apps.googleusercontent.com';
@@ -1415,6 +1415,8 @@ function renderHoldingCards() {
     const sEl = $('hc-symbols-' + cat);
     if (cEl) cEl.textContent = count + ' ' + unit;
     if (aEl) aEl.textContent = total > 0 ? fmt(total) : '—';
+    const summaryEl = $('mgmt-amount-' + cat);
+    if (summaryEl) summaryEl.textContent = fmtWan(total);
     if (dEl) {
       if (!change || change.pct == null) {
         dEl.textContent = ''; dEl.className = 'hc-change';

@@ -3521,3 +3521,29 @@ body.amounts-hidden #modal-body:has(#m-bk-name) #m-bk-amt {
 }
 .asset-explorer #tab-staking .stake-sumval .staking-diff.pos { color: var(--success); }
 .asset-explorer #tab-staking .stake-sumval .staking-diff.neg { color: var(--danger); }
+
+/* 四類摘要沿用明細的同一份總額，分類切換時仍能一覽其他資產。 */
+.asset-explorer #tab-management #mgmt-subnav {
+  display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin-bottom: 22px;
+}
+.asset-explorer #tab-management #mgmt-subnav button {
+  display: flex; flex-direction: column; align-items: flex-start; justify-content: center;
+  min-width: 0; min-height: 116px; padding: 18px; text-align: left;
+  background: var(--bg-card) !important; border: 1px solid var(--border) !important;
+  border-radius: 16px !important; color: var(--text-primary); white-space: normal;
+}
+.asset-explorer #tab-management #mgmt-subnav button[aria-pressed="true"] {
+  background: var(--brand-lavender-soft) !important; border-color: var(--accent) !important;
+  box-shadow: inset 0 0 0 1px var(--accent);
+}
+.asset-explorer #tab-management #mgmt-subnav button:hover { border-color: var(--accent) !important; }
+.asset-explorer #tab-management #mgmt-subnav button:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+.asset-explorer #tab-management .mgmt-summary-label { font-size: 13px; font-weight: 500; color: var(--text-secondary); }
+.asset-explorer #tab-management .mgmt-summary-amount { display: block; margin-top: 10px; font: 600 24px/1.3 var(--font-num); font-variant-numeric: tabular-nums; letter-spacing: -.02em; overflow-wrap: anywhere; }
+.asset-explorer #tab-management .mgmt-summary-unit { font-size: 11px; color: var(--text-muted); margin-top: 4px; }
+body.amounts-hidden .mgmt-summary-amount { filter: blur(7px) !important; user-select: none; pointer-events: none; }
+@media (min-width: 769px) {
+  .asset-explorer #tab-management #mgmt-subnav { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px; }
+  .asset-explorer #tab-management #mgmt-subnav button { padding: 22px; min-height: 132px; }
+  .asset-explorer #tab-management .mgmt-summary-amount { font-size: 28px; }
+}
