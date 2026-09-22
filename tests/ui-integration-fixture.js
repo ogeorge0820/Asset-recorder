@@ -72,3 +72,24 @@ const fixtureBanner = document.createElement('div');
 fixtureBanner.textContent = '整合驗證｜示意持倉・禁止連外・重新整理還原';
 fixtureBanner.style.cssText = 'padding:10px 16px;background:var(--accent);color:var(--accent-fg);font-size:12px;text-align:center';
 $('app-content').prepend(fixtureBanner);
+
+// 以網址參數驗收成功、空白與失敗畫面，正式頁面不會載入。
+const fixtureView = new URLSearchParams(location.search);
+if (fixtureView.has('market')) {
+  S.data.indicators = [['coinbase_rank',30,getNowTW8().slice(0,10),'示意'],['google_trends',80,'2025/01/01','示意過期值'],['nupl',0.35,getNowTW8().slice(0,10),'示意'],['rainbow','綠',getNowTW8().slice(0,10),'示意']];
+  S.btcMarket = {history:Array.from({length:730},(_,i)=>[Date.now()-(729-i)*86400000,60000+i*50]),dominance:56};
+}
+if (fixtureView.has('news')) {
+  const newsMode = fixtureView.get('news');
+  const newsItem = (title,source,minutes,desc='') => ({title,source,ts:Date.now()-minutes*60000,url:'https://example.com/',desc});
+  S.news = {fetchedAt:Date.now(),errors:{},en:[],zh:[],x:[]};
+  if (newsMode === 'demo') {
+    S.news.en = [newsItem('Demo: Bitcoin market activity and the week ahead','示意英文媒體',20,'This is sample content for checking layout and reading rhythm, not a real report.'),newsItem('Demo: A closer look at long-term bitcoin holdings','示意研究媒體',45)];
+    S.news.zh = [newsItem('示意新聞：比特幣市場觀察，從資金流向看近期變化','示意繁中媒體',30,'這是排版驗收用的虛構摘要，並非真實報導或市場資訊。'),newsItem('示意新聞：長期持有者如何看待市場波動','示意繁中媒體',90)];
+    S.news.x = [newsItem('示意討論：價格之外，也關注市場參與者與長期持倉的變化。','@demo',10)];
+  } else if (newsMode === 'error') S.news.errors = {en:'示意連線失敗',zh:'示意連線失敗',x:'示意連線失敗'};
+}
+if (fixtureView.has('snapshots')) {
+  S.data.snapshots = fixtureView.get('snapshots') === 'empty' ? [] : S.data.snapshots.slice(-1);
+  renderTrend();
+}

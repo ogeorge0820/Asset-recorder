@@ -16,8 +16,8 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=DM+Sans:wght@300;400;500;600;700&display=swap">
-<link rel="stylesheet" href="theme.css?v=202609211749">
-<link rel="stylesheet" href="style.css?v=202609211749">
+<link rel="stylesheet" href="theme.css?v=202609221609">
+<link rel="stylesheet" href="style.css?v=202609221609">
 </head>
 <body class="asset-explorer">
 
@@ -115,6 +115,11 @@
             </div>
           </div>
           <div class="ov2-chart-caption"><span>幣別：TWD ・ 金額以萬／億顯示</span><span>月度快照 ・「▸」為本月即時值</span></div>
+          <div class="trend-date-control">
+            <label for="trend-date">查看月份</label>
+            <input type="range" id="trend-date" min="0" max="0" value="0" step="1" disabled oninput="setTrendDate(this.value)">
+            <output id="trend-date-value" for="trend-date" aria-live="polite">尚無歷史資料</output>
+          </div>
         </div>
         <div class="ov2-alloc-card">
           <div class="ov2-alloc-head">
@@ -133,7 +138,7 @@
         <div class="ovx-assets">
           <div class="ovx-assets-head">
             <h3>我的資產</h3>
-            <span class="ovx-assets-sub">點選分類前往管理</span>
+            <span class="ovx-assets-sub">點選分類展開持倉</span>
           </div>
           <div class="ovx-filters" id="ovx-filters" aria-label="資產分類篩選">
             <button type="button" data-cat="all" aria-pressed="true" onclick="setOvxFilter('all')">全部</button>
@@ -731,7 +736,7 @@
         <div class="news-head">
           <div class="news-head-left">
             <h3 class="news-title-main">比特幣新聞</h3>
-            <span class="news-subtitle">近 12 小時 · 共 10 則</span>
+            <span class="news-subtitle" id="news-subtitle">近 12 小時</span>
           </div>
           <div class="news-head-right">
             <span class="news-updated" id="news-updated">—</span>
@@ -883,6 +888,6 @@
 <!-- ── Toast ── -->
 <div class="toast" id="toast"></div>
 
-<script src="app.js?v=202609211749"></script>
+<script src="app.js?v=202609221609"></script>
 </body>
 </html>

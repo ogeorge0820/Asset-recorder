@@ -4,7 +4,7 @@
 // 應用版本號 — 重大功能變更才升版（小修補只更新 BUILD_DATE）
 const APP_VERSION = 'v1.0';
 // Build 時間：每次修改 code 後手動更新此時間（UTC+8 台北時間）
-const BUILD_DATE = '2026/09/21 17:49';
+const BUILD_DATE = '2026/09/22 16:09';
 
 const SPREADSHEET_ID = '1lpRpxVzWaYUqL-jVPOAJCtjsJUIedPYYyOx4gg4PPFU';
 const CLIENT_ID = '149884248440-85f8dhc6ub9up10sv0f89e3e0itrnooj.apps.googleusercontent.com';
@@ -1550,6 +1550,24 @@ function ovxGo(cat) {
   switchTab('management');
   if (cat) setMgmtCat(cat);
 }
+function getOvxHoldings(cat) {
+  const rate = S.prices.usdtwd || 0;
+  const coins = S.data.crypto || [];
+  let rows = [];
+  if (cat === 'cash') {
+    rows = (S.data.cash || []).map(r => ({ name: r[0] || '未命名帳戶', value: cashToTWD(r) }));
+    const usdt = coins.find(r => r[0]?.toUpperCase() === 'USDT');
+    if (usdt) rows.push({ name: 'USDT', value: (parseFloat(usdt[1]) || 0) * rate });
+  } else if (cat === 'insurance') {
+    rows = [{ name: '儲蓄險', value: (parseFloat(S.data.settings.insurance_total) || 0) * rate }];
+  } else if (['tw', 'us', 'crypto'].includes(cat)) {
+    rows = (S.data[cat] || []).filter(r => cat !== 'crypto' || r[0]?.toUpperCase() !== 'USDT')
+      .map(r => ({ name: r[0] || '未命名持倉', value: (parseFloat(r[1]) || 0) *
+        (S.prices[cat][cat === 'crypto' ? r[0]?.toUpperCase() : r[0]] || 0) * (cat === 'tw' ? 1 : rate) }));
+  }
+  return rows.sort((a, b) => b.value - a.value);
+}
+
 function renderOvxAssets() {
   const list = $('ovx-asset-list');
   if (!list) return;
@@ -1558,15 +1576,22 @@ function renderOvxAssets() {
   const usdtEntry = (S.data.crypto || []).find(r => r[0]?.toUpperCase() === 'USDT');
   const usdtTWD = usdtEntry ? (parseFloat(usdtEntry[1]) || 0) * rate : 0;
   const vals = { cash: cashT + usdtTWD, tw: twT, us: usT, crypto: cryT - usdtTWD, insurance: ins };
+  const expanded = new Set([...list.querySelectorAll('details[open]')].map(el => el.dataset.cat));
   list.innerHTML = OVX_CATS
     .filter(c => OVX_FILTER === 'all' || c.id === OVX_FILTER)
     .map(c => `
-      <button class="ovx-row" type="button" onclick="ovxGo('${c.mgmt}')" aria-label="前往管理：${c.name}">
+      <details class="ovx-details" data-cat="${c.id}" ${expanded.has(c.id) ? 'open' : ''}>
+      <summary class="ovx-row" aria-label="展開${c.name}持倉">
         <span class="ovx-icon">${c.icon}</span>
         <span class="ovx-title">${c.name}<small>${c.unit}</small></span>
         <span class="ovx-value">${vals[c.id] > 0 ? fmt(vals[c.id]) : '—'}<small>TWD</small></span>
         <span class="ovx-chevron" aria-hidden="true">›</span>
-      </button>`).join('');
+      </summary>
+      <div class="ovx-holdings">
+        <ul>${getOvxHoldings(c.id).map(r => `<li><span>${esc(r.name)}</span><b class="ovx-holding-value">${fmtWan(r.value)}<small> TWD</small></b></li>`).join('') || '<li class="ovx-empty">尚無持倉</li>'}</ul>
+        <button type="button" class="ovx-manage" onclick="ovxGo('${c.mgmt}')">前往管理${c.name}</button>
+      </div>
+      </details>`).join('');
 }
 
 // 管理頁第二排：其他資產+負債（合併卡）/ 質押收益
@@ -4110,6 +4135,31 @@ window.addEventListener('resize', () => {
   applyMobilePieLayout();
 });
 
+function trendPointAt(labels, values, rawIndex) {
+  if (!labels.length || !values.length) return null;
+  const max = Math.min(labels.length, values.length) - 1;
+  const n = Number(rawIndex);
+  const index = Number.isFinite(n) ? Math.max(0, Math.min(max, Math.round(n))) : max;
+  return { index, date: labels[index], value: Number(values[index]) || 0 };
+}
+
+function setTrendDate(rawIndex) {
+  const chart = S.charts.trend;
+  const input = $('trend-date');
+  const output = $('trend-date-value');
+  if (!input || !output) return;
+  const point = chart ? trendPointAt(chart.data.labels, chart.data.datasets[0].data, rawIndex) : null;
+  input.disabled = !point || chart.data.labels.length < 2;
+  input.max = point ? String(chart.data.labels.length - 1) : '0';
+  input.value = point ? String(point.index) : '0';
+  input.setAttribute('aria-valuetext', point ? String(point.date).replace(' ▸', ' 即時') : '尚無歷史資料');
+  output.textContent = point ? `${point.date} · 淨資產 ${fmtWan(point.value)} TWD` : '尚無歷史資料';
+  if (point) {
+    chart.setActiveElements([{ datasetIndex: 0, index: point.index }]);
+    chart.update('none');
+  }
+}
+
 function renderTrend() {
   let snaps = [...S.data.snapshots];
   const ctx = $('trend-chart').getContext('2d');
@@ -4119,6 +4169,8 @@ function renderTrend() {
   if (snaps.length === 0) {
     ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
     if (nodata) nodata.style.display = 'flex';
+    S.charts.trend = null;
+    setTrendDate(0);
     return;
   }
   if (nodata) nodata.style.display = 'none';
@@ -4181,6 +4233,7 @@ function renderTrend() {
       },
     },
   });
+  setTrendDate(snaps.length - 1);
 }
 
 function renderMonthly() {
@@ -4649,18 +4702,18 @@ function renderIndicatorCard(id) {
     }
   }
   const stale = def.manual && (!lu || staleDays == null || staleDays > 14);
-  const sigText = { top: '偏頂', mid: '中性', bottom: '偏底', unknown: '—' }[sig];
+  const sigText = { top: '偏頂', mid: '中性', bottom: '偏底', unknown: '資料不足' }[sig];
   const fillPct = s == null ? 0 : Math.round((s + 1) * 50);
   const updatedText = def.manual
     ? (lu && staleDays != null ? `${staleDays} 天前` : '尚未更新')
-    : '即時';
+    : (v == null ? '尚無資料' : '自動更新');
   return `
     <div class="ind-card ind-${sig}">
       <div class="ind-card-head">
         <span class="ind-card-label">${esc(def.label)}<span class="ind-card-mode">${def.manual ? '手動' : '自動'}</span></span>
         <span class="ind-card-actions">
           ${stale ? '<span class="ind-stale-badge" title="超過 14 天未更新">⚠</span>' : ''}
-          ${def.manual ? `<button class="ind-card-edit" title="更新" onclick="openIndicatorEdit('${id}')">✏︎</button>` : ''}
+          ${def.manual ? `<button class="ind-card-edit" title="更新" aria-label="更新${esc(def.label)}" onclick="openIndicatorEdit('${id}')">✏︎</button>` : ''}
         </span>
       </div>
       <div class="ind-card-value">${esc(def.fmt(v))}</div>
@@ -7785,6 +7838,8 @@ function _renderNewsUI(data, isStale) {
   _renderNewsZone('en', data.en, data.errors && data.errors.en);
   _renderNewsZone('zh', data.zh, data.errors && data.errors.zh);
   _renderNewsZone('x',  data.x,  data.errors && data.errors.x);
+  const subtitle = $('news-subtitle');
+  if (subtitle) subtitle.textContent = '近 12 小時 · 共 ' + ['en', 'zh', 'x'].reduce((n, z) => n + (data.errors?.[z] ? 0 : (data[z] || []).length), 0) + ' 則';
   const upd = $('news-updated');
   if (upd) {
     upd.textContent = (isStale ? '⚠ ' : '') + _fmtRelTime(data.fetchedAt) + '更新';

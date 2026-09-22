@@ -71,3 +71,26 @@ test('列數異常減少時仍拒寫，完全不清除資料',async()=>{
  assert.match(result.error,/BLOCKED/);
  assert.deepEqual(result.operations,[]);
 });
+
+test('總覽展開持倉與分類合計一致，USDT 只顯示於現金且不改資料',()=>{
+ const result=run(current,`(() => {
+   const before=JSON.stringify(S.data);
+   const categories=['cash','tw','us','crypto','insurance'];
+   const rows=Object.fromEntries(categories.map(c=>[c,getOvxHoldings(c)]));
+   return {rows,unchanged:before===JSON.stringify(S.data)};
+ })()`);
+ assert.equal(result.unchanged,true);
+ assert.equal(result.rows.cash.reduce((s,r)=>s+r.value,0),3200000);
+ assert.equal(result.rows.crypto.reduce((s,r)=>s+r.value,0),128000);
+ assert.equal(result.rows.tw[0].value,3000000);
+ assert.equal(result.rows.us[0].value,800000);
+ assert.equal(result.rows.insurance[0].value,22455*32);
+ assert.equal(result.rows.cash.filter(r=>r.name==='USDT').length,1);
+ assert.equal(result.rows.crypto.some(r=>r.name==='USDT'),false);
+});
+test('日期選取只讀取對應淨資產，處理空資料、單點及越界',()=>{
+ assert.equal(run(current,`trendPointAt([],[],0)`),null);
+ assert.deepEqual(run(current,`trendPointAt(['2026/08'],[123456],99)`),{index:0,date:'2026/08',value:123456});
+ assert.deepEqual(run(current,`trendPointAt(['2026/07','2026/08'],[100,200],-3)`),{index:0,date:'2026/07',value:100});
+ assert.deepEqual(run(current,`trendPointAt(['2026/07','2026/08'],[100,200],'1')`),{index:1,date:'2026/08',value:200});
+});
