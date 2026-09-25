@@ -94,3 +94,12 @@ test('日期選取只讀取對應淨資產，處理空資料、單點及越界',
  assert.deepEqual(run(current,`trendPointAt(['2026/07','2026/08'],[100,200],-3)`),{index:0,date:'2026/07',value:100});
  assert.deepEqual(run(current,`trendPointAt(['2026/07','2026/08'],[100,200],'1')`),{index:1,date:'2026/08',value:200});
 });
+
+test('首頁漲跌呈現保留正負、缺值與來源期間，不把月底資料標成 24h',()=>{
+ assert.match(run(current,`renderOvxChange({pct:1.25,delta:12500},'crypto')`),/ovx-change pos/);
+ assert.match(run(current,`renderOvxChange({pct:-2,delta:-20000,win:'2026/08 月底'},'us')`),/-2.00%.*-2.0萬.*2026\/08 月底/);
+ assert.match(run(current,`renderOvxChange(null,'tw')`),/暫無漲跌資料/);
+ assert.doesNotMatch(run(current,`renderOvxChange({pct:2,delta:200,win:'2026/08 月底'},'crypto')`),/24h/);
+ assert.equal(run(current,`renderOvxChange(null,'cash')`),'');
+ assert.equal(run(current,`renderOvxChange(null,'insurance')`),'');
+});

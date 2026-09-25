@@ -3648,3 +3648,17 @@ body.amounts-hidden :is(#trend-date-value, .ovx-holding-value) { filter: blur(7p
 .asset-explorer #dwz-params .dwz-params-body { padding-top: 16px; }
 .asset-explorer #dwz-params[data-layout="mobile"] { position: static; max-height: none; width: 100%; box-sizing: border-box; }
 .asset-explorer :is(.dwz-params-toggle,.ind-reading summary):focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; border-radius: 6px; }
+
+/* 隱藏頁籤會讓圖表重新量測；容器不可隨 canvas 的暫時高度收縮。 */
+.asset-explorer #tab-overview .ov2-hero-trend { flex: 0 0 auto; height: 220px !important; min-height: 220px !important; }
+.asset-explorer #tab-management .mgmt-detail-head .hc-change.pos { color: var(--success); }
+.asset-explorer #tab-management .mgmt-detail-head .hc-change.neg { color: var(--danger); }
+.asset-explorer #tab-overview .ovx-change { display: block; margin-top: 6px; font-size: 12px; line-height: 1.6; font-weight: 500; }
+.asset-explorer #tab-overview .ovx-change.pos { color: var(--success); }
+.asset-explorer #tab-overview .ovx-change.neg { color: var(--danger); }
+.asset-explorer #tab-overview .ovx-change.neutral { color: var(--text-muted); }
+.asset-explorer #tab-overview .ovx-change-window { display: block; font-size: 10px; color: var(--text-muted); font-weight: 400; }
+.asset-explorer #tab-overview .ovx-value { flex-shrink: 0; }
+@media (min-width: 769px) {
+  .asset-explorer #tab-overview .ov2-hero-trend { height: 260px !important; min-height: 260px !important; }
+}

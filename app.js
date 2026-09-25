@@ -4,7 +4,7 @@
 // 應用版本號 — 重大功能變更才升版（小修補只更新 BUILD_DATE）
 const APP_VERSION = 'v1.0';
 // Build 時間：每次修改 code 後手動更新此時間（UTC+8 台北時間）
-const BUILD_DATE = '2026/09/25 20:29';
+const BUILD_DATE = '2026/09/25 20:37';
 
 const SPREADSHEET_ID = '1lpRpxVzWaYUqL-jVPOAJCtjsJUIedPYYyOx4gg4PPFU';
 const CLIENT_ID = '149884248440-85f8dhc6ub9up10sv0f89e3e0itrnooj.apps.googleusercontent.com';
@@ -1568,6 +1568,17 @@ function getOvxHoldings(cat) {
   return rows.sort((a, b) => b.value - a.value);
 }
 
+function renderOvxChange(change, cat) {
+  if (!['tw', 'us', 'crypto'].includes(cat)) return '';
+  if (!change || !Number.isFinite(change.pct) || !Number.isFinite(change.delta)) {
+    return '<span class="ovx-change neutral">暫無漲跌資料</span>';
+  }
+  const cls = change.pct > 0 ? 'pos' : change.pct < 0 ? 'neg' : 'neutral';
+  const pct = `${change.pct > 0 ? '+' : ''}${change.pct.toFixed(2)}%`;
+  const delta = `${change.delta > 0 ? '+' : ''}${fmtWan(change.delta)}`;
+  return `<span class="ovx-change ${cls}">${pct} · ${delta}<span class="ovx-change-window">${esc(change.win || getDailyChangeWindow(cat))}</span></span>`;
+}
+
 function renderOvxAssets() {
   const list = $('ovx-asset-list');
   if (!list) return;
@@ -1576,6 +1587,8 @@ function renderOvxAssets() {
   const usdtEntry = (S.data.crypto || []).find(r => r[0]?.toUpperCase() === 'USDT');
   const usdtTWD = usdtEntry ? (parseFloat(usdtEntry[1]) || 0) * rate : 0;
   const vals = { cash: cashT + usdtTWD, tw: twT, us: usT, crypto: cryT - usdtTWD, insurance: ins };
+  const inv = calcInvestDelta();
+  const changes = { tw: inv.tw, us: inv.us, crypto: inv.cry };
   const expanded = new Set([...list.querySelectorAll('details[open]')].map(el => el.dataset.cat));
   list.innerHTML = OVX_CATS
     .filter(c => OVX_FILTER === 'all' || c.id === OVX_FILTER)
@@ -1584,7 +1597,7 @@ function renderOvxAssets() {
       <summary class="ovx-row" aria-label="展開${c.name}持倉">
         <span class="ovx-icon">${c.icon}</span>
         <span class="ovx-title">${c.name}<small>${c.unit}</small></span>
-        <span class="ovx-value">${vals[c.id] > 0 ? fmt(vals[c.id]) : '—'}<small>TWD</small></span>
+        <span class="ovx-value">${vals[c.id] > 0 ? fmt(vals[c.id]) : '—'}<small>TWD</small>${renderOvxChange(changes[c.id], c.id)}</span>
         <span class="ovx-chevron" aria-hidden="true">›</span>
       </summary>
       <div class="ovx-holdings">
