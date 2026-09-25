@@ -16,8 +16,8 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=DM+Sans:wght@300;400;500;600;700&display=swap">
-<link rel="stylesheet" href="theme.css?v=202609221609">
-<link rel="stylesheet" href="style.css?v=202609221609">
+<link rel="stylesheet" href="theme.css?v=202609252029">
+<link rel="stylesheet" href="style.css?v=202609252029">
 </head>
 <body class="asset-explorer">
 
@@ -52,7 +52,7 @@
     <nav class="tab-nav" aria-label="主要導覽">
       <button class="tab-btn active" onclick="switchTab('overview')"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="2"/><rect x="14" y="3" width="7" height="7" rx="2"/><rect x="3" y="14" width="7" height="7" rx="2"/><rect x="14" y="14" width="7" height="7" rx="2"/></svg><span>總覽</span></button>
       <button class="tab-btn" onclick="switchTab('management')"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M3 7h18v13H3zM3 7l3-4h12l3 4M7 12h10"/></svg><span>管理</span></button>
-      <button class="tab-btn" onclick="switchTab('dwz')"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M4 21V4m0 1c6-5 10 5 16 0v11c-6 5-10-5-16 0"/></svg><span><span class="tab-full">Die With Zero</span><span class="tab-short">DWZ</span></span></button>
+      <button class="tab-btn" onclick="switchTab('dwz')"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M4 21V4m0 1c6-5 10 5 16 0v11c-6 5-10-5-16 0"/></svg><span><span class="tab-full">人生規劃</span><span class="tab-short">人生規劃</span></span></button>
       <button class="tab-btn" onclick="switchTab('indicators')"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M4 20V10m8 10V4m8 16v-7"/></svg><span>指標</span></button>
       <button class="tab-btn" onclick="switchTab('news')"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M7 8h10M7 12h4m-4 4h10"/></svg><span>新聞</span></button>
       <button class="tab-btn" onclick="switchTab('staking')"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><ellipse cx="12" cy="6" rx="8" ry="3"/><path d="M4 6v6c0 4 16 4 16 0V6M4 12v6c0 4 16 4 16 0v-6"/></svg><span>質押</span></button>
@@ -275,13 +275,12 @@
               <span class="hc-deco hc-deco-rings" aria-hidden="true"></span>
               <div class="hc-top">
                 <span class="hc-label">加密貨幣 / CRYPTO</span>
-                <span class="hc-count" id="hc-count-crypto">— holdings</span>
               </div>
               <div class="hc-amount" id="hc-amount-crypto">—</div>
-              <div class="hc-change" id="hc-change-crypto"></div>
               <div class="hc-symbols" id="hc-symbols-crypto"></div>
               <span class="hc-arrow" aria-hidden="true">▾</span>
             </button>
+            <header class="mgmt-detail-head"><div><h2>加密貨幣明細</h2><span class="hc-count" id="hc-count-crypto">— 檔持倉</span><div class="hc-change" id="hc-change-crypto"></div></div><div class="mgmt-detail-actions"><button class="btn-add" onclick="addItem('crypto')">+ 新增加密貨幣</button><button class="btn-add" onclick="openCMCImport()">匯入 CoinMarketCap CSV</button></div></header>
             <div class="holding-detail">
               <div class="section-card" id="section-crypto">
                 <div class="section-body">
@@ -290,10 +289,6 @@
                     <tbody id="tb-crypto"></tbody>
                   </table></div>
                   <div class="crypto-cards" id="crypto-cards"></div>
-                  <div style="display:flex;gap:8px;flex-wrap:wrap">
-                    <button class="btn-add" onclick="addItem('crypto')">+ 新增加密貨幣</button>
-                    <button class="btn-add" onclick="openCMCImport()">匯入 CoinMarketCap CSV</button>
-                  </div>
                 </div>
               </div>
             </div>
@@ -304,13 +299,12 @@
               <span class="hc-deco hc-deco-stars" aria-hidden="true"></span>
               <div class="hc-top">
                 <span class="hc-label">美股 / US STOCKS</span>
-                <span class="hc-count" id="hc-count-us">— holdings</span>
               </div>
               <div class="hc-amount" id="hc-amount-us">—</div>
-              <div class="hc-change" id="hc-change-us"></div>
               <div class="hc-symbols" id="hc-symbols-us"></div>
               <span class="hc-arrow" aria-hidden="true">▾</span>
             </button>
+            <header class="mgmt-detail-head"><div><h2>美股明細</h2><span class="hc-count" id="hc-count-us">— 檔持倉</span><div class="hc-change" id="hc-change-us"></div></div><div class="mgmt-detail-actions"><button class="btn-add" onclick="addItem('us')">+ 新增美股</button></div></header>
             <div class="holding-detail">
               <div class="section-card" id="section-us">
                 <div class="section-body">
@@ -319,7 +313,6 @@
                     <tbody id="tb-us"></tbody>
                   </table></div>
                   <div class="stock-cards" id="us-cards"></div>
-                  <button class="btn-add" onclick="addItem('us')">+ 新增美股</button>
                 </div>
               </div>
             </div>
@@ -330,13 +323,12 @@
               <span class="hc-deco hc-deco-stripes" aria-hidden="true"></span>
               <div class="hc-top">
                 <span class="hc-label">台股 / TW STOCKS</span>
-                <span class="hc-count" id="hc-count-tw">— holdings</span>
               </div>
               <div class="hc-amount" id="hc-amount-tw">—</div>
-              <div class="hc-change" id="hc-change-tw"></div>
               <div class="hc-symbols" id="hc-symbols-tw"></div>
               <span class="hc-arrow" aria-hidden="true">▾</span>
             </button>
+            <header class="mgmt-detail-head"><div><h2>台股明細</h2><span class="hc-count" id="hc-count-tw">— 檔持倉</span><div class="hc-change" id="hc-change-tw"></div></div><div class="mgmt-detail-actions"><button class="btn-add" onclick="addItem('tw')">+ 新增台股</button></div></header>
             <div class="holding-detail">
               <div class="section-card" id="section-tw">
                 <div class="section-body">
@@ -345,7 +337,6 @@
                     <tbody id="tb-tw"></tbody>
                   </table></div>
                   <div class="stock-cards" id="tw-cards"></div>
-                  <button class="btn-add" onclick="addItem('tw')">+ 新增台股</button>
                 </div>
               </div>
             </div>
@@ -356,13 +347,12 @@
               <span class="hc-deco hc-deco-dollar" aria-hidden="true">$</span>
               <div class="hc-top">
                 <span class="hc-label">流動現金 / CASH</span>
-                <span class="hc-count" id="hc-count-cash">— accounts</span>
               </div>
               <div class="hc-amount" id="hc-amount-cash">—</div>
-              <div class="hc-avail" id="hc-avail-cash"></div>
               <div class="hc-symbols" id="hc-symbols-cash"></div>
               <span class="hc-arrow" aria-hidden="true">▾</span>
             </button>
+            <header class="mgmt-detail-head"><div><h2>現金明細</h2><span class="hc-count" id="hc-count-cash">— 個帳戶</span><div class="hc-avail" id="hc-avail-cash"></div></div><div class="mgmt-detail-actions"><button class="btn-add" onclick="addItem('cash')">+ 新增流動現金</button></div></header>
             <div class="holding-detail">
               <div class="section-card" id="section-cash">
                 <div class="section-body">
@@ -371,7 +361,6 @@
                     <tbody id="tb-cash"></tbody>
                   </table></div>
                   <div class="cash-cards" id="cash-cards"></div>
-                  <button class="btn-add" onclick="addItem('cash')">+ 新增流動現金</button>
                   <span class="section-avail" id="avail-cash" style="display:none"></span>
                 </div>
               </div>
@@ -530,7 +519,9 @@
      <div class="dwz-layout">
 
       <!-- ═══ 左欄：模擬參數（水平 row 版） ═══ -->
-      <aside class="dwz-left">
+      <details class="dwz-left" id="dwz-params" open>
+        <summary class="dwz-params-toggle">調整試算<span>年齡、報酬與支出</span></summary>
+        <div class="dwz-params-body">
         <header class="dwz-left-head">
           <h3 class="dwz-section-title compact">模擬參數 <span class="dwz-autocalc-badge">即時</span></h3>
           <div class="dwz-left-kpis">
@@ -630,7 +621,8 @@
             </div>
           </section>
         </div>
-      </aside>
+        </div>
+      </details>
 
       <!-- ═══ 右欄：曲線 + 分析 ═══ -->
       <main class="dwz-right">
@@ -735,7 +727,6 @@
       <section class="news-card">
         <div class="news-head">
           <div class="news-head-left">
-            <h3 class="news-title-main">比特幣新聞</h3>
             <span class="news-subtitle" id="news-subtitle">近 12 小時</span>
           </div>
           <div class="news-head-right">
@@ -775,10 +766,10 @@
         <span class="staking-hero-art" aria-hidden="true"><svg viewBox="0 0 400 220" xmlns="http://www.w3.org/2000/svg"><path d="M0 190 90 143 165 167 252 85 320 110 400 35V220H0" fill="#c3e0f5"/><path d="M0 178 90 131 165 155 252 73 320 98 400 23" fill="none" stroke="#78b8e2" stroke-width="3"/><circle cx="205" cy="114" r="69" fill="#2176b3"/><circle cx="205" cy="114" r="57" fill="none" stroke="#9bd0ef" stroke-width="2"/><text x="205" y="143" font-family="sans-serif" font-size="81" text-anchor="middle" fill="#fff">₿</text></svg></span>
         <div class="staking-total-label">可優先變現總額</div>
         <div class="staking-total-num" id="staking-total">—</div>
-        <div class="staking-sub">現在持倉 vs 2025/10/01 基準 — 數量增加的部分視為質押收益，需要用錢時優先變現這部分、不動本金。差異含期間手動買賣的淨效果，解讀時注意。</div>
+        <div class="staking-sub">與 2025/10/01 基準比較。正數差額換算為可優先變現額；數量變化包含買賣與收益，不等同純質押收益。</div>
       </section>
       <section class="staking-card">
-        <h3 class="staking-title">質押被動收入</h3>
+        <h3 class="staking-title">持倉數量變化</h3>
         <div id="staking-list" class="staking-list"></div>
       </section>
     </div><!-- /tab-staking -->
@@ -828,7 +819,7 @@
     </div>
     <div class="roi-foot-actions">
       <button class="btn-cancel" onclick="resetROIToPresets()">↺ 重置為預設</button>
-      <button class="btn-ok" id="roi-drawer-apply">套用到 DWZ</button>
+      <button class="btn-ok" id="roi-drawer-apply">套用到人生規劃</button>
     </div>
   </footer>
 </aside>
@@ -888,6 +879,6 @@
 <!-- ── Toast ── -->
 <div class="toast" id="toast"></div>
 
-<script src="app.js?v=202609221609"></script>
+<script src="app.js?v=202609252029"></script>
 </body>
 </html>

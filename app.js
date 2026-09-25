@@ -4,7 +4,7 @@
 // 應用版本號 — 重大功能變更才升版（小修補只更新 BUILD_DATE）
 const APP_VERSION = 'v1.0';
 // Build 時間：每次修改 code 後手動更新此時間（UTC+8 台北時間）
-const BUILD_DATE = '2026/09/22 16:09';
+const BUILD_DATE = '2026/09/25 20:29';
 
 const SPREADSHEET_ID = '1lpRpxVzWaYUqL-jVPOAJCtjsJUIedPYYyOx4gg4PPFU';
 const CLIENT_ID = '149884248440-85f8dhc6ub9up10sv0f89e3e0itrnooj.apps.googleusercontent.com';
@@ -1441,7 +1441,7 @@ function renderHoldingCards() {
     (parseFloat(b[1])||0)*(S.prices.crypto[b[0]?.toUpperCase()]||0) -
     (parseFloat(a[1])||0)*(S.prices.crypto[a[0]?.toUpperCase()]||0))
     .slice(0,5).map(r => r[0]?.toUpperCase()).filter(Boolean).join(' · ');
-  setHC('crypto', cryRows.length, cryTot, inv.cry, crySyms, 'holdings');
+  setHC('crypto', cryRows.length, cryTot, inv.cry, crySyms, '檔持倉');
 
   // US
   const usRows = S.data.us || [];
@@ -1449,7 +1449,7 @@ function renderHoldingCards() {
   const usSyms = usRows.slice().sort((a,b) =>
     (parseFloat(b[1])||0)*(S.prices.us[b[0]]||0) - (parseFloat(a[1])||0)*(S.prices.us[a[0]]||0))
     .slice(0,5).map(r => r[0]).filter(Boolean).join(' · ');
-  setHC('us', usRows.length, usTot, inv.us, usSyms, 'holdings');
+  setHC('us', usRows.length, usTot, inv.us, usSyms, '檔持倉');
 
   // TW
   const twRows = S.data.tw || [];
@@ -1457,7 +1457,7 @@ function renderHoldingCards() {
   const twSyms = twRows.slice().sort((a,b) =>
     (parseFloat(b[1])||0)*(S.prices.tw[b[0]]||0) - (parseFloat(a[1])||0)*(S.prices.tw[a[0]]||0))
     .slice(0,5).map(r => r[0]).filter(Boolean).join(' · ');
-  setHC('tw', twRows.length, twTot, inv.tw, twSyms, 'holdings');
+  setHC('tw', twRows.length, twTot, inv.tw, twSyms, '檔持倉');
 
   // Cash — 含 USDT TWD 折算（與 renderCash 顯示總計一致）
   const cashRows = S.data.cash || [];
@@ -1469,7 +1469,7 @@ function renderHoldingCards() {
     ...cashRows.map(r => (r[2]||'').toUpperCase()).filter(Boolean),
     ...(usdtTWD > 0 ? ['USDT'] : [])
   ])].slice(0, 5).join(' · ');
-  setHC('cash', cashCount, cashTot, null, currencies, 'accounts');
+  setHC('cash', cashCount, cashTot, null, currencies, '個帳戶');
 
   // 可用現金 = 流動現金總額（含 USDT）− 月生活支出預算
   const availEl = $('hc-avail-cash');
@@ -4205,7 +4205,8 @@ function renderTrend() {
         borderColor: cc.line1,
         borderWidth: 2.5,
         tension: 0.42,
-        pointRadius: 4,
+        pointRadius: 0,
+        pointHitRadius: 12,
         pointHoverRadius: 7,
         pointBackgroundColor: cc.line1,
         pointBorderColor: 'transparent',
@@ -4229,7 +4230,7 @@ function renderTrend() {
       },
       scales: {
         x: { offset: false, grid: { display: false }, ticks: { color: cc.tick, font: { size: 10 }, maxTicksLimit: 6, maxRotation: 0 }, border: { display: false } },
-        y: { display: false },
+        y: { display: true, grid: { color: 'rgba(120,140,160,.12)' }, border: { display: false }, ticks: { maxTicksLimit: 3, color: cc.tick, font: { size: 10 }, callback: value => fmtWan(value) } },
       },
     },
   });
@@ -4525,43 +4526,43 @@ async function loadBtcMarketData(force = false) {
 // MARKET INDICATORS — 閾值、評分、聚合
 // ══════════════════════════════════════════════════════════════
 const INDICATOR_DEFS = {
-  coinbase_rank:  { label: 'Coinbase APP Ranking', input: 'number', range: [1, 100], src: 'https://www.similarweb.com/app/google-play/com.coinbase.android/statistics/', manual: true,
+  coinbase_rank:  { label: 'Coinbase 應用程式排名', description: '觀察交易所 App 的關注程度。', input: 'number', range: [1, 100], src: 'https://www.similarweb.com/app/google-play/com.coinbase.android/statistics/', manual: true,
     thresholds: '頂 ≤5 · 中 21–50 · 底 >50',
     score: v => v == null ? null : v <= 5 ? 1 : v <= 20 ? 0.5 : v <= 50 ? 0 : -0.3,
     fmt:   v => v == null ? '—' : '#' + v },
-  google_trends:  { label: 'Bitcoin Google Trends', input: 'number', range: [0, 100], src: 'https://trends.google.com.tw/trends/explore?q=bitcoin', manual: true,
+  google_trends:  { label: '比特幣搜尋熱度', description: '觀察搜尋關注度的變化。', input: 'number', range: [0, 100], src: 'https://trends.google.com.tw/trends/explore?q=bitcoin', manual: true,
     thresholds: '底 <25 · 中 25–74 · 頂 ≥75',
     score: v => v == null ? null : v >= 75 ? 1 : v >= 50 ? 0.5 : v >= 25 ? 0 : -0.5,
     fmt:   v => v == null ? '—' : String(v) },
-  nupl:           { label: 'NUPL', input: 'number', range: [-1, 1], step: 0.01, src: 'https://www.bitcoinmagazinepro.com/charts/relative-unrealized-profit--loss/', manual: true,
+  nupl:           { label: '未實現損益（NUPL）', description: '觀察整體持有者未實現獲利與虧損的狀態。', input: 'number', range: [-1, 1], step: 0.01, src: 'https://www.bitcoinmagazinepro.com/charts/relative-unrealized-profit--loss/', manual: true,
     thresholds: '底 <0 · 中 0.25–0.5 · 頂 ≥0.75',
     score: v => v == null ? null : v >= 0.75 ? 1 : v >= 0.5 ? 0.5 : v >= 0.25 ? 0 : v >= 0 ? -0.3 : -1,
     fmt:   v => v == null ? '—' : v.toFixed(2) },
-  rainbow:        { label: 'Rainbow Chart 色帶', input: 'select', options: ['深藍','藍','綠','黃','橘','紅','深紅'], src: 'https://www.coinglass.com/zh-TW/pro/i/bitcoin-rainbow-chart', manual: true,
+  rainbow:        { label: '彩虹圖色帶', description: '以價格所處色帶觀察長期估值位置。', input: 'select', options: ['深藍','藍','綠','黃','橘','紅','深紅'], src: 'https://www.coinglass.com/zh-TW/pro/i/bitcoin-rainbow-chart', manual: true,
     thresholds: '底 深藍 · 中 黃 · 頂 深紅',
     score: v => v == null ? null : ({'深紅':1,'紅':0.7,'橘':0.3,'黃':0,'綠':-0.3,'藍':-0.7,'深藍':-1}[v] ?? null),
     fmt:   v => v ?? '—' },
-  mvrv_z:         { label: 'MVRV Z-Score', input: 'number', range: [-2, 15], step: 0.1, src: 'https://www.bitcoinmagazinepro.com/charts/mvrv-zscore/', manual: true,
+  mvrv_z:         { label: '市值估值（MVRV Z）', description: '比較市場市值與已實現市值的偏離程度。', input: 'number', range: [-2, 15], step: 0.1, src: 'https://www.bitcoinmagazinepro.com/charts/mvrv-zscore/', manual: true,
     thresholds: '底 <0 · 中 2–4 · 頂 ≥7',
     score: v => v == null ? null : v >= 7 ? 1 : v >= 4 ? 0.5 : v >= 2 ? 0 : v >= 0 ? -0.3 : -1,
     fmt:   v => v == null ? '—' : v.toFixed(2) },
-  mayer:          { label: 'Mayer Multiple', src: 'https://studio.glassnode.com/charts/btc-mayer-multiple', manual: false,
+  mayer:          { label: '200 日均線倍數', description: '比較現價與近 200 日平均價格。', src: 'https://studio.glassnode.com/charts/btc-mayer-multiple', manual: false,
     thresholds: '底 <0.8 · 中 1–1.5 · 頂 ≥2.4',
     score: v => v == null ? null : v >= 2.4 ? 1 : v >= 1.5 ? 0.3 : v >= 1 ? 0 : v >= 0.8 ? -0.3 : -1,
     fmt:   v => v == null ? '—' : v.toFixed(2) },
-  two_year_ma:    { label: '2-Year MA Multiple', src: 'https://www.bitcoinmagazinepro.com/charts/bitcoin-investor-tool/', manual: false,
+  two_year_ma:    { label: '兩年均線倍數', description: '比較現價與近兩年平均價格。', src: 'https://www.bitcoinmagazinepro.com/charts/bitcoin-investor-tool/', manual: false,
     thresholds: '底 <1× · 中 1.5–3× · 頂 ≥5×',
     score: v => v == null ? null : v >= 5 ? 1 : v >= 3 ? 0.5 : v >= 1.5 ? 0 : v >= 1 ? -0.3 : -1,
     fmt:   v => v == null ? '—' : v.toFixed(2) + '×' },
-  pi_cycle:       { label: 'Pi Cycle Top', src: 'https://www.coinglass.com/zh-TW/bull-market-peak-signals', manual: false,
+  pi_cycle:       { label: '週期均線比值', description: '比較 111 日均線與兩倍 350 日均線。', src: 'https://www.coinglass.com/zh-TW/bull-market-peak-signals', manual: false,
     thresholds: '底 <0.5× · 中 0.7–0.95× · 頂 ≥1.0×',
     score: v => v == null ? null : v >= 1.05 ? 1 : v >= 0.95 ? 0.5 : v >= 0.7 ? 0 : v >= 0.5 ? -0.3 : -0.7,
     fmt:   v => v == null ? '—' : v.toFixed(2) + '×' },
-  ahr999:         { label: 'AHR999', src: 'https://www.coinglass.com/zh-TW/bull-market-peak-signals', manual: false,
+  ahr999:         { label: 'AHR999 估值指標', description: '觀察現價相對於 200 日幾何均價與模型估值的位置。', src: 'https://www.coinglass.com/zh-TW/bull-market-peak-signals', manual: false,
     thresholds: '底 <0.45 · 中 0.45–1.2 · 頂 ≥1.2',
     score: v => v == null ? null : v >= 1.2 ? 1 : v >= 0.85 ? 0.3 : v >= 0.45 ? 0 : -1,
     fmt:   v => v == null ? '—' : v.toFixed(2) },
-  dominance:      { label: 'BTC Dominance', src: 'https://coinstats.app/btc-dominance/', manual: false,
+  dominance:      { label: '比特幣市占率', description: '觀察比特幣占整體加密市場市值的比例。', src: 'https://coinstats.app/btc-dominance/', manual: false,
     thresholds: '頂 <40% · 中 50–60% · 底 >70%',
     score: v => v == null ? null : v < 40 ? 1 : v < 50 ? 0.3 : v < 60 ? 0 : v < 70 ? -0.3 : -0.7,
     fmt:   v => v == null ? '—' : v.toFixed(1) + '%' },
@@ -4716,8 +4717,9 @@ function renderIndicatorCard(id) {
           ${def.manual ? `<button class="ind-card-edit" title="更新" aria-label="更新${esc(def.label)}" onclick="openIndicatorEdit('${id}')">✏︎</button>` : ''}
         </span>
       </div>
+      <p class="ind-card-description">${esc(def.description)}</p>
       <div class="ind-card-value">${esc(def.fmt(v))}</div>
-      ${def.thresholds ? `<div class="ind-card-thresh">${esc(def.thresholds)}</div>` : ''}
+      ${def.thresholds ? `<details class="ind-reading"><summary>查看判讀區間</summary><div class="ind-card-thresh">${esc(def.thresholds)}</div></details>` : ''}
       <div class="ind-gauge"><div class="ind-gauge-fill ${sig === 'unknown' ? '' : sig}" style="width:${fillPct}%"></div></div>
       <div class="ind-card-foot">
         <span class="ind-card-signal ${sig}">${sigText}</span>
@@ -6540,7 +6542,24 @@ function _calcStratLabInflow() {
   };
 }
 
+function syncDWZParamsLayout() {
+  const params = $('dwz-params');
+  if (!params) return;
+  const mobile = window.matchMedia('(max-width: 900px)').matches;
+  const layout = mobile ? 'mobile' : 'desktop';
+  if (params.dataset.layout === layout) return;
+  const right = document.querySelector('.dwz-right');
+  const container = document.querySelector('.dwz-layout');
+  if (!right || !container) return;
+  if (mobile) right.insertBefore(params, right.querySelector('.dwz-insights'));
+  else container.insertBefore(params, right);
+  params.open = !mobile;
+  params.dataset.layout = layout;
+}
+window.addEventListener('resize', syncDWZParamsLayout);
+
 function renderDWZ() {
+  syncDWZParamsLayout();
   _saveDWZParams();
 
   const currentAge  = _dwzParam('dwz-age');
@@ -7355,7 +7374,7 @@ function renderStaking() {
 
   const gainSubtotal = totalGainTWD > 0 ? '小計 ' + fmt(totalGainTWD) : '';
   const html =
-    sectionHTML('質押收益（建議優先變現）', gainSubtotal, gains) +
+    sectionHTML('數量增加（可優先變現）', gainSubtotal, gains) +
     sectionHTML('10/1 後新增持倉', '無基準可比', newOnes) +
     sectionHTML('數量減少 / 出清', '', downs) +
     sectionHTML('無變動', '', stables);

@@ -3622,3 +3622,29 @@ body.amounts-hidden :is(#trend-date-value, .ovx-holding-value) { filter: blur(7p
 .asset-explorer #tab-indicators .ind-card.ind-mid { border-top: 3px solid var(--warning, #d4aa4d); }
 .asset-explorer #tab-indicators .ind-card.ind-bottom { border-top: 3px solid var(--success); }
 .asset-explorer #tab-news .news-head-left { justify-items: start; text-align: left; }
+
+/* 精簡摘要後的明細層級，保留原有掛載點。 */
+.asset-explorer #tab-management :is(#hb-cash,#hb-tw,#hb-us,#hb-crypto) > .holding-card { display: none !important; }
+.asset-explorer #tab-management .mgmt-detail-head { display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; padding: 20px 24px 12px; }
+.asset-explorer #tab-management .mgmt-detail-head h2 { display: inline; font-size: 18px; margin: 0 12px 0 0; }
+.asset-explorer #tab-management .mgmt-detail-head .hc-count { color: var(--text-muted); font-size: 12px; }
+.asset-explorer #tab-management .mgmt-detail-head :is(.hc-change,.hc-avail) { color: var(--text-secondary); font-size: 13px; margin-top: 8px; }
+.asset-explorer #tab-management .mgmt-detail-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.asset-explorer #tab-management .mgmt-detail-actions .btn-add { min-height: 44px; margin: 0; }
+.asset-explorer #tab-management #avail-cash { display: none !important; }
+.asset-explorer #tab-news .news-zone:has(#news-list-en) { background: transparent; border: 0; box-shadow: none; padding: 0; }
+.asset-explorer #tab-news .news-head { padding-top: 0; }
+.asset-explorer #tab-indicators .ind-card-description { color: var(--text-secondary); font-size: 13px; line-height: 1.8; margin: 12px 0 0; }
+.asset-explorer #tab-indicators .ind-reading { margin-bottom: 14px; }
+.asset-explorer #tab-indicators .ind-reading summary { display: flex; align-items: center; min-height: 44px; color: var(--accent); cursor: pointer; font-size: 12px; }
+.asset-explorer #tab-indicators .ind-reading summary::after { content: '＋'; margin-left: auto; }
+.asset-explorer #tab-indicators .ind-reading[open] summary::after { content: '−'; }
+.asset-explorer #tab-indicators .ind-reading .ind-card-thresh { min-height: 0; margin: 0; }
+.asset-explorer #dwz-params .dwz-params-toggle { min-height: 44px; display: flex; align-items: center; flex-wrap: wrap; gap: 8px 16px; cursor: pointer; font-size: 15px; font-weight: 600; }
+.asset-explorer #dwz-params .dwz-params-toggle span { font-size: 12px; font-weight: 400; color: var(--text-muted); }
+.asset-explorer #dwz-params .dwz-params-toggle::after { content: '＋'; margin-left: auto; color: var(--accent); }
+.asset-explorer #dwz-params[open] .dwz-params-toggle::after { content: '−'; }
+.asset-explorer #dwz-params .dwz-params-toggle::-webkit-details-marker { display: none; }
+.asset-explorer #dwz-params .dwz-params-body { padding-top: 16px; }
+.asset-explorer #dwz-params[data-layout="mobile"] { position: static; max-height: none; width: 100%; box-sizing: border-box; }
+.asset-explorer :is(.dwz-params-toggle,.ind-reading summary):focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; border-radius: 6px; }
