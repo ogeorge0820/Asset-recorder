@@ -3662,3 +3662,19 @@ body.amounts-hidden :is(#trend-date-value, .ovx-holding-value) { filter: blur(7p
 @media (min-width: 769px) {
   .asset-explorer #tab-overview .ov2-hero-trend { height: 260px !important; min-height: 260px !important; }
 }
+
+/* 漲跌獨立於總額，寬版利用中欄、窄版接在名稱下方。 */
+.asset-explorer #tab-overview .ovx-row { display: grid; grid-template-columns: auto minmax(0,1fr) auto auto; gap: 4px 12px; }
+.asset-explorer #tab-overview .ovx-icon { grid-column: 1; grid-row: 1; }
+.asset-explorer #tab-overview .ovx-title { grid-column: 2; grid-row: 1; }
+.asset-explorer #tab-overview .ovx-value { grid-column: 3; grid-row: 1; }
+.asset-explorer #tab-overview .ovx-chevron { grid-column: 4; grid-row: 1; }
+.asset-explorer #tab-overview .ovx-change { grid-column: 2 / 4; grid-row: 2; display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 8px; margin: 0; font-variant-numeric: tabular-nums; }
+.asset-explorer #tab-overview .ovx-change-window { display: inline; }
+body.amounts-hidden .ovx-change { filter: blur(7px) !important; pointer-events: none; user-select: none; }
+@media (min-width: 769px) {
+  .asset-explorer #tab-overview .ovx-row { grid-template-columns: auto minmax(120px,1fr) minmax(0,auto) auto auto; column-gap: 16px; }
+  .asset-explorer #tab-overview .ovx-change { grid-column: 3; grid-row: 1; justify-content: flex-end; }
+  .asset-explorer #tab-overview .ovx-value { grid-column: 4; }
+  .asset-explorer #tab-overview .ovx-chevron { grid-column: 5; }
+}

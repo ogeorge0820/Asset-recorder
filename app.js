@@ -4,7 +4,7 @@
 // 應用版本號 — 重大功能變更才升版（小修補只更新 BUILD_DATE）
 const APP_VERSION = 'v1.0';
 // Build 時間：每次修改 code 後手動更新此時間（UTC+8 台北時間）
-const BUILD_DATE = '2026/09/25 20:37';
+const BUILD_DATE = '2026/09/25 20:43';
 
 const SPREADSHEET_ID = '1lpRpxVzWaYUqL-jVPOAJCtjsJUIedPYYyOx4gg4PPFU';
 const CLIENT_ID = '149884248440-85f8dhc6ub9up10sv0f89e3e0itrnooj.apps.googleusercontent.com';
@@ -1597,7 +1597,8 @@ function renderOvxAssets() {
       <summary class="ovx-row" aria-label="展開${c.name}持倉">
         <span class="ovx-icon">${c.icon}</span>
         <span class="ovx-title">${c.name}<small>${c.unit}</small></span>
-        <span class="ovx-value">${vals[c.id] > 0 ? fmt(vals[c.id]) : '—'}<small>TWD</small>${renderOvxChange(changes[c.id], c.id)}</span>
+        <span class="ovx-value">${vals[c.id] > 0 ? fmt(vals[c.id]) : '—'}<small>TWD</small></span>
+        ${renderOvxChange(changes[c.id], c.id)}
         <span class="ovx-chevron" aria-hidden="true">›</span>
       </summary>
       <div class="ovx-holdings">
