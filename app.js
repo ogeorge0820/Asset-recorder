@@ -4,7 +4,7 @@
 // 應用版本號 — 重大功能變更才升版（小修補只更新 BUILD_DATE）
 const APP_VERSION = 'v1.0';
 // Build 時間：每次修改 code 後手動更新此時間（UTC+8 台北時間）
-const BUILD_DATE = '2026/10/01 20:58';
+const BUILD_DATE = '2026/10/01 23:03';
 
 const SPREADSHEET_ID = '1lpRpxVzWaYUqL-jVPOAJCtjsJUIedPYYyOx4gg4PPFU';
 const CLIENT_ID = '149884248440-85f8dhc6ub9up10sv0f89e3e0itrnooj.apps.googleusercontent.com';
@@ -693,9 +693,17 @@ async function saveSheet(name, dataRows) {
     throw new Error(msg);
   }
   _SHEET_HIGH_WATER[name] = Math.max(known, newSize);
-  const values = [HEADERS[name], ...dataRows.map(r => r.map(v => v ?? ''))];
-  await sheetClear(`${name}!A:Z`);   // 先清空，防止刪除後舊列殘留
+  // 先整批覆寫、最後才清尾：舊做法「先清空再寫回」若寫回沒送達（斷網、手機切走），
+  // 會留下連標題都沒有的空表，下次開 app 守門看到 0 列就放行，歷史只剩當天（2026/09/30 事故）。
+  // 每列補空字串到欄寬、刪掉的列補空白列，讓單次覆寫就蓋掉舊內容，不殘留舊欄位或舊列。
+  const width = HEADERS[name].length;
+  const pad = r => { const row = r.map(v => v ?? ''); while (row.length < width) row.push(''); return row; };
+  const values = [HEADERS[name], ...dataRows.map(pad)];
+  for (let i = newSize; i < known; i++) values.push(Array(width).fill(''));
   await sheetPut(`${name}!A1`, values);
+  // 清尾只是收拾已知範圍外的殘列；格線剛好用滿時 API 會報超出範圍，資料此時已正確寫入，不當失敗
+  try { await sheetClear(`${name}!A${values.length + 1}:Z`); }
+  catch (e) { console.warn(`[saveSheet] ${name} 清尾略過：`, e.message || e); }
 }
 
 // ══════════════════════════════════════════════════════════════
