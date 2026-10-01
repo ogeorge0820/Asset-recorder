@@ -103,3 +103,30 @@ test('首頁漲跌呈現保留正負、缺值與來源期間，不把月底資�
  assert.equal(run(current,`renderOvxChange(null,'cash')`),'');
  assert.equal(run(current,`renderOvxChange(null,'insurance')`),'');
 });
+
+function dailyMiniMarkup(dates) {
+ return run(current,`(() => {
+   getNowTW8=()=> '2026/10/01 12:00';
+   S.data.daily_snapshots=${JSON.stringify(dates)}.map(date=>[date,0,100000+Number(date.split(/[/\\-]/).at(-1))*100,200000,300000]);
+   const before=JSON.stringify(S.data.daily_snapshots);
+   document.documentElement={dataset:{theme:'light'}};
+   const wrap={innerHTML:''};
+   document.getElementById=id=>id==='daily-mini-bars'?wrap:null;
+   renderDailyTrend();
+   if(before!==JSON.stringify(S.data.daily_snapshots)) throw new Error('圖表修改原始資料');
+   return wrap.innerHTML;
+ })()`);
+}
+test('近十四天跨月支援未補零及斜線／短橫線日期，不排除九月歷史',()=>{
+ const dates=Array.from({length:15},(_,i)=>`2026/9/${16+i}`);
+ const markup=dailyMiniMarkup(dates);
+ assert.equal((markup.match(/data-tip=/g)||[]).length,14);
+ assert.match(markup,/09\/30/);
+ assert.match(markup,/10\/01 ▸ 即時/);
+ assert.equal((markup.match(/無資料/g)||[]).length,0);
+ assert.equal(dailyMiniMarkup(dates.map(d=>d.replaceAll('/','-'))),markup);
+});
+test('每日圖表只排序讀取副本，亂序日期仍保留十四天且不修改資料',()=>{
+ const dates=Array.from({length:15},(_,i)=>`2026/09/${16+i}`).reverse();
+ assert.equal(dailyMiniMarkup(dates),dailyMiniMarkup([...dates].reverse()));
+});

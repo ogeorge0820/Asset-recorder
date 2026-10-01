@@ -4,7 +4,7 @@
 // 應用版本號 — 重大功能變更才升版（小修補只更新 BUILD_DATE）
 const APP_VERSION = 'v1.0';
 // Build 時間：每次修改 code 後手動更新此時間（UTC+8 台北時間）
-const BUILD_DATE = '2026/09/25 20:43';
+const BUILD_DATE = '2026/10/01 20:58';
 
 const SPREADSHEET_ID = '1lpRpxVzWaYUqL-jVPOAJCtjsJUIedPYYyOx4gg4PPFU';
 const CLIENT_ID = '149884248440-85f8dhc6ub9up10sv0f89e3e0itrnooj.apps.googleusercontent.com';
@@ -3890,7 +3890,17 @@ function renderDailyTrend() {
   // ⚠ 關鍵修正：排除今日的快照（若有），避免晨間存下的舊值覆蓋即時值，
   //   造成圖表與「投資收益」KPI 不一致
   const todayStr = getNowTW8().slice(0, 10);
-  const recent = snaps.filter(s => s[0] < todayStr).slice(-15);
+  // Sheet 顯示日期可能未補零；先正規化並排序副本，避免跨月文字比較排除歷史。
+  const recent = snaps.map(row => {
+    const match = String(row[0] || '').trim().match(/^(\d{4})[/-](\d{1,2})[/-](\d{1,2})$/);
+    if (!match) return null;
+    const [, year, month, day] = match;
+    const parsed = new Date(Date.UTC(+year, +month - 1, +day));
+    if (parsed.getUTCFullYear() !== +year || parsed.getUTCMonth() !== +month - 1 || parsed.getUTCDate() !== +day) return null;
+    const date = `${year}/${month.padStart(2, '0')}/${day.padStart(2, '0')}`;
+    return [date, ...row.slice(1)];
+  }).filter(row => row && row[0] < todayStr)
+    .sort((a, b) => a[0].localeCompare(b[0])).slice(-15);
 
   function dateStr(d) {
     return `${d.getFullYear()}/${String(d.getMonth()+1).padStart(2,'0')}/${String(d.getDate()).padStart(2,'0')}`;
