@@ -3734,3 +3734,40 @@ body.amounts-hidden :is(#overview-attention-title,#overview-attention-copy) { fi
   .asset-explorer #tab-management .holdings-grid .asset-card::after { width: auto; min-width: 42px; flex-shrink: 0; white-space: nowrap; }
   .asset-explorer #tab-management #mgmt-subnav > button { padding: 16px 20px; min-height: 104px; }
 }
+
+/* 桌機首屏以摘要與持倉為主，避免重複留白推走內容。 */
+@media (min-width: 769px) {
+  .asset-explorer #tab-overview { gap: 16px; }
+  .asset-explorer #tab-overview .explorer-welcome { margin: 0; padding-bottom: 0; }
+  .asset-explorer #tab-overview .explorer-welcome h1 { font-size: 24px; margin: 0; }
+  .asset-explorer #tab-overview .explorer-welcome p { margin: 6px 0 0; }
+  .asset-explorer #tab-overview .ov2-top-row { gap: 16px; min-height: 0; }
+  .asset-explorer #tab-overview .ov2-hero { padding: 20px; }
+  .asset-explorer #tab-overview .ov2-hero-head { gap: 16px; margin-bottom: 0; }
+  .asset-explorer #tab-overview .ov2-hero-primary { flex: 1 1 210px; }
+  .asset-explorer #tab-overview .overview-facts { margin-top: 0; flex: 1 1 240px; min-width: 240px; }
+  .asset-explorer #tab-overview .ov2-hero-num { font-size: 40px; }
+  .asset-explorer #tab-overview .ov2-chart-heading { margin: 12px 0 8px; }
+  .asset-explorer #tab-overview .ov2-hero-trend { height: 180px !important; min-height: 180px !important; }
+  .asset-explorer #tab-overview .ov2-chart-caption { margin-top: 6px; gap: 8px; flex-wrap: wrap; }
+  .asset-explorer #tab-overview .trend-date-control { grid-template-columns: auto minmax(80px,1fr) auto; gap: 10px; margin-top: 8px; padding-top: 4px; }
+  .asset-explorer #tab-overview #trend-date-value { grid-column: auto; font-size: 11px; }
+  .asset-explorer #tab-overview .overview-side { gap: 12px; }
+  .asset-explorer #tab-overview .ov2-alloc-card { padding: 18px !important; }
+  .asset-explorer #tab-overview .ov2-alloc-card .pie-canvas { width: 140px !important; height: 140px !important; margin: 8px auto 12px; }
+  .asset-explorer #tab-overview .pie-legend { gap: 8px; }
+  .asset-explorer #tab-overview .overview-attention { padding: 12px !important; }
+  .asset-explorer #tab-overview .ovx-lower { gap: 16px; margin-top: 0; }
+  .asset-explorer #tab-overview .ovx-assets { padding: 18px; }
+  .asset-explorer #tab-overview .ovx-row { padding-top: 12px; padding-bottom: 12px; }
+}
+@media (min-width: 1200px) {
+  .asset-explorer #tab-overview .ov2-alloc-card .pie-wrap { display: grid !important; grid-template-columns: 140px minmax(0,1fr); align-items: center; gap: 12px; }
+  .asset-explorer #tab-overview .ov2-alloc-card .pie-canvas { margin: 12px 0; }
+  .asset-explorer #tab-overview .pie-legend-item { flex-wrap: wrap; gap: 4px 8px; }
+}
+@media (min-width: 1200px) {
+  .asset-explorer #tab-overview .pie-legend li { display: grid; grid-template-columns: minmax(0,1fr) auto; gap: 2px 6px; }
+  .asset-explorer #tab-overview .pie-legend .pl-name { overflow: visible; white-space: normal; text-overflow: clip; }
+  .asset-explorer #tab-overview .pie-legend .pl-amt { grid-column: 1 / -1; text-align: right; font-size: 11px; }
+}
