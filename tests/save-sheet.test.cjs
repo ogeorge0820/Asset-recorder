@@ -7,7 +7,7 @@ const source=fs.readFileSync(path.join(__dirname,'..','app.js'),'utf8');
 
 // 模擬一張 Google Sheet：讀取時去掉尾端空格與空列（同 Sheets API），寫入逐格覆蓋
 function appWithSheet(name,initialRows){
- const sheet={rows:initialRows.map(r=>[...r]),failPut:false};
+ const sheet={rows:initialRows.map(r=>[...r]),failPut:false,blindRead:false};
  const ctx=vm.createContext({document:{addEventListener(){},getElementById(){return {textContent:'',className:''}}},localStorage:{getItem(){return null}},console:{error(){},log(){},warn(){}},Chart:{register(){},defaults:{font:{}},Tooltip:{positioners:{}}},setTimeout(){},clearTimeout(){},setInterval(){},window:{addEventListener(){}}});
  vm.runInContext(source,ctx);
  const read=range=>{
@@ -17,7 +17,7 @@ function appWithSheet(name,initialRows){
   return out;
  };
  ctx.fake={
-  get:async range=>read(range),
+  get:async range=>sheet.blindRead?[]:read(range),
   clear:async range=>{const from=Number((range.match(/!A(\d*):Z$/)||[])[1]||1)-1;for(let i=from;i<sheet.rows.length;i++)sheet.rows[i]=[];},
   put:async(range,values)=>{
    if(sheet.failPut)throw new Error('模擬斷線：寫入沒送達');
@@ -53,13 +53,15 @@ test('刪除一列後表上不殘留舊尾列，也不殘留舊列的尾端欄�
  assert.deepEqual(app.read('expense_budget!A:Z'),[header,['浮動','電費','1500'],['浮動','水費','300']]);
 });
 
-test('最後清尾失敗（格線剛好用滿）不算存檔失敗，刪除結果仍正確',async()=>{
- const app=appWithSheet('expense_budget',[]);
- const header=app.header;
- app.sheet.rows=[header,['固定','房貸','41039','信用卡','2027-01','b_1'],['浮動','電費','1500','','','b_2']];
- vm.runInContext('sheetClear=async()=>{throw new Error("exceeds grid limits")}',app.ctx);
- await app.save([['浮動','電費','1500','','','b_2']]);
- assert.deepEqual(app.read('expense_budget!A:Z'),[header,['浮動','電費','1500','','','b_2']]);
+test('Google 連續兩次誤報空表時，最多蓋掉一列，其餘歷史保留',async()=>{
+ const history=dailyRows(170);
+ const app=appWithSheet('daily_snapshots',[app0Header(),...history]);
+ app.sheet.blindRead=true;
+ await app.save([['2026/10/02','1','2','3','4','5','6','7','8','{}']]);
+ app.sheet.blindRead=false;
+ const after=app.read('daily_snapshots!A:J');
+ assert.equal(after.length-1,170,'總列數不變，沒有被整片抹掉');
+ assert.deepEqual(after.slice(2),history.slice(1),'被蓋掉的只有第一列，其餘 169 列原封不動');
 });
 
 test('新增一列照常寫入，表上內容與記憶體一致',async()=>{

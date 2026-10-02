@@ -60,15 +60,15 @@ async function captureWrite(source, count, rows){
  try { await vm.runInContext("saveSheet('cash_accounts',testRows)",ctx); } catch(e){error=e.message;}
  return {operations,error};
 }
-test('寫入欄位與 v1.1 相同，但改為先整批覆寫、最後才清尾（不再先清空整張表）',async()=>{
+test('寫入欄位與 v1.1 相同，但改為單次覆寫已知列（不再先清空整張表、不清開放範圍）',async()=>{
  const rows=[['示意帳戶',10000,'TWD']];
  const result=await captureWrite(current,2,rows);
  const before=await captureWrite(baseline,2,rows);
  assert.equal(result.error,null);
- assert.deepEqual(result.operations.map(o=>o.method),['put','clear']);
+ assert.deepEqual(result.operations.map(o=>o.method),['put']);
+ assert.equal(result.operations[0].range,'cash_accounts!A1');
  assert.deepEqual(result.operations[0].values.slice(0,2),before.operations[1].values);
  assert.deepEqual(result.operations[0].values.slice(2),[['','','']]);
- assert.equal(result.operations[1].range,'cash_accounts!A4:Z');
 });
 test('列數異常減少時仍拒寫，完全不清除資料',async()=>{
  const result=await captureWrite(current,8,[['示意帳戶',10000,'TWD']]);

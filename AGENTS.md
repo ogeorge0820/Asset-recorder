@@ -27,7 +27,7 @@
 - 2026/05/04 發生過 daily_snapshots 整片被抹掉的事故（commit `0db7b51` 為修補）。
 - `rows(settled, label)` 對 rejected Promise **不能靜默回 `[]`**，必須帶 `_failed` 旗標讓 `loadAll` 末段偵測到並 `throw`。
 - `saveSheet` 內部維護 `_SHEET_HIGH_WATER`，若記憶體陣列比本 session 看過的最大列數縮水超過一半就 throw 拒寫——**不要拿掉這個 guard**。
-- `saveSheet` 寫入順序必須是「**先整批覆寫（短列補空字串、刪掉的列補空白列）→ 最後才清尾**」，**絕對不要改回「先 `sheetClear` 整張再寫回」**。2026/09/30 事故：先清空後寫回沒送達（手機切走／斷網），留下連標題都沒有的空表，下次開 app 守門看到 0 列放行，daily_snapshots 只剩當天（靠 Google 版本記錄救回）。測試 `tests/save-sheet.test.cjs` 鎖住這個行為。
+- `saveSheet` 必須是「**單次 `sheetPut` 覆寫（短列補空字串、刪掉的列補空白列到 known 列）**」，**絕對不要改回「先 `sheetClear` 整張再寫回」，也不要加回清開放範圍（如 `A{n}:Z`）的清尾**。2026/09/30 事故：先清空後寫回沒送達（手機切走／斷網），留下連標題都沒有的空表，下次開 app 守門看到 0 列放行，daily_snapshots 只剩當天（靠 Google 版本記錄救回）。只擦讀到過的列，是為了讀取連續誤回空表（6/14 類型）時最多蓋掉一列、不抹掉看不到的歷史。測試 `tests/save-sheet.test.cjs` 鎖住這兩個行為。
 - `loadAll` 末段會 seed 16 張 Sheet 的初始 size 到 high-water，加新 sheet 時記得補進去。
 
 ### `doSaveDailySnapshot()`（app.js 約 4684 行）
