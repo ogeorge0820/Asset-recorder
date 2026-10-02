@@ -3771,3 +3771,9 @@ body.amounts-hidden :is(#overview-attention-title,#overview-attention-copy) { fi
   .asset-explorer #tab-overview .pie-legend .pl-name { overflow: visible; white-space: normal; text-overflow: clip; }
   .asset-explorer #tab-overview .pie-legend .pl-amt { grid-column: 1 / -1; text-align: right; font-size: 11px; }
 }
+
+/* 舊 canvas 的 auto 尺寸會超出縮小後的外框，遮住相鄰圖例。 */
+@media (min-width: 769px) {
+  .asset-explorer #tab-overview .pie-canvas #pie-chart { display: block; width: 100% !important; height: 100% !important; max-width: 100% !important; max-height: 100% !important; }
+  .asset-explorer #tab-overview .pie-legend { min-width: 0; }
+}
