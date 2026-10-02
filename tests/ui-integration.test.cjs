@@ -111,6 +111,7 @@ test('首頁漲跌呈現保留正負、缺值與來源期間，不把月底資�
 function dailyMiniMarkup(dates) {
  return run(current,`(() => {
    getNowTW8=()=> '2026/10/01 12:00';
+   calcInvestDelta=()=>({anyValid:true,total:123});
    S.data.daily_snapshots=${JSON.stringify(dates)}.map(date=>[date,0,100000+Number(date.split(/[/\\-]/).at(-1))*100,200000,300000]);
    const before=JSON.stringify(S.data.daily_snapshots);
    document.documentElement={dataset:{theme:'light'}};
@@ -133,4 +134,28 @@ test('近十四天跨月支援未補零及斜線／短橫線日期，不排除�
 test('每日圖表只排序讀取副本，亂序日期仍保留十四天且不修改資料',()=>{
  const dates=Array.from({length:15},(_,i)=>`2026/09/${16+i}`).reverse();
  assert.equal(dailyMiniMarkup(dates),dailyMiniMarkup([...dates].reverse()));
+});
+
+test('管理搜尋與排序保留原始索引、不更動資料，USDT 仍只出現在現金',()=>{
+ const result=run(current,`(() => {
+   const before=JSON.stringify(S.data);
+   const cash=getMgmtViewItems('cash','usd','value');
+   const crypto=getMgmtViewItems('crypto','','value');
+   const tw=getMgmtViewItems('tw','2330','name');
+   return {cash,crypto,tw,unchanged:before===JSON.stringify(S.data)};
+ })()`);
+ assert.ok(result.unchanged);
+ assert.equal(result.cash.length,1);
+ assert.equal(result.cash[0].name,'USDT');
+ assert.equal(result.cash[0].type,'crypto');
+ assert.equal(result.cash[0].index,0);
+ assert.equal(result.crypto.some(item=>item.name==='USDT'),false);
+ assert.equal(result.tw[0].index,0);
+ assert.deepEqual(run(current,`getMgmtViewItems('tw','不存在')`),[]);
+});
+test('只有今日快照時十四天圖保留缺日空位，不把單根長條當完整歷史',()=>{
+ const markup=dailyMiniMarkup(['2026/10/01']);
+ assert.equal((markup.match(/data-tip=/g)||[]).length,14);
+ assert.equal((markup.match(/無資料/g)||[]).length,13);
+ assert.equal((markup.match(/▸ 即時/g)||[]).length,1);
 });

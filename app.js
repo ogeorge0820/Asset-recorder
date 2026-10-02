@@ -4,7 +4,7 @@
 // 應用版本號 — 重大功能變更才升版（小修補只更新 BUILD_DATE）
 const APP_VERSION = 'v1.0';
 // Build 時間：每次修改 code 後手動更新此時間（UTC+8 台北時間）
-const BUILD_DATE = '2026/10/02 12:43';
+const BUILD_DATE = '2026/10/02 23:40';
 
 const SPREADSHEET_ID = '1lpRpxVzWaYUqL-jVPOAJCtjsJUIedPYYyOx4gg4PPFU';
 const CLIENT_ID = '149884248440-85f8dhc6ub9up10sv0f89e3e0itrnooj.apps.googleusercontent.com';
@@ -1523,6 +1523,59 @@ function toggleDwzAdvanced() {
 
 // ── 管理頁分類切換（核准稿：pills 取代大卡逐張展開；四個 holding-block 一次只顯示一個）──
 let MGMT_CAT = 'cash';
+const MGMT_VIEW = Object.fromEntries(['cash','tw','us','crypto'].map(cat => [cat, { query: '', sort: 'value' }]));
+function getMgmtViewItems(cat, query = '', sort = 'value') {
+  const rate = S.prices.usdtwd || 0;
+  const items = (S.data[cat] || []).map((r, index) => {
+    const symbol = String(r[0] || '');
+    const price = S.prices[cat]?.[cat === 'crypto' ? symbol.toUpperCase() : symbol];
+    return { type: cat, index, name: symbol, value: cat === 'cash' ? cashToTWD(r) : (parseFloat(r[1]) || 0) * (price || 0) * (cat === 'tw' ? 1 : rate),
+      change: cat === 'cash' ? null : symDailyChangePct(cat, symbol, price) };
+  }).filter(item => cat !== 'crypto' || item.name.toUpperCase() !== 'USDT');
+  if (cat === 'cash') {
+    const index = (S.data.crypto || []).findIndex(r => r[0]?.toUpperCase() === 'USDT');
+    if (index >= 0 && +S.data.crypto[index][1] > 0) items.push({ type: 'crypto', index, name: 'USDT', value: +S.data.crypto[index][1] * rate, change: null });
+  }
+  const term = query.trim().toLocaleLowerCase();
+  return items.filter(item => item.name.toLocaleLowerCase().includes(term)).sort((a,b) => {
+    if (sort === 'name') return a.name.localeCompare(b.name, 'zh-TW');
+    if (sort === 'change') {
+      if (a.change == null) return b.change == null ? 0 : 1;
+      if (b.change == null) return -1;
+      return b.change - a.change;
+    }
+    return b.value - a.value;
+  });
+}
+function setMgmtView(cat, key, value) {
+  if (!MGMT_VIEW[cat] || !['query','sort'].includes(key)) return;
+  MGMT_VIEW[cat][key] = value;
+  applyMgmtView(cat);
+}
+function applyMgmtView(cat) {
+  const container = $(cat + '-cards');
+  if (!container) return;
+  const view = MGMT_VIEW[cat];
+  const items = getMgmtViewItems(cat, view.query, view.sort);
+  const order = new Map(items.map((item, rank) => [item.type + ':' + item.index, rank]));
+  const cards = [...container.querySelectorAll('.asset-card')];
+  const keyFor = card => {
+    const match = (card.getAttribute('onclick') || '').match(/openAssetDetail\('([^']+)',(\d+)\)/);
+    return match ? match[1] + ':' + match[2] : '';
+  };
+  cards.forEach(card => { card.hidden = !order.has(keyFor(card)); });
+  cards.sort((a,b) => (order.get(keyFor(a)) ?? Infinity) - (order.get(keyFor(b)) ?? Infinity)).forEach(card => container.appendChild(card));
+  const status = $('mgmt-results-' + cat);
+  if (status) {
+    status.hidden = !view.query.trim();
+    status.textContent = items.length ? `找到 ${items.length} 筆資產` : '找不到符合的資產，請調整搜尋文字。';
+  }
+}
+function setMgmtDensity(compact) {
+  $('tab-management').classList.toggle('mgmt-compact', compact);
+  document.querySelectorAll('.mgmt-density button').forEach(button => button.setAttribute('aria-pressed', String((button.textContent === '緊湊') === compact)));
+}
+
 function setMgmtCat(cat) {
   if (!['cash', 'tw', 'us', 'crypto'].includes(cat)) return;
   MGMT_CAT = cat;
@@ -1881,6 +1934,7 @@ function renderCash() {
 
   $('cash-cards').innerHTML = allCards ||
     '<div style="text-align:center;padding:20px;color:var(--muted);font-size:0.88rem">尚無帳戶</div>';
+  applyMgmtView('cash');
 }
 
 // 取昨日 daily_snapshots 某欄位數值（colIdx: 2=tw,3=us,4=crypto）
@@ -2032,6 +2086,7 @@ function renderTW() {
 
   $('tot-tw').textContent = fmt(totalTWTWD);
   updateSectionGain('gain-tw', totalTWTWD, 2);
+  applyMgmtView('tw');
 }
 
 function renderUS() {
@@ -2092,6 +2147,7 @@ function renderUS() {
 
   $('tot-us').textContent = fmt(totalUSTWD);
   updateSectionGain('gain-us', totalUSTWD, 3);
+  applyMgmtView('us');
 }
 
 function renderCrypto() {
@@ -2171,6 +2227,7 @@ function renderCrypto() {
 
   $('tot-crypto').textContent = fmt(totalCryptoTWD); // 顯示不含 USDT
   updateSectionGain('gain-crypto', gainTot, 4);       // 收益含 USDT，與快照對齊
+  applyMgmtView('crypto');
 }
 
 // ── 質押/活存收益記錄 ──────────────────────────────────────────
@@ -3887,8 +3944,16 @@ function renderDailyTrend() {
   const wrap = $('daily-mini-bars');
   if (!wrap) return;
   wrap.innerHTML = '';
+  if (snaps._failed) {
+    const status = $('daily-data-status');
+    if (status) status.textContent = '歷史資料載入失敗';
+    wrap.innerHTML = '<div class="ov2-mini-empty">無法讀取歷史快照 <button type="button" onclick="location.reload()">重新載入</button></div>';
+    return;
+  }
   if (snaps.length < 1) {
-    wrap.innerHTML = '<div class="ov2-mini-empty">尚無每日資料</div>';
+    const status = $('daily-data-status');
+    if (status) status.textContent = '近 14 天 · 尚無資料';
+    wrap.innerHTML = '<div class="ov2-mini-empty">尚無每日資料，累積快照後會顯示走勢。</div>';
     return;
   }
 
@@ -3948,7 +4013,11 @@ function renderDailyTrend() {
   filled.push({ date: todayStr, net: _twT + _usT + _cryT, isLive: true, isGap: false });
 
   // ── Step 3：取最後 15 個節點計算損益差值 ──
-  const win = filled.slice(-15);
+  const startDate = new Date(todayStr.replace(/\//g, '-') + 'T00:00:00');
+  startDate.setDate(startDate.getDate() - 14);
+  const padded = [];
+  for (let d = dateStr(startDate); d < filled[0].date; d = nextDay(d)) padded.push({ date: d, net: null, isLive: false, isGap: true });
+  const win = [...padded, ...filled].slice(-15);
   if (win.length < 2) {
     wrap.innerHTML = '<div class="ov2-mini-empty">尚無每日資料</div>';
     return;
@@ -3991,6 +4060,10 @@ function renderDailyTrend() {
 
   // ── Step 4：渲染 mini-bars（純 HTML，無 Chart.js）──
   // 高度依 |delta| 相對最大值縮放；色彩依正負；最後一根（即時）滿不透明
+  const validDays = plData.filter(v => v !== null && Number.isFinite(v)).length;
+  const status = $('daily-data-status');
+  if (status) status.textContent = `近 14 天 · ${validDays} 天有資料`;
+  wrap.setAttribute?.('aria-label', `近 14 天每日損益，${validDays} 天有資料；空白斜線代表缺資料。`);
   const validAbs = plData.filter(v => v !== null && Number.isFinite(v)).map(Math.abs);
   const maxAbs = validAbs.length ? Math.max(...validAbs, 1) : 1;
   const cc = chartColors();
@@ -5086,6 +5159,13 @@ function renderCashDefense() {
   $('cf-aging-conc').textContent = (total > 0 && topPayer)
     ? `集中度：${topPayer[0]} 占 ${(topPayer[1] / total * 100).toFixed(0)}%`
     : '';
+  const attentionTitle = $('overview-attention-title');
+  const attentionCopy = $('overview-attention-copy');
+  if (attentionTitle && attentionCopy) {
+    const soon = unsettled.filter(u => u.due && u.due >= today && u.due <= new Date(today.getTime() + 7 * dayMs));
+    attentionTitle.textContent = overdue.length ? `${overdue.length} 筆應收已逾期` : soon.length ? `${soon.length} 筆應收即將到期` : '應收款待辦';
+    attentionCopy.textContent = total > 0 ? `共 ${unsettled.length} 筆未收 · 查看到期明細` : '目前沒有待收款項';
+  }
   const card = $('cf-aging-card');
   if (card) card.classList.toggle('cf-card-warn', overdue.length > 0);
 }

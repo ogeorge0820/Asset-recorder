@@ -16,8 +16,8 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=DM+Sans:wght@300;400;500;600;700&display=swap">
-<link rel="stylesheet" href="theme.css?v=202610021243">
-<link rel="stylesheet" href="style.css?v=202610021243">
+<link rel="stylesheet" href="theme.css?v=202610022340">
+<link rel="stylesheet" href="style.css?v=202610022340">
 </head>
 <body class="asset-explorer">
 
@@ -121,6 +121,7 @@
             <output id="trend-date-value" for="trend-date" aria-live="polite">尚無歷史資料</output>
           </div>
         </div>
+        <div class="overview-side">
         <div class="ov2-alloc-card">
           <div class="ov2-alloc-head">
             <h3>可用資產分布</h3>
@@ -130,6 +131,8 @@
             <div class="pie-canvas"><canvas id="pie-chart"></canvas></div>
             <ul class="pie-legend" id="pie-legend"></ul>
           </div>
+        </div>
+        <button class="overview-attention" onclick="openAgingDetail()"><span class="overview-attention-icon" aria-hidden="true">!</span><span><strong id="overview-attention-title">應收款待辦</strong><small id="overview-attention-copy">查看未收款項與到期日</small></span><span class="overview-attention-cta">查看 ›</span></button>
         </div>
       </section>
 
@@ -179,7 +182,7 @@
         <div class="ov2-pl-card" id="card-invest-gain">
           <div class="ov2-pl-head">
             <div class="ov2-pl-label">本日投資損益</div>
-            <div class="ov2-pl-period">近 14 天</div>
+            <div class="ov2-pl-period" id="daily-data-status" aria-live="polite">近 14 天</div>
           </div>
           <div class="ov2-pl-num skel" id="kv-invest-gain">—</div>
           <div class="ov2-mini-bars" id="daily-mini-bars" aria-label="近 14 天每日損益迷你長條圖"></div>
@@ -280,9 +283,14 @@
               <div class="hc-symbols" id="hc-symbols-crypto"></div>
               <span class="hc-arrow" aria-hidden="true">▾</span>
             </button>
-            <header class="mgmt-detail-head"><div><h2>加密貨幣明細</h2><span class="hc-count" id="hc-count-crypto">— 檔持倉</span><div class="hc-change" id="hc-change-crypto"></div></div><div class="mgmt-detail-actions"><button class="btn-add" onclick="addItem('crypto')">+ 新增加密貨幣</button><button class="btn-add" onclick="openCMCImport()">匯入 CoinMarketCap CSV</button></div></header>
+            <header class="mgmt-detail-head"><div><h2>加密貨幣明細</h2><span class="hc-count" id="hc-count-crypto">— 檔持倉</span><div class="hc-change" id="hc-change-crypto"></div></div><div class="mgmt-detail-actions"><button class="btn-add" onclick="addItem('crypto')">+ 新增加密貨幣</button><button class="btn-add mgmt-import" onclick="openCMCImport()">匯入 CoinMarketCap CSV</button></div></header>
             <div class="holding-detail">
               <div class="section-card" id="section-crypto">
+                <div class="mgmt-tools" data-category="crypto">
+                  <label class="mgmt-search"><span class="sr-only">搜尋加密貨幣名稱或代號</span><input type="search" placeholder="搜尋名稱或代號" aria-label="搜尋加密貨幣" oninput="setMgmtView('crypto','query',this.value)"></label>
+                  <label class="mgmt-sort"><span>排序</span><select aria-label="加密貨幣排序" onchange="setMgmtView('crypto','sort',this.value)"><option value="value">資產金額</option><option value="name">名稱／代號</option><option value="change">漲跌幅</option></select></label>
+                  <div class="mgmt-density" aria-label="明細密度"><button type="button" aria-pressed="true" onclick="setMgmtDensity(false)">舒適</button><button type="button" aria-pressed="false" onclick="setMgmtDensity(true)">緊湊</button></div>
+                </div><p class="mgmt-results" id="mgmt-results-crypto" role="status" hidden></p>
                 <div class="section-body">
                   <div class="table-wrap" id="crypto-table-wrap"><table class="data-table">
                     <thead><tr><th>代號</th><th>數量</th><th style="text-align:right">幣價 (USD)</th><th style="text-align:right">24h漲跌</th><th style="text-align:right">現值 (TWD)</th></tr></thead>
@@ -307,6 +315,11 @@
             <header class="mgmt-detail-head"><div><h2>美股明細</h2><span class="hc-count" id="hc-count-us">— 檔持倉</span><div class="hc-change" id="hc-change-us"></div></div><div class="mgmt-detail-actions"><button class="btn-add" onclick="addItem('us')">+ 新增美股</button></div></header>
             <div class="holding-detail">
               <div class="section-card" id="section-us">
+                <div class="mgmt-tools" data-category="us">
+                  <label class="mgmt-search"><span class="sr-only">搜尋美股名稱或代號</span><input type="search" placeholder="搜尋名稱或代號" aria-label="搜尋美股" oninput="setMgmtView('us','query',this.value)"></label>
+                  <label class="mgmt-sort"><span>排序</span><select aria-label="美股排序" onchange="setMgmtView('us','sort',this.value)"><option value="value">資產金額</option><option value="name">名稱／代號</option><option value="change">漲跌幅</option></select></label>
+                  <div class="mgmt-density" aria-label="明細密度"><button type="button" aria-pressed="true" onclick="setMgmtDensity(false)">舒適</button><button type="button" aria-pressed="false" onclick="setMgmtDensity(true)">緊湊</button></div>
+                </div><p class="mgmt-results" id="mgmt-results-us" role="status" hidden></p>
                 <div class="section-body">
                   <div class="table-wrap" id="us-table-wrap"><table class="data-table">
                     <thead><tr><th>代號</th><th>股數</th><th style="text-align:right">股價 (USD)</th><th style="text-align:right">日漲跌</th><th style="text-align:right">現值 (TWD)</th></tr></thead>
@@ -331,6 +344,11 @@
             <header class="mgmt-detail-head"><div><h2>台股明細</h2><span class="hc-count" id="hc-count-tw">— 檔持倉</span><div class="hc-change" id="hc-change-tw"></div></div><div class="mgmt-detail-actions"><button class="btn-add" onclick="addItem('tw')">+ 新增台股</button></div></header>
             <div class="holding-detail">
               <div class="section-card" id="section-tw">
+                <div class="mgmt-tools" data-category="tw">
+                  <label class="mgmt-search"><span class="sr-only">搜尋台股名稱或代號</span><input type="search" placeholder="搜尋名稱或代號" aria-label="搜尋台股" oninput="setMgmtView('tw','query',this.value)"></label>
+                  <label class="mgmt-sort"><span>排序</span><select aria-label="台股排序" onchange="setMgmtView('tw','sort',this.value)"><option value="value">資產金額</option><option value="name">名稱／代號</option><option value="change">漲跌幅</option></select></label>
+                  <div class="mgmt-density" aria-label="明細密度"><button type="button" aria-pressed="true" onclick="setMgmtDensity(false)">舒適</button><button type="button" aria-pressed="false" onclick="setMgmtDensity(true)">緊湊</button></div>
+                </div><p class="mgmt-results" id="mgmt-results-tw" role="status" hidden></p>
                 <div class="section-body">
                   <div class="table-wrap" id="tw-table-wrap"><table class="data-table">
                     <thead><tr><th>代號</th><th>股數</th><th style="text-align:right">股價 (TWD)</th><th style="text-align:right">日漲跌</th><th style="text-align:right">現值 (TWD)</th></tr></thead>
@@ -355,6 +373,11 @@
             <header class="mgmt-detail-head"><div><h2>現金明細</h2><span class="hc-count" id="hc-count-cash">— 個帳戶</span><div class="hc-avail" id="hc-avail-cash"></div></div><div class="mgmt-detail-actions"><button class="btn-add" onclick="addItem('cash')">+ 新增流動現金</button></div></header>
             <div class="holding-detail">
               <div class="section-card" id="section-cash">
+                <div class="mgmt-tools" data-category="cash">
+                  <label class="mgmt-search"><span class="sr-only">搜尋現金名稱或代號</span><input type="search" placeholder="搜尋名稱或代號" aria-label="搜尋現金" oninput="setMgmtView('cash','query',this.value)"></label>
+                  <label class="mgmt-sort"><span>排序</span><select aria-label="現金排序" onchange="setMgmtView('cash','sort',this.value)"><option value="value">資產金額</option><option value="name">名稱／代號</option><option value="change">漲跌幅</option></select></label>
+                  <div class="mgmt-density" aria-label="明細密度"><button type="button" aria-pressed="true" onclick="setMgmtDensity(false)">舒適</button><button type="button" aria-pressed="false" onclick="setMgmtDensity(true)">緊湊</button></div>
+                </div><p class="mgmt-results" id="mgmt-results-cash" role="status" hidden></p>
                 <div class="section-body">
                   <div class="table-wrap" id="cash-table-wrap"><table class="data-table">
                     <thead><tr><th>帳戶</th><th>幣別</th><th style="text-align:right">金額</th><th style="text-align:right">台幣現值</th></tr></thead>
@@ -879,6 +902,6 @@
 <!-- ── Toast ── -->
 <div class="toast" id="toast"></div>
 
-<script src="app.js?v=202610021243"></script>
+<script src="app.js?v=202610022340"></script>
 </body>
 </html>
