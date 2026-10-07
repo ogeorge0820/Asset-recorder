@@ -4,7 +4,7 @@
 // 應用版本號 — 重大功能變更才升版（小修補只更新 BUILD_DATE）
 const APP_VERSION = 'v1.0';
 // Build 時間：每次修改 code 後手動更新此時間（UTC+8 台北時間）
-const BUILD_DATE = '2026/10/02 23:56';
+const BUILD_DATE = '2026/10/07 09:37';
 
 const SPREADSHEET_ID = '1lpRpxVzWaYUqL-jVPOAJCtjsJUIedPYYyOx4gg4PPFU';
 const CLIENT_ID = '149884248440-85f8dhc6ub9up10sv0f89e3e0itrnooj.apps.googleusercontent.com';
@@ -3893,13 +3893,21 @@ Chart.register({
     const cx = (left + right) / 2, cy = (top + bottom) / 2;
     ctx.save();
     ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-    // 主數字：縮小字體、深灰色更 Apple
-    ctx.fillStyle = cc.center_text;
-    ctx.font = '700 18px -apple-system, BlinkMacSystemFont, sans-serif';
-    ctx.fillText(opts.text, cx, cy - 10);
-    ctx.fillStyle = cc.center_sub;
-    ctx.font = '500 11px -apple-system, BlinkMacSystemFont, sans-serif';
-    ctx.fillText(opts.sub || '', cx, cy + 12);
+    const radius = chart.getDatasetMeta(0).data[0]?.innerRadius || 0;
+    if (radius <= 4) { ctx.restore(); return; }
+    // 依圓心實際半徑與文字寬度縮字，避免長金額碰到圓環。
+    const drawFitted = (text, weight, preferred, offset, color) => {
+      let size = Math.min(preferred, radius * .4);
+      const maxWidth = 2 * Math.sqrt(Math.max(0, (radius - 4) ** 2 - (Math.abs(offset) + size / 2) ** 2));
+      ctx.font = `${weight} ${size}px -apple-system, BlinkMacSystemFont, sans-serif`;
+      const width = ctx.measureText(text).width;
+      if (width > maxWidth) size *= maxWidth / width;
+      ctx.font = `${weight} ${size}px -apple-system, BlinkMacSystemFont, sans-serif`;
+      ctx.fillStyle = color;
+      ctx.fillText(text, cx, cy + offset);
+    };
+    drawFitted(opts.text, 700, 18, -radius * .22, cc.center_text);
+    drawFitted(opts.sub || '', 500, 11, radius * .3, cc.center_sub);
     ctx.restore();
   }
 });
