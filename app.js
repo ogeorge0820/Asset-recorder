@@ -4,7 +4,7 @@
 // 應用版本號 — 重大功能變更才升版（小修補只更新 BUILD_DATE）
 const APP_VERSION = 'v1.0';
 // Build 時間：每次修改 code 後手動更新此時間（UTC+8 台北時間）
-const BUILD_DATE = '2026/10/14 09:57';
+const BUILD_DATE = '2026/10/14 10:09';
 
 const SPREADSHEET_ID = '1lpRpxVzWaYUqL-jVPOAJCtjsJUIedPYYyOx4gg4PPFU';
 const CLIENT_ID = '149884248440-85f8dhc6ub9up10sv0f89e3e0itrnooj.apps.googleusercontent.com';
@@ -1512,6 +1512,18 @@ function toggleAmountPrivacy() {
 }
 
 // ── DWZ 進階設定（遺贈&體驗）收合──
+function toggleDWZSharePrivacy() {
+  const page = $('tab-dwz');
+  const on = page.classList.toggle('dwz-share-hidden');
+  const button = $('dwz-share-privacy');
+  button.setAttribute('aria-pressed', String(on));
+  button.textContent = on ? '顯示個人金額' : '隱藏個人金額';
+  renderDWZ();
+}
+function isDWZShareHidden() {
+  return $('tab-dwz')?.classList.contains('dwz-share-hidden');
+}
+
 function toggleDwzAdvanced() {
   const body = $('dwz-adv-body');
   const head = document.querySelector('.dwz-adv-block .dwz-strat-lab-head');
@@ -7033,6 +7045,7 @@ function renderDWZ() {
           callbacks: {
             title: items => `${items[0].label} 歲`,
             label: item => {
+              if (isDWZShareHidden()) return ['個人金額已隱藏'];
               const v = item.raw;
               const exps = allExps.filter(e => e.age === ages[item.dataIndex]);
               const energy = Math.round(lifeEnergy[item.dataIndex]);
@@ -7063,7 +7076,7 @@ function renderDWZ() {
         },
         y: {
           grid: { color: gridColor },
-          ticks: { font: { size: 11 }, callback: v => fmtWan(v) },
+          ticks: { font: { size: 11 }, callback: v => isDWZShareHidden() ? '' : fmtWan(v) },
         },
         y2: {
           position: 'right',

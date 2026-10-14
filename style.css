@@ -3791,3 +3791,11 @@ body.amounts-hidden :is(#overview-attention-title,#overview-attention-copy) { fi
   .asset-explorer #tab-dwz .dwz-banner { display: none; }
   .asset-explorer #tab-dwz .dwz-layout { margin-top: 0; }
 }
+
+.asset-explorer #tab-dwz .dwz-share-privacy { min-height: 44px; padding: 8px 14px; border: 1px solid var(--border); border-radius: 10px; background: var(--bg-card); color: var(--accent); flex-shrink: 0; }
+.asset-explorer #tab-dwz .explorer-welcome { flex-wrap: wrap; }
+.asset-explorer #tab-dwz.dwz-share-hidden :is(.dwz-kpi-tag b,.dwz-pill,.bucket-stats,.dwz-smart-tips,.bucket-amt,#dwz-safe-floor,#dwz-legacy,#dwz-exp-budget) { visibility: hidden !important; pointer-events: none; }
+.asset-explorer #tab-dwz.dwz-share-hidden .dwz-pill { display: none; }
+.asset-explorer #tab-dwz.dwz-share-hidden #dwz-expenses-list { pointer-events: none; }
+.asset-explorer #tab-dwz.dwz-share-hidden :is(#dwz-planned-body,.roi-mv) { visibility: hidden !important; pointer-events: none; }
+.asset-explorer #tab-dwz.dwz-share-hidden #dwz-timeline { pointer-events: none; }
