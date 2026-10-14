@@ -3777,3 +3777,17 @@ body.amounts-hidden :is(#overview-attention-title,#overview-attention-copy) { fi
   .asset-explorer #tab-overview .pie-canvas #pie-chart { display: block; width: 100% !important; height: 100% !important; max-width: 100% !important; max-height: 100% !important; }
   .asset-explorer #tab-overview .pie-legend { min-width: 0; }
 }
+
+/* 桌機合併重複介紹，讓試算內容更靠近頁面上緣。 */
+.asset-explorer #tab-dwz .dwz-heading-desktop { display: none; }
+@media (min-width: 769px) {
+  .asset-explorer #app-content:has(#tab-dwz:not([style*="display:none"]):not([style*="display: none"])) { padding-top: 24px; }
+  .asset-explorer #tab-dwz .dwz-heading-mobile { display: none; }
+  .asset-explorer #tab-dwz .dwz-heading-desktop { display: inline; }
+  .asset-explorer #tab-dwz .explorer-welcome { margin: 0 0 20px; padding: 0; }
+  .asset-explorer #tab-dwz .explorer-welcome h1 { font-size: 24px; line-height: 1.4; margin: 4px 0 0; }
+  .asset-explorer #tab-dwz .explorer-welcome h1 + p { margin-top: 6px; }
+  .asset-explorer #tab-dwz .explorer-horizon,
+  .asset-explorer #tab-dwz .dwz-banner { display: none; }
+  .asset-explorer #tab-dwz .dwz-layout { margin-top: 0; }
+}
