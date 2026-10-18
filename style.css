@@ -3799,3 +3799,9 @@ body.amounts-hidden :is(#overview-attention-title,#overview-attention-copy) { fi
 .asset-explorer #tab-dwz.dwz-share-hidden #dwz-expenses-list { pointer-events: none; }
 .asset-explorer #tab-dwz.dwz-share-hidden :is(#dwz-planned-body,.roi-mv) { visibility: hidden !important; pointer-events: none; }
 .asset-explorer #tab-dwz.dwz-share-hidden #dwz-timeline { pointer-events: none; }
+
+/* 人生規劃「未來支出規劃」→ 管理頁編輯入口（文字按鈕，手機保留 44px 可點高度） */
+.asset-explorer #tab-dwz .dwz-planned-edit { display: inline-flex; align-items: center; min-height: 44px; margin-top: 4px; padding: 0 4px; border: 0; background: none; color: var(--accent); font-size: 13px; font-weight: 600; cursor: pointer; }
+.asset-explorer #tab-dwz .dwz-planned-edit:hover { text-decoration: underline; }
+.asset-explorer #budget-planned-section { scroll-margin-top: 80px; }
+@media (min-width: 769px) { .asset-explorer #budget-planned-section { scroll-margin-top: 24px; } }

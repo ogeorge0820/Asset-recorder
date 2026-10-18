@@ -4,7 +4,7 @@
 // 應用版本號 — 重大功能變更才升版（小修補只更新 BUILD_DATE）
 const APP_VERSION = 'v1.0';
 // Build 時間：每次修改 code 後手動更新此時間（UTC+8 台北時間）
-const BUILD_DATE = '2026/10/14 10:09';
+const BUILD_DATE = '2026/10/18 21:21';
 
 const SPREADSHEET_ID = '1lpRpxVzWaYUqL-jVPOAJCtjsJUIedPYYyOx4gg4PPFU';
 const CLIENT_ID = '149884248440-85f8dhc6ub9up10sv0f89e3e0itrnooj.apps.googleusercontent.com';
@@ -3060,6 +3060,19 @@ function togglePlanned() {
   if (wrap) wrap.classList.toggle('expanded');
 }
 
+// 人生規劃只能開關、編輯入口在管理頁 → 切頁並展開預算卡與未來規劃清單，捲到清單
+function goEditPlanned() {
+  switchTab('management');
+  $('hb-budget')?.classList.add('expanded');
+  const wrap = $('budget-planned-section');
+  if (!wrap) return;
+  wrap.classList.add('expanded');
+  // 切頁會重播各卡的 hd-expand（max-height 從 0 長開），版面定型前捲會停在偏上的位置
+  const anims = document.getAnimations?.().filter(a => a.animationName === 'hd-expand') || [];
+  Promise.race([Promise.allSettled(anims.map(a => a.finished)), new Promise(r => setTimeout(r, 600))])
+    .then(() => wrap.scrollIntoView({ block: 'start' }));
+}
+
 // ── DWZ tab 「未來支出規劃」區塊（per-item toggle，預設全部考量）──
 // 設計：「忽略的 id 集合」以 settings sheet 為主（跨裝置同步），localStorage 為離線備援。
 function _getDwzPlannedIgnored() {
@@ -3105,8 +3118,9 @@ function _renderDwzPlannedList() {
 
   if (cntEl) cntEl.textContent = items.length ? `${activeCount}/${items.length}` : '';
 
+  const editBtn = label => `<button type="button" class="dwz-planned-edit" onclick="goEditPlanned()">${label} ›</button>`;
   if (!items.length) {
-    listEl.innerHTML = `<div class="dwz-planned-empty">尚無未來規劃。可在<a href="#" onclick="switchTab('overview'); return false;">總覽</a>「生活支出預算」內新增。</div>`;
+    listEl.innerHTML = `<div class="dwz-planned-empty">尚無未來規劃。</div>${editBtn('到管理頁新增')}`;
     return;
   }
 
@@ -3155,7 +3169,7 @@ function _renderDwzPlannedList() {
           <span class="dwz-toggle-track"></span>
         </label>
       </div>`;
-  }).join('');
+  }).join('') + editBtn('到管理頁編輯或新增');
 }
 
 // ══════════════════════════════════════════════════════════════
