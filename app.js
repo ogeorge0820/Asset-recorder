@@ -4,7 +4,7 @@
 // 應用版本號 — 重大功能變更才升版（小修補只更新 BUILD_DATE）
 const APP_VERSION = 'v1.0';
 // Build 時間：每次修改 code 後手動更新此時間（UTC+8 台北時間）
-const BUILD_DATE = '2026/10/19 15:39';
+const BUILD_DATE = '2026/10/20 15:23';
 
 const SPREADSHEET_ID = '1lpRpxVzWaYUqL-jVPOAJCtjsJUIedPYYyOx4gg4PPFU';
 const CLIENT_ID = '149884248440-85f8dhc6ub9up10sv0f89e3e0itrnooj.apps.googleusercontent.com';
@@ -7527,6 +7527,168 @@ function renderStaking() {
   listEl.innerHTML = html || '<div class="staking-empty">尚無持倉資料</div>';
 }
 
+// 月計畫只寫入本機，持倉與快照維持唯讀。
+let SALE_PLAN = null;
+let SALE_DIRTY = false;
+const SALE_STORAGE_KEY = 'asset_sale_plans_v1_' + SPREADSHEET_ID;
+function createSalePlan(holdings, prices, fx, month, asOf) {
+  const grouped = new Map();
+  holdings.forEach(r => {
+    const symbol = String(r[0] || '').trim().toUpperCase();
+    const qty = Number(r[1]);
+    if (symbol && Number.isFinite(qty) && qty > 0) grouped.set(symbol, (grouped.get(symbol) || 0) + qty);
+  });
+  return {version:1, month, asOf, target:0, fx:Number(fx), rows:[...grouped].map(([symbol,qty]) => {
+    const price = Number(prices[symbol]) * Number(fx);
+    return {symbol, qty, price:Number.isFinite(price) && price > 0 ? price : 0, selected:symbol !== 'USDT', amount:0};
+  })};
+}
+function salePlanErrors(plan) {
+  const errors = [];
+  if (!/^\d{4}-(0[1-9]|1[0-2])$/.test(plan.month)) errors.push('月份格式不正確');
+  if (!Number.isFinite(plan.target) || plan.target <= 0 || Math.abs(plan.target * 100 - Math.round(plan.target * 100)) > 1e-6 || plan.target > Number.MAX_SAFE_INTEGER / 100) errors.push('請輸入大於零的有效目標金額');
+  if (!Number.isFinite(plan.fx) || plan.fx <= 0) errors.push('缺少有效匯率，請先更新價格');
+  plan.rows.forEach(r => {
+    if (!Number.isFinite(r.qty) || r.qty < 0 || (r.selected && r.qty === 0) || !Number.isFinite(r.amount) || r.amount < 0 || Math.abs(r.amount * 100 - Math.round(r.amount * 100)) > 1e-6) errors.push(`${r.symbol}：數量或金額無效`);
+    if (r.selected && (!(r.price > 0) || !Number.isFinite(r.price))) errors.push(`${r.symbol}：缺少參考價格，請更新價格或取消勾選`);
+    if (r.amount > 0 && !r.selected) errors.push(`${r.symbol}：未納入的持倉不可有賣出金額`);
+    if (r.amount > r.qty * r.price + .001) errors.push(`${r.symbol}：賣出金額超過規劃持倉`);
+  });
+  if (!plan.rows.some(r => r.selected)) errors.push('請至少選擇一個幣種');
+  return errors;
+}
+function allocateSalePlan(plan) {
+  const next = JSON.parse(JSON.stringify(plan));
+  next.rows.forEach(r => { r.amount = 0; });
+  const errors = salePlanErrors(next);
+  if (errors.length) throw new Error(errors[0]);
+  const chosen = next.rows.filter(r => r.selected);
+  const total = chosen.reduce((sum,r) => sum + r.qty * r.price,0);
+  const cents = Math.round(next.target * 100);
+  const capacities = chosen.map(r => Math.floor(r.qty * r.price * 100 + 1e-7));
+  if (cents > capacities.reduce((sum,n) => sum+n,0)) throw new Error('目標超過可賣持倉市值，請降低目標或增加幣種');
+  const parts = chosen.map((r,i) => { const raw=cents*r.qty*r.price/total; return {r,i,raw,cents:Math.min(capacities[i],Math.floor(raw))}; });
+  let left = cents - parts.reduce((sum,p) => sum+p.cents,0);
+  parts.sort((a,b) => (b.raw-b.cents)-(a.raw-a.cents));
+  while (left > 0) for (const p of parts) if (left > 0 && p.cents < capacities[p.i]) { p.cents++; left--; }
+  parts.forEach(p => { p.r.amount=p.cents/100; });
+  return next;
+}
+function saleNow() { return new Date().toLocaleString('zh-TW',{timeZone:'Asia/Taipei',hour12:false}); }
+function saleMonthNow() {
+  const parts = new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Taipei',year:'numeric',month:'2-digit'}).formatToParts(new Date());
+  return parts.find(p=>p.type==='year').value+'-'+parts.find(p=>p.type==='month').value;
+}
+function readSalePlans() {
+  const raw = localStorage.getItem(SALE_STORAGE_KEY);
+  if (!raw) return {};
+  const plans = JSON.parse(raw);
+  if (!plans || typeof plans !== 'object' || Array.isArray(plans)) throw new Error('本機計畫格式異常，已保留原資料');
+  return plans;
+}
+function freshSalePlan(month) { return createSalePlan(S.data.crypto,S.prices.crypto,S.prices.usdtwd,month,saleNow()); }
+function initSalePlan() {
+  if (!SALE_PLAN) loadSaleMonth(saleMonthNow());
+  else renderSalePlan();
+}
+function loadSaleMonth(month) {
+  if (!/^\d{4}-(0[1-9]|1[0-2])$/.test(month)) return;
+  if (SALE_DIRTY && !confirm('切換月份會放棄尚未儲存的調整，是否繼續？')) { $('sale-month').value=SALE_PLAN.month; return; }
+  try {
+    const stored = readSalePlans()[month];
+    if (stored && (stored.version!==1 || !Array.isArray(stored.rows) || stored.month!==month || stored.rows.some(r => typeof r.symbol!=='string' || typeof r.selected!=='boolean' || !Number.isFinite(r.qty) || !Number.isFinite(r.price) || !Number.isFinite(r.amount)))) throw new Error('這個月的本機計畫格式異常，已保留原資料');
+    SALE_PLAN = stored || freshSalePlan(month);
+    SALE_DIRTY=false;
+    renderSalePlan();
+  } catch(e) {
+    showToast(e.message || '無法讀取本機計畫','error');
+    if (SALE_PLAN) $('sale-month').value=SALE_PLAN.month;
+    else {
+      $('sale-errors').textContent='無法讀取本機計畫，原資料未變更。請檢查瀏覽器是否允許網站儲存，再重新整理。';
+      document.querySelectorAll('#tab-sale button, #sale-target').forEach(el=>{el.disabled=true;});
+    }
+  }
+}
+function saleEdit(index, field, value) {
+  const r=SALE_PLAN?.rows[index];
+  if (!r) return;
+  if (field==='selected') { r.selected=!!value; if (!r.selected) r.amount=0; }
+  if (field==='amount') r.amount=value==='' ? NaN : Number(value);
+  SALE_DIRTY=true;
+  if (field==='selected') renderSalePlan(); else updateSaleSummary();
+}
+function saleTarget(value) { SALE_PLAN.target=value==='' ? NaN : Number(value); SALE_DIRTY=true; updateSaleSummary(); }
+function distributeSalePlan() {
+  if (SALE_PLAN.rows.some(r=>r.amount>0) && !confirm('重新按比例分配會取代目前各幣的手動金額，是否繼續？')) return;
+  try { SALE_PLAN=allocateSalePlan(SALE_PLAN); SALE_DIRTY=true; renderSalePlan(); } catch(e) { showToast(e.message,'error'); }
+}
+function repriceSalePlan() {
+  if (!confirm('將以目前已載入的持倉與價格更新估算，保留各幣的台幣金額。是否繼續？')) return;
+  const fresh=freshSalePlan(SALE_PLAN.month);
+  fresh.target=SALE_PLAN.target;
+  const old=new Map(SALE_PLAN.rows.map(r=>[r.symbol,r]));
+  fresh.rows.forEach(r=>{const before=old.get(r.symbol);if(before){r.selected=before.selected;r.amount=before.amount;old.delete(r.symbol);}});
+  old.forEach(r=>{if(r.selected&&r.amount>0)fresh.rows.push({...r,qty:0,price:0});});
+  SALE_PLAN=fresh;SALE_DIRTY=true;renderSalePlan();
+}
+function restoreSalePlan() {
+  if (SALE_DIRTY && !confirm('還原這個月最近儲存的計畫，放棄未儲存調整？')) return;
+  SALE_DIRTY=false;loadSaleMonth(SALE_PLAN.month);
+}
+function saveSalePlan() {
+  const errors=salePlanErrors(SALE_PLAN);
+  const live=freshSalePlan(SALE_PLAN.month);
+  const qty=new Map(live.rows.map(r=>[r.symbol,r.qty]));
+  SALE_PLAN.rows.filter(r=>r.amount>0).forEach(r=>{if(r.amount/r.price>(qty.get(r.symbol)||0)+1e-10) errors.push(`${r.symbol}：目前持倉已不足，請更新估算`);});
+  if(errors.length){showToast(errors[0],'error');return;}
+  try {
+    const plans=readSalePlans();
+    const saved=JSON.parse(JSON.stringify(SALE_PLAN));saved.savedAt=saleNow();
+    plans[saved.month]=saved;
+    localStorage.setItem(SALE_STORAGE_KEY,JSON.stringify(plans));
+    SALE_PLAN=saved;SALE_DIRTY=false;renderSalePlan();showToast('已儲存到本機；未扣減持倉');
+  } catch(e) { showToast('儲存失敗：瀏覽器儲存空間不可用或原資料異常，調整仍保留在畫面','error'); }
+}
+function saleQty(n) { return Number.isFinite(n)?n.toLocaleString('en-US',{maximumFractionDigits:8}):'—'; }
+function saleMoney(n) { return Number.isFinite(n)?n.toLocaleString('zh-TW',{minimumFractionDigits:2,maximumFractionDigits:2}):'—'; }
+function renderSalePlan() {
+  const p=SALE_PLAN;if(!p)return;
+  $('sale-month').value=p.month;
+  $('sale-target').value=Number.isFinite(p.target)&&p.target>0?p.target:'';
+  $('sale-rows').innerHTML=p.rows.length?p.rows.map((r,i)=>`<tr>
+    <td><input type="checkbox" aria-label="納入 ${esc(r.symbol)}" ${r.selected?'checked':''} onchange="saleEdit(${i},'selected',this.checked)"></td>
+    <th scope="row">${esc(r.symbol)}${r.symbol==='USDT'?'<small>現金用途・預設不賣</small>':''}${!r.price?'<small class="sale-error">缺少價格</small>':''}<small class="sale-private">參考單價 ${saleMoney(r.price)} TWD</small></th>
+    <td class="sale-private">${saleQty(r.qty)}</td>
+    <td><label class="sale-amount sale-private"><span>TWD</span><input aria-label="${esc(r.symbol)} 賣出台幣金額" type="number" min="0" step="0.01" value="${Number.isFinite(r.amount)?r.amount:''}" ${!r.selected?'disabled':''} oninput="saleEdit(${i},'amount',this.value)"></label></td>
+    <td class="sale-private" id="sale-qty-${i}"></td><td class="sale-private" id="sale-pct-${i}"></td><td class="sale-private" id="sale-remain-${i}"></td></tr>`).join(''):'<tr><td colspan="7">尚無加密貨幣持倉，請先至管理頁新增。</td></tr>';
+  $('sale-reference').textContent=`估算建立：${p.asOf}（台北時間）・匯率 ${saleMoney(p.fx)} TWD/USD。使用當時已載入報價，可能包含備援快照價；未含交易成本。`;
+  try {
+    const months=Object.keys(readSalePlans()).filter(m=>/^\d{4}-\d{2}$/.test(m)).sort().reverse();
+    $('sale-history').innerHTML='<option value="">讀取已存計畫</option>'+months.map(m=>`<option value="${m}">${m}</option>`).join('');
+  }catch(e){$('sale-history').innerHTML='<option value="">本機紀錄無法讀取</option>';}
+  updateSaleSummary();
+}
+function updateSaleSummary() {
+  const p=SALE_PLAN;let total=0;
+  p.rows.forEach((r,i)=>{
+    if(Number.isFinite(r.amount))total+=r.amount;
+    const qty=r.amount===0?0:r.price>0&&Number.isFinite(r.amount)?r.amount/r.price:NaN;
+    if($('sale-qty-'+i))$('sale-qty-'+i).textContent=saleQty(qty);
+    if($('sale-pct-'+i))$('sale-pct-'+i).textContent=Number.isFinite(qty)&&r.qty>0?(qty/r.qty*100).toFixed(2)+'%':'—';
+    if($('sale-remain-'+i))$('sale-remain-'+i).textContent=saleQty(Number.isFinite(qty)?r.qty-qty:NaN);
+  });
+  const delta=Math.round((p.target-total)*100)/100;
+  $('sale-total').textContent=fmtWan(total);
+  $('sale-gap-label').textContent=!(p.target>0)?'等待設定目標':delta>0?'還差':delta<0?'超出目標':'已達目標';
+  $('sale-gap').textContent=p.target>0&&Number.isFinite(delta)?fmtWan(Math.abs(delta)):'—';
+  $('sale-progress').value=p.target>0?Math.min(100,total/p.target*100):0;
+  $('sale-progress').setAttribute('aria-label',`已規劃 ${saleMoney(total)} 元`);
+  const errors=salePlanErrors(p);
+  $('sale-errors').textContent=errors.join('；');
+  $('sale-save').disabled=errors.length>0;
+  $('sale-save-state').textContent=SALE_DIRTY?'尚未儲存':p.savedAt?`已存本機：${p.savedAt}`:'尚未儲存本月計畫';
+}
+
 function switchTab(tab) {
   // ⚠ 用空字串而非 'block' — 讓 CSS 的 display 規則生效
   // tab-overview 在 CSS 是 display:flex（column + gap:14px）
@@ -7537,11 +7699,13 @@ function switchTab(tab) {
   $('tab-indicators').style.display  = tab==='indicators'  ? '' : 'none';
   const elNews = $('tab-news');
   if (elNews) elNews.style.display    = tab==='news'        ? '' : 'none';
+  const elSale = $('tab-sale');
+  if (elSale) elSale.style.display = tab==='sale' ? '' : 'none';
   const elStaking = $('tab-staking');
   if (elStaking) elStaking.style.display = tab==='staking'  ? '' : 'none';
   document.querySelectorAll('.tab-btn').forEach((b,i) => {
     b.classList.toggle('active',
-      (i===0&&tab==='overview')||(i===1&&tab==='management')||(i===2&&tab==='dwz')||(i===3&&tab==='indicators')||(i===4&&tab==='news')||(i===5&&tab==='staking'));
+      b.getAttribute('onclick') === `switchTab('${tab}')`);
   });
   // Sidebar nav
   const sO = $('snav-overview'), sM = $('snav-management'), sD = $('snav-dwz'), sI = $('snav-indicators'), sN = $('snav-news');
@@ -7555,6 +7719,7 @@ function switchTab(tab) {
   if (tab === 'indicators') renderIndicators();
   if (tab === 'news') renderNewsTab();
   if (tab === 'staking') renderStaking();
+  if (tab === 'sale') initSalePlan();
   // v1.2.4：切回 overview 只做輕量 resize（不再 destroy+recreate）
   // CSS min-height 已保證容器尺寸穩定，resize 讓 Chart.js 更新內部 viewport
   // 之前的完整 destroy+new 會觸發新的入場動畫，使切回後的 chart 視覺上與首次載入有差

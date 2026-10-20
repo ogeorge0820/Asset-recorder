@@ -3808,3 +3808,62 @@ body.amounts-hidden :is(#overview-attention-title,#overview-attention-copy) { fi
 .asset-explorer #tab-dwz .dwz-planned-edit:hover { text-decoration: underline; }
 .asset-explorer #budget-planned-section { scroll-margin-top: 80px; }
 @media (min-width: 769px) { .asset-explorer #budget-planned-section { scroll-margin-top: 24px; } }
+
+/* 月賣出規劃：金額直接編輯，其餘數字維持可比較的固定欄位。 */
+.asset-explorer #tab-sale { min-width: 0; }
+.asset-explorer #tab-sale .sale-heading { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 20px; }
+.asset-explorer #tab-sale h1 { font-size: 26px; line-height: 1.4; margin: 4px 0; }
+.asset-explorer #tab-sale p { color: var(--text-secondary); font-size: 13px; line-height: 1.7; }
+.asset-explorer #tab-sale .sale-month-controls,.asset-explorer #tab-sale .sale-actions { display: flex; gap: 10px; flex-wrap: wrap; }
+.asset-explorer #tab-sale .sale-month-controls label { font-size: 12px; color: var(--text-secondary); }
+.asset-explorer #tab-sale :is(input,select,button) { min-height: 44px; max-width: 100%; box-sizing: border-box; font: inherit; font-size: 13px; color: var(--text-primary); }
+.asset-explorer #tab-sale :is(input,select) { border: 1px solid var(--border); border-radius: 8px; padding: 8px 10px; background: var(--bg-card); }
+.asset-explorer #tab-sale button { padding: 10px 16px; border: 1px solid var(--border) !important; border-radius: 9px; background: var(--bg-card) !important; color: var(--accent); cursor: pointer; }
+.asset-explorer #tab-sale .sale-primary { background: var(--accent) !important; color: white !important; border-color: var(--accent) !important; }
+.asset-explorer #tab-sale button:disabled { opacity: .45; cursor: not-allowed; }
+.asset-explorer #tab-sale .sale-card { border: 1px solid var(--border); border-radius: 16px; background: var(--bg-card); padding: 18px; margin-bottom: 16px; min-width: 0; }
+.asset-explorer #tab-sale .sale-summary { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 18px; }
+.asset-explorer #tab-sale .sale-summary > label { grid-column: 1 / -1; font-size: 13px; color: var(--text-secondary); }
+.asset-explorer #tab-sale #sale-target { display: block; width: 100%; margin-top: 8px; font-size: 26px; font-weight: 600; }
+.asset-explorer #tab-sale .sale-summary span { display: block; font-size: 13px; color: var(--text-secondary); }
+.asset-explorer #tab-sale .sale-summary strong { display: block; color: var(--accent); font-size: 26px; font-weight: 600; overflow-wrap: anywhere; }
+.asset-explorer #tab-sale .sale-summary small { font-size: 11px; color: var(--text-secondary); }
+.asset-explorer #tab-sale #sale-gap { color: #b66c19; }
+.asset-explorer #tab-sale progress { width: 100%; height: 10px; grid-column: 1 / -1; accent-color: var(--accent); }
+.asset-explorer #tab-sale .sale-table-head { display: flex; gap: 14px; justify-content: space-between; align-items: center; flex-wrap: wrap; margin-bottom: 16px; }
+.asset-explorer #tab-sale h2 { font-size: 18px; margin: 0 0 4px; }
+.asset-explorer #tab-sale .sale-table-head small { display: block; font-size: 11px; color: var(--text-secondary); margin-top: 4px; }
+.asset-explorer #tab-sale .sale-table-scroll { overflow-x: auto; max-width: 100%; }
+.asset-explorer #tab-sale .sale-table { width: 100%; min-width: 920px; border-collapse: collapse; font-size: 13px; font-variant-numeric: tabular-nums; }
+.asset-explorer #tab-sale .sale-table :is(th,td) { padding: 14px 10px; text-align: right; border-bottom: 1px solid var(--border); white-space: nowrap; }
+.asset-explorer #tab-sale .sale-table th { font-weight: 500; }
+.asset-explorer #tab-sale .sale-table thead { background: var(--bg-hover); color: var(--text-secondary); }
+.asset-explorer #tab-sale .sale-table :is(th,td):nth-child(-n+2) { text-align: left; }
+.asset-explorer #tab-sale .sale-table small { display: block; font-size: 10px; color: var(--text-secondary); margin-top: 4px; }
+.asset-explorer #tab-sale input[type="checkbox"] { width: 22px; height: 22px; min-height: 22px; accent-color: var(--accent); }
+.asset-explorer #tab-sale .sale-amount { display: flex; align-items: center; gap: 6px; }
+.asset-explorer #tab-sale .sale-amount span { font-size: 10px; color: var(--text-secondary); }
+.asset-explorer #tab-sale .sale-amount input { width: 125px; text-align: right; border-color: var(--accent); }
+.asset-explorer #tab-sale .sale-amount input:disabled { background: var(--bg-hover); border-color: var(--border); opacity: .6; }
+.asset-explorer #tab-sale .sale-error { color: var(--danger); font-size: 12px; }
+.asset-explorer #tab-sale .sale-table-note { margin-top: 12px; font-size: 12px; }
+.asset-explorer #tab-sale .sale-reference-row,.asset-explorer #tab-sale .sale-footer { display: flex; align-items: center; justify-content: space-between; gap: 14px; flex-wrap: wrap; }
+.asset-explorer #tab-sale .sale-reference-row p { flex: 1 1 300px; }
+.asset-explorer #tab-sale .sale-footer strong { font-size: 13px; }
+.asset-explorer #tab-sale .sale-footer small { font-size: 12px; color: var(--text-secondary); }
+body.amounts-hidden #tab-sale .sale-private { visibility: hidden !important; pointer-events: none; }
+@media (min-width: 769px) {
+  .asset-explorer #tab-sale .sale-summary { grid-template-columns: repeat(3,minmax(0,1fr)); align-items: center; padding: 24px; }
+  .asset-explorer #tab-sale .sale-summary > label { grid-column: auto; }
+  .asset-explorer #tab-sale .sale-card { padding: 24px; }
+  .asset-explorer #app-header .tab-btn[onclick="switchTab('sale')"] { order: 1; }
+}
+@media (min-width: 769px) and (max-height: 850px) {
+  .asset-explorer #app-header { padding-top: 20px !important; gap: 18px !important; overflow-y: auto; }
+  .asset-explorer #app-header .tab-nav { gap: 2px !important; }
+  .asset-explorer #app-header .tab-btn { padding: 10px 12px !important; min-height: 44px; }
+}
+.asset-explorer #tab-sale #sale-rows th[scope="row"] { min-width: 105px; }
+@media (min-width: 769px) {
+  .asset-explorer #app-header .tab-btn[onclick="switchTab('sale')"] { order: 0; }
+}

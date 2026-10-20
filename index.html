@@ -16,8 +16,8 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=DM+Sans:wght@300;400;500;600;700&display=swap">
-<link rel="stylesheet" href="theme.css?v=202610191539">
-<link rel="stylesheet" href="style.css?v=202610191539">
+<link rel="stylesheet" href="theme.css?v=202610201523">
+<link rel="stylesheet" href="style.css?v=202610201523">
 </head>
 <body class="asset-explorer">
 
@@ -52,7 +52,8 @@
     <nav class="tab-nav" aria-label="主要導覽">
       <button class="tab-btn active" onclick="switchTab('overview')"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="2"/><rect x="14" y="3" width="7" height="7" rx="2"/><rect x="3" y="14" width="7" height="7" rx="2"/><rect x="14" y="14" width="7" height="7" rx="2"/></svg><span>總覽</span></button>
       <button class="tab-btn" onclick="switchTab('management')"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M3 7h18v13H3zM3 7l3-4h12l3 4M7 12h10"/></svg><span>管理</span></button>
-      <button class="tab-btn" onclick="switchTab('dwz')"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M4 21V4m0 1c6-5 10 5 16 0v11c-6 5-10-5-16 0"/></svg><span><span class="tab-full">人生規劃</span><span class="tab-short">人生規劃</span></span></button>
+      <button class="tab-btn" onclick="switchTab('dwz')"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M4 21V4m0 1c6-5 10 5 16 0v11c-6 5-10-5-16 0"/></svg><span><span class="tab-full">人生規劃</span><span class="tab-short">人生</span></span></button>
+      <button class="tab-btn" onclick="switchTab('sale')"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M4 20h16M12 3v13m-5-5 5 5 5-5"/></svg><span><span class="tab-full">賣出計畫</span><span class="tab-short">賣出</span></span></button>
       <button class="tab-btn" onclick="switchTab('indicators')"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M4 20V10m8 10V4m8 16v-7"/></svg><span>指標</span></button>
       <button class="tab-btn" onclick="switchTab('news')"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M7 8h10M7 12h4m-4 4h10"/></svg><span>新聞</span></button>
       <button class="tab-btn" onclick="switchTab('staking')"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><ellipse cx="12" cy="6" rx="8" ry="3"/><path d="M4 6v6c0 4 16 4 16 0V6M4 12v6c0 4 16 4 16 0v-6"/></svg><span>質押</span></button>
@@ -532,6 +533,23 @@
 
     </div><!-- /tab-management -->
 
+    <div id="tab-sale" style="display:none">
+      <div class="sale-heading"><div><p class="explorer-eyebrow">每月生活費規劃</p><h1>資產賣出計畫</h1><p>每月準備生活費，保留你想繼續持有的資產。</p></div><div class="sale-month-controls"><label>規劃月份 <input id="sale-month" type="month" onchange="loadSaleMonth(this.value)"></label><select id="sale-history" aria-label="讀取已存計畫" onchange="if(this.value)loadSaleMonth(this.value)"><option value="">讀取已存計畫</option></select></div></div>
+      <div class="sale-summary sale-card">
+        <label>本月目標（TWD）<input id="sale-target" class="sale-private" type="number" min="0.01" step="0.01" placeholder="輸入目標金額" oninput="saleTarget(this.value)"></label>
+        <div><span>已規劃</span><strong id="sale-total" class="sale-private">—</strong><small>TWD</small></div>
+        <div><span id="sale-gap-label">還差</span><strong id="sale-gap" class="sale-private">—</strong><small>TWD</small></div>
+        <progress id="sale-progress" max="100" value="0"></progress>
+      </div>
+      <section class="sale-card"><div class="sale-table-head"><div><h2>選擇本月可賣出的幣種</h2><p>依勾選持倉市值，分配相同賣出比例。</p></div><div><button class="sale-primary" onclick="distributeSalePlan()">按比例分配</button><small>重新分配會取代手動金額</small></div></div>
+        <div class="sale-table-scroll" tabindex="0" role="region" aria-label="幣種賣出規劃，可左右捲動"><table class="sale-table"><thead><tr><th>納入</th><th>幣種</th><th>持有顆數</th><th>賣出台幣金額</th><th>預估賣出顆數</th><th>賣出比例</th><th>剩餘顆數</th></tr></thead><tbody id="sale-rows"></tbody></table></div>
+        <p class="sale-table-note">手動修改單筆金額，不會改動其他幣種。金額與顆數皆為估算；持倉資料以建立計畫當時為準。</p>
+        <p id="sale-errors" class="sale-error sale-private" role="status"></p>
+      </section>
+      <div class="sale-card sale-reference-row"><p id="sale-reference" class="sale-private"></p><button onclick="repriceSalePlan()">更新目前價格與持倉</button></div>
+      <div class="sale-footer"><div><strong>僅規劃，不會下單或扣減持倉</strong><p>只儲存在這台裝置的瀏覽器，未同步雲端。清除網站資料會移除計畫。</p><small id="sale-save-state" role="status"></small></div><div class="sale-actions"><button onclick="restoreSalePlan()">還原調整</button><button id="sale-save" class="sale-primary" onclick="saveSalePlan()">儲存本月計畫</button></div></div>
+    </div>
+
     <!-- ══ Die With Zero Tab ══ -->
     <div id="tab-dwz" style="display:none">
      <div class="explorer-welcome"><div><p class="explorer-eyebrow">人生規劃</p><h1><span class="dwz-heading-mobile">讓資產陪你走過每個階段</span><span class="dwz-heading-desktop">把時間留給想做的事</span></h1><p><span class="dwz-heading-mobile">Die With Zero · 把資源留給值得的體驗，也為未來留好餘裕。</span><span class="dwz-heading-desktop">調整人生階段，看看資產曲線如何改變。</span></p></div><button id="dwz-share-privacy" class="dwz-share-privacy" type="button" aria-pressed="false" onclick="toggleDWZSharePrivacy()">隱藏個人金額</button><span class="explorer-horizon" aria-hidden="true"></span></div>
@@ -902,6 +920,6 @@
 <!-- ── Toast ── -->
 <div class="toast" id="toast"></div>
 
-<script src="app.js?v=202610191539"></script>
+<script src="app.js?v=202610201523"></script>
 </body>
 </html>

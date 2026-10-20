@@ -34,8 +34,8 @@ test('保留所有原有總覽 DOM 掛載點及操作',()=>{
  const overview=s=>s.split('<div id="tab-overview">')[1].split('</div><!-- /tab-overview -->')[0];
  for(const match of overview(before).matchAll(/(?:id|onclick)="([^"]+)"/g)) assert.ok(overview(html).includes(match[0]),match[0]);
 });
-test('新版六個導覽入口具備清楚的圖示與名稱',()=>{
- assert.equal((html.match(/class="nav-icon"/g)||[]).length,6);
+test('新版七個導覽入口具備清楚的圖示與名稱',()=>{
+ assert.equal((html.match(/class="nav-icon"/g)||[]).length,7);
  assert.ok(html.includes('看看資產的變化'));
  assert.equal((html.match(/id="kv-hero-monthly"/g)||[]).length,1);
 });
