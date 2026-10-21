@@ -49,3 +49,9 @@ test('本機儲存與還原保留排除及價格，不觸碰帳本；儲存失�
  assert.equal(JSON.parse([...values.values()][0])['2026-10'].rows[0].amount,500);
  assert.ok(notices.at(-1).includes('儲存失敗'));
 });
+test('全選包含 USDT 且保留既有金額，全取消清零但不修改持倉',()=>{
+ const out=run(`(()=>{renderSalePlan=()=>{};const holdings=[['BTC',1],['USDT',500]];SALE_PLAN=createSalePlan(holdings,{BTC:100,USDT:1},32,'2026-10','時間');SALE_PLAN.rows[0].amount=100;setSaleSelectionAll(true);const selected=JSON.parse(JSON.stringify(SALE_PLAN.rows));setSaleSelectionAll(false);return {selected,cleared:SALE_PLAN.rows,dirty:SALE_DIRTY,holdings}})()`);
+ assert.ok(out.selected.every(r=>r.selected));assert.equal(out.selected[0].amount,100);
+ assert.ok(out.cleared.every(r=>!r.selected&&r.amount===0));assert.equal(out.dirty,true);
+ assert.deepEqual(out.holdings,[['BTC',1],['USDT',500]]);
+});

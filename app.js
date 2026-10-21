@@ -4,7 +4,7 @@
 // 應用版本號 — 重大功能變更才升版（小修補只更新 BUILD_DATE）
 const APP_VERSION = 'v1.0';
 // Build 時間：每次修改 code 後手動更新此時間（UTC+8 台北時間）
-const BUILD_DATE = '2026/10/21 14:10';
+const BUILD_DATE = '2026/10/21 14:15';
 
 const SPREADSHEET_ID = '1lpRpxVzWaYUqL-jVPOAJCtjsJUIedPYYyOx4gg4PPFU';
 const CLIENT_ID = '149884248440-85f8dhc6ub9up10sv0f89e3e0itrnooj.apps.googleusercontent.com';
@@ -7609,6 +7609,15 @@ function loadSaleMonth(month) {
     }
   }
 }
+function setSaleSelectionAll(selected) {
+  if (!SALE_PLAN) return;
+  SALE_PLAN.rows.forEach(r => {
+    r.selected = !!selected;
+    if (!selected) r.amount = 0;
+  });
+  SALE_DIRTY = true;
+  renderSalePlan();
+}
 function saleEdit(index, field, value) {
   const r=SALE_PLAN?.rows[index];
   if (!r) return;
@@ -7655,6 +7664,11 @@ function renderSalePlan() {
   const p=SALE_PLAN;if(!p)return;
   $('sale-month').value=p.month;
   $('sale-target').value=Number.isFinite(p.target)&&p.target>0?p.target:'';
+  const selectAll = $('sale-select-all');
+  const selectedCount = p.rows.filter(r => r.selected).length;
+  selectAll.checked = p.rows.length > 0 && selectedCount === p.rows.length;
+  selectAll.indeterminate = selectedCount > 0 && selectedCount < p.rows.length;
+  selectAll.disabled = p.rows.length === 0;
   $('sale-rows').innerHTML=p.rows.length?p.rows.map((r,i)=>`<tr>
     <th scope="row"><label class="sale-coin"><input type="checkbox" aria-label="納入 ${esc(r.symbol)}" ${r.selected?'checked':''} onchange="saleEdit(${i},'selected',this.checked)"><span>${esc(r.symbol)}${r.symbol==='USDT'?'<small>現金用途</small>':''}${!r.price?'<small class="sale-error">缺少價格</small>':''}</span></label></th>
     <td class="sale-private"><strong>${r.price > 0 && Number.isFinite(r.qty * r.price) ? fmtWan(r.qty * r.price) : '待更新'}</strong><small>${saleQty(r.qty)} ${esc(r.symbol)}</small></td>
