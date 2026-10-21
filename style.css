@@ -3868,3 +3868,28 @@ body.amounts-hidden #tab-sale .sale-private { visibility: hidden !important; poi
   .asset-explorer #app-header .tab-btn[onclick="switchTab('sale')"] { order: 0; }
 }
 .asset-explorer #tab-sale .sale-table .sale-holding-value { margin-top: 5px; font-size: 12px; white-space: nowrap; }
+
+/* 五欄按持有、賣出、剩餘排列，表頭與輸入數字共用右緣。 */
+.asset-explorer #tab-sale .sale-table { table-layout: fixed; min-width: 980px; }
+.asset-explorer #tab-sale .sale-table :is(th,td) { height: 76px; box-sizing: border-box; padding: 12px; vertical-align: middle; text-align: right !important; }
+.asset-explorer #tab-sale .sale-table thead th { height: 44px; }
+.asset-explorer #tab-sale .sale-table :is(th,td):first-child { text-align: left !important; }
+.asset-explorer #tab-sale .sale-table tbody tr { background: transparent; }
+.asset-explorer #tab-sale .sale-table tbody tr:hover { background: var(--bg-hover); }
+.asset-explorer #tab-sale .sale-coin { display: flex; align-items: center; gap: 12px; }
+.asset-explorer #tab-sale .sale-coin input { flex-shrink: 0; }
+.asset-explorer #tab-sale .sale-table strong { font-size: 15px; font-weight: 600; }
+.asset-explorer #tab-sale .sale-table small { margin-top: 5px; font-size: 11px; }
+.asset-explorer #tab-sale .sale-edit-amount { display: block; margin-left: auto; width: 180px; max-width: 100%; height: 44px; padding: 8px 12px; text-align: right; font-variant-numeric: tabular-nums; border-color: var(--border); }
+.asset-explorer #tab-sale .sale-edit-amount:focus { border-color: var(--accent); outline: 2px solid var(--bg-hover); }
+.asset-explorer #tab-sale .sale-retained { display: inline-flex; width: 180px; max-width: 100%; min-height: 44px; align-items: center; justify-content: center; background: var(--bg-hover); border-radius: 8px; color: var(--text-secondary); }
+.asset-explorer #tab-sale .sale-prices { border-bottom: 1px solid var(--border); padding: 4px 0; }
+.asset-explorer #tab-sale .sale-prices summary { min-height: 44px; display: flex; align-items: center; cursor: pointer; color: var(--accent); font-size: 12px; }
+.asset-explorer #tab-sale .sale-prices summary::before { content: '＋'; margin-right: 8px; }
+.asset-explorer #tab-sale .sale-prices[open] summary::before { content: '−'; }
+.asset-explorer #tab-sale .sale-prices ul { list-style: none; margin: 0; padding: 0 0 12px; }
+.asset-explorer #tab-sale .sale-prices li { display: flex; justify-content: space-between; gap: 16px; padding: 6px 0; font-size: 12px; font-variant-numeric: tabular-nums; }
+.asset-explorer #tab-sale .sale-table thead th:nth-child(3) { padding-right: 24px; }
+.asset-explorer #tab-sale .sale-edit-amount { appearance: textfield; -moz-appearance: textfield; }
+.asset-explorer #tab-sale .sale-edit-amount::-webkit-inner-spin-button,
+.asset-explorer #tab-sale .sale-edit-amount::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
