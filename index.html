@@ -16,8 +16,8 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=DM+Sans:wght@300;400;500;600;700&display=swap">
-<link rel="stylesheet" href="theme.css?v=202610201523">
-<link rel="stylesheet" href="style.css?v=202610201523">
+<link rel="stylesheet" href="theme.css?v=202610211340">
+<link rel="stylesheet" href="style.css?v=202610211340">
 </head>
 <body class="asset-explorer">
 
@@ -542,7 +542,7 @@
         <progress id="sale-progress" max="100" value="0"></progress>
       </div>
       <section class="sale-card"><div class="sale-table-head"><div><h2>選擇本月可賣出的幣種</h2><p>依勾選持倉市值，分配相同賣出比例。</p></div><div><button class="sale-primary" onclick="distributeSalePlan()">按比例分配</button><small>重新分配會取代手動金額</small></div></div>
-        <div class="sale-table-scroll" tabindex="0" role="region" aria-label="幣種賣出規劃，可左右捲動"><table class="sale-table"><thead><tr><th>納入</th><th>幣種</th><th>持有顆數</th><th>賣出台幣金額</th><th>預估賣出顆數</th><th>賣出比例</th><th>剩餘顆數</th></tr></thead><tbody id="sale-rows"></tbody></table></div>
+        <div class="sale-table-scroll" tabindex="0" role="region" aria-label="幣種賣出規劃，可左右捲動"><table class="sale-table"><thead><tr><th>納入</th><th>幣種</th><th>持有顆數／台幣價值</th><th>賣出台幣金額</th><th>預估賣出顆數</th><th>賣出比例</th><th>剩餘顆數</th></tr></thead><tbody id="sale-rows"></tbody></table></div>
         <p class="sale-table-note">手動修改單筆金額，不會改動其他幣種。金額與顆數皆為估算；持倉資料以建立計畫當時為準。</p>
         <p id="sale-errors" class="sale-error sale-private" role="status"></p>
       </section>
@@ -920,6 +920,6 @@
 <!-- ── Toast ── -->
 <div class="toast" id="toast"></div>
 
-<script src="app.js?v=202610201523"></script>
+<script src="app.js?v=202610211340"></script>
 </body>
 </html>

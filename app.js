@@ -4,7 +4,7 @@
 // 應用版本號 — 重大功能變更才升版（小修補只更新 BUILD_DATE）
 const APP_VERSION = 'v1.0';
 // Build 時間：每次修改 code 後手動更新此時間（UTC+8 台北時間）
-const BUILD_DATE = '2026/10/20 15:23';
+const BUILD_DATE = '2026/10/21 13:40';
 
 const SPREADSHEET_ID = '1lpRpxVzWaYUqL-jVPOAJCtjsJUIedPYYyOx4gg4PPFU';
 const CLIENT_ID = '149884248440-85f8dhc6ub9up10sv0f89e3e0itrnooj.apps.googleusercontent.com';
@@ -7658,7 +7658,7 @@ function renderSalePlan() {
   $('sale-rows').innerHTML=p.rows.length?p.rows.map((r,i)=>`<tr>
     <td><input type="checkbox" aria-label="納入 ${esc(r.symbol)}" ${r.selected?'checked':''} onchange="saleEdit(${i},'selected',this.checked)"></td>
     <th scope="row">${esc(r.symbol)}${r.symbol==='USDT'?'<small>現金用途・預設不賣</small>':''}${!r.price?'<small class="sale-error">缺少價格</small>':''}<small class="sale-private">參考單價 ${saleMoney(r.price)} TWD</small></th>
-    <td class="sale-private">${saleQty(r.qty)}</td>
+    <td class="sale-private">${saleQty(r.qty)}<small class="sale-holding-value">${r.price > 0 && Number.isFinite(r.qty * r.price) ? fmtWan(r.qty * r.price) + ' TWD' : '台幣價值待更新'}</small></td>
     <td><label class="sale-amount sale-private"><span>TWD</span><input aria-label="${esc(r.symbol)} 賣出台幣金額" type="number" min="0" step="0.01" value="${Number.isFinite(r.amount)?r.amount:''}" ${!r.selected?'disabled':''} oninput="saleEdit(${i},'amount',this.value)"></label></td>
     <td class="sale-private" id="sale-qty-${i}"></td><td class="sale-private" id="sale-pct-${i}"></td><td class="sale-private" id="sale-remain-${i}"></td></tr>`).join(''):'<tr><td colspan="7">尚無加密貨幣持倉，請先至管理頁新增。</td></tr>';
   $('sale-reference').textContent=`估算建立：${p.asOf}（台北時間）・匯率 ${saleMoney(p.fx)} TWD/USD。使用當時已載入報價，可能包含備援快照價；未含交易成本。`;

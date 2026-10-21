@@ -3867,3 +3867,4 @@ body.amounts-hidden #tab-sale .sale-private { visibility: hidden !important; poi
 @media (min-width: 769px) {
   .asset-explorer #app-header .tab-btn[onclick="switchTab('sale')"] { order: 0; }
 }
+.asset-explorer #tab-sale .sale-table .sale-holding-value { margin-top: 5px; font-size: 12px; white-space: nowrap; }
