@@ -4,7 +4,7 @@
 // 應用版本號 — 重大功能變更才升版（小修補只更新 BUILD_DATE）
 const APP_VERSION = 'v1.0';
 // Build 時間：每次修改 code 後手動更新此時間（UTC+8 台北時間）
-const BUILD_DATE = '2026/10/21 14:15';
+const BUILD_DATE = '2026/11/01 16:07';
 
 const SPREADSHEET_ID = '1lpRpxVzWaYUqL-jVPOAJCtjsJUIedPYYyOx4gg4PPFU';
 const CLIENT_ID = '149884248440-85f8dhc6ub9up10sv0f89e3e0itrnooj.apps.googleusercontent.com';
@@ -7660,6 +7660,13 @@ function saveSalePlan() {
 }
 function saleQty(n) { return Number.isFinite(n)?n.toLocaleString('en-US',{maximumFractionDigits:8}):'—'; }
 function saleMoney(n) { return Number.isFinite(n)?n.toLocaleString('zh-TW',{minimumFractionDigits:2,maximumFractionDigits:2}):'—'; }
+function getSaleDisplayRows(plan) {
+  const value = r => r.price > 0 && Number.isFinite(r.qty * r.price) ? r.qty * r.price : -Infinity;
+  return plan.rows.map((r,i) => ({r,i})).sort((a,b) => {
+    const av=value(a.r), bv=value(b.r);
+    return av === bv ? a.i-b.i : av > bv ? -1 : 1;
+  });
+}
 function renderSalePlan() {
   const p=SALE_PLAN;if(!p)return;
   $('sale-month').value=p.month;
@@ -7669,13 +7676,13 @@ function renderSalePlan() {
   selectAll.checked = p.rows.length > 0 && selectedCount === p.rows.length;
   selectAll.indeterminate = selectedCount > 0 && selectedCount < p.rows.length;
   selectAll.disabled = p.rows.length === 0;
-  $('sale-rows').innerHTML=p.rows.length?p.rows.map((r,i)=>`<tr>
+  $('sale-rows').innerHTML=p.rows.length?getSaleDisplayRows(p).map(({r,i})=>`<tr>
     <th scope="row"><label class="sale-coin"><input type="checkbox" aria-label="納入 ${esc(r.symbol)}" ${r.selected?'checked':''} onchange="saleEdit(${i},'selected',this.checked)"><span>${esc(r.symbol)}${r.symbol==='USDT'?'<small>現金用途</small>':''}${!r.price?'<small class="sale-error">缺少價格</small>':''}</span></label></th>
     <td class="sale-private"><strong>${r.price > 0 && Number.isFinite(r.qty * r.price) ? fmtWan(r.qty * r.price) : '待更新'}</strong><small>${saleQty(r.qty)} ${esc(r.symbol)}</small></td>
     <td class="sale-private">${r.selected?`<input class="sale-edit-amount" aria-label="${esc(r.symbol)} 賣出台幣金額" type="number" min="0" step="0.01" value="${Number.isFinite(r.amount)?r.amount.toFixed(2):''}" oninput="saleEdit(${i},'amount',this.value)">`:'<span class="sale-retained">本月保留</span>'}</td>
     <td class="sale-private"><span id="sale-qty-${i}"></span><small id="sale-pct-${i}"></small></td>
     <td class="sale-private" id="sale-remain-${i}"></td></tr>`).join(''):'<tr><td colspan="5">尚無加密貨幣持倉，請先至管理頁新增。</td></tr>';
-  $('sale-unit-prices').innerHTML=p.rows.map(r=>`<li><span>${esc(r.symbol)}</span><span>${r.price>0?saleMoney(r.price)+' TWD':'缺少價格'}</span></li>`).join('');
+  $('sale-unit-prices').innerHTML=getSaleDisplayRows(p).map(({r})=>`<li><span>${esc(r.symbol)}</span><span>${r.price>0?saleMoney(r.price)+' TWD':'缺少價格'}</span></li>`).join('');
   $('sale-reference').textContent=`估算建立：${p.asOf}（台北時間）・匯率 ${saleMoney(p.fx)} TWD/USD。使用當時已載入報價，可能包含備援快照價；未含交易成本。`;
   try {
     const months=Object.keys(readSalePlans()).filter(m=>/^\d{4}-\d{2}$/.test(m)).sort().reverse();
