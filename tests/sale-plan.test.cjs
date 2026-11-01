@@ -56,7 +56,7 @@ test('全選包含 USDT 且保留既有金額，全取消清零但不修改持�
  assert.deepEqual(out.holdings,[['BTC',1],['USDT',500]]);
 });
 test('賣出規劃按持倉台幣價值遞減、缺價最後且排序不改寫原索引',()=>{
- const out=run(`(()=>{renderSalePlan=()=>{};SALE_PLAN={rows:[{symbol:'TAO',qty:2,price:100,selected:false,amount:0},{symbol:'NEAR',qty:100,price:5,selected:false,amount:0},{symbol:'無價',qty:999,price:0,selected:true,amount:0},{symbol:'LINK',qty:10,price:30,selected:true,amount:0},{symbol:'USDT',qty:400,price:1,selected:false,amount:0}]};const view=getSaleDisplayRows(SALE_PLAN);saleEdit(view[0].i,'amount','123');return {symbols:view.map(x=>x.r.symbol),original:SALE_PLAN.rows.map(r=>r.symbol),amounts:SALE_PLAN.rows.map(r=>r.amount)}})()`);
+ const out=run(`(()=>{renderSalePlan=()=>{};updateSaleSummary=()=>{};SALE_PLAN={rows:[{symbol:'TAO',qty:2,price:100,selected:false,amount:0},{symbol:'NEAR',qty:100,price:5,selected:false,amount:0},{symbol:'無價',qty:999,price:0,selected:true,amount:0},{symbol:'LINK',qty:10,price:30,selected:true,amount:0},{symbol:'USDT',qty:400,price:1,selected:false,amount:0}]};const view=getSaleDisplayRows(SALE_PLAN);saleEdit(view[0].i,'amount','123');return {symbols:view.map(x=>x.r.symbol),original:SALE_PLAN.rows.map(r=>r.symbol),amounts:SALE_PLAN.rows.map(r=>r.amount)}})()`);
  assert.deepEqual(out.symbols,['NEAR','USDT','LINK','TAO','無價']);
  assert.deepEqual(out.original,['TAO','NEAR','無價','LINK','USDT']);
  assert.deepEqual(out.amounts,[0,123,0,0,0]);
